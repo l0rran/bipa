@@ -12,13 +12,9 @@
   "searchScan": "Bipar um produto",
   "sectionRunningLow": "Acabando",
   "sectionAtHome": "Em casa",
-  "seeAll": "Ver tudo",
   "placeAll": "Tudo",
   "stockUsedOne": "Usei um",
   "stockBoughtOne": "Comprei um",
-  "stockAddToList": "Pôr na lista",
-  "stockOnList": "Na lista",
-  "stockRemoveFromList": "Tirar da lista",
   "stockLevelOut": "Acabou",
   "stockLevelLow": "{quantity} de {target} {unit}",
   "@stockLevelLow": {
@@ -72,12 +68,16 @@
     "description": "Unidade das quantidades do estoque (embalagens)."
   },
   "stockSettings": "Ajustar item",
-  "stockAdjustmentUndone": "Desfeito",
   "listComingSoon": "A lista de compras chega na próxima versão.\nPor enquanto, o que está acabando aparece na Casa.",
   "placePantry": "Despensa",
   "placeFridge": "Geladeira",
   "placeFreezer": "Freezer",
   "placeBathroom": "Banheiro",
   "placeCleaning": "Limpeza",
-  "placeOther": "Outros"
+  "placeOther": "Outros",
+  "stockSheetWhere": "Onde fica guardado",
+  "stockSheetTarget": "Ter sempre",
+  "stockSheetTargetHelp": "Abaixo disso, o item aparece em \"Acabando\"",
+  "stockSheetSeeProduct": "Ver produto e preços",
+  "save": "Salvar"
 }

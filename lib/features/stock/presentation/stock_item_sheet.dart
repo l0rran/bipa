@@ -1,7 +1,9 @@
 import 'package:bipa/core/formatting/formatters.dart';
+import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/features/stock/domain/stock_item.dart';
 import 'package:bipa/features/stock/domain/stock_location.dart';
+import 'package:bipa/features/stock/presentation/stock_display.dart';
 import 'package:bipa/features/stock/presentation/stock_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -55,6 +57,7 @@ class _StockItemSheetState extends ConsumerState<StockItemSheet> {
   Widget build(BuildContext context) {
     final product = widget.entry.product;
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Padding(
       padding: EdgeInsets.fromLTRB(16, 0, 16, 16 + MediaQuery.viewInsetsOf(context).bottom),
@@ -64,14 +67,14 @@ class _StockItemSheetState extends ConsumerState<StockItemSheet> {
         children: [
           Text(product.name, style: theme.textTheme.titleLarge),
           const SizedBox(height: 16),
-          Text('Onde fica guardado', style: theme.textTheme.titleSmall),
+          Text(l10n.stockSheetWhere, style: theme.textTheme.titleSmall),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             children: [
               for (final location in StockLocation.values)
                 ChoiceChip(
-                  label: Text(location.label),
+                  label: Text(location.localizedLabel(l10n)),
                   selected: _location == location,
                   onSelected: (_) => setState(() => _location = location),
                 ),
@@ -81,9 +84,9 @@ class _StockItemSheetState extends ConsumerState<StockItemSheet> {
           TextField(
             controller: _target,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              labelText: 'Ter sempre',
-              helperText: 'Abaixo disso, o item aparece em "Acabando"',
+            decoration: InputDecoration(
+              labelText: l10n.stockSheetTarget,
+              helperText: l10n.stockSheetTargetHelp,
             ),
           ),
           const SizedBox(height: 24),
@@ -95,10 +98,10 @@ class _StockItemSheetState extends ConsumerState<StockItemSheet> {
                   Navigator.of(context).pop();
                   router.push(Routes.productDetail(product.id));
                 },
-                child: const Text('Ver produto e preços'),
+                child: Text(l10n.stockSheetSeeProduct),
               ),
               const Spacer(),
-              FilledButton(onPressed: _save, child: const Text('Salvar')),
+              FilledButton(onPressed: _save, child: Text(l10n.save)),
             ],
           ),
         ],
