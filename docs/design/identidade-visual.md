@@ -23,7 +23,17 @@ Cada coisa só ganha atenção quando precisa:
 - **Cor só com função.** O âmbar é o único alerta ("acabando" e "acabou"), o verde marca o que deu certo, e o vermelho fica para a ação. Nada de fundos coloridos em pílulas de quantidade.
 - **Controles aparecem ao tocar.** Em repouso, as linhas mostram só informação. O −/+ e o "Pôr na lista" abrem no item tocado, e o uso mais comum ("Usei um") também é um gesto de deslizar.
 - **Números como números.** O que decide uma ação (há quanto tempo comprou, de quanto em quanto tempo compra, quanto tem em casa) aparece como número com rótulo, nunca escondido no meio de uma frase.
-- **Textos inteiros.** Nomes de produto quebram em até duas linhas em vez de serem cortados.
+- **Textos inteiros.** Nomes de produto quebram em até duas linhas em vez de serem cortados, e a medida nunca fica sozinha na linha de baixo ("395 g" usa espaço inseparável).
+
+### Todo texto precisa se justificar
+
+Antes de pôr um texto na tela, responda três perguntas:
+
+1. **É o lugar dele?** Talvez ele pertença a outra tela, ao detalhe do produto ou ao ⓘ.
+2. **É necessário?** Se outro elemento já diz o mesmo (a seção, a régua, o medidor, a arte), o texto sai.
+3. **Dá para dizer de outra forma sem prejudicar a compreensão?** Por exemplo, com ícone, número, cor, forma, posição ou um componente que já existe.
+
+Limites: rótulos da navegação e de ações que apagam algo ficam com texto, não se troca texto por ícone ambíguo, e todo elemento visual tem rótulo acessível. Como na home do iFood, quase não há texto solto. Quando o componente é só texto, a tipografia faz o trabalho: uma linha pequena e o essencial grande.
 
 Referências: os redesenhos do Linear e do Shortcut em 2025 ("não dispute uma atenção que você não conquistou") e os testes do Flo (indicadores rápidos de ler funcionaram melhor que gráficos detalhados). O processo e as demais referências estão em [processo.md](processo.md).
 
