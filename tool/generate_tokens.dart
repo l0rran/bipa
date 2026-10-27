@@ -35,7 +35,7 @@ String _color(String value) {
 }
 
 String _palette(Map<String, dynamic> tokens) {
-  final colors = ((tokens['color'] as Map<String, dynamic>)['tokens'] as List).cast<Map<String, dynamic>>();
+  final colors = ((tokens['color'] as Map<String, dynamic>)['tokens'] as List<dynamic>).cast<Map<String, dynamic>>();
   final names = [for (final token in colors) _camel(token['name'] as String)];
   final buffer = StringBuffer()
     ..write(_header)
@@ -99,7 +99,7 @@ String _palette(Map<String, dynamic> tokens) {
 
 String _metrics(Map<String, dynamic> tokens) {
   List<Map<String, dynamic>> group(String key) =>
-      ((tokens[key] as Map<String, dynamic>)['tokens'] as List).cast<Map<String, dynamic>>();
+      ((tokens[key] as Map<String, dynamic>)['tokens'] as List<dynamic>).cast<Map<String, dynamic>>();
   double px(String value) => double.parse(value.replaceAll('px', ''));
   final buffer = StringBuffer()
     ..write(_header)

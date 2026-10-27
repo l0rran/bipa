@@ -1,5 +1,9 @@
 include: package:flutter_lints/flutter.yaml
 
+# O código usa linhas de até 120 colunas; o dart format respeita este valor.
+formatter:
+  page_width: 120
+
 analyzer:
   exclude:
     - "**/*.g.dart"
