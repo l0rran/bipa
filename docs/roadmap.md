@@ -7,7 +7,7 @@
 - [x] Identidade visual e protótipo das telas principais
 - [ ] Atualizar Gradle, Android Gradle Plugin e Kotlin
 - [ ] Migrar para Riverpod com geração de código e freezed
-- [ ] Implementar o design system em `lib/core/design_system/`, com fontes embutidas
+- [ ] Implementar o design system em `lib/core/design_system/`, com fontes embutidas e a paleta semântica num arquivo só (ADR 0009)
 - [ ] Textos em ARB (`flutter gen-l10n`)
 - [ ] Redesenhar as telas conforme o protótipo: barra com botão de bipar, câmera direto, folha "Bipou!"
 - [ ] Casa nova: busca com bipar, blocos de número, locais como categorias, carrossel de insights, prateleira de Acabando e lista com medidor de nível

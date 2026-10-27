@@ -12,6 +12,7 @@ App Android em Flutter para controlar o estoque da casa e o histórico de preço
 - Feature-first com camadas `domain` / `data` / `presentation` ([docs/arquitetura.md](docs/arquitetura.md)). O domínio não importa Flutter nem Drift.
 - Riverpod com geração de código e freezed (ADR 0004); Drift para o banco local (ADR 0002).
 - Dinheiro sempre em centavos (`int`), nunca `double` (ADR 0006).
+- Cores só pelo tema, com nomes de função (`context.colors.brand`, `alert`...). A paleta fica num arquivo só, `lib/core/design_system/bipa_palette.dart`; nada de `Color(0xFF...)` nos widgets (ADR 0009).
 - Dados prontos para sincronizar: UUID gerado no aparelho, `syncedAt` na outbox, e observações de preço imutáveis (ADR 0007).
 - Decisão nova de arquitetura vira um ADR em `docs/adr/`.
 
