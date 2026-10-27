@@ -67,11 +67,38 @@ Preços sempre com `FontFeature.tabularFigures()`. As três famílias são livre
 - **Flutuante:** sombra `0 8px 24px` a 12% para folhas e a barra de navegação.
 - Botões secundários: contorno de 1,5px em `line`. Cartões de lista sem sombra.
 
-## Ícones e movimento
+## Ícones
 
-- Material Symbols Rounded (`Icons.*_rounded`), 24px.
-- "Bip" ao salvar ou somar: escala 1 → 1,04 → 1 em 200ms, com `HapticFeedback.lightImpact()`.
-- Respeitar `MediaQuery.disableAnimations`: com ele ativo, só fade.
+Material Symbols Rounded (`Icons.*_rounded`), 24px.
+
+## Movimento
+
+Tudo que muda de estado anima, e nada passa de 600ms. No código, estes valores ficam em `BipaMotion`.
+
+| Token | Valor | Uso |
+| --- | --- | --- |
+| `durationFast` | 120ms | Resposta ao toque |
+| `durationBase` | 220ms | Troca de estado, números rolando |
+| `durationSlow` | 380ms | Entradas, folhas, indicador da aba |
+| `durationCelebrate` | 600ms | "Bipou!" e contagem do preço |
+| `easingStandard` | `Cubic(0.2, 0, 0, 1)` | Padrão |
+| `easingSpring` | `Cubic(0.34, 1.56, 0.64, 1)` | Mola: toques, números, indicadores |
+| `easingExit` | `Cubic(0.3, 0, 1, 1)` | Saídas |
+
+Padrões que os widgets do design system implementam:
+
+- **Toque:** controles encolhem para 88–96% com mola e voltam ao soltar.
+- **Números rolam:** quantidade e preço trocam com rolagem vertical (`AnimatedSwitcher` com `SlideTransition`); o preço lido conta de 0 até o valor.
+- **Indicadores deslizam:** a aba ativa da navegação desliza com mola até o destino.
+- **Botão principal com estados:** normal, carregando e concluído (check desenhado), sem mudar de largura.
+- **BipFeedback:** ao salvar um preço, círculo verde com mola, check desenhado, onda e aviso "Bipou!", com `HapticFeedback.lightImpact()`.
+- **Listas** entram em cascata (60ms entre itens); **folhas** sobem com mola.
+- **Skeleton** com brilho no formato do conteúdo, só se a espera passar de 200ms.
+- Com `MediaQuery.disableAnimations`, as animações viram cortes ou fades.
+
+## Componentes
+
+`BipaButton`, `PriceTag`, `StockStepper`, `MarketChip`, `ScanNavBar`, `BipFeedback` e `Skeleton`. A referência de comportamento de cada um são as prévias interativas do design system (o `bundle.js` define as animações em JavaScript, que o Flutter reproduz).
 
 ## Voz
 
