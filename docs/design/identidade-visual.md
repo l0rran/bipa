@@ -20,7 +20,7 @@ Cada coisa só ganha atenção quando precisa:
 
 - **Um destaque por tela.** No máximo um elemento com ênfase, seja um cartão de insight ou um botão cheio.
 - **Um sinal por informação.** Se o item está na seção "Acabando", a linha não repete o estado com selo, barra e cor de fundo.
-- **Cor só com função.** O âmbar é o único alerta ("acabando" e "acabou"), o verde marca o que deu certo, e o vermelho fica para a ação. Nada de fundos coloridos em pílulas de quantidade.
+- **Um acento por tela.** Cada tela tem uma cor de destaque, e o resto é neutro. Na Casa, o vermelho fica para as duas ações de marca (o bloco da lista e o botão de bipar), o âmbar só marca o que está abaixo do "ter sempre", e todo o resto (locais, "+", "na lista", régua, links) fica em `ink` e cinzas. O verde é da economia e o `slate` é dos mercados, cada um na sua tela.
 - **Controles aparecem ao tocar.** Em repouso, as linhas mostram só informação. O −/+ e o "Pôr na lista" abrem no item tocado, e o uso mais comum ("Usei um") também é um gesto de deslizar.
 - **Números como números.** O que decide uma ação (há quanto tempo comprou, de quanto em quanto tempo compra, quanto tem em casa) aparece como número com rótulo, nunca escondido no meio de uma frase.
 - **Textos inteiros.** Nomes de produto quebram em até duas linhas em vez de serem cortados, e a medida nunca fica sozinha na linha de baixo ("395 g" usa espaço inseparável).
