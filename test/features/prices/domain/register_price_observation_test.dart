@@ -1,0 +1,158 @@
+import 'package:bipa/core/money/money.dart';
+import 'package:bipa/features/prices/domain/price_source.dart';
+import 'package:bipa/features/prices/domain/register_price_observation.dart';
+import 'package:bipa/features/products/domain/measure_unit.dart';
+import 'package:bipa/features/products/domain/product.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import '../../../helpers/fakes.dart';
+
+void main() {
+  final now = DateTime(2026, 10, 27, 10, 30);
+
+  late InMemoryProductRepository products;
+  late InMemoryPriceRepository prices;
+  late RegisterPriceObservation register;
+
+  setUp(() {
+    products = InMemoryProductRepository();
+    prices = InMemoryPriceRepository();
+    register = RegisterPriceObservation(
+      products: products,
+      prices: prices,
+      ids: SequentialIdGenerator(),
+      clock: () => now,
+    );
+  });
+
+  Product existingProduct({String? barcode}) {
+    final product = Product(
+      id: 'leite',
+      name: 'Leite',
+      barcode: barcode,
+      unit: MeasureUnit.liter,
+      createdAt: now,
+      updatedAt: now,
+    );
+    products.products[product.id] = product;
+    return product;
+  }
+
+  test('registra preço de um produto pelo id', () async {
+    existingProduct();
+
+    final observation = await register(
+      const RegisterPriceInput(
+        marketId: 'mercado',
+        productId: 'leite',
+        price: Money.cents(549),
+        source: PriceSource.manual,
+      ),
+    );
+
+    expect(observation.productId, 'leite');
+    expect(observation.observedAt, now);
+    expect(prices.observations, [observation]);
+  });
+
+  test('encontra o produto pelo código de barras', () async {
+    existingProduct(barcode: '7891910000197');
+
+    final observation = await register(
+      const RegisterPriceInput(
+        marketId: 'mercado',
+        barcode: '7891910000197',
+        newProductName: 'Ignorado, pois o produto já existe',
+        price: Money.cents(549),
+        source: PriceSource.priceTag,
+      ),
+    );
+
+    expect(observation.productId, 'leite');
+    expect(products.products, hasLength(1));
+  });
+
+  test('cadastra o produto quando o código ainda não existe', () async {
+    final observation = await register(
+      const RegisterPriceInput(
+        marketId: 'mercado',
+        barcode: '7891000100103',
+        newProductName: '  Leite condensado ',
+        price: Money.cents(799),
+        source: PriceSource.priceTag,
+      ),
+    );
+
+    final created = products.products[observation.productId]!;
+    expect(created.name, 'Leite condensado');
+    expect(created.barcode, '7891000100103');
+  });
+
+  test('guarda o preço normal apenas se for maior que o pago', () async {
+    existingProduct();
+
+    final promotion = await register(
+      const RegisterPriceInput(
+        marketId: 'mercado',
+        productId: 'leite',
+        price: Money.cents(2490),
+        regularPrice: Money.cents(3290),
+        source: PriceSource.priceTag,
+      ),
+    );
+    final inconsistent = await register(
+      const RegisterPriceInput(
+        marketId: 'mercado',
+        productId: 'leite',
+        price: Money.cents(2490),
+        regularPrice: Money.cents(1990),
+        source: PriceSource.priceTag,
+      ),
+    );
+
+    expect(promotion.isPromotion, isTrue);
+    expect(inconsistent.regularPrice, isNull);
+  });
+
+  test('rejeita preço zero', () {
+    expect(
+      () => register(
+        const RegisterPriceInput(
+          marketId: 'mercado',
+          productId: 'leite',
+          price: Money.zero,
+          source: PriceSource.manual,
+        ),
+      ),
+      throwsA(isA<InvalidPriceException>()),
+    );
+  });
+
+  test('exige nome para produto novo', () {
+    expect(
+      () => register(
+        const RegisterPriceInput(
+          marketId: 'mercado',
+          barcode: '7891000100103',
+          price: Money.cents(100),
+          source: PriceSource.manual,
+        ),
+      ),
+      throwsA(isA<MissingProductNameException>()),
+    );
+  });
+
+  test('falha quando o produto informado não existe', () {
+    expect(
+      () => register(
+        const RegisterPriceInput(
+          marketId: 'mercado',
+          productId: 'inexistente',
+          price: Money.cents(100),
+          source: PriceSource.manual,
+        ),
+      ),
+      throwsA(isA<ProductNotFoundException>()),
+    );
+  });
+}
