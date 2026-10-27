@@ -14,6 +14,19 @@ Este arquivo resume o que o código precisa saber. Se ele e o design system dive
 
 O varejo brasileiro: o vermelho das redes de supermercado e o amarelo da etiqueta de oferta, num tom sério e confiável. É um app que cuida do dinheiro de quem usa; a leveza fica na voz e no "bip", não na decoração.
 
+## Calma por padrão
+
+Cada coisa só ganha atenção quando precisa:
+
+- **Um destaque por tela.** No máximo um elemento com ênfase, seja um cartão de insight ou um botão cheio.
+- **Um sinal por informação.** Se o item está na seção "Acabando", a linha não repete o estado com selo, barra e cor de fundo.
+- **Cor só com função.** O âmbar é o único alerta ("acabando" e "acabou"), o verde marca o que deu certo, e o vermelho fica para a ação. Nada de fundos coloridos em pílulas de quantidade.
+- **Controles aparecem ao tocar.** Em repouso, as linhas mostram só informação. O −/+ e o "Pôr na lista" abrem no item tocado, e o uso mais comum ("Usei um") também é um gesto de deslizar.
+- **Números como números.** O que decide uma ação (há quanto tempo comprou, de quanto em quanto tempo compra, quanto tem em casa) aparece como número com rótulo, nunca escondido no meio de uma frase.
+- **Textos inteiros.** Nomes de produto quebram em até duas linhas em vez de serem cortados.
+
+Referências: os redesenhos do Linear e do Shortcut em 2025 ("não dispute uma atenção que você não conquistou") e os testes do Flo (indicadores rápidos de ler funcionaram melhor que gráficos detalhados). O processo e as demais referências estão em [processo.md](processo.md).
+
 ## Cores
 
 | Token | Claro | Escuro | Papel |
@@ -98,8 +111,21 @@ Padrões que os widgets do design system implementam:
 
 ## Componentes
 
-`BipaButton`, `PriceTag`, `StockStepper`, `MarketChip`, `ScanNavBar`, `BipFeedback` e `Skeleton`. A referência de comportamento de cada um são as prévias interativas do design system (o `bundle.js` define as animações em JavaScript, que o Flutter reproduz).
+A referência de comportamento de cada um são as prévias interativas do design system (o `bundle.js` define as animações em JavaScript, que o Flutter reproduz).
+
+| Componente | No Flutter | Resumo |
+| --- | --- | --- |
+| Button | `BipaButton`, `BipaSegmented` | Principal, secundário e tonal. A forma muda ao pressionar, o carregamento usa as barras do símbolo, e há um seletor segmentado |
+| PriceTag | `PriceTag` | Etiqueta amarela: normal com preço por unidade, de/por, no app/clube, leve X pague Y e menor preço |
+| StockStepper | `StockList`, `StockStepper` | Lista calma do estoque. Tocar abre −/+ e "Pôr na lista"; deslizar dá baixa ou põe na lista |
+| InsightCard | `InsightCard` | "Hora de repor" com a régua do ciclo e três números à vista; "Economia do mês" |
+| MarketChip | `MarketChip` | Mercado e distância, com destaque quando você está nele |
+| ScanNavBar | `ScanNavBar` | Barra de vidro com o botão de bipar; o toque longo abre o menu |
+| ScanFrame e ScanTray | `ScanFrame`, `ScanTray` | Visor que trava no código e bandeja do modo carrinho com o total |
+| BipFeedback | `BipFeedback` | "Bipou!" com Desfazer por 4s |
+| ShoppingList | `ShoppingList` | Adicionar com um toque e lista na ordem dos corredores |
+| Skeleton | `Skeleton` | Placeholder com brilho |
 
 ## Voz
 
-Direta, em "você", cordial e sem gírias. "Bipou!", "Acabando", "Mais barato aqui". Botões dizem o que acontece ("Salvar preço", "Usei um"). Mais exemplos no README do design system.
+Direta, em "você", cordial e sem gírias. "Bipou!", "Acabando", "Mais barato aqui". Botões dizem o que acontece ("Salvar preço", "Usei um"). Erros dizem o que aconteceu e o que fazer em seguida, sempre com uma saída. Mais exemplos no README do design system.
