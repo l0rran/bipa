@@ -35,6 +35,9 @@ class ScanNavBar extends StatelessWidget {
   final VoidCallback onScan;
   final String scanLabel;
 
+  static const _barHeight = 72.0;
+  static const _scanLift = 22.0;
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -51,13 +54,18 @@ class ScanNavBar extends StatelessWidget {
     return SafeArea(
       top: false,
       minimum: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      // O botão de bipar sobe 22 px acima da pílula. A caixa inclui essa parte,
+      // porque o toque não passa dos limites do pai mesmo com Clip.none.
       child: SizedBox(
-        height: 72,
+        height: _barHeight + _scanLift,
         child: Stack(
-          clipBehavior: Clip.none,
           alignment: Alignment.topCenter,
           children: [
-            Positioned.fill(
+            Positioned(
+              left: 0,
+              right: 0,
+              top: _scanLift,
+              bottom: 0,
               child: DecoratedBox(
                 decoration: ShapeDecoration(
                   shape: const StadiumBorder(),
@@ -81,7 +89,7 @@ class ScanNavBar extends StatelessWidget {
                 ),
               ),
             ),
-            Positioned(top: -22, child: _ScanButton(label: scanLabel, onPressed: onScan)),
+            Positioned(top: 0, child: _ScanButton(label: scanLabel, onPressed: onScan)),
           ],
         ),
       ),

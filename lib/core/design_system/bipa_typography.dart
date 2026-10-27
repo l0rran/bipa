@@ -1,5 +1,3 @@
-import 'dart:ui' show FontFeature;
-
 import 'package:flutter/painting.dart';
 
 /// Famílias de fonte embutidas no app (ver `assets/fonts/`). O app é offline,
