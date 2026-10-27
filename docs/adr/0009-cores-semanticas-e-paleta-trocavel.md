@@ -12,7 +12,7 @@ A paleta do Bipa mudou várias vezes durante o protótipo: vermelho e âmbar, pe
 - **Os tokens têm nome de função, não de cor:** `brand`, `onBrand`, `brandSoft`, `alert`, `onAlert`, `alertSoft`, `positive`, `place`, `price` (a etiqueta), `ground`, `surface`, `surfaceSunken`, `line`, `ink`, `inkMuted`. Trocar a marca de vermelho para amarelo não muda nenhum nome no código.
 - **A paleta é uma fonte só:** as cores ficam em um único arquivo, `lib/core/design_system/bipa_palette.dart`, com uma instância por tema (`BipaPalette.light`, `BipaPalette.dark`). De preferência, esse arquivo é gerado a partir do `tokens.json` do design system, para o código e o Claude não divergirem.
 - **`BipaColors` é um `ThemeExtension`** montado a partir da paleta, com `copyWith` e `lerp` (a troca de tema anima). O `ColorScheme` do Material 3 é derivado da mesma paleta: `brand` vira `primary`, e assim por diante.
-- **Widgets só leem cores do tema:** `context.colors.brand`. Nenhum `Color(0xFF...)` ou `Colors.red` fora de `bipa_palette.dart`; o lint `avoid_hardcoded_colors` (ou uma regra do `custom_lint`) aponta exceções.
+- **Widgets só leem cores do tema:** `context.colors.brand`. Nenhum `Color(0xFF...)` ou `Colors.red` fora de `bipa_palette.dart`. Uma regra própria com `custom_lint`, ou uma busca por `Color(0x` no CI, aponta as exceções.
 - **Contraste vem junto:** cada cor de fundo tem o seu par "on" (`brand`/`onBrand`). Um teste verifica o contraste mínimo de 4,5:1 para texto em todos os pares, nos dois temas.
 
 ## Consequências
