@@ -86,8 +86,9 @@ final class DriftStockRepository implements StockRepository {
   }
 
   @override
-  Future<void> setMinimumQuantity(String productId, double? minimum) =>
-      _upsertSettings(productId, StockItemsCompanion(minimumQuantity: Value(minimum)));
+  // A coluna continua minimumQuantity no banco; no domínio é o "ter sempre".
+  Future<void> setTargetQuantity(String productId, double? target) =>
+      _upsertSettings(productId, StockItemsCompanion(minimumQuantity: Value(target)));
 
   @override
   Future<void> setLocation(String productId, StockLocation location) =>
@@ -125,7 +126,7 @@ extension StockItemRowMapper on StockItemRow {
   StockItem toEntity() => StockItem(
     productId: productId,
     quantity: quantity,
-    minimumQuantity: minimumQuantity,
+    targetQuantity: minimumQuantity,
     location: location,
     updatedAt: updatedAt,
   );

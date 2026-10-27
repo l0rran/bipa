@@ -12,22 +12,34 @@ final class StockItem {
     required this.quantity,
     required this.location,
     required this.updatedAt,
-    this.minimumQuantity,
+    this.targetQuantity,
   });
 
   final String productId;
   final double quantity;
 
-  /// Abaixo (ou no) mínimo, o item aparece como "acabando".
-  final double? minimumQuantity;
+  /// Quanto a pessoa quer ter sempre em casa. Abaixo disso, o item está
+  /// acabando; `null` desliga o alerta.
+  final double? targetQuantity;
   final StockLocation location;
   final DateTime updatedAt;
 
   bool get isOut => quantity <= 0;
 
-  bool get isLow {
-    final minimum = minimumQuantity;
-    return isOut || (minimum != null && quantity <= minimum);
+  bool get isLow => level != StockLevel.ok;
+
+  /// Em dia, acabando (abaixo do "ter sempre") ou acabou.
+  StockLevel get level {
+    if (isOut) return StockLevel.out;
+    final target = targetQuantity;
+    return target != null && quantity < target ? StockLevel.low : StockLevel.ok;
+  }
+
+  /// Quanto do "ter sempre" está em casa, de 0 a 1. Sem meta, conta como cheio.
+  double get fillFraction {
+    final target = targetQuantity;
+    if (target == null || target <= 0) return isOut ? 0.0 : 1.0;
+    return (quantity / target).clamp(0.0, 1.0);
   }
 
   /// Aplica uma variação sem permitir estoque negativo.
@@ -38,12 +50,24 @@ final class StockItem {
       other is StockItem &&
       other.productId == productId &&
       other.quantity == quantity &&
-      other.minimumQuantity == minimumQuantity &&
+      other.targetQuantity == targetQuantity &&
       other.location == location &&
       other.updatedAt == updatedAt;
 
   @override
-  int get hashCode => Object.hash(productId, quantity, minimumQuantity, location, updatedAt);
+  int get hashCode => Object.hash(productId, quantity, targetQuantity, location, updatedAt);
+}
+
+/// Estado do estoque de um item, que define a cor do medidor.
+enum StockLevel {
+  /// No "ter sempre" ou acima.
+  ok,
+
+  /// Abaixo do "ter sempre".
+  low,
+
+  /// Zerado.
+  out,
 }
 
 /// Item de estoque com os dados do produto, para exibição.

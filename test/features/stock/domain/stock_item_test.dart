@@ -3,10 +3,10 @@ import 'package:bipa/features/stock/domain/stock_location.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  StockItem item(double quantity, {double? minimum}) => StockItem(
+  StockItem item(double quantity, {double? target}) => StockItem(
     productId: 'arroz',
     quantity: quantity,
-    minimumQuantity: minimum,
+    targetQuantity: target,
     location: StockLocation.pantry,
     updatedAt: DateTime(2026),
   );
@@ -17,14 +17,24 @@ void main() {
     expect(StockItem.nextQuantity(0.5, 1), 1.5);
   });
 
-  test('item zerado está em falta e acabando', () {
+  test('item zerado acabou', () {
     expect(item(0).isOut, isTrue);
     expect(item(0).isLow, isTrue);
+    expect(item(0, target: 2).level, StockLevel.out);
   });
 
-  test('item no mínimo ou abaixo está acabando', () {
-    expect(item(2, minimum: 2).isLow, isTrue);
-    expect(item(3, minimum: 2).isLow, isFalse);
+  test('item abaixo do ter sempre está acabando; no ter sempre, em dia', () {
+    expect(item(1, target: 2).level, StockLevel.low);
+    expect(item(2, target: 2).level, StockLevel.ok);
+    expect(item(3, target: 2).isLow, isFalse);
     expect(item(3).isLow, isFalse);
+  });
+
+  test('fillFraction mostra quanto do ter sempre está em casa', () {
+    expect(item(2, target: 4).fillFraction, 0.5);
+    expect(item(5, target: 4).fillFraction, 1);
+    expect(item(0, target: 4).fillFraction, 0);
+    expect(item(3).fillFraction, 1);
+    expect(item(0).fillFraction, 0);
   });
 }

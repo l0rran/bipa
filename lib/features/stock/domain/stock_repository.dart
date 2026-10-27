@@ -17,8 +17,8 @@ abstract interface class StockRepository {
     required StockMovementReason reason,
   });
 
-  /// Define a quantidade mínima desejada; `null` remove o alerta.
-  Future<void> setMinimumQuantity(String productId, double? minimum);
+  /// Define quanto a pessoa quer ter sempre em casa; `null` remove o alerta.
+  Future<void> setTargetQuantity(String productId, double? target);
 
   Future<void> setLocation(String productId, StockLocation location);
 }

@@ -107,14 +107,14 @@ class _StockTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final item = entry.item;
     final colors = Theme.of(context).colorScheme;
-    final minimum = item.minimumQuantity;
+    final target = item.targetQuantity;
 
     return ListTile(
       title: Text(entry.product.name),
       subtitle: Text(
         [
           item.location.label,
-          if (minimum != null) 'mínimo ${Formatters.quantity(minimum)}',
+          if (target != null) 'ter sempre ${Formatters.quantity(target)}',
         ].join(' · '),
       ),
       onTap: () => showStockItemSheet(context, entry),

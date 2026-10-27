@@ -55,11 +55,11 @@ void main() {
   });
 
   test('configura mínimo e local, mesmo antes da primeira entrada', () async {
-    await repository.setMinimumQuantity('arroz', 1);
+    await repository.setTargetQuantity('arroz', 1);
     await repository.setLocation('arroz', StockLocation.freezer);
 
     final item = await repository.findByProduct('arroz');
-    expect(item?.minimumQuantity, 1);
+    expect(item?.targetQuantity, 1);
     expect(item?.location, StockLocation.freezer);
     expect(item?.isLow, isTrue);
   });
