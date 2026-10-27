@@ -2,14 +2,17 @@
 
 ## Ambiente
 
-- Flutter estável (3.32 ou mais novo) e Android SDK. Confira com `flutter doctor`.
+- Flutter estável **3.47 ou mais novo** (rode `flutter upgrade`), JDK 17 ou mais novo e Android SDK. Confira com `flutter doctor`.
+- O build Android usa Gradle 9.3.1, Android Gradle Plugin 9.1.0 e Kotlin 2.4.0. As flags `android.builtInKotlin` e `android.newDsl` ficam em `false` em `android/gradle.properties` até todos os plugins (câmera, ML Kit, localização) migrarem para o Kotlin embutido do AGP 9. Se o Flutter avisar que um plugin ainda aplica o Kotlin Gradle Plugin, isso é esperado por enquanto.
 - No Windows, use o terminal do próprio Windows (PowerShell ou VS Code), não o WSL, para o emulador aparecer.
 
 ```bash
-flutter pub get
+flutter pub get                  # também gera os textos (lib/core/l10n/app_localizations*.dart)
 dart run build_runner build -d   # gera o código do Drift, Riverpod e freezed
 flutter run
 ```
+
+Na primeira execução depois da atualização, o banco migra sozinho para o esquema 2 (fotos dos produtos).
 
 Durante o desenvolvimento, deixe `dart run build_runner watch -d` rodando num terminal à parte.
 
@@ -21,7 +24,18 @@ flutter analyze
 flutter test
 ```
 
-Os três precisam passar. Código gerado (`*.g.dart`, `*.freezed.dart`) não é versionado.
+Os três precisam passar. Código gerado (`*.g.dart`, `*.freezed.dart` e os arquivos do `gen-l10n`) não é versionado.
+
+## Design system no código
+
+- **Cores, espaçamentos, raios e movimento** vêm de `design/tokens.json`, a mesma fonte do design system no Claude. Depois de mudar o arquivo, rode `dart run tool/generate_tokens.dart`, que reescreve `lib/core/design_system/bipa_palette.dart` e `bipa_metrics.dart`. Não edite esses dois à mão. O teste `test/core/design_system/bipa_palette_test.dart` falha se algum par de texto ficar abaixo de 4,5:1.
+- **Nos widgets**, cores só pelo tema (`context.colors.brand`, `context.colors.alert`...), textos de `BipaText` e medidas de `BipaSpacing` e `BipaRadius`. Nada de `Color(0xFF...)` fora da paleta (ADR 0009).
+- **Componentes** ficam em `lib/core/design_system/components/` e não importam nada de `features/`: a tela converte o domínio para o que o componente desenha (veja `stock_display.dart`).
+- **Fontes:** Manrope, Figtree e JetBrains Mono estão em `assets/fonts/`, em arquivos estáticos por peso, com as licenças OFL ao lado.
+
+## Textos
+
+Todo texto visível ao usuário fica em `lib/core/l10n/app_pt.arb` e é lido com `AppLocalizations.of(context)`. As telas antigas ainda têm textos no código e migram aos poucos.
 
 ## Commits
 

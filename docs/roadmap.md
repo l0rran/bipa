@@ -5,15 +5,16 @@
 - [x] Protótipo funcional: produtos, mercados com GPS, preços com OCR, estoque
 - [x] Documentação: arquitetura, ADRs, convenções
 - [x] Identidade visual e protótipo das telas principais
-- [ ] Atualizar Gradle, Android Gradle Plugin e Kotlin
+- [x] Atualizar Gradle, Android Gradle Plugin e Kotlin (9.3.1, 9.1.0 e 2.4.0)
 - [ ] Migrar para Riverpod com geração de código e freezed
-- [ ] Implementar o design system em `lib/core/design_system/`, com fontes embutidas e a paleta semântica num arquivo só (ADR 0009)
-- [ ] Textos em ARB (`flutter gen-l10n`)
+- [x] Implementar a base do design system em `lib/core/design_system/`: tokens gerados, paleta semântica (ADR 0009), tema, fontes embutidas e os componentes da Casa
+- [ ] Textos em ARB (`flutter gen-l10n`): ligado, com a Casa; falta migrar as telas antigas
 - [ ] Redesenhar as telas conforme o protótipo: barra com botão de bipar, câmera direto, folha "Bipou!"
-- [ ] Casa nova: busca com bipar, prévia da lista, locais como categorias, carrossel de insights (repor e economia), prateleira de Acabando e lista com medidor de nível
+- [x] Casa nova: busca com bipar, locais como categorias, prateleira de Acabando e lista com medidor de nível
+- [ ] Casa: prévia da lista e carrossel de insights (dependem da lista de compras e da previsão de consumo)
 - [ ] Modo compra: barra fixa acima da navegação com progresso e total, em todas as abas
-- [ ] Trocar "mínimo" por "ter sempre" e ajustar `StockItem.isLow` para `quantity < minimumQuantity`
-- [ ] Miniatura dos produtos: foto da captura ou da Open Food Facts, com ícone da categoria como reserva
+- [x] Trocar "mínimo" por "ter sempre" (`StockItem.targetQuantity`, acabando abaixo dele)
+- [ ] Fotos dos produtos (ADR 0010): miniatura com ícone da categoria pronta e `photoPath` no banco; falta tirar a foto ao bipar e buscar no Open Food Facts
 - [ ] Câmera própria na captura (pacote `camera`), com leitura ao vivo em vez de foto
 
 ## Fase 1: MVP para uso pessoal
