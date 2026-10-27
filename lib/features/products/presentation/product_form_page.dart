@@ -102,6 +102,8 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
       barcode: _nullIfBlank(_barcode.text),
       unit: _unit,
       packageSize: _parseSize(_packageSize.text),
+      // A foto não é editada neste formulário: mantém a que já existe.
+      photoPath: original?.photoPath,
       createdAt: original?.createdAt ?? now,
       updatedAt: now,
     );

@@ -10,6 +10,7 @@ extension ProductRowMapper on ProductRow {
     brand: brand,
     unit: unit,
     packageSize: packageSize,
+    photoPath: photoPath,
     createdAt: createdAt,
     updatedAt: updatedAt,
   );
@@ -24,6 +25,7 @@ extension ProductCompanionMapper on Product {
     brand: Value(brand),
     unit: unit,
     packageSize: Value(packageSize),
+    photoPath: Value(photoPath),
     createdAt: createdAt,
     updatedAt: updatedAt,
     syncedAt: const Value(null),

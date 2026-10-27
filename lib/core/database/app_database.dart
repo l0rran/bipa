@@ -18,11 +18,15 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 1;
+  // v2: produtos ganham photoPath.
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (migrator) => migrator.createAll(),
+    onUpgrade: (migrator, from, to) async {
+      if (from < 2) await migrator.addColumn(products, products.photoPath);
+    },
     beforeOpen: (details) async {
       // SQLite não aplica chaves estrangeiras sem este pragma.
       await customStatement('PRAGMA foreign_keys = ON');

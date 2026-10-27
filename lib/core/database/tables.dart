@@ -17,6 +17,9 @@ class Products extends Table {
   TextColumn get brand => text().nullable()();
   TextColumn get unit => textEnum<MeasureUnit>()();
   RealColumn get packageSize => real().nullable()();
+
+  /// Caminho relativo da foto na pasta de fotos do app (esquema v2).
+  TextColumn get photoPath => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get syncedAt => dateTime().nullable()();

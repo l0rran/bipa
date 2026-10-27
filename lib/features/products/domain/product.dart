@@ -14,6 +14,7 @@ final class Product {
     this.barcode,
     this.brand,
     this.packageSize,
+    this.photoPath,
   });
 
   final String id;
@@ -24,6 +25,10 @@ final class Product {
   /// Unidade em que [packageSize] é expresso (ex.: 395 g, 1 L, 12 un).
   final MeasureUnit unit;
   final double? packageSize;
+
+  /// Foto do produto guardada no aparelho, relativa à pasta de fotos do app.
+  /// Sem foto, a interface mostra o ícone da categoria.
+  final String? photoPath;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -52,6 +57,7 @@ final class Product {
       other.brand == brand &&
       other.unit == unit &&
       other.packageSize == packageSize &&
+      other.photoPath == photoPath &&
       other.createdAt == createdAt &&
       other.updatedAt == updatedAt;
 
@@ -63,6 +69,7 @@ final class Product {
     brand,
     unit,
     packageSize,
+    photoPath,
     createdAt,
     updatedAt,
   );
