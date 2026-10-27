@@ -9,8 +9,9 @@ Widget _app(Widget child) => MaterialApp(theme: BipaTheme.light, home: Scaffold(
 
 void main() {
   testWidgets('o medidor mostra o número e diz o estado ao leitor de tela', (tester) async {
+    // O handle precisa ser descartado dentro do teste: o flutter_test confere
+    // isso antes de rodar os addTearDown.
     final semantics = tester.ensureSemantics();
-    addTearDown(semantics.dispose);
     await tester.pumpWidget(
       _app(const StockGauge(quantityLabel: '2', state: GaugeState.low, fraction: 0.5, semanticsLabel: '2 de 4 un')),
     );
@@ -18,11 +19,11 @@ void main() {
 
     expect(find.text('2'), findsOneWidget);
     expect(find.bySemanticsLabel('2 de 4 un'), findsOneWidget);
+    semantics.dispose();
   });
 
   testWidgets('o stepper soma e dá baixa; sem onDecrement, o − não faz nada', (tester) async {
     final semantics = tester.ensureSemantics();
-    addTearDown(semantics.dispose);
     var value = 1;
     await tester.pumpWidget(
       _app(
@@ -51,6 +52,7 @@ void main() {
     await tester.tap(find.bySemanticsLabel('Usei um'));
     await tester.pumpAndSettle();
     expect(value, 0);
+    semantics.dispose();
   });
 
   testWidgets('a linha do estoque abre o editor só quando expandida', (tester) async {
