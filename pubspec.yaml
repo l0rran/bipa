@@ -43,3 +43,34 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    # Licenças das fontes (SIL Open Font License), exibidas na tela de licenças.
+    - assets/fonts/OFL-Manrope.txt
+    - assets/fonts/OFL-Figtree.txt
+    - assets/fonts/OFL-JetBrainsMono.txt
+
+  # Fontes do design system, em arquivos estáticos por peso (o app é offline).
+  fonts:
+    - family: Manrope
+      fonts:
+        - asset: assets/fonts/Manrope-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Manrope-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Manrope-ExtraBold.ttf
+          weight: 800
+    - family: Figtree
+      fonts:
+        - asset: assets/fonts/Figtree-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Figtree-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Figtree-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Figtree-Bold.ttf
+          weight: 700
+    - family: JetBrainsMono
+      fonts:
+        - asset: assets/fonts/JetBrainsMono-Medium.ttf
+          weight: 500
