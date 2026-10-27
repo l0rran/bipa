@@ -59,7 +59,8 @@ class MarketsPage extends ConsumerWidget {
                       onAction: () => context.push(Routes.newMarket),
                     )
                   : ListView.separated(
-                      padding: const EdgeInsets.only(bottom: 96),
+                      // Espaço para a barra de navegação flutuante.
+                      padding: const EdgeInsets.only(bottom: 120),
                       itemCount: ranked.length,
                       separatorBuilder: (_, _) => const Divider(height: 1),
                       itemBuilder: (context, index) => MarketTile(

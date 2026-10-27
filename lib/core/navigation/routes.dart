@@ -1,9 +1,10 @@
 /// Caminhos de navegação do app, centralizados para evitar strings soltas.
 abstract final class Routes {
   // Abas principais.
-  static const stock = '/estoque';
+  static const home = '/casa';
   static const products = '/produtos';
   static const markets = '/mercados';
+  static const shoppingList = '/lista';
 
   // Telas em tela cheia (fora das abas).
   static const scanner = '/scanner';

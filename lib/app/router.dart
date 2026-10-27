@@ -7,26 +7,30 @@ import 'package:bipa/features/products/presentation/barcode_scanner_page.dart';
 import 'package:bipa/features/products/presentation/product_detail_page.dart';
 import 'package:bipa/features/products/presentation/product_form_page.dart';
 import 'package:bipa/features/products/presentation/products_page.dart';
-import 'package:bipa/features/stock/presentation/stock_page.dart';
+import 'package:bipa/features/shopping_list/presentation/shopping_list_page.dart';
+import 'package:bipa/features/stock/presentation/home_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
-    initialLocation: Routes.stock,
+    initialLocation: Routes.home,
     routes: [
       // Abas: cada uma mantém sua própria pilha de navegação.
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) => HomeShell(navigationShell: navigationShell),
         branches: [
           StatefulShellBranch(
-            routes: [GoRoute(path: Routes.stock, builder: (_, _) => const StockPage())],
+            routes: [GoRoute(path: Routes.home, builder: (_, _) => const HomePage())],
           ),
           StatefulShellBranch(
             routes: [GoRoute(path: Routes.products, builder: (_, _) => const ProductsPage())],
           ),
           StatefulShellBranch(
             routes: [GoRoute(path: Routes.markets, builder: (_, _) => const MarketsPage())],
+          ),
+          StatefulShellBranch(
+            routes: [GoRoute(path: Routes.shoppingList, builder: (_, _) => const ShoppingListPage())],
           ),
         ],
       ),

@@ -1,8 +1,10 @@
+import 'package:bipa/core/design_system/components/scan_nav_bar.dart';
+import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// Estrutura com as abas principais e o atalho para bipar preços.
+/// Estrutura com as abas principais e o botão de bipar no centro da barra.
 class HomeShell extends StatelessWidget {
   const HomeShell({required this.navigationShell, super.key});
 
@@ -10,36 +12,26 @@ class HomeShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
+      // O conteúdo passa por trás da barra de vidro.
+      extendBody: true,
       body: navigationShell,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push(Routes.capturePrice),
-        icon: const Icon(Icons.document_scanner_outlined),
-        label: const Text('Bipar preço'),
-      ),
-      bottomNavigationBar: NavigationBar(
+      bottomNavigationBar: ScanNavBar(
         selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: (index) => navigationShell.goBranch(
+        onSelected: (index) => navigationShell.goBranch(
           index,
           // Tocar na aba atual volta para o início dela.
           initialLocation: index == navigationShell.currentIndex,
         ),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.kitchen_outlined),
-            selectedIcon: Icon(Icons.kitchen),
-            label: 'Estoque',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2),
-            label: 'Produtos',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.storefront_outlined),
-            selectedIcon: Icon(Icons.storefront),
-            label: 'Mercados',
-          ),
+        onScan: () => context.push(Routes.capturePrice),
+        scanLabel: l10n.navScan,
+        // A ordem segue os ramos do StatefulShellRoute em router.dart.
+        destinations: [
+          ScanNavDestination(icon: Icons.home_outlined, selectedIcon: Icons.home_rounded, label: l10n.navHome),
+          ScanNavDestination(icon: Icons.sell_outlined, selectedIcon: Icons.sell_rounded, label: l10n.navProducts),
+          ScanNavDestination(icon: Icons.place_outlined, selectedIcon: Icons.place_rounded, label: l10n.navMarkets),
+          ScanNavDestination(icon: Icons.checklist_outlined, selectedIcon: Icons.checklist_rounded, label: l10n.navList),
         ],
       ),
     );
