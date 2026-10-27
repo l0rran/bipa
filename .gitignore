@@ -35,6 +35,8 @@ migrate_working_dir/
 
 # Código gerado (dart run build_runner build)
 *.g.dart
+# Textos gerados por flutter gen-l10n a partir dos .arb
+lib/core/l10n/app_localizations*.dart
 
 # Android
 **/android/**/gradle-wrapper.jar

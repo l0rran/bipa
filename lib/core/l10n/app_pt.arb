@@ -1,0 +1,46 @@
+{
+  "@@locale": "pt",
+
+  "navHome": "Casa",
+  "navProducts": "Produtos",
+  "navMarkets": "Mercados",
+  "navScan": "Bipar",
+  "@navScan": {"description": "Rótulo acessível do botão central de bipar."},
+
+  "homeTitle": "Sua casa",
+  "searchHome": "Buscar na sua casa",
+  "searchScan": "Bipar um produto",
+
+  "sectionRunningLow": "Acabando",
+  "sectionAtHome": "Em casa",
+  "seeAll": "Ver tudo",
+
+  "placeAll": "Tudo",
+
+  "stockUsedOne": "Usei um",
+  "stockBoughtOne": "Comprei um",
+  "stockAddToList": "Pôr na lista",
+  "stockOnList": "Na lista",
+  "stockRemoveFromList": "Tirar da lista",
+
+  "stockLevelOut": "Acabou",
+  "stockLevelLow": "{quantity} de {target} {unit}",
+  "@stockLevelLow": {
+    "description": "Quantidade abaixo do ter sempre, para o leitor de tela. Ex.: 2 de 4 un.",
+    "placeholders": {"quantity": {"type": "String"}, "target": {"type": "String"}, "unit": {"type": "String"}}
+  },
+  "stockLevelOk": "{quantity} {unit}",
+  "@stockLevelOk": {
+    "placeholders": {"quantity": {"type": "String"}, "unit": {"type": "String"}}
+  },
+
+  "stockUsedOneDone": "Usei um: {name}",
+  "@stockUsedOneDone": {"placeholders": {"name": {"type": "String"}}},
+  "stockBoughtOneDone": "+1 {name}",
+  "@stockBoughtOneDone": {"placeholders": {"name": {"type": "String"}}},
+  "undo": "Desfazer",
+
+  "homeEmpty": "Sua casa ainda está vazia.\nBipe os produtos que você tem.",
+  "homeEmptyAction": "Bipar produtos",
+  "homeNoResults": "Nada com esse nome na sua casa."
+}

@@ -1,0 +1,6 @@
+# Textos do app em ARB, gerados por `flutter gen-l10n` (roda junto com `flutter pub get`).
+arb-dir: lib/core/l10n
+template-arb-file: app_pt.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+nullable-getter: false
