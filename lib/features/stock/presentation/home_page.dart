@@ -51,21 +51,27 @@ class _HomePageState extends ConsumerState<HomePage> {
   Future<void> _addByBarcode() async {
     final product = await scanAndResolveProduct(context, ref);
     if (product == null || !mounted) return;
-    await _adjust(product, 1, undoable: true);
+    final current = await ref.read(stockRepositoryProvider).findByProduct(product.id);
+    if (!mounted) return;
+    await _adjust(product, current?.quantity ?? 0, 1, undoable: true);
   }
 
-  /// Soma [delta] ao estoque. Com [undoable], mostra o aviso com "Desfazer".
-  Future<void> _adjust(Product product, double delta, {bool undoable = false}) async {
+  /// Soma [delta] ao estoque, que hoje tem [current]. Com [undoable], mostra o
+  /// aviso com "Desfazer", que reverte só o que mudou de fato (a quantidade
+  /// nunca fica negativa, então uma baixa pode mudar menos que [delta]).
+  Future<void> _adjust(Product product, double current, double delta, {bool undoable = false}) async {
     final repository = ref.read(stockRepositoryProvider);
+    final applied = StockItem.nextQuantity(current, delta) - current;
+    if (applied == 0) return;
     await repository.adjust(
       productId: product.id,
-      delta: delta,
-      reason: delta > 0 ? StockMovementReason.purchase : StockMovementReason.consumption,
+      delta: applied,
+      reason: applied > 0 ? StockMovementReason.purchase : StockMovementReason.consumption,
     );
     if (!undoable || !mounted) return;
 
     final l10n = AppLocalizations.of(context);
-    final message = delta > 0 ? l10n.stockBoughtOneDone(product.name) : l10n.stockUsedOneDone(product.name);
+    final message = applied > 0 ? l10n.stockBoughtOneDone(product.name) : l10n.stockUsedOneDone(product.name);
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
@@ -76,7 +82,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             label: l10n.undo,
             onPressed: () => repository.adjust(
               productId: product.id,
-              delta: -delta,
+              delta: -applied,
               reason: StockMovementReason.adjustment,
             ),
           ),
@@ -115,9 +121,12 @@ class _HomePageState extends ConsumerState<HomePage> {
 
           final visible = _visible(entries);
           // Acabou primeiro, depois o que está mais perto de acabar.
-          final low = visible.where((e) => e.item.isLow).toList()
+          // A linha aberta fica em "Em casa" enquanto é editada, mesmo que caia
+          // abaixo do "ter sempre": assim o editor não some debaixo do dedo.
+          bool inShelf(StockEntry e) => e.item.isLow && e.product.id != _expandedProductId;
+          final low = visible.where(inShelf).toList()
             ..sort((a, b) => a.item.fillFraction.compareTo(b.item.fillFraction));
-          final atHome = visible.where((e) => !e.item.isLow).toList();
+          final atHome = visible.where((e) => !inShelf(e)).toList();
 
           return CustomScrollView(
             slivers: [
@@ -179,6 +188,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                           image: _ProductArt(product: entry.product, photo: productPhotoFile(entry.product, photos)),
                           gauge: entry.item.gauge(l10n, size: 36),
                           onTap: () => context.push(Routes.productDetail(entry.product.id)),
+                          onLongPress: () => showStockItemSheet(context, entry),
                         );
                       },
                     ),
@@ -201,7 +211,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                               final id = entry.product.id;
                               _expandedProductId = _expandedProductId == id ? null : id;
                             }),
-                            onAdjust: (delta, {undoable = false}) => _adjust(entry.product, delta, undoable: undoable),
+                            onAdjust: (delta, {undoable = false}) =>
+                                _adjust(entry.product, entry.item.quantity, delta, undoable: undoable),
                           ),
                       ],
                     ),

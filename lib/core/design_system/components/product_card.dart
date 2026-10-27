@@ -11,6 +11,7 @@ class ProductCard extends StatelessWidget {
     required this.image,
     required this.gauge,
     required this.onTap,
+    this.onLongPress,
     this.onToggleList,
     this.onList = false,
     this.addLabel,
@@ -25,6 +26,7 @@ class ProductCard extends StatelessWidget {
   final Widget image;
   final Widget gauge;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
   /// `null` esconde o "+" (por exemplo, enquanto não há lista de compras).
   final VoidCallback? onToggleList;
@@ -51,6 +53,7 @@ class ProductCard extends StatelessWidget {
               clipBehavior: Clip.antiAlias,
               child: InkWell(
                 onTap: onTap,
+                onLongPress: onLongPress,
                 child: Stack(
                   children: [
                     Positioned.fill(child: image),
