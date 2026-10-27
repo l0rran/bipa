@@ -122,12 +122,14 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
     }
     if (photo == null || !mounted) return;
 
+    // Variável local não-nula: a promoção de `photo` não vale dentro de closures.
+    final path = photo.path;
     setState(() {
-      _photoPath = photo.path;
+      _photoPath = path;
       _reading = true;
     });
     try {
-      final reading = await reader.read(photo.path);
+      final reading = await reader.read(path);
       if (mounted) _applyReading(reading);
     } on Exception {
       if (mounted) {
