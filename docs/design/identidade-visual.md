@@ -12,7 +12,7 @@ Este arquivo resume o que o código precisa saber. Se ele e o design system dive
 
 ## Conceito
 
-O varejo brasileiro: o vermelho das redes de supermercado e o amarelo da etiqueta de oferta, num tom sério e confiável. É um app que cuida do dinheiro de quem usa; a leveza fica na voz e no "bip", não na decoração.
+A etiqueta de oferta do varejo brasileiro: o amarelo do preço é a cor da marca, sobre uma base clara e neutra, num tom calmo e confiável. É um app que cuida do dinheiro de quem usa e o preço é o herói; a leveza fica na voz e no "bip", não na decoração.
 
 ## Calma por padrão
 
@@ -20,7 +20,7 @@ Cada coisa só ganha atenção quando precisa:
 
 - **Um destaque por tela.** No máximo um elemento com ênfase, seja um cartão de insight ou um botão cheio.
 - **Um sinal por informação.** Se o item está na seção "Acabando", a linha não repete o estado com selo, barra e cor de fundo.
-- **Um acento por tela.** Cada tela tem uma cor de destaque, e o resto é neutro. Na Casa, o vermelho fica para as duas ações de marca (o bloco da lista e o botão de bipar), o âmbar só marca o que está abaixo do "ter sempre", e todo o resto (locais, "+", "na lista", régua, links) fica em `ink` e cinzas. O verde é da economia e o `slate` é dos mercados, cada um na sua tela.
+- **Um acento por tela.** Cada tela tem uma cor de destaque, e o resto é neutro. Na Casa, o amarelo (`brand`) fica para as ações de marca (o botão de bipar, "Ir às compras" e a barra da compra), o coral (`alert`) só marca o que está abaixo do "ter sempre", e todo o resto (locais, "+", "na lista", régua, links) fica em `ink` e cinzas. O verde (`positive`) é da economia e o azul-ardósia (`place`) é dos mercados, cada um no seu lugar.
 - **Controles aparecem ao tocar.** Em repouso, as linhas mostram só informação. O −/+ e o "Pôr na lista" abrem no item tocado, e o uso mais comum ("Usei um") também é um gesto de deslizar.
 - **Números como números.** O que decide uma ação (há quanto tempo comprou, de quanto em quanto tempo compra, quanto tem em casa) aparece como número com rótulo, nunca escondido no meio de uma frase.
 - **Textos inteiros.** Nomes de produto quebram em até duas linhas em vez de serem cortados, e a medida nunca fica sozinha na linha de baixo ("395 g" usa espaço inseparável).
@@ -39,32 +39,39 @@ Referências: os redesenhos do Linear e do Shortcut em 2025 ("não dispute uma a
 
 ## Cores
 
+Os tokens têm nome de função, não de cor ([ADR 0009](../adr/0009-cores-semanticas-e-paleta-trocavel.md)). No Flutter, todos ficam em `lib/core/design_system/bipa_palette.dart`, e trocar a paleta é editar esse arquivo.
+
 | Token | Claro | Escuro | Papel |
 | --- | --- | --- | --- |
-| `ground` | `#F5F5F6` | `#131317` | Fundo das telas |
-| `surface` | `#FFFFFF` | `#1D1D23` | Cartões, folhas, navegação |
-| `surfaceSunken` | `#EBEBEE` | `#27272F` | Campos, chips, stepper |
-| `line` | `#D9D9DE` | `#35353F` | Divisórias e contorno de secundários |
-| `ink` | `#1C1B22` | `#F3F2F6` | Texto e ícones |
-| `inkMuted` | `#5E5D68` | `#A9A8B5` | Texto secundário |
-| `red` | `#C8102E` | `#FF5A6A` | Marca, ação principal, aba ativa |
-| `onRed` | `#FFFFFF` | `#1C1B22` | Texto sobre `red` |
-| `redText` | `#B00E28` | `#FF8A95` | Vermelho em texto, erros |
-| `redSoft` | `#FBE4E7` | `#3D1A1F` | Fundo da aba ativa |
-| `yellow` | `#F6C445` | `#F6C445` | **Só preço** (etiqueta) |
-| `onYellow` | `#1C1B22` | `#1C1B22` | Texto sobre `yellow` |
-| `amber` | `#E08A00` | `#F2A93B` | Atenção: contador de "acabando" |
-| `amberText` | `#9A5B00` | `#F5B95E` | Âmbar em texto |
-| `amberSoft` | `#FDF0D9` | `#3A2A12` | Fundo de "Acabando" |
-| `slate` | `#34507A` | `#8FA9D6` | Lugar: mercados, distância |
-| `onSlate` | `#FFFFFF` | `#131317` | Texto sobre `slate` |
-| `slateSoft` | `#E6ECF5` | `#232C3D` | Fundo de chips de lugar |
-| `greenText` | `#1A7A4A` | `#5FD69A` | Economia: menor preço |
-| `greenSoft` | `#DFF3E8` | `#17301F` | Fundo do selo de menor preço |
+| `ground` | `#F5F5F3` | `#0D0E11` | Fundo das telas |
+| `surface` | `#FFFFFF` | `#17191D` | Cartões, folhas, navegação |
+| `surfaceSunken` | `#EDEDEA` | `#22252B` | Campos, miniaturas, stepper |
+| `line` | `#DCDCD7` | `#2D3138` | Divisórias, contornos, medidor em dia |
+| `ink` | `#1C1B1F` | `#F3F3F5` | Texto, ícones e botões neutros |
+| `inkMuted` | `#5F5E66` | `#9EA2AA` | Texto secundário |
+| `brand` | `#F6C445` | `#F6C445` | Marca: bipar, botão principal, barra da compra |
+| `onBrand` | `#1C1B1F` | `#1C1B1F` | Texto sobre `brand` (escuro) |
+| `brandText` | `#7A5800` | `#F6C445` | A marca em texto sobre fundo claro |
+| `brandSoft` | `#FDF1CF` | `#3A3015` | Fundo da aba ativa |
+| `price` | `#F6C445` | `#F6C445` | Etiqueta de preço (igual à marca) |
+| `onPrice` | `#1C1B1F` | `#1C1B1F` | Texto sobre a etiqueta |
+| `alert` | `#E8573A` | `#FF7B66` | Alerta: abaixo do "ter sempre" |
+| `onAlert` | `#1C1B1F` | `#1C1B1F` | Texto sobre `alert` |
+| `alertText` | `#B8402A` | `#FF8F7D` | Alerta em texto, erros |
+| `alertSoft` | `#FCE4DD` | `#3D1E19` | Fundo de selos de alerta |
+| `place` | `#34507A` | `#8FA9D6` | Lugar, só na tela de mercados |
+| `onPlace` | `#FFFFFF` | `#131317` | Texto sobre `place` |
+| `placeSoft` | `#E6ECF5` | `#232C3D` | Fundo de destaques de lugar |
+| `positiveText` | `#1A7A4A` | `#5FD69A` | Economia: menor preço |
+| `positiveSoft` | `#DFF3E8` | `#17301F` | Fundo do selo de economia |
 
-Mapeamento para o `ColorScheme` do Material 3: `primary` = `red`, `onPrimary` = `onRed`, `secondary` = `slate`, `error` = `redText`, `surface` = `surface`, e o fundo do `Scaffold` = `ground`.
+Mapeamento para o `ColorScheme` do Material 3: `primary` = `brand`, `onPrimary` = `onBrand`, `error` = `alertText`, `surface` = `surface`, e o fundo do `Scaffold` = `ground`.
 
-O vermelho é a marca, não sinal de erro. Erros usam `redText` sempre com ícone e mensagem; ações destrutivas pedem confirmação.
+O amarelo nunca é usado como texto sobre fundo claro, porque não tem contraste: sobre ele vai sempre texto escuro (`onBrand`), e quando a marca precisa aparecer em texto usa `brandText`. Erros usam `alertText` sempre com ícone e mensagem; ações destrutivas pedem confirmação. O tema escuro existe nos tokens, mas o app nasce no claro.
+
+### Logo
+
+O símbolo é um bloco amarelo (`brand`) com quatro barras de código em `ink`, cortadas por uma linha coral (`alert`): o laser do leitor.
 
 ## Tipografia
 
