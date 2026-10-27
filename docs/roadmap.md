@@ -10,7 +10,8 @@
 - [ ] Implementar o design system em `lib/core/design_system/`, com fontes embutidas e a paleta semântica num arquivo só (ADR 0009)
 - [ ] Textos em ARB (`flutter gen-l10n`)
 - [ ] Redesenhar as telas conforme o protótipo: barra com botão de bipar, câmera direto, folha "Bipou!"
-- [ ] Casa nova: busca com bipar, blocos de número, locais como categorias, carrossel de insights, prateleira de Acabando e lista com medidor de nível
+- [ ] Casa nova: busca com bipar, prévia da lista, locais como categorias, carrossel de insights (repor e economia), prateleira de Acabando e lista com medidor de nível
+- [ ] Modo compra: barra fixa acima da navegação com progresso e total, em todas as abas
 - [ ] Trocar "mínimo" por "ter sempre" e ajustar `StockItem.isLow` para `quantity < minimumQuantity`
 - [ ] Miniatura dos produtos: foto da captura ou da Open Food Facts, com ícone da categoria como reserva
 - [ ] Câmera própria na captura (pacote `camera`), com leitura ao vivo em vez de foto
