@@ -125,16 +125,22 @@ A referência de comportamento de cada um são as prévias interativas do design
 
 | Componente | No Flutter | Resumo |
 | --- | --- | --- |
-| Button | `BipaButton`, `BipaSegmented` | Principal, secundário e tonal. A forma muda ao pressionar, o carregamento usa as barras do símbolo, e há um seletor segmentado |
+| Button | `BipaButton`, `BipaSegmented` | Principal, secundário, tonal e neutro. A forma muda ao pressionar, o carregamento usa as barras do símbolo, e há um seletor segmentado |
 | PriceTag | `PriceTag` | Etiqueta amarela: normal com preço por unidade, de/por, no app/clube, leve X pague Y e menor preço |
-| StockStepper | `StockList`, `StockStepper` | Lista calma do estoque. Tocar abre −/+ e "Pôr na lista"; deslizar dá baixa ou põe na lista |
-| InsightCard | `InsightCard` | "Hora de repor" com a régua do ciclo e três números à vista; "Economia do mês" |
+| SearchBar | `BipaSearchBar` | Busca no topo com o botão de bipar dentro |
+| StatTile | `StatTile`, `SectionHeader` | Dois blocos de número sobre cor (lista e economia); cabeçalho de seção com contagem e "Ver tudo" |
+| FilterChips | `PlaceFilter` | Locais como categorias com arte (Casa) ou chips (listas longas) |
+| ProductCard | `ProductCard` | Prateleira de Acabando: imagem, medidor no canto e "+" |
+| StockStepper | `StockList`, `StockGauge`, `StockStepper` | Lista do estoque com miniatura, nome e medidor de nível; tocar abre −/+ e "Pôr na lista"; deslizar dá baixa |
+| InsightCard | `InsightCard`, `BipaCarousel` | "Hora de repor" em carrossel: título tipográfico com arte, régua do ciclo e três números; fonte no ⓘ |
 | MarketChip | `MarketChip` | Mercado e distância, com destaque quando você está nele |
 | ScanNavBar | `ScanNavBar` | Barra de vidro com o botão de bipar; o toque longo abre o menu |
 | ScanFrame e ScanTray | `ScanFrame`, `ScanTray` | Visor que trava no código e bandeja do modo carrinho com o total |
 | BipFeedback | `BipFeedback` | "Bipou!" com Desfazer por 4s |
 | ShoppingList | `ShoppingList` | Adicionar com um toque e lista na ordem dos corredores |
 | Skeleton | `Skeleton` | Placeholder com brilho |
+
+O medidor de nível compara a quantidade com o **"ter sempre"** (hoje `minimumQuantity`): o item está acabando quando fica **abaixo** desse número. Ao implementar, `StockItem.isLow` passa de `quantity <= minimum` para `quantity < minimum`, e o texto "mínimo" vira "ter sempre".
 
 ## Voz
 
