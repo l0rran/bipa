@@ -352,6 +352,9 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
   Future<void> _onTagRead(TagPriceRead read) async {
     final trip = ref.read(activeTripProvider).value;
     if (trip == null) return;
+    // A etiqueta da balança já entra pelo código dela, com o mesmo valor
+    // (ADR 0018); lida também como etiqueta, somaria duas vezes.
+    if (read.barcode case final code? when ScaleLabel.isScaleCode(code)) return;
     final products = ref.read(productRepositoryProvider);
     final cartRepository = ref.read(cartRepositoryProvider);
     final register = ref.read(registerPriceObservationProvider);
