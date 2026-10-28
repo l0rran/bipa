@@ -19,6 +19,7 @@ import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/live_scan.dart';
 import 'package:bipa/features/shopping_list/domain/live_tag_router.dart';
+import 'package:bipa/features/shopping_list/domain/match_list_to_cart.dart';
 import 'package:bipa/features/shopping_list/domain/record_trip_price.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
@@ -196,7 +197,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
       }
       if (product == null) return;
       await scale.addToCart(trip.id, product, label);
-      await matchList(trip.id, product.id);
+      await matchList(trip.id, product.id, CartListChange.added);
       unawaited(HapticFeedback.mediumImpact());
       unawaited(SystemSound.play(SystemSoundType.click));
       if (!mounted) return;
@@ -247,7 +248,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
       // O preço do histórico é uma estimativa até a etiqueta ser lida.
       estimated: fromTag == null,
     );
-    await matchList(trip.id, product.id);
+    await matchList(trip.id, product.id, CartListChange.added);
     unawaited(HapticFeedback.mediumImpact());
     // O bipe: o som de clique do sistema, que segue a configuração de sons de
     // toque do aparelho (desligado lá, desligado aqui).
@@ -402,7 +403,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     final matchList = ref.read(matchListToCartProvider);
     try {
       await cart.setTake(entry.item.id, take: take);
-      await matchList(entry.item.tripId, entry.product.id);
+      await matchList(entry.item.tripId, entry.product.id, take ? CartListChange.added : CartListChange.removed);
     } on Exception catch (error, stack) {
       _report(error, stack);
     }
@@ -450,7 +451,8 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     if (chosen == null || chosen == entry.item.quantity) return;
     try {
       await cart.setQuantity(entry.item.id, chosen);
-      await matchList(entry.item.tripId, entry.product.id);
+      final change = chosen > entry.item.quantity ? CartListChange.added : CartListChange.removed;
+      await matchList(entry.item.tripId, entry.product.id, change);
     } on Exception catch (error, stack) {
       _report(error, stack);
     }
@@ -521,7 +523,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     try {
       // Só o preço: se o produto já está no carrinho, não soma uma unidade.
       await cart.setPriceForProduct(trip.id, product.id, read.price);
-      await matchList(trip.id, product.id);
+      await matchList(trip.id, product.id, CartListChange.added);
       _settledItems.add(CartItem.keyOf(product.id, null));
       await _recordTag(recordPrice, trip, product.id, null, read);
     } on Exception catch (error, stack) {

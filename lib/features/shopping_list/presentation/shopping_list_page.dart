@@ -15,6 +15,7 @@ import 'package:bipa/features/products/presentation/product_photos.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:bipa/features/shopping_list/domain/aisle_order.dart';
 import 'package:bipa/features/shopping_list/domain/list_entry_text.dart';
+import 'package:bipa/features/shopping_list/domain/match_list_to_cart.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_sections.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
@@ -102,9 +103,14 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
   /// quantidade.
   Future<void> _setQuantity(ShoppingListEntry entry) async {
     final repository = ref.read(shoppingListRepositoryProvider);
+    final matchList = ref.read(matchListToCartProvider);
+    final trip = ref.read(activeTripProvider).value;
     final chosen = await showQuantityDialog(context, title: entry.name, initial: entry.item.quantity);
     if (chosen == null || chosen == entry.item.quantity) return;
     await repository.setQuantity(entry.item.id, chosen);
+    // Na compra, o carrinho pode passar a alcançar a lista, ou deixar de.
+    final productId = entry.item.productId;
+    if (trip != null && productId != null) await matchList(trip.id, productId, CartListChange.listQuantity);
   }
 
   Future<void> _remove(ShoppingListEntry entry) async {

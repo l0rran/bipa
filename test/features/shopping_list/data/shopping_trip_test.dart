@@ -203,7 +203,7 @@ void main() {
     final trip = await trips.start();
     final match = MatchListToCart(list: list, cart: cart);
     await cart.addProduct(trip.id, 'cafe');
-    await match(trip.id, 'cafe');
+    await match(trip.id, 'cafe', CartListChange.added);
 
     expect((await list.watchAll().first).single.item.isChecked, isFalse);
     final review = ReviewShoppingTrip(
@@ -233,13 +233,33 @@ void main() {
 
     await cart.addProduct(trip.id, 'cafe');
     await cart.addProduct(trip.id, 'cafe');
-    await match(trip.id, 'cafe');
+    await match(trip.id, 'cafe', CartListChange.added);
     expect(await checked(), isTrue);
 
     final item = (await cart.watchTrip(trip.id).first).single.item;
     await cart.setTake(item.id, take: false);
-    await match(trip.id, 'cafe');
+    await match(trip.id, 'cafe', CartListChange.removed);
     expect(await checked(), isFalse);
+  });
+
+  test('o marcado à mão segue marcado com um bipe, e mudar a quantidade da lista acerta pelo carrinho', () async {
+    await list.addProduct(productId: 'cafe', name: 'Café', quantity: 3);
+    final trip = await trips.start();
+    final match = MatchListToCart(list: list, cart: cart);
+    Future<ShoppingListItem> listed() async => (await list.watchAll().first).single.item;
+
+    await list.setChecked((await listed()).id, checked: true);
+    await cart.addProduct(trip.id, 'cafe');
+    await match(trip.id, 'cafe', CartListChange.added);
+    expect((await listed()).isChecked, isTrue);
+
+    // A lista baixa para 1: o carrinho já alcança. Sobe para 2: deixa de alcançar.
+    await list.setQuantity((await listed()).id, 1);
+    await match(trip.id, 'cafe', CartListChange.listQuantity);
+    expect((await listed()).isChecked, isTrue);
+    await list.setQuantity((await listed()).id, 2);
+    await match(trip.id, 'cafe', CartListChange.listQuantity);
+    expect((await listed()).isChecked, isFalse);
   });
 
   test('o marcado antes da compra não vai para casa nem sai da lista no "Terminei"', () async {
