@@ -94,14 +94,6 @@
   "@priceConditionWholesaleUnknown": {
     "description": "Preço de atacado quando a etiqueta não diz a quantidade mínima."
   },
-  "captureOtherOffers": "Também na etiqueta",
-  "@captureOtherOffers": {
-    "description": "Outros preços da etiqueta, com condição, que também serão salvos."
-  },
-  "captureChoosePrice": "A etiqueta tem mais de um preço. Toque no que você paga.",
-  "@captureChoosePrice": {
-    "description": "A foto trouxe vários preços sem dizer qual é o de varejo, e o campo ficou em branco."
-  },
   "listTitle": "Lista",
   "listAddHint": "Adicionar item",
   "listAdd": "Adicionar",
@@ -569,42 +561,8 @@
       }
     }
   },
-  "captureCameraFailed": "Não foi possível abrir a câmera.",
-  "captureReadFailed": "Não foi possível ler a etiqueta. Preencha os campos manualmente.",
-  "captureNoPrice": "Nenhum preço encontrado. Aproxime a câmera da etiqueta e tente de novo.",
-  "captureMarketMissing": "Escolha o mercado antes de salvar.",
-  "capturePriceSaved": "{price} registrado em {market}.",
-  "@capturePriceSaved": {
-    "placeholders": {
-      "price": {
-        "type": "String"
-      },
-      "market": {
-        "type": "String"
-      }
-    }
-  },
   "capturePriceFailed": "Não foi possível salvar o preço.",
-  "capturePriceMissing": "Informe o preço",
-  "captureTitle": "Bipar preço",
-  "captureOtherValues": "Outros valores na etiqueta:",
-  "captureProduct": "Produto",
-  "captureProductName": "Nome do produto",
-  "captureNewProduct": "Produto novo: será cadastrado ao salvar",
-  "capturePrice": "Preço",
-  "capturePaid": "Preço pago",
-  "captureRegular": "Sem desconto",
-  "captureRegularHint": "Opcional, se em promoção",
-  "captureSaveAndNext": "Salvar e bipar outro",
-  "captureMarketSearching": "Procurando mercados próximos…",
-  "captureMarketChoose": "Toque para escolher",
-  "captureMarketDetected": "Detectado pela sua localização",
-  "captureMarketChange": "Toque para trocar",
-  "capturePhotoHint": "Fotografe a etiqueta: preço, código e nome são preenchidos automaticamente.",
-  "captureReading": "Lendo a etiqueta…",
-  "capturePhotoAgain": "Tirar outra foto",
   "loading": "Carregando…",
-  "captureKnownProduct": "Produto já cadastrado",
   "loadFailed": "Não deu para carregar os dados. Tente de novo em instantes.",
   "marketsSearch": "Buscar mercado",
   "marketsMapLabel": "{count, plural, =1{Mapa com 1 mercado perto de você} other{Mapa com {count} mercados perto de você}}",

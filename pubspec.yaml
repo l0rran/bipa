@@ -30,11 +30,8 @@ dependencies:
   # Reconhecimento on-device (offline) de texto e código de barras.
   google_mlkit_barcode_scanning: ^0.14.1
   google_mlkit_text_recognition: ^0.15.0
-  image_picker: ^1.1.2
   intl: ^0.20.2
   meta: ^1.15.0
-  # Leitura de código de barras em tempo real pela câmera.
-  mobile_scanner: ^7.0.0
   # Pasta de documentos do app, onde ficam as fotos dos produtos.
   path_provider: ^2.1.6
   uuid: ^4.5.1

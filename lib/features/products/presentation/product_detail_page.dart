@@ -209,7 +209,7 @@ class _ProductView extends ConsumerWidget {
                         child: Text(l10n.productEdit),
                       ),
                       PopupMenuItem(
-                        value: () => context.push(Routes.capturePriceFor(product.id)),
+                        value: () => context.push(Routes.cameraPriceFor(product.id)),
                         child: Text(l10n.productRegisterPrice),
                       ),
                       PopupMenuItem(value: () => _merge(context, ref), child: Text(l10n.productMerge)),
@@ -247,7 +247,7 @@ class _ProductView extends ConsumerWidget {
                         meta: row.price?.unitPrice?.format(),
                         value: row.price?.price.format() ?? l10n.productNoPriceShort,
                         // Registrar o preço desta embalagem.
-                        onTap: () => context.push(Routes.capturePriceFor(product.id, packageId: row.package.id)),
+                        onTap: () => context.push(Routes.cameraPriceFor(product.id, packageId: row.package.id)),
                         badge: _cheapestPerUnit(l10n, row.price, isFirst: index == 0 && perPackage.length > 1),
                       ),
                   ],

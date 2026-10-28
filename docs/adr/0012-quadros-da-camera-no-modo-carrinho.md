@@ -47,3 +47,7 @@ As opções consideradas foram estas:
 - O recorte da moldura, o consenso entre quadros e o destino do preço são Dart puro e têm testes. O que depende do aparelho (rotação, formato do quadro, desempenho) só se confere no celular.
 - O consumo de bateria precisa ser medido numa compra real. Se pesar, o OCR pode rodar em quadros alternados, sem mudar o resto.
 - A leitura ao vivo é uma sugestão, como toda leitura (ADR 0005). O preço do item continua corrigível com um toque.
+
+## Atualização (28/10/2026)
+
+Todas as telas que leem código passaram a usar a mesma câmera ao vivo (o leitor das buscas e do formulário do produto também), e o `mobile_scanner` saiu do app. O disparo fotografa pela própria câmera ao vivo, e a etiqueta da foto segue o caminho da leitura ao vivo: o formulário "Bipar preço" e o `image_picker` também saíram.

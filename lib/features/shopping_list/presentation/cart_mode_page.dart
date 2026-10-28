@@ -513,7 +513,8 @@ class _CartModePageState extends ConsumerState<CartModePage> {
       return;
     }
     if (!mounted) return;
-    _showNotice((price: read.price.format(), detail: product.name, waiting: false), key: CartItem.keyOf(product.id, null));
+    final key = CartItem.keyOf(product.id, null);
+    _showNotice((price: read.price.format(), detail: product.name, waiting: false), key: key);
   }
 
   /// "Terminei": a escolha do mercado para os preços que esperavam vem no

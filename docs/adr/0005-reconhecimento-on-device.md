@@ -20,3 +20,5 @@ Ler código de barras e etiqueta de preço pela câmera é o que diferencia o ap
 - O APK cresce alguns megabytes com os modelos embutidos.
 - O motor de OCR pode ser trocado sem mexer nas regras, porque o parser recebe apenas linhas de texto com posição e altura (`OcrLine`).
 - A leitura é sempre uma sugestão: a interface mostra o resultado para o usuário conferir antes de salvar.
+
+Atualização (28/10/2026): o código de barras ao vivo passou a ser lido pelo ML Kit nos quadros do plugin `camera` (ADR 0012), em todas as telas; o `mobile_scanner` saiu.

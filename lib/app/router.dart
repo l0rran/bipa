@@ -4,11 +4,10 @@ import 'package:bipa/features/markets/presentation/market_form_page.dart';
 import 'package:bipa/features/markets/presentation/market_page.dart';
 import 'package:bipa/features/markets/presentation/markets_page.dart';
 import 'package:bipa/features/prices/presentation/camera_page.dart';
-import 'package:bipa/features/prices/presentation/capture_price_page.dart';
-import 'package:bipa/features/products/presentation/barcode_scanner_page.dart';
 import 'package:bipa/features/products/presentation/product_detail_page.dart';
 import 'package:bipa/features/products/presentation/product_form_page.dart';
 import 'package:bipa/features/products/presentation/products_page.dart';
+import 'package:bipa/features/products/presentation/scan_code_page.dart';
 import 'package:bipa/features/shopping_list/presentation/cart_mode_page.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_page.dart';
 import 'package:bipa/features/stock/presentation/home_page.dart';
@@ -39,20 +38,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
       // Telas em tela cheia, sobre as abas.
-      GoRoute(path: Routes.scanner, builder: (_, _) => const BarcodeScannerPage()),
+      GoRoute(path: Routes.scanner, builder: (_, _) => const ScanCodePage()),
       GoRoute(path: Routes.cartMode, builder: (_, _) => const CartModePage()),
       GoRoute(
         path: Routes.camera,
-        builder: (_, state) => CameraPage(mode: CameraMode.fromQuery(state.uri.queryParameters['modo'])),
-      ),
-      GoRoute(
-        path: Routes.capturePrice,
-        builder: (_, state) => CapturePricePage(
+        builder: (_, state) => CameraPage(
+          mode: CameraMode.fromQuery(state.uri.queryParameters['modo']),
           productId: state.uri.queryParameters['produto'],
           packageId: state.uri.queryParameters['embalagem'],
-          fromCart: state.uri.queryParameters['carrinho'] == '1',
-          photoFirst: state.uri.queryParameters['foto'] == '1',
-          marketId: state.uri.queryParameters['mercado'],
         ),
       ),
       // "/produto/novo" precisa vir antes de "/produto/:id".

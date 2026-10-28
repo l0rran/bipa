@@ -7,8 +7,8 @@ abstract final class Routes {
   static const shoppingList = '/lista';
 
   // Telas em tela cheia (fora das abas).
+  /// O leitor de código das buscas e do formulário do produto.
   static const scanner = '/scanner';
-  static const capturePrice = '/bipar';
 
   /// A câmera do botão de bipar (protótipo "Captura").
   static const camera = '/camera';
@@ -20,22 +20,12 @@ abstract final class Routes {
   /// a localização atual é a dele.
   static const newMarketHere = '$newMarket?aqui=1';
 
-  /// Registrar preço de um produto; com [packageId], daquela embalagem.
-  static String capturePriceFor(String productId, {String? packageId}) =>
-      Uri(path: capturePrice, queryParameters: {'produto': productId, 'embalagem': ?packageId}).toString();
-
-  /// O formulário do preço com o mercado já escolhido (o do chip da
-  /// câmera): o preço não vai para o mercado que a localização achar.
-  static String capturePriceAt(String? marketId) =>
-      marketId == null ? capturePrice : Uri(path: capturePrice, queryParameters: {'mercado': marketId}).toString();
-
-  /// A foto da etiqueta aberta pelo modo carrinho, no mercado da compra.
-  static String capturePriceFromCart(String? marketId) =>
-      Uri(path: capturePrice, queryParameters: {'carrinho': '1', 'mercado': ?marketId}).toString();
-
-  /// O formulário do preço, já abrindo a câmera para fotografar a etiqueta.
-  static String capturePricePhoto(String? marketId) =>
-      Uri(path: capturePrice, queryParameters: {'foto': '1', 'mercado': ?marketId}).toString();
+  /// Registrar preço de um produto (pela tela dele): a câmera em "Etiqueta",
+  /// com o produto esperando a etiqueta; com [packageId], daquela embalagem.
+  static String cameraPriceFor(String productId, {String? packageId}) => Uri(
+    path: camera,
+    queryParameters: {'modo': 'etiqueta', 'produto': productId, 'embalagem': ?packageId},
+  ).toString();
 
   /// A câmera somando em casa cada código ("Comprei", o Início vazio).
   static const cameraBought = '$camera?modo=comprei';

@@ -72,9 +72,15 @@ typedef _Notice = ({IconData icon, String? value, String detail, bool waiting});
 /// pelo Início vazio, os mesmos bipes dão baixa ou somam em casa, um atrás
 /// do outro. O mercado fica no chip do topo e só é pedido no "Salvar".
 class CameraPage extends ConsumerStatefulWidget {
-  const CameraPage({this.mode = CameraMode.price, super.key});
+  const CameraPage({this.mode = CameraMode.price, this.productId, this.packageId, super.key});
 
   final CameraMode mode;
+
+  /// "Registrar preço" na tela do produto: ele espera a etiqueta sem prazo,
+  /// e a câmera volta para a tela dele depois de salvar. Com [packageId], o
+  /// preço é daquela embalagem.
+  final String? productId;
+  final String? packageId;
 
   @override
   ConsumerState<CameraPage> createState() => _CameraPageState();
@@ -95,6 +101,10 @@ class _CameraPageState extends ConsumerState<CameraPage> {
   /// O produto bipado há pouco, esperando a etiqueta.
   ({Product product, ProductPackage package, DateTime at})? _pendingProduct;
 
+  /// O produto aberto pela tela dele ([CameraPage.productId]), que espera a
+  /// etiqueta enquanto a câmera estiver aberta.
+  ({Product product, ProductPackage? package})? _held;
+
   _Notice? _notice;
   Timer? _noticeTimer;
 
@@ -102,6 +112,24 @@ class _CameraPageState extends ConsumerState<CameraPage> {
   void initState() {
     super.initState();
     unawaited(_detectMarket());
+    if (widget.productId case final productId?) unawaited(_loadHeld(productId, widget.packageId));
+  }
+
+  /// O produto da tela dele e a embalagem escolhida; sem ela, a mais recente
+  /// do produto, como fazia o formulário antigo.
+  Future<void> _loadHeld(String productId, String? packageId) async {
+    final repository = ref.read(productRepositoryProvider);
+    try {
+      final product = await repository.findById(productId);
+      if (product == null) return;
+      final chosen = packageId == null ? null : await repository.findPackageById(packageId);
+      final package = chosen?.productId == productId
+          ? chosen
+          : (await repository.watchPackages(productId).first).firstOrNull;
+      if (mounted) setState(() => _held = (product: product, package: package));
+    } on Exception catch (error, stack) {
+      FlutterError.reportError(FlutterErrorDetails(exception: error, stack: stack, library: 'camera'));
+    }
   }
 
   @override
@@ -293,6 +321,10 @@ class _CameraPageState extends ConsumerState<CameraPage> {
       await _confirmTag(pending.product, pending.package, read);
       return;
     }
+    if (_held case (:final product, :final package)?) {
+      await _confirmTag(product, package, read);
+      return;
+    }
     _pendingTag = (read: read, at: DateTime.now());
     unawaited(HapticFeedback.selectionClick());
     // Código fora de alcance: tocar no aviso escolhe o produto pelo nome (D5).
@@ -305,7 +337,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
 
   /// Tocou no aviso do produto que esperava a etiqueta: digitar o preço ou,
   /// em casa, guardar uma embalagem (AB7).
-  Future<void> _completeProduct(Product product, ProductPackage package) async {
+  Future<void> _completeProduct(Product product, ProductPackage? package) async {
     final l10n = AppLocalizations.of(context);
     _clearNotice();
     final choice = await _withAnalysisPaused(
@@ -346,6 +378,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
   Future<void> _typePrice() async {
     final pending = _pendingProduct;
     if (pending != null && _fresh(pending.at)) return _typePriceFor(pending.product, pending.package);
+    if (_held case (:final product, :final package)?) return _typePriceFor(product, package);
     final l10n = AppLocalizations.of(context);
     final choice = await _withAnalysisPaused(
       () => pickProduct(context, allowCreate: false, title: l10n.cameraWhichProduct),
@@ -430,6 +463,11 @@ class _CameraPageState extends ConsumerState<CameraPage> {
         },
       ),
     );
+    if (saved && mounted && _held?.product.id == product.id) {
+      // Veio da tela do produto: volta para ela, que já mostra o preço.
+      context.pop();
+      return;
+    }
     if (saved && mounted) {
       final l10n = AppLocalizations.of(context);
       _showNotice((
@@ -443,15 +481,15 @@ class _CameraPageState extends ConsumerState<CameraPage> {
 
   /// "Comprei" ou "Dar baixa": uma embalagem a mais ou a menos em casa. A
   /// lista acompanha (RecordAtHome), e o Desfazer volta os dois.
-  Future<void> _adjust(Product product, ProductPackage package, {required bool bought}) async {
+  Future<void> _adjust(Product product, ProductPackage? package, {required bool bought}) async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final record = ref.read(recordAtHomeProvider);
     final HomeChange? change;
     try {
       change = bought
-          ? await record.bought(product, packageId: package.id)
-          : await record.used(product, packageId: package.id);
+          ? await record.bought(product, packageId: package?.id)
+          : await record.used(product, packageId: package?.id);
     } on Exception {
       if (mounted) {
         messenger
@@ -511,8 +549,20 @@ class _CameraPageState extends ConsumerState<CameraPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final colors = context.colors;
-    final notice = _notice;
-    final choosing = _mode == CameraMode.price || _mode == CameraMode.find;
+    final held = _held;
+    // Sem outro aviso, o produto da tela dele espera a etiqueta; tocar digita
+    // o preço (D5).
+    final _Notice? heldNotice = held == null
+        ? null
+        : (icon: Icons.sell_outlined, value: null, detail: l10n.cameraWaitingTag(held.product.name), waiting: false);
+    final notice = _notice ?? heldNotice;
+    final VoidCallback? noticeTap = switch ((_notice, held)) {
+      (null, (:final product, :final package)?) => () => _typePriceFor(product, package),
+      _ => _noticeTap,
+    };
+    // Aberta para um produto, a câmera só lê a etiqueta dele.
+    final forProduct = held != null || widget.productId != null;
+    final choosing = !forProduct && (_mode == CameraMode.price || _mode == CameraMode.find);
     // Observado enquanto a câmera está aberta: o leitor do disparo carrega os
     // modelos do ML Kit uma vez e os solta ao sair.
     ref.watch(priceTagReaderProvider);
@@ -530,7 +580,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
             price: value,
             detail: detail,
             countdown: waiting ? _waitFor : null,
-            onTap: _noticeTap,
+            onTap: noticeTap,
           ),
           null => null,
         },
