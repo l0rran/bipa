@@ -20,9 +20,9 @@ void main() {
   test('agrupa pelas seções do mercado, na ordem do percurso', () {
     final sections = shoppingListSections([
       entry('Café Pilão 500 g'),
-      entry('Detergente Ypê'),
-      entry('Tomate italiano'),
-      entry('Arroz 5 kg'),
+      entry('Detergente Ypê', minute: 1),
+      entry('Tomate italiano', minute: 2),
+      entry('Arroz 5 kg', minute: 3),
     ]);
 
     expect(sections.map((s) => s.aisle), [Aisle.produce, Aisle.grocery, Aisle.cleaning]);
