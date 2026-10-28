@@ -6,10 +6,12 @@ import 'package:bipa/core/design_system/components/price_tag.dart';
 import 'package:bipa/core/design_system/components/product_category_icon.dart';
 import 'package:bipa/core/design_system/components/save_badge.dart';
 import 'package:bipa/core/design_system/components/scan_tray.dart';
+import 'package:bipa/core/design_system/components/tap_target.dart';
 import 'package:bipa/core/formatting/formatters.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/money/money.dart';
 import 'package:bipa/core/widgets/price_dialog.dart';
+import 'package:bipa/features/markets/domain/market.dart';
 import 'package:bipa/features/prices/domain/price_comparison.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/prices/domain/price_tag.dart';
@@ -39,19 +41,19 @@ typedef PriceToConfirm = ({
 });
 
 /// Abre a folha "Conferir e salvar" (protótipo "Confirmação"). Devolve
-/// `true` quando o preço foi salvo. Sem [marketId], o mercado é pedido no
-/// "Salvar" por [chooseMarket].
+/// `true` quando o preço foi salvo. O mercado aparece sob o produto e se
+/// troca ali, por [chooseMarket]; sem [market], é pedido no "Salvar".
 Future<bool> showConfirmPriceSheet(
   BuildContext context, {
   required PriceToConfirm reading,
-  required String? marketId,
-  required Future<String?> Function() chooseMarket,
+  required Market? market,
+  required Future<Market?> Function() chooseMarket,
 }) async {
   final saved = await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    builder: (_) => ConfirmPriceSheet(reading: reading, marketId: marketId, chooseMarket: chooseMarket),
+    builder: (_) => ConfirmPriceSheet(reading: reading, market: market, chooseMarket: chooseMarket),
   );
   return saved ?? false;
 }
@@ -60,11 +62,11 @@ Future<bool> showConfirmPriceSheet(
 /// destaque (com o lápis para corrigir), "Mais barato aqui" quando é o caso
 /// e "Também comprei", que soma uma embalagem em casa.
 class ConfirmPriceSheet extends ConsumerStatefulWidget {
-  const ConfirmPriceSheet({required this.reading, required this.marketId, required this.chooseMarket, super.key});
+  const ConfirmPriceSheet({required this.reading, required this.market, required this.chooseMarket, super.key});
 
   final PriceToConfirm reading;
-  final String? marketId;
-  final Future<String?> Function() chooseMarket;
+  final Market? market;
+  final Future<Market?> Function() chooseMarket;
 
   @override
   ConsumerState<ConfirmPriceSheet> createState() => _ConfirmPriceSheetState();
@@ -75,6 +77,7 @@ class _ConfirmPriceSheetState extends ConsumerState<ConfirmPriceSheet> {
   late ProductPackage? _package = widget.reading.package;
   late Money _price = widget.reading.price;
   late PriceSource _source = widget.reading.source;
+  late Market? _market = widget.market;
   var _alsoBought = false;
   var _saving = false;
   String? _error;
@@ -88,6 +91,12 @@ class _ConfirmPriceSheetState extends ConsumerState<ConfirmPriceSheet> {
       // A embalagem lida era de outro produto.
       _package = null;
     });
+  }
+
+  /// Tocou no mercado: o preço vai para o escolhido (D7).
+  Future<void> _changeMarket() async {
+    final market = await widget.chooseMarket();
+    if (market != null && mounted) setState(() => _market = market);
   }
 
   Future<void> _editPrice() async {
@@ -110,12 +119,13 @@ class _ConfirmPriceSheetState extends ConsumerState<ConfirmPriceSheet> {
       _error = null;
     });
     try {
-      // O mercado só é pedido aqui, no "Salvar" (protótipo "Captura").
-      final marketId = widget.marketId ?? await widget.chooseMarket();
-      if (marketId == null) {
+      // Sem mercado, ele é pedido aqui, no "Salvar" (protótipo "Captura").
+      final market = _market ?? await widget.chooseMarket();
+      if (market == null) {
         if (mounted) setState(() => _error = l10n.cartNeedMarket);
         return;
       }
+      final marketId = market.id;
       final packageId = _package?.id;
       await register(
         RegisterPriceInput(
@@ -145,7 +155,7 @@ class _ConfirmPriceSheetState extends ConsumerState<ConfirmPriceSheet> {
   /// mesma embalagem; `null` se não fica. Sem a embalagem ou sem saber o
   /// mercado, a comparação não seria justa: não há selo.
   Money? _cheaperBy() {
-    final marketId = widget.marketId;
+    final marketId = _market?.id;
     final packageId = _package?.id;
     if (marketId == null || packageId == null) return null;
     final history = ref.watch(priceHistoryProvider(_product.id)).value ?? const [];
@@ -219,6 +229,39 @@ class _ConfirmPriceSheetState extends ConsumerState<ConfirmPriceSheet> {
                 icon: const Icon(Icons.swap_horiz_rounded),
               ),
             ],
+          ),
+          // Onde o preço vai cair, à vista e trocável (D7): sem destaque, que
+          // o destaque da folha é o preço.
+          const SizedBox(height: BipaSpacing.s2),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TapTarget(
+              onTap: _changeMarket,
+              child: Semantics(
+                button: true,
+                label: switch (_market) {
+                  final market? => l10n.confirmMarketLabel(market.name),
+                  null => l10n.cartChooseMarket,
+                },
+                excludeSemantics: true,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.storefront_outlined, size: 18, color: colors.inkMuted),
+                    const SizedBox(width: BipaSpacing.s1),
+                    Flexible(
+                      child: Text(
+                        _market?.name ?? l10n.cartChooseMarket,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: BipaText.body.copyWith(color: colors.inkMuted),
+                      ),
+                    ),
+                    Icon(Icons.expand_more_rounded, size: 18, color: colors.inkMuted),
+                  ],
+                ),
+              ),
+            ),
           ),
           const SizedBox(height: BipaSpacing.s4),
           Row(

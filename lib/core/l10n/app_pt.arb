@@ -1175,5 +1175,14 @@
   "cameraPhotoNoPrice": "Sem preço na foto. Chegue mais perto.",
   "@cameraPhotoNoPrice": {
     "description": "Aviso no visor quando a foto do disparo não tem um preço que sirva."
+  },
+  "confirmMarketLabel": "Mercado: {market}. Trocar",
+  "@confirmMarketLabel": {
+    "description": "Rótulo acessível da linha do mercado na folha \"Conferir e salvar\".",
+    "placeholders": {
+      "market": {
+        "type": "String"
+      }
+    }
   }
 }

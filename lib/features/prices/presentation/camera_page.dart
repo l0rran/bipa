@@ -456,10 +456,10 @@ class _CameraPageState extends ConsumerState<CameraPage> {
           source: source,
           perKilo: perKilo,
         ),
-        marketId: _market?.id,
+        market: _market,
         chooseMarket: () async {
           await _chooseMarket();
-          return _market?.id;
+          return _market;
         },
       ),
     );
