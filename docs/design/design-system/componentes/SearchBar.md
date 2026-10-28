@@ -1,6 +1,6 @@
 # SearchBar
 
-A busca no topo da Casa e das listas, com o botão de bipar dentro dela.
+A busca no topo do Início e das listas, com o botão de bipar dentro dela.
 
 ## Referências
 

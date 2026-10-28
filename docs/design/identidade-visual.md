@@ -20,7 +20,7 @@ Cada coisa só ganha atenção quando precisa:
 
 - **Um destaque por tela.** No máximo um elemento com ênfase, seja um cartão de insight ou um botão cheio.
 - **Um sinal por informação.** Se o item está na seção "Acabando", a linha não repete o estado com selo, barra e cor de fundo.
-- **Um acento por tela.** Cada tela tem uma cor de destaque, e o resto é neutro. Na Casa, o amarelo (`brand`) fica para as ações de marca (o botão de bipar, "Ir às compras" e a barra da compra), o coral (`alert`) só marca o que está abaixo do "ter sempre", e todo o resto (locais, "+", "na lista", régua, links) fica em `ink` e cinzas. O verde (`positive`) é da economia e o azul-ardósia (`place`) é dos mercados, cada um no seu lugar.
+- **Um acento por tela.** Cada tela tem uma cor de destaque, e o resto é neutro. No Início, o amarelo (`brand`) fica para as ações de marca (o botão de bipar, "Ir às compras" e a barra da compra), o coral (`alert`) só marca o que está abaixo do "ter sempre", e todo o resto (locais, "+", "na lista", régua, links) fica em `ink` e cinzas. O verde (`positive`) é da economia e o azul-ardósia (`place`) é dos mercados, cada um no seu lugar.
 - **Controles aparecem ao tocar.** Em repouso, as linhas mostram só informação. O −/+ e o "Pôr na lista" abrem no item tocado, e o uso mais comum ("Usei um") também é um gesto de deslizar.
 - **Números como números.** O que decide uma ação (há quanto tempo comprou, de quanto em quanto tempo compra, quanto tem em casa) aparece como número com rótulo, nunca escondido no meio de uma frase.
 - **Textos inteiros.** Nomes de produto quebram em até duas linhas em vez de serem cortados, e a medida nunca fica sozinha na linha de baixo ("395 g" usa espaço inseparável).
@@ -135,9 +135,9 @@ A referência de comportamento de cada um são as prévias interativas do design
 | Button | `BipaButton`, `BipaSegmented` | Principal, secundário, tonal e neutro. A forma muda ao pressionar, o carregamento usa as barras do símbolo, e há um seletor segmentado |
 | PriceTag | `PriceTag` | Etiqueta amarela: normal com preço por unidade, de/por, no app/clube, leve X pague Y e menor preço |
 | SearchBar | `BipaSearchBar` | Busca no topo com o botão de bipar dentro |
-| ListPreview | `ListPreview`, `SectionHeader` | A lista na Casa: miniaturas, quantidade, total estimado e "Ir às compras"; cabeçalho de seção com contagem e "Ver tudo" |
+| ListPreview | `ListPreview`, `SectionHeader` | A lista no Início: miniaturas, quantidade, total estimado e "Ir às compras"; cabeçalho de seção com contagem e "Ver tudo" |
 | ShoppingBar | `ShoppingBar` | A compra em andamento, fixa acima da navegação: progresso e total bipado |
-| FilterChips | `PlaceFilter` | Locais como categorias com arte (Casa) ou chips (listas longas) |
+| FilterChips | `PlaceFilter` | Locais como categorias com arte (Início) ou chips (listas longas) |
 | ProductCard | `ProductCard` | Prateleira de Acabando: imagem, medidor no canto e "+" |
 | StockStepper | `StockList`, `StockGauge`, `StockStepper` | Lista do estoque com miniatura, nome e medidor de nível; tocar abre −/+ e "Pôr na lista"; deslizar dá baixa |
 | InsightCard | `InsightCard`, `BipaCarousel` | Carrossel: "Hora de repor" (título tipográfico com arte, régua do ciclo e três números) e "Economia do mês"; fonte no ⓘ |

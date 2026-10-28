@@ -1,6 +1,6 @@
 # FilterChips
 
-Filtro de uma escolha só. Tem duas formas: **categorias** com arte grande e nome embaixo, para a Casa, e **chips** compactos, para listas longas como Produtos.
+Filtro de uma escolha só. Tem duas formas: **categorias** com arte grande e nome embaixo, para o Início, e **chips** compactos, para listas longas como Produtos.
 
 ## Referências
 
@@ -9,7 +9,7 @@ Filtro de uma escolha só. Tem duas formas: **categorias** com arte grande e nom
 
 ## Do jeito do Bipa
 
-- **Categorias** (`.bipa-filter--tiles`): arte de 64px em `surface` com ícone `ink`. A contagem fica num selo `surface-sunken` no canto. Ao escolher, a arte fica cheia em `ink` e cresce levemente com mola. Na Casa não há cor de lugar: o `place` fica para a tela de mercados.
+- **Categorias** (`.bipa-filter--tiles`): arte de 64px em `surface` com ícone `ink`. A contagem fica num selo `surface-sunken` no canto. Ao escolher, a arte fica cheia em `ink` e cresce levemente com mola. No Início não há cor de lugar: o `place` fica para a tela de mercados.
 - **Chips** (`.bipa-filter`): pílula de 36px com ícone, nome e contagem. O escolhido fica em `ink`.
 - O local sai das linhas da lista: quem quer ver só a geladeira toca na categoria.
 

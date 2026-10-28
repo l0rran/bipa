@@ -17,7 +17,7 @@ O Bipa ajuda a cuidar da despensa e a pagar menos no mercado sem digitar quase n
 5. **Calma por padrão.** Cada coisa só ganha atenção quando precisa. Em cada tela há no máximo um elemento com destaque (um cartão ou um botão cheio). Cada informação aparece por um sinal só: se o item está em "Acabando", a linha não repete o estado com selo e barra. As cores de estado se resumem ao coral para alerta e ao verde para o que deu certo, e o amarelo da marca fica para bipar e comprar. Controles aparecem quando a pessoa toca, e os números importantes aparecem como números, não escondidos numa frase.
 6. **Mostrar em vez de escrever.** Como na home do iFood, quase não há texto solto: todo texto faz parte de um componente. Produtos têm imagem, locais são categorias com arte, quantidade é um medidor e "na lista" é um selo. Quando o componente é só texto, a tipografia trabalha: uma linha pequena, o essencial grande e uma pílula com o detalhe.
 7. **Todo texto precisa se justificar.** Antes de pôr um texto na tela, três perguntas: **é o lugar dele?** **É necessário?** **Dá para dizer o mesmo de outra forma** (ícone, número, cor, forma, posição ou um componente que já existe) **sem prejudicar a compreensão?** Se outro elemento já diz a mesma coisa, o texto sai. Três limites: rótulos da navegação e de ações que apagam algo ficam com texto, não se troca texto por ícone ambíguo, e todo elemento visual tem rótulo acessível.
-8. **Um acento por tela.** Cada tela tem uma cor de destaque, e o resto é neutro. Na Casa, o amarelo (`brand`) fica para as ações de marca (o botão de bipar, "Ir às compras" e a barra da compra), o coral (`alert`) só marca o que está abaixo do "ter sempre", e todo o resto (locais, "+", "na lista", régua, links) é `ink` e cinzas. O verde é da economia e o `place` é dos mercados, cada um na sua tela.
+8. **Um acento por tela.** Cada tela tem uma cor de destaque, e o resto é neutro. No Início, o amarelo (`brand`) fica para as ações de marca (o botão de bipar, "Ir às compras" e a barra da compra), o coral (`alert`) só marca o que está abaixo do "ter sempre", e todo o resto (locais, "+", "na lista", régua, links) é `ink` e cinzas. O verde é da economia e o `place` é dos mercados, cada um na sua tela.
 9. **Funciona com uma mão, no corredor.** Ações principais no terço inferior da tela, alvos de toque com no mínimo 48px, contraste alto para a luz fria do mercado.
 
 ## Voz e tom
@@ -113,15 +113,15 @@ O símbolo é um bloco `brand` (o amarelo da etiqueta) com quatro barras de cód
 | StockStepper | Lista do estoque: miniatura, nome e medidor de nível; tocar abre −/+ e "Pôr na lista"; deslizar dá baixa ou põe na lista. |
 | ProductCard | Prateleira de produtos (Acabando): imagem, medidor no canto e "+" para pôr na lista. |
 | SearchBar | Busca no topo com o botão de bipar dentro. |
-| ListPreview | A lista na Casa: miniaturas do que tem nela, quantidade, total estimado e "Ir às compras"; cabeçalho de seção. |
+| ListPreview | A lista no Início: miniaturas do que tem nela, quantidade, total estimado e "Ir às compras"; cabeçalho de seção. |
 | ShoppingBar | A compra em andamento, fixa acima da navegação: progresso da lista e total bipado. |
-| FilterChips | Filtro de uma escolha: locais como categorias com arte (Casa) ou chips (listas longas). |
+| FilterChips | Filtro de uma escolha: locais como categorias com arte (Início) ou chips (listas longas). |
 | MarketChip | Mercado e distância (vidro sobre a câmera); preço por mercado com a idade do preço; sua lista em cada mercado. |
 | ScanNavBar | Barra de vidro que encolhe ao rolar, com indicador deslizante e o botão de bipar (menu no toque longo). |
 | ScanFrame | Visor da câmera: procurando, trava no código, clarão e confirmação. |
 | ScanTray | Bandeja do modo carrinho: itens bipados em sequência e o total do que você vai levar. |
 | BipFeedback | A confirmação animada de preço salvo, com Desfazer. |
-| InsightCard | Carrossel da Casa: "Hora de repor" (título tipográfico com a arte, régua do ciclo e três números) e "Economia do mês"; a fonte fica no ⓘ. |
+| InsightCard | Carrossel do Início: "Hora de repor" (título tipográfico com a arte, régua do ciclo e três números) e "Economia do mês"; a fonte fica no ⓘ. |
 | ShoppingList | Adicionar com um toque e lista na ordem dos corredores do mercado. |
 | Skeleton | Placeholder de carregamento com brilho. |
 

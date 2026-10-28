@@ -1,6 +1,6 @@
 # ListPreview
 
-A lista de compras na Casa. Em vez de um número solto, o cartão mostra **o que** tem na lista (miniaturas dos produtos), quantos itens, quanto deve custar e uma ação só.
+A lista de compras no Início. Em vez de um número solto, o cartão mostra **o que** tem na lista (miniaturas dos produtos), quantos itens, quanto deve custar e uma ação só.
 
 ## Por que assim
 
@@ -18,13 +18,13 @@ O bloco de número anterior ("7 itens" sobre amarelo) era abstrato: não dizia o
 
 ## Regras
 
-- Some quando a lista está vazia: no lugar, a Casa mostra direto os insights.
+- Some quando a lista está vazia: no lugar, o Início mostra direto os insights.
 - Durante uma compra, o cartão sai do topo e dá lugar à barra da compra (ShoppingBar).
 - O total leva "≈" porque é uma estimativa; o total real aparece na barra da compra.
 
 ## Cabeçalho de seção
 
-A Casa usa o cabeçalho de seção (`.bipa-section-head`): título, selo de contagem (`.bipa-count`, em `alert-soft` quando é alerta) e "Ver tudo" em `ink` à direita.
+O Início usa o cabeçalho de seção (`.bipa-section-head`): título, selo de contagem (`.bipa-count`, em `alert-soft` quando é alerta) e "Ver tudo" em `ink` à direita.
 
 ## Markup
 

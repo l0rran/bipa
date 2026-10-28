@@ -9,7 +9,7 @@ O cartão de produto da prateleira "Acabando": imagem grande, medidor no canto e
 
 ## Do jeito do Bipa
 
-- Em vez do preço, o canto mostra o **medidor de nível** (o mesmo da lista), porque na Casa o que importa é quanto resta.
+- Em vez do preço, o canto mostra o **medidor de nível** (o mesmo da lista), porque no Início o que importa é quanto resta.
 - O **"+"** é a única ação. Tocado, vira um check e o item vai para a lista.
 - Tocar no resto do cartão abre o produto.
 
