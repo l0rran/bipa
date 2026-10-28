@@ -42,6 +42,8 @@ confere("scanner", parse(tag([("R$ 2,00", 50), ("7891000100103", 12)]), barcodes
         "7891910000197")
 r = parse(tag([("TOMATE ITALIANO", 20), ("R$ 8,99 KG", 70)]))
 confere("KG depois do preço", (r.price, r.per_kilo), (899, True))
+r = parse(tag([("TOMATE", 20), ("R$ 8,99 O KG", 70)]))
+confere("o kg depois do preço", (r.price, r.per_kilo), (899, True))
 r = parse(tag([("ACUCAR UNIAO 1KG", 20), ("R$ 4,99 UN", 70)]))
 confere("UN depois do preço", (r.price, r.per_kilo), (499, False))
 r = parse(tag([("AGUA MINERAL 5 L", 20), ("R$ 1,20 /L", 60)]))

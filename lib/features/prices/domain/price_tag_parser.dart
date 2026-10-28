@@ -64,8 +64,8 @@ final class PriceTagParser {
     caseSensitive: false,
   );
 
-  /// "kg" logo depois do valor: "8,99 KG", "39,90 /kg".
-  static final _perKiloAfter = RegExp(r'^\s?/?\s?(kg|quilo)\b', caseSensitive: false);
+  /// "kg" logo depois do valor: "8,99 KG", "39,90 /kg", "8,99 o kg".
+  static final _perKiloAfter = RegExp(r'^\s?(o\s+)?/?\s?(kg|quilo)\b', caseSensitive: false);
 
   /// A linha inteira fala do preço por quilo: "PREÇO POR KG", "R$ 5,58/kg".
   static final _perKiloMarker = RegExp(

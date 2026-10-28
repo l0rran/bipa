@@ -55,7 +55,7 @@ UNIT_PRICE = re.compile(
     AI,
 )
 # "kg" logo depois do valor ("8,99 KG", "39,90 /kg") e a linha do preço por quilo.
-PER_KILO_AFTER = re.compile(r"^\s?/?\s?(kg|quilo)\b", AI)
+PER_KILO_AFTER = re.compile(r"^\s?(o\s+)?/?\s?(kg|quilo)\b", AI)
 PER_KILO_MARKER = re.compile(r"/\s?kg\b|\bp/\s?kg\b|\bpor\s+(kg|quilo)\b", AI)
 REGULAR = re.compile(r"\b(de|normal|antes|era)\b[\s:]*(r\$)?\s*$", AI)
 PROMO = re.compile(r"\b(por|oferta|promo[cçÇ][aãÃ]o)\b[\s:]*(r\$)?\s*$", AI)

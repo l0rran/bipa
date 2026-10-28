@@ -151,6 +151,12 @@ void main() {
     expect((unit.price, unit.perKilo), (const Money.cents(499), false));
   });
 
+  test('"o kg" depois do preço também é por quilo', () {
+    final reading = parser.parse(tag([('TOMATE', 20), ('R\$ 8,99 O KG', 70)]));
+
+    expect((reading.price, reading.perKilo), (const Money.cents(899), true));
+  });
+
   test('o preço por litro não é por quilo', () {
     final reading = parser.parse(tag([('AGUA MINERAL 5 L', 20), ('R\$ 1,20 /L', 60)]));
 
