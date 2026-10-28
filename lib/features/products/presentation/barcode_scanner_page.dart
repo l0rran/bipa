@@ -1,3 +1,4 @@
+import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/features/products/domain/gtin.dart';
@@ -71,9 +72,9 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
           MobileScanner(controller: _controller, onDetect: _onDetect),
           const _ScanFrame(),
           Positioned(
-            left: 24,
-            right: 24,
-            bottom: 48,
+            left: BipaSpacing.s6,
+            right: BipaSpacing.s6,
+            bottom: BipaSpacing.s8 + BipaSpacing.s4,
             child: Text(
               l10n.scannerHint,
               textAlign: TextAlign.center,
@@ -98,7 +99,7 @@ class _ScanFrame extends StatelessWidget {
         height: 160,
         decoration: BoxDecoration(
           border: Border.all(color: context.colors.onCamera, width: 3),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(BipaRadius.lg),
         ),
       ),
     );

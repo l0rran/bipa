@@ -2,6 +2,7 @@ import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/components/scan_nav_bar.dart';
 import 'package:bipa/core/design_system/components/shopping_list.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
+import 'package:bipa/core/l10n/meta_join.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:bipa/features/shopping_list/presentation/trip_summary_label.dart';
@@ -47,7 +48,7 @@ class HomeShell extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(BipaSpacing.s3, 0, BipaSpacing.s3, BipaSpacing.s2),
               child: ShoppingBar(
                 title: l10n.tripItems(summary.done, summary.total),
-                subtitle: _subtitle(summary.spentLabel(l10n), marketName),
+                subtitle: _subtitle(l10n, summary.spentLabel(l10n), marketName),
                 actionLabel: l10n.tripContinue,
                 progress: summary.progress,
                 semanticLabel: l10n.tripSemantics(summary.done, summary.total),
@@ -78,8 +79,8 @@ class HomeShell extends ConsumerWidget {
   }
 
   /// "R$ 32,10 · Atacarejo Vila Nova": o total do carrinho e o mercado.
-  static String? _subtitle(String? spent, String? marketName) {
+  static String? _subtitle(AppLocalizations l10n, String? spent, String? marketName) {
     final parts = [?spent, ?marketName];
-    return parts.isEmpty ? null : parts.join(' · ');
+    return parts.isEmpty ? null : l10n.joinMeta(parts);
   }
 }

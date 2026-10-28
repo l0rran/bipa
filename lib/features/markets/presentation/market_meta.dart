@@ -1,5 +1,6 @@
 import 'package:bipa/core/formatting/formatters.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
+import 'package:bipa/core/l10n/meta_join.dart';
 import 'package:bipa/features/markets/domain/nearest_market_finder.dart';
 import 'package:flutter/material.dart';
 
@@ -19,11 +20,11 @@ String marketMeta(
   final days = latestPrice == null
       ? null
       : DateUtils.dateOnly(now).difference(DateUtils.dateOnly(latestPrice)).inDays;
-  return [
+  return l10n.joinMeta([
     if (distance != null) Formatters.distance(distance),
     if (days != null) l10n.marketsPriceAge(days),
     if (distance == null && days == null) item.market.address ?? l10n.marketsNoPoint,
-  ].join(' · ');
+  ]);
 }
 
 /// O alfinete acompanha a linha quando ela fala de lugar.

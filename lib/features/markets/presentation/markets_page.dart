@@ -10,6 +10,7 @@ import 'package:bipa/core/design_system/components/section_header.dart';
 import 'package:bipa/core/di/core_providers.dart';
 import 'package:bipa/core/formatting/formatters.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
+import 'package:bipa/core/l10n/meta_join.dart';
 import 'package:bipa/core/location/location_failure_label.dart';
 import 'package:bipa/core/location/location_service.dart';
 import 'package:bipa/core/navigation/routes.dart';
@@ -243,11 +244,11 @@ class MarketTile extends ConsumerWidget {
       ),
       title: Text(market.name),
       subtitle: Text(
-        [
+        l10n.joinMeta([
           if (isHere) l10n.marketsHere,
           ?market.address,
           if (market.location == null) l10n.marketsNoPoint,
-        ].join(' · '),
+        ]),
       ),
       trailing: distance == null ? null : Text(Formatters.distance(distance)),
       onTap: onTap,

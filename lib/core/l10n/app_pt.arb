@@ -809,5 +809,17 @@
   "@marketsLocationReason": {
     "description": "Linha em Mercados quando a localização ainda não foi permitida; o botão ao lado pede a permissão."
   },
-  "locationAllow": "Usar localização"
+  "locationAllow": "Usar localização",
+  "metaPair": "{first} · {second}",
+  "@metaPair": {
+    "description": "Junta duas partes de uma linha de apoio: \"850 m · preços de 5 dias\".",
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "second": {
+        "type": "String"
+      }
+    }
+  }
 }

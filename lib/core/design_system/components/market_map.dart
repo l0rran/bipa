@@ -118,6 +118,10 @@ class _Pin extends StatelessWidget {
 
   final MarketMapPin pin;
 
+  /// A ponta da gota: um arredondado mínimo, parte do desenho do alfinete
+  /// (como o caminho do mapa), não um canto de componente.
+  static const _tipRadius = 4.0;
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -127,7 +131,7 @@ class _Pin extends StatelessWidget {
       topLeft: Radius.circular(size / 2),
       topRight: Radius.circular(size / 2),
       bottomRight: Radius.circular(size / 2),
-      bottomLeft: Radius.circular(4),
+      bottomLeft: Radius.circular(_tipRadius),
     );
     return Transform.rotate(
       angle: -math.pi / 4,

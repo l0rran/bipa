@@ -90,7 +90,7 @@ class _CompareRow extends StatelessWidget {
               Text(row.value, style: BipaText.number.copyWith(color: colors.ink)),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: BipaSpacing.s2),
           // Desenhada à mão: o LinearProgressIndicator do Material 3 põe um
           // vão e um ponto no fim que o design system não tem.
           ClipRRect(

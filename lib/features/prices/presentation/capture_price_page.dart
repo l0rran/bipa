@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:bipa/core/errors/domain_exception.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
+import 'package:bipa/core/l10n/meta_join.dart';
 import 'package:bipa/core/location/location_service.dart';
 import 'package:bipa/core/money/money.dart';
 import 'package:bipa/core/navigation/routes.dart';
@@ -468,7 +469,7 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
                 children: [
                   for (final offer in _otherOffers)
                     FilterChip(
-                      label: Text([offer.price.format(), ?offer.condition.label(l10n)].join(' · ')),
+                      label: Text(l10n.joinMeta([offer.price.format(), ?offer.condition.label(l10n)])),
                       selected: _selectedOffers.contains(offer),
                       onSelected: (selected) => setState(() {
                         if (selected) {
