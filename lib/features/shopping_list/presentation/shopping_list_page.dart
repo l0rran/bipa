@@ -12,7 +12,11 @@ import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_sections.dart';
+import 'package:bipa/features/products/presentation/product_photos.dart';
+import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
+import 'package:bipa/features/shopping_list/presentation/list_preview.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
+import 'package:bipa/features/shopping_list/presentation/start_shopping.dart';
 import 'package:bipa/features/stock/domain/stock_item.dart';
 import 'package:bipa/features/stock/presentation/stock_providers.dart';
 import 'package:flutter/material.dart';
@@ -21,8 +25,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// A lista de compras (protótipo "Lista"): o progresso, o campo de adicionar,
 /// os itens de sempre e a lista agrupada pelas seções do mercado.
 ///
-/// Ainda não há modo compra, ordem dos corredores aprendida por mercado, nem
-/// lista por foto ou voz (roadmap da fase 1).
+/// Fora de uma compra, o topo mostra a prévia com "Ir às compras"; durante a
+/// compra, o progresso e "Terminei". Ainda não há ordem dos corredores
+/// aprendida por mercado nem lista por foto ou voz (roadmap da fase 1).
 class ShoppingListPage extends ConsumerStatefulWidget {
   const ShoppingListPage({super.key});
 
@@ -103,10 +108,30 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
       );
   }
 
+  /// "Terminei": o comprado vai para o estoque e sai da lista, com Desfazer.
+  Future<void> _finish(ShoppingTrip trip) async {
+    final finish = ref.read(finishShoppingTripProvider);
+    final finished = await finish(trip.id);
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(l10n.tripFinished(finished.stockedProductIds.length)),
+          duration: const Duration(seconds: 6),
+          action: SnackBarAction(label: l10n.undo, onPressed: () => finish.undo(finished)),
+        ),
+      );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final list = ref.watch(shoppingListProvider);
+    final trip = ref.watch(activeTripProvider).value;
+    final tripSummary = ref.watch(shoppingTripSummaryProvider);
+    final photos = ref.watch(productPhotosDirectoryProvider).value;
     final prices = ref.watch(shoppingListPricesProvider).value ?? const <String, Money>{};
     final summary = ref.watch(shoppingListSummaryProvider);
     final onList = ref.watch(productsOnListProvider);
@@ -139,15 +164,36 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                         header: true,
                         child: Text(l10n.listTitle, style: BipaText.headline.copyWith(color: context.colors.ink)),
                       ),
-                      if (!summary.isEmpty) ...[
+                      if (trip != null && tripSummary != null) ...[
                         const SizedBox(height: BipaSpacing.s4),
                         ShoppingProgress(
-                          label: l10n.listProgress(summary.done, summary.total),
-                          value: summary.progress,
-                          leading: switch (summary.estimate) {
-                            final estimate? => l10n.listEstimate(estimate.format()),
+                          label: l10n.listProgress(tripSummary.done, tripSummary.total),
+                          value: tripSummary.progress,
+                          leading: switch (tripSummary.spent?.format()) {
+                            final spent? when tripSummary.estimated => l10n.listEstimate(spent),
+                            final spent? => spent,
                             null => null,
                           },
+                        ),
+                        const SizedBox(height: BipaSpacing.s3),
+                        Align(
+                          alignment: AlignmentDirectional.centerEnd,
+                          child: FilledButton(
+                            onPressed: () => _finish(trip),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: context.colors.ink,
+                              foregroundColor: context.colors.surface,
+                            ),
+                            child: Text(l10n.tripFinish),
+                          ),
+                        ),
+                      ] else if (summary.remaining > 0) ...[
+                        const SizedBox(height: BipaSpacing.s4),
+                        ListPreview(
+                          entries: entries,
+                          summary: summary,
+                          photos: photos,
+                          onGoShopping: () => startShopping(context, ref),
                         ),
                       ],
                       const SizedBox(height: BipaSpacing.s4),
@@ -259,8 +305,8 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                   ),
                 ),
               ],
-              // Espaço para a barra de navegação flutuante.
-              const SliverToBoxAdapter(child: SizedBox(height: 120)),
+              // Espaço para as barras flutuantes (navegação e compra).
+              SliverToBoxAdapter(child: SizedBox(height: MediaQuery.paddingOf(context).bottom + BipaSpacing.s4)),
             ],
           );
         },

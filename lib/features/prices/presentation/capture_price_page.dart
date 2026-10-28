@@ -19,6 +19,7 @@ import 'package:bipa/features/prices/presentation/prices_providers.dart';
 import 'package:bipa/features/products/domain/gtin.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
+import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -202,8 +203,11 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
     final barcode = _barcode.text.trim();
     setState(() => _saving = true);
 
+    // Lidos antes dos awaits: a tela pode fechar no meio do caminho.
+    final trips = ref.read(shoppingTripRepositoryProvider);
+    final list = ref.read(shoppingListRepositoryProvider);
     try {
-      await ref.read(registerPriceObservationProvider).call(
+      final observation = await ref.read(registerPriceObservationProvider).call(
         RegisterPriceInput(
           marketId: market.id,
           price: price,
@@ -219,6 +223,8 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
           newProductName: _name.text,
         ),
       );
+      // Durante a compra, registrar o preço de um item da lista o marca.
+      if (await trips.watchActive().first != null) await list.checkProduct(observation.productId);
       if (!mounted) return;
 
       context.showMessage('${price.format()} registrado em ${market.name}.');

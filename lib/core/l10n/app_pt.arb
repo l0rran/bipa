@@ -174,10 +174,6 @@
       }
     }
   },
-  "listOpen": "Abrir a lista",
-  "@listOpen": {
-    "description": "Ação da prévia da lista no Início. Vira \"Ir às compras\" quando houver o modo compra."
-  },
   "listAddToList": "Pôr na lista",
   "listRemoveFromList": "Tirar da lista",
   "listOnList": "Na lista",
@@ -192,5 +188,48 @@
   "aisleCleaning": "Limpeza",
   "aisleHygiene": "Higiene",
   "aislePet": "Pet",
-  "aisleOther": "Outros"
+  "aisleOther": "Outros",
+  "listGoShopping": "Ir às compras",
+  "@listGoShopping": {
+    "description": "Começa o modo compra."
+  },
+  "tripItems": "{done} de {total, plural, =1{1 item} other{{total} itens}}",
+  "@tripItems": {
+    "description": "Progresso da compra na barra.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "tripContinue": "Continuar",
+  "@tripContinue": {
+    "description": "Ação da barra da compra: volta para a lista."
+  },
+  "tripFinish": "Terminei",
+  "@tripFinish": {
+    "description": "Termina a compra: o comprado vai para o estoque."
+  },
+  "tripFinished": "{count, plural, =0{Compra terminada} =1{Compra terminada: 1 item foi para o estoque} other{Compra terminada: {count} itens foram para o estoque}}",
+  "@tripFinished": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tripSemantics": "Compra em andamento: {done} de {total}. Continuar na lista",
+  "@tripSemantics": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  }
 }

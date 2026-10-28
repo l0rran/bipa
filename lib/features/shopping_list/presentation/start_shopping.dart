@@ -1,0 +1,26 @@
+import 'package:bipa/core/location/location_service.dart';
+import 'package:bipa/core/navigation/routes.dart';
+import 'package:bipa/features/markets/presentation/markets_providers.dart';
+import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+/// "Ir às compras": começa a compra, abre a lista e, se a localização
+/// permitir, descobre em qual mercado a pessoa está.
+Future<void> startShopping(BuildContext context, WidgetRef ref) async {
+  // Tudo lido antes dos awaits: a tela pode sair da árvore no meio do caminho.
+  final trips = ref.read(shoppingTripRepositoryProvider);
+  final location = ref.read(locationServiceProvider);
+  final markets = ref.read(marketRepositoryProvider);
+  final finder = ref.read(nearestMarketFinderProvider);
+
+  final trip = await trips.start();
+  if (context.mounted) context.go(Routes.shoppingList);
+  if (trip.marketId != null) return;
+
+  final position = await location.currentLocation();
+  if (position is! LocationFound) return;
+  final market = finder.marketAt(position.point, await markets.all());
+  if (market != null) await trips.setMarket(trip.id, market.id);
+}

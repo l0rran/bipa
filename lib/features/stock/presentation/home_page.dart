@@ -10,7 +10,6 @@ import 'package:bipa/core/design_system/components/product_category_icon.dart';
 import 'package:bipa/core/design_system/components/product_thumb.dart';
 import 'package:bipa/core/design_system/components/quantity_stepper.dart';
 import 'package:bipa/core/design_system/components/section_header.dart';
-import 'package:bipa/core/design_system/components/shopping_list.dart';
 import 'package:bipa/core/design_system/components/stock_list.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
@@ -20,8 +19,9 @@ import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/presentation/product_photos.dart';
 import 'package:bipa/features/products/presentation/scan_product.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
-import 'package:bipa/features/shopping_list/domain/shopping_list_sections.dart';
+import 'package:bipa/features/shopping_list/presentation/list_preview.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
+import 'package:bipa/features/shopping_list/presentation/start_shopping.dart';
 import 'package:bipa/features/stock/domain/stock_item.dart';
 import 'package:bipa/features/stock/domain/stock_location.dart';
 import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
@@ -118,6 +118,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     final onList = ref.watch(productsOnListProvider);
     final listEntries = ref.watch(shoppingListProvider).value ?? const <ShoppingListEntry>[];
     final listSummary = ref.watch(shoppingListSummaryProvider);
+    // Durante a compra, a prévia dá lugar à barra da compra.
+    final shopping = ref.watch(activeTripProvider).value != null;
 
     return Scaffold(
       body: AsyncValueView(
@@ -162,9 +164,14 @@ class _HomePageState extends ConsumerState<HomePage> {
                           onScan: _addByBarcode,
                           scanLabel: l10n.searchScan,
                         ),
-                        if (listSummary.remaining > 0) ...[
+                        if (listSummary.remaining > 0 && !shopping) ...[
                           const SizedBox(height: BipaSpacing.s4),
-                          _ListPreview(entries: listEntries, summary: listSummary, photos: photos),
+                          ListPreview(
+                            entries: listEntries,
+                            summary: listSummary,
+                            photos: photos,
+                            onGoShopping: () => startShopping(context, ref),
+                          ),
                         ],
                       ],
                     ),
@@ -244,8 +251,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                 ),
               ],
-              // Espaço para a barra de navegação flutuante.
-              const SliverToBoxAdapter(child: SizedBox(height: 120)),
+              // Espaço para as barras flutuantes (navegação e compra).
+              SliverToBoxAdapter(child: SizedBox(height: MediaQuery.paddingOf(context).bottom + BipaSpacing.s4)),
             ],
           );
         },
@@ -372,53 +379,5 @@ class _HomeStockRow extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-/// A lista no Início: quantos itens faltam, o total estimado e as miniaturas.
-/// Enquanto não há o modo compra, a ação abre a aba da lista.
-class _ListPreview extends StatelessWidget {
-  const _ListPreview({required this.entries, required this.summary, required this.photos});
-
-  final List<ShoppingListEntry> entries;
-  final ShoppingListSummary summary;
-  final Directory? photos;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final missing = entries.where((e) => !e.item.isChecked).toList();
-    final estimate = summary.estimate?.format();
-
-    return ListPreviewCard(
-      count: summary.remaining,
-      countLabel: l10n.listItems(summary.remaining),
-      estimate: estimate == null ? null : l10n.listEstimate(estimate),
-      thumbs: [for (final entry in missing.take(3)) _ListThumb(entry: entry, photos: photos)],
-      extraCount: missing.length > 3 ? missing.length - 3 : 0,
-      actionLabel: l10n.listOpen,
-      actionIcon: Icons.checklist_rounded,
-      onTap: () => context.go(Routes.shoppingList),
-      semanticLabel: [
-        l10n.listPreviewSemantics(summary.remaining),
-        if (estimate != null) l10n.listAbout(estimate),
-      ].join(', '),
-    );
-  }
-}
-
-class _ListThumb extends StatelessWidget {
-  const _ListThumb({required this.entry, required this.photos});
-
-  final ShoppingListEntry entry;
-  final Directory? photos;
-
-  @override
-  Widget build(BuildContext context) {
-    final icon = Center(child: Icon(productCategoryIcon(entry.name), size: 20, color: context.colors.ink));
-    final product = entry.product;
-    final file = product == null ? null : productPhotoFile(product, photos);
-    if (file == null) return icon;
-    return Image.file(file, fit: BoxFit.cover, gaplessPlayback: true, errorBuilder: (_, _, _) => icon);
   }
 }

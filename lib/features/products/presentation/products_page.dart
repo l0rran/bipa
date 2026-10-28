@@ -69,8 +69,8 @@ class ProductsPage extends ConsumerWidget {
                   );
           }
           return ListView.separated(
-            // Espaço para a barra de navegação flutuante.
-            padding: const EdgeInsets.only(bottom: 120),
+            // Espaço para as barras flutuantes (navegação e compra).
+            padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom + 16),
             itemCount: items.length,
             separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, index) => _ProductTile(product: items[index]),
