@@ -23,6 +23,7 @@ class ScanTray extends StatelessWidget {
     this.maxListHeight = 196,
     this.handleLabel,
     this.onHandleTap,
+    this.expanded = false,
     super.key,
   });
 
@@ -43,6 +44,10 @@ class ScanTray extends StatelessWidget {
   /// A alça expande ou recolhe a lista: o rótulo diz o que o toque faz.
   final String? handleLabel;
   final VoidCallback? onHandleTap;
+
+  /// A lista está expandida: arrastar a alça para baixo recolhe, e para
+  /// cima expande. O toque alterna.
+  final bool expanded;
   final List<Widget> items;
   final Widget footer;
 
@@ -89,7 +94,9 @@ class ScanTray extends StatelessWidget {
                     behavior: HitTestBehavior.opaque,
                     onTap: onHandleTap,
                     onVerticalDragEnd: (details) {
-                      if ((details.primaryVelocity ?? 0).abs() > 100) onHandleTap();
+                      // Para cima a velocidade é negativa.
+                      final velocity = details.primaryVelocity ?? 0;
+                      if (velocity < -100 && !expanded || velocity > 100 && expanded) onHandleTap();
                     },
                     child: SizedBox(height: 24, child: Center(child: handle)),
                   ),
@@ -176,6 +183,7 @@ class ScanTrayItem extends StatelessWidget {
     required this.priceTapLabel,
     this.price,
     this.priceEstimated = false,
+    this.priceSemanticsLabel,
     this.justRead = false,
     this.onNameTap,
     this.nameTapLabel,
@@ -189,8 +197,13 @@ class ScanTrayItem extends StatelessWidget {
   final String? price;
 
   /// O preço é o do histórico, não o lido hoje: a etiqueta fica vazada (só o
-  /// contorno), e a cheia fica para o preço confirmado.
+  /// contorno), e a cheia fica para o preço confirmado. É o único sinal na
+  /// tela; o leitor de tela ouve [priceSemanticsLabel].
   final bool priceEstimated;
+
+  /// O que o leitor de tela diz do preço ("R$ 27,90, estimado"); sem ele,
+  /// o próprio [price].
+  final String? priceSemanticsLabel;
 
   /// Tocar no nome muda a quantidade.
   final VoidCallback? onNameTap;
@@ -275,7 +288,7 @@ class ScanTrayItem extends StatelessWidget {
             duration: BipaMotion.base,
             child: Semantics(
               button: true,
-              label: price ?? priceTapLabel,
+              label: priceSemanticsLabel ?? price ?? priceTapLabel,
               excludeSemantics: true,
               onTap: onPriceTap,
               // A etiqueta é pequena, mas a área de toque tem 48 de altura.

@@ -1172,5 +1172,14 @@
         "type": "int"
       }
     }
+  },
+  "cartPriceEstimated": "{price}, estimado",
+  "@cartPriceEstimated": {
+    "description": "Rótulo acessível do preço estimado na bandeja (o do histórico, não o lido hoje).",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
   }
 }

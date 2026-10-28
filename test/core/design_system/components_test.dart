@@ -300,8 +300,9 @@ void main() {
       _app(
         ScanTrayItem(
           name: 'Café Pilão',
-          price: r'≈ R$ 18,99',
+          price: r'R$ 18,99',
           priceEstimated: true,
+          priceSemanticsLabel: r'R$ 18,99, estimado',
           take: true,
           takeLabel: 'Levar Café Pilão',
           onTakeChanged: (_) {},
@@ -313,9 +314,42 @@ void main() {
       ),
     );
 
-    expect(find.text(r'≈ R$ 18,99'), findsOneWidget);
+    // Na tela, só a etiqueta vazada diz que é estimado; o leitor de tela ouve.
+    expect(find.text(r'R$ 18,99'), findsOneWidget);
+    expect(find.bySemanticsLabel(r'R$ 18,99, estimado'), findsOneWidget);
     await tester.tap(find.bySemanticsLabel('Quantidade de Café Pilão'));
     expect(nameTaps, 1);
+    semantics.dispose();
+  });
+
+  testWidgets('a alça da bandeja segue a direção do arrasto', (tester) async {
+    final semantics = tester.ensureSemantics();
+    var toggles = 0;
+    Future<void> pump({required bool expanded}) => tester.pumpWidget(
+      _app(
+        ScanTray(
+          title: 'Carrinho',
+          totalLabel: 'Vou levar',
+          items: const [],
+          footer: const SizedBox(),
+          handleLabel: 'Alça',
+          onHandleTap: () => toggles++,
+          expanded: expanded,
+        ),
+      ),
+    );
+
+    await pump(expanded: false);
+    await tester.fling(find.bySemanticsLabel('Alça'), const Offset(0, 60), 800);
+    expect(toggles, 0, reason: 'recolhida, puxar para baixo não faz nada');
+    await tester.fling(find.bySemanticsLabel('Alça'), const Offset(0, -60), 800);
+    expect(toggles, 1);
+
+    await pump(expanded: true);
+    await tester.fling(find.bySemanticsLabel('Alça'), const Offset(0, -60), 800);
+    expect(toggles, 1, reason: 'expandida, puxar para cima não faz nada');
+    await tester.fling(find.bySemanticsLabel('Alça'), const Offset(0, 60), 800);
+    expect(toggles, 2);
     semantics.dispose();
   });
 

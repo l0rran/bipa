@@ -656,17 +656,19 @@ class _CartModePageState extends ConsumerState<CartModePage> {
           maxListHeight: _trayExpanded ? MediaQuery.sizeOf(context).height * 0.55 : 196,
           handleLabel: _trayExpanded ? l10n.cartTrayLess : l10n.cartTrayMore,
           onHandleTap: () => setState(() => _trayExpanded = !_trayExpanded),
+          expanded: _trayExpanded,
           items: [
             for (final entry in cart)
               ScanTrayItem(
                 key: ValueKey(entry.item.id),
                 name: entry.item.quantity > 1 ? l10n.cartQuantity(entry.item.quantity, entry.name) : entry.name,
-                price: switch (entry.item.price) {
-                  final price? when entry.item.priceEstimated => l10n.priceEstimate(price.format()),
-                  final price? => price.format(),
-                  null => null,
-                },
+                // O estimado se distingue só pela etiqueta vazada: um sinal só.
+                price: entry.item.price?.format(),
                 priceEstimated: entry.item.priceEstimated,
+                priceSemanticsLabel: switch (entry.item.price) {
+                  final price? when entry.item.priceEstimated => l10n.cartPriceEstimated(price.format()),
+                  _ => null,
+                },
                 onNameTap: () => _setQuantity(entry),
                 nameTapLabel: l10n.cartQuantityOf(entry.name),
                 justRead: entry.item.key == _justReadKey,
