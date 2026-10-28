@@ -148,6 +148,7 @@ class _MarketsPageState extends ConsumerState<MarketsPage> {
                           // barra mais curta diria "mais barato" sem ser.
                           fraction: cost.isPartial ? null : cost.total.cents / _highestComplete(compare),
                           note: _costNote(l10n, cost, now),
+                          onTap: () => context.push(Routes.market(cost.marketId)),
                         ),
                     ],
                   ),

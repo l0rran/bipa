@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 /// Uma linha da comparação: o mercado, o total e o tamanho da barra.
 @immutable
 class ListCostRow {
-  const ListCostRow({required this.name, required this.value, this.fraction, this.note});
+  const ListCostRow({required this.name, required this.value, this.fraction, this.note, this.onTap});
 
   final String name;
 
@@ -20,6 +20,9 @@ class ListCostRow {
   /// Uma ressalva em cinza, como "preços de até 12 dias · sem preço de 2
   /// itens".
   final String? note;
+
+  /// Abre o mercado da linha.
+  final VoidCallback? onTap;
 }
 
 /// "Sua lista em cada mercado" (Compare do design system): uma barra por
@@ -66,7 +69,10 @@ class _CompareRow extends StatelessWidget {
     final best = this.best;
     final note = row.note;
     final fraction = row.fraction;
-    return MergeSemantics(
+    // Com movimento reduzido no aparelho, a barra já nasce no tamanho.
+    final still = MediaQuery.disableAnimationsOf(context);
+    final onTap = row.onTap;
+    final content = MergeSemantics(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -105,7 +111,7 @@ class _CompareRow extends StatelessWidget {
                   height: 10,
                   child: TweenAnimationBuilder<double>(
                     tween: Tween(begin: 0, end: fraction.clamp(0.0, 1.0)),
-                    duration: BipaMotion.slow,
+                    duration: still ? Duration.zero : BipaMotion.slow,
                     curve: BipaMotion.spring,
                     builder: (context, value, _) => FractionallySizedBox(
                       alignment: AlignmentDirectional.centerStart,
@@ -128,6 +134,12 @@ class _CompareRow extends StatelessWidget {
           ],
         ],
       ),
+    );
+    if (onTap == null) return content;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(BipaRadius.sm),
+      child: ConstrainedBox(constraints: const BoxConstraints(minHeight: 48), child: content),
     );
   }
 }
