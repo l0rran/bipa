@@ -60,4 +60,18 @@ void main() {
     final entry = (await cart.watchTrip(trip.id).first).single;
     expect((entry.item.quantity, entry.item.price, entry.item.packageId), (1, const Money.cents(843 + 1299), null));
   });
+
+  test('a pesagem troca o preço de uma linha que não é de pesagens', () async {
+    final trip = await trips.start(marketId: 'vila');
+    final product = await scale.remember('vila', tomate, newName: 'Tomate');
+    // O preço do histórico, estimado, numa linha de duas unidades.
+    await cart.addProduct(trip.id, product.id, price: const Money.cents(599), estimated: true);
+    final line = (await cart.watchTrip(trip.id).first).single.item;
+    await cart.setQuantity(line.id, 2);
+
+    await scale.addToCart(trip.id, product, tomate);
+
+    final entry = (await cart.watchTrip(trip.id).first).single.item;
+    expect((entry.quantity, entry.price, entry.priceEstimated), (1, const Money.cents(843), false));
+  });
 }

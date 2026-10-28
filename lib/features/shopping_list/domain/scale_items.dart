@@ -54,16 +54,25 @@ final class ScaleItems {
 
   /// Põe a pesagem no carrinho. Duas pesagens do mesmo produto (dois sacos
   /// de tomate) somam o valor numa linha só, que conta como uma embalagem.
+  ///
+  /// Só soma numa linha que já é de pesagens: uma embalagem, para levar, com
+  /// preço firmado. Uma linha com outro preço (o por kg da etiqueta, ou um
+  /// estimado) passa a ser a da pesagem.
   Future<void> addToCart(String tripId, Product product, ScaleLabel label) async {
     final cart = await _cart.watchTrip(tripId).first;
     final existing = cart
         .where((entry) => entry.item.productId == product.id && entry.item.packageId == null)
-        .firstOrNull;
+        .firstOrNull
+        ?.item;
     if (existing == null) {
       await _cart.addProduct(tripId, product.id, price: label.total);
-    } else {
-      await _cart.setPrice(existing.item.id, (existing.item.price ?? Money.zero) + label.total);
+      return;
     }
+    final weighed = existing.quantity == 1 && existing.take && !existing.priceEstimated;
+    final previous = weighed ? existing.price ?? Money.zero : Money.zero;
+    await _cart.setPrice(existing.id, previous + label.total);
+    if (existing.quantity != 1) await _cart.setQuantity(existing.id, 1);
+    if (!existing.take) await _cart.setTake(existing.id, take: true);
   }
 
   Future<Product> _create(String name) async {
