@@ -1345,5 +1345,21 @@
         "type": "String"
       }
     }
+  },
+  "stockTargetSpoken": "{count, plural, =1{ter sempre 1 embalagem} other{ter sempre {label} embalagens}}",
+  "@stockTargetSpoken": {
+    "description": "Leitor de tela do stepper do \"ter sempre\": \"ter sempre 4 embalagens\".",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      },
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "stockTargetNoneSpoken": "ter sempre: não definido",
+  "@stockTargetNoneSpoken": {
+    "description": "Leitor de tela do stepper do \"ter sempre\" sem valor."
   }
 }

@@ -110,6 +110,7 @@ class StockItemSheet extends ConsumerWidget {
               child: QuantityStepper(
                 value: item.quantityLabel,
                 unit: l10n.unitPackages,
+                valueSpoken: l10n.stockAtHomeSpoken(item.quantity, item.quantityLabel),
                 decrementLabel: l10n.stockOneLess,
                 incrementLabel: l10n.stockOneMore,
                 highlighted: item.isLow,
@@ -124,6 +125,9 @@ class StockItemSheet extends ConsumerWidget {
               child: QuantityStepper(
                 value: target == null ? l10n.stockTargetNone : Formatters.quantity(target),
                 unit: l10n.unitPackages,
+                valueSpoken: target == null
+                    ? l10n.stockTargetNoneSpoken
+                    : l10n.stockTargetSpoken(target, Formatters.quantity(target)),
                 decrementLabel: l10n.stockTargetLess,
                 incrementLabel: l10n.stockTargetMore,
                 onIncrement: () => _setTarget(ref, (target ?? 0) + 1),
