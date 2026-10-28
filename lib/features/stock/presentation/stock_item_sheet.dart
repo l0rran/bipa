@@ -52,10 +52,9 @@ class StockItemSheet extends ConsumerWidget {
   Future<void> _setTarget(WidgetRef ref, double? target) =>
       ref.read(stockRepositoryProvider).setTargetQuantity(product.id, target);
 
-  Future<void> _toggleList(WidgetRef ref, {required bool onList}) {
-    final list = ref.read(shoppingListRepositoryProvider);
-    return onList ? list.removeProduct(product.id) : list.addProduct(productId: product.id, name: product.name);
-  }
+  Future<void> _toggleList(WidgetRef ref, {required bool onList}) => onList
+      ? ref.read(shoppingListRepositoryProvider).removeProduct(product.id)
+      : ref.read(putProductOnListProvider)(product);
 
   /// "Tirar de casa": o produto sai do Início (e do "Acabando"); ele e os
   /// preços continuam.

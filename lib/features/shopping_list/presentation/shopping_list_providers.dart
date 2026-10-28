@@ -18,6 +18,7 @@ import 'package:bipa/features/shopping_list/data/mlkit_live_frame_analyzer.dart'
 import 'package:bipa/features/shopping_list/domain/aisle_order.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/finish_shopping_trip.dart';
+import 'package:bipa/features/shopping_list/domain/put_product_on_list.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_repository.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_sections.dart';
@@ -174,6 +175,14 @@ final listAisleOrderProvider = StreamProvider.autoDispose<AisleOrder>((ref) {
       ? Stream.value(AisleOrder.empty)
       : ref.watch(aisleOrderRepositoryProvider).watch(marketId);
 });
+
+/// "Pôr na lista" com o que falta para o "ter sempre".
+final putProductOnListProvider = Provider<PutProductOnList>(
+  (ref) => PutProductOnList(
+    list: ref.watch(shoppingListRepositoryProvider),
+    stock: ref.watch(stockRepositoryProvider),
+  ),
+);
 
 final finishShoppingTripProvider = Provider<FinishShoppingTrip>(
   (ref) => FinishShoppingTrip(

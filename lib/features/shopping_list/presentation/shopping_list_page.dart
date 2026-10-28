@@ -8,6 +8,7 @@ import 'package:bipa/core/design_system/components/shopping_list.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
+import 'package:bipa/core/widgets/quantity_dialog.dart';
 import 'package:bipa/features/markets/presentation/market_picker_sheet.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/presentation/product_photos.dart';
@@ -61,7 +62,7 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
   }
 
   Future<void> _addProduct(Product product) async {
-    await ref.read(shoppingListRepositoryProvider).addProduct(productId: product.id, name: product.name);
+    await ref.read(putProductOnListProvider)(product);
     if (mounted) _clearInput();
   }
 
@@ -71,10 +72,11 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
     final text = _input.text.trim();
     if (text.isEmpty) return;
     final list = ref.read(shoppingListRepositoryProvider);
+    final put = ref.read(putProductOnListProvider);
     final matches = await ref.read(productRepositoryProvider).watchAll(query: text).first;
     final exact = matches.where((p) => p.name.toLowerCase() == text.toLowerCase()).firstOrNull;
     if (exact != null) {
-      await list.addProduct(productId: exact.id, name: exact.name);
+      await put(exact);
     } else {
       await list.addCustom(text);
     }
@@ -87,11 +89,16 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
     _inputFocus.requestFocus();
   }
 
-  Future<void> _toggleUsual(Product product, {required bool onList}) {
+  Future<void> _toggleUsual(Product product, {required bool onList}) => onList
+      ? ref.read(shoppingListRepositoryProvider).removeProduct(product.id)
+      : ref.read(putProductOnListProvider)(product);
+
+  /// O toque longo (ou a ação do leitor de tela) muda a quantidade.
+  Future<void> _setQuantity(ShoppingListEntry entry) async {
     final repository = ref.read(shoppingListRepositoryProvider);
-    return onList
-        ? repository.removeProduct(product.id)
-        : repository.addProduct(productId: product.id, name: product.name);
+    final chosen = await showQuantityDialog(context, title: entry.name, initial: entry.item.quantity);
+    if (chosen == null || chosen == entry.item.quantity) return;
+    await repository.setQuantity(entry.item.id, chosen);
   }
 
   Future<void> _remove(ShoppingListEntry entry) async {
@@ -386,6 +393,7 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                             // Deslizar não existe para o leitor de tela: a mesma ação fica no menu dele.
                             Semantics(
                               customSemanticsActions: {
+                                CustomSemanticsAction(label: l10n.listChangeQuantity): () => _setQuantity(entry),
                                 CustomSemanticsAction(label: l10n.listRemoveFromList): () => _remove(entry),
                               },
                               child: Dismissible(
@@ -411,6 +419,11 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                                     (:final price, exact: false) => l10n.listEstimate(price.formatDecimal()),
                                     null => null,
                                   },
+                                  quantity: entry.item.quantity > 1 ? l10n.listQuantity(entry.item.quantity) : null,
+                                  quantitySpoken: entry.item.quantity > 1
+                                      ? l10n.listQuantitySpoken(entry.item.quantity)
+                                      : null,
+                                  onLongPress: () => _setQuantity(entry),
                                   onChanged: (checked) => _setChecked(entry, checked: checked),
                                 ),
                               ),

@@ -147,6 +147,30 @@ void main() {
     semantics.dispose();
   });
 
+  testWidgets('o item da lista mostra a quantidade antes do nome e a muda no toque longo', (tester) async {
+    final semantics = tester.ensureSemantics();
+    var longPresses = 0;
+    await tester.pumpWidget(
+      _app(
+        ShoppingListRow(
+          name: 'Leite',
+          quantity: '3×',
+          quantitySpoken: '3 embalagens',
+          price: '4,79',
+          checked: false,
+          onChanged: (_) {},
+          onLongPress: () => longPresses++,
+        ),
+      ),
+    );
+
+    expect(find.text('3× Leite'), findsOneWidget);
+    expect(find.bySemanticsLabel('Leite, 3 embalagens, 4,79'), findsOneWidget);
+    await tester.longPress(find.text('3× Leite'));
+    expect(longPresses, 1);
+    semantics.dispose();
+  });
+
   testWidgets('a prévia da lista mostra o número, o total e o "+N" das miniaturas', (tester) async {
     var tapped = false;
     await tester.pumpWidget(

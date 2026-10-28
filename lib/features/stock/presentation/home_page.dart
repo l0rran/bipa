@@ -113,10 +113,9 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   /// Põe o produto na lista ou o tira de lá.
-  Future<void> _toggleList(Product product, {required bool onList}) {
-    final list = ref.read(shoppingListRepositoryProvider);
-    return onList ? list.removeProduct(product.id) : list.addProduct(productId: product.id, name: product.name);
-  }
+  Future<void> _toggleList(Product product, {required bool onList}) => onList
+      ? ref.read(shoppingListRepositoryProvider).removeProduct(product.id)
+      : ref.read(putProductOnListProvider)(product);
 
   List<StockEntry> _visible(List<StockEntry> entries) {
     final query = _query.trim().toLowerCase();

@@ -24,6 +24,8 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - Nova tela de Mercados, como no protótipo: busca, mapa esquemático com os mercados em volta, quanto a lista custa em cada mercado (com ressalva quando faltam preços) e os mercados do mais perto ao mais longe, com a idade dos preços.
 - Tela do mercado: tocar num mercado abre onde ele fica e a idade dos preços, a ordem das seções aprendida nas compras, o preço mais recente de cada produto ali e "Ir às compras aqui". Editar e Apagar ficam no menu.
 - Tocar numa embalagem na tela do produto registra o preço dela.
+- Quantidade na lista: "Pôr na lista" sugere o que falta para o "ter sempre" (com 1 em casa e "ter sempre 4", entram 3), o item mostra "3×" antes do nome, o toque longo muda a quantidade, o total da lista multiplica por ela e o marcado à mão entra no estoque com ela. O esquema vai à versão 10, com testes das migrações.
+- Na Lista, o preço do mercado da compra aparece exato; o "≈" fica só no preço estimado pelos outros mercados.
 - Cópias exportadas do design system e do protótipo em `docs/design/`.
 - Banco de testes do OCR em `tool/ocr_bench`, com etiquetas sintéticas e transcrições de etiquetas reais.
 

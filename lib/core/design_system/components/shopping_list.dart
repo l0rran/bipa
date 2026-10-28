@@ -334,14 +334,17 @@ class ShoppingSectionCard extends StatelessWidget {
   }
 }
 
-/// Item da lista: a caixa de marcar, o nome e o preço esperado. Comprado, o
-/// nome fica riscado e a linha esmaece.
+/// Item da lista: a caixa de marcar, a quantidade (quando é mais de uma), o
+/// nome e o preço esperado. Comprado, o nome fica riscado e a linha esmaece.
 class ShoppingListRow extends StatelessWidget {
   const ShoppingListRow({
     required this.name,
     required this.checked,
     required this.onChanged,
     this.price,
+    this.quantity,
+    this.quantitySpoken,
+    this.onLongPress,
     super.key,
   });
 
@@ -352,19 +355,30 @@ class ShoppingListRow extends StatelessWidget {
   /// O preço esperado, já formatado ("≈ 7,90").
   final String? price;
 
+  /// "3×", em cinza antes do nome; `null` para uma embalagem só.
+  final String? quantity;
+
+  /// A quantidade para o leitor de tela ("3 embalagens").
+  final String? quantitySpoken;
+
+  /// O toque longo muda a quantidade.
+  final VoidCallback? onLongPress;
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final price = this.price;
+    final quantity = this.quantity;
 
     return Semantics(
       button: true,
       checked: checked,
-      label: [name, ?price].join(', '),
+      label: [name, ?(quantitySpoken ?? quantity), ?price].join(', '),
       excludeSemantics: true,
       onTap: () => onChanged(!checked),
       child: InkWell(
         onTap: () => onChanged(!checked),
+        onLongPress: onLongPress,
         child: AnimatedOpacity(
           opacity: checked ? 0.5 : 1,
           duration: BipaMotion.base,
@@ -387,8 +401,21 @@ class ShoppingListRow extends StatelessWidget {
                   ),
                   const SizedBox(width: BipaSpacing.s3),
                   Expanded(
-                    child: Text(
-                      name,
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          if (quantity != null)
+                            TextSpan(
+                              text: '$quantity ',
+                              style: TextStyle(
+                                color: colors.inkMuted,
+                                fontWeight: FontWeight.w600,
+                                fontFeatures: const [FontFeature.tabularFigures()],
+                              ),
+                            ),
+                          TextSpan(text: name),
+                        ],
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: BipaText.bodyLarge.copyWith(

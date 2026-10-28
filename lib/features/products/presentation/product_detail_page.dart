@@ -144,10 +144,9 @@ class _ProductView extends ConsumerWidget {
     }
   }
 
-  Future<void> _toggleList(WidgetRef ref, {required bool onList}) {
-    final list = ref.read(shoppingListRepositoryProvider);
-    return onList ? list.removeProduct(product.id) : list.addProduct(productId: product.id, name: product.name);
-  }
+  Future<void> _toggleList(WidgetRef ref, {required bool onList}) => onList
+      ? ref.read(shoppingListRepositoryProvider).removeProduct(product.id)
+      : ref.read(putProductOnListProvider)(product);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

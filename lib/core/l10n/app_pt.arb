@@ -821,5 +821,27 @@
         "type": "String"
       }
     }
+  },
+  "listQuantity": "{count}×",
+  "@listQuantity": {
+    "description": "Quantidade antes do nome do item da lista, quando é mais de uma: \"3× Leite\".",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listQuantitySpoken": "{count, plural, =1{1 embalagem} other{{count} embalagens}}",
+  "@listQuantitySpoken": {
+    "description": "A quantidade do item da lista para o leitor de tela.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listChangeQuantity": "Mudar a quantidade",
+  "@listChangeQuantity": {
+    "description": "Ação do leitor de tela no item da lista; com o dedo, é o toque longo."
   }
 }
