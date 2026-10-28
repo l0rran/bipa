@@ -62,6 +62,15 @@ final class ScaleItems {
   Future<void> addToCart(String tripId, Product product, ScaleLabel label) =>
       _addWeighing(tripId, product.id, label.total);
 
+  /// Põe na bandeja o produto escolhido pela etiqueta de granel por quilo
+  /// (D3): uma linha sem embalagem e sem preço, porque quanto custa só a
+  /// pesagem diz. É a mesma linha em que a pesagem dele cai depois
+  /// ([addToCart]), e escolher o mesmo granel de novo não cria outra nem
+  /// mexe na que já existe.
+  Future<void> addGranel(String tripId, String productId) async {
+    if (await _weighingLine(tripId, productId) == null) await _cart.addProduct(tripId, productId);
+  }
+
   Future<void> _addWeighing(String tripId, String productId, Money total) async {
     final existing = await _weighingLine(tripId, productId);
     if (existing == null) {

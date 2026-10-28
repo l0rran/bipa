@@ -146,7 +146,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     final messenger = ScaffoldMessenger.of(context);
     final recordPrice = ref.read(recordTripPriceProvider);
     final createProduct = ref.read(createProductByWeightProvider);
-    final cart = ref.read(cartRepositoryProvider);
+    final scale = ref.read(scaleItemsProvider);
     final matchList = ref.read(matchListToCartProvider);
     _clearNotice();
     final choice = await _withAnalysisPaused(
@@ -167,11 +167,8 @@ class _CartModePageState extends ConsumerState<CartModePage> {
       await _recordTag(recordPrice, trip, product.id, null, read);
       // O granel vai para a bandeja sem preço, que só a pesagem diz: a
       // etiqueta da balança, se vier, firma o valor (ADR 0018). E marca a
-      // lista (D3).
-      final inCart = (await cart.watchTrip(trip.id).first).any(
-        (entry) => entry.item.productId == product.id && entry.item.packageId == null,
-      );
-      if (!inCart) await cart.addProduct(trip.id, product.id);
+      // lista (D3), como o bipe: "1 de 3" enquanto não alcança a lista.
+      await scale.addGranel(trip.id, product.id);
       await matchList(trip.id, product.id, CartListChange.added);
       if (!mounted) return;
       _lockFrame();
