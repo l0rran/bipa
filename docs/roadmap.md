@@ -57,10 +57,6 @@ Primeira abertura e em casa:
 
 - [ ] AB5: primeira carga que configura: folha "Arrumar o que entrou" com local e "ter sempre", ou o local sugerido pela categoria
 
-Lista e compra:
-
-- [ ] CE4: o marcado à mão entra no total pelo preço esperado, com "≈", ou como "sem preço"; a prévia da lista diz "sem preço de N"
-
 Câmera e modo carrinho:
 
 - [ ] D3: o granel escolhido entra na bandeja sem preço, com o preço por kg como estimativa, e marca a lista
@@ -84,7 +80,7 @@ Consistência e acessibilidade:
 - [ ] H5: as linhas de "Nos mercados" e da comparação abrem o mercado, e os alfinetes do mapa levam à linha
 - [ ] A barra de navegação encolhe ao rolar, como no design system
 - [ ] Movimento reduzido respeitado em todas as animações (barras da comparação e stepper)
-- [ ] Revisar no protótipo: "Modo carrinho: granel sem código", "Menu do bipar" com "Guardar em casa", "Mercados" com a idade dos preços e a pergunta "Levar os preços?", o mercado na "Confirmação", o aviso tocável em "Modo carrinho: preço esperando", o "1 de 2" no "Modo carrinho", e o "2× Leite" e o "Cancelar compra" no "Fim da compra", e o "⋯" no editor da linha do "Início"
+- [ ] Revisar no protótipo: o granel sem código, o aviso tocável do preço esperando e o "1 de 2" na bandeja do "Modo carrinho"; "Guardar em casa" no "Menu do bipar"; a idade dos preços e a pergunta "Levar os preços?" em "Mercados"; o mercado na "Confirmação"; o "2× Leite" e o "Cancelar compra" no "Fim da compra"; o "⋯" no editor da linha do "Início"; e o "2 sem preço" na prévia da "Lista"
 
 ## Fase 2: base comunitária
 
