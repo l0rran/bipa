@@ -98,6 +98,10 @@ class PriceObservations extends Table {
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get syncedAt => dateTime().nullable()();
 
+  /// A observação que esta corrige (ADR 0017, esquema v11). Sem chave
+  /// estrangeira: a corrigida pode ainda não ter chegado de outro aparelho.
+  TextColumn get supersedesId => text().nullable()();
+
   @override
   Set<Column<Object>> get primaryKey => {id};
 }

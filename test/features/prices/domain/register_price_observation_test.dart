@@ -62,6 +62,32 @@ void main() {
     expect(prices.observations, [observation]);
   });
 
+  test('um preço digitado corrige a leitura errada sem apagá-la', () async {
+    existingProduct();
+    final wrong = await register(
+      const RegisterPriceInput(
+        marketId: 'mercado',
+        productId: 'leite',
+        price: Money.cents(2190),
+        source: PriceSource.priceTag,
+      ),
+    );
+
+    final fixed = await register(
+      RegisterPriceInput(
+        marketId: 'mercado',
+        productId: 'leite',
+        price: const Money.cents(2790),
+        source: PriceSource.manual,
+        supersedes: wrong.id,
+      ),
+    );
+
+    expect(fixed.supersedes, wrong.id);
+    expect(prices.observations, [wrong, fixed]);
+    expect((await prices.watchHistory('leite').first).map((e) => e.observation), [fixed]);
+  });
+
   test('encontra o produto pelo código de barras', () async {
     existingProduct(barcode: '7891910000197');
 

@@ -36,6 +36,7 @@ final class RegisterPriceInput {
     this.barcode,
     this.newProductName,
     this.newProductUnit = MeasureUnit.unit,
+    this.supersedes,
   });
 
   final String marketId;
@@ -49,6 +50,10 @@ final class RegisterPriceInput {
   final String? barcode;
   final String? newProductName;
   final MeasureUnit newProductUnit;
+
+  /// A observação que este preço corrige (ADR 0017): a etiqueta lida errado
+  /// e depois digitada certa, por exemplo. Vale só para o preço principal.
+  final String? supersedes;
 }
 
 /// Caso de uso: registra o preço de um produto em um mercado, cadastrando o
@@ -76,7 +81,7 @@ final class RegisterPriceObservation {
     final (product, package) = await _resolve(input);
     final now = _clock();
 
-    PriceObservation observe(PriceOffer offer) => PriceObservation(
+    PriceObservation observe(PriceOffer offer, {String? supersedes}) => PriceObservation(
       id: _ids.newId(),
       productId: product.id,
       packageId: package?.id,
@@ -87,10 +92,12 @@ final class RegisterPriceObservation {
       source: input.source,
       observedAt: now,
       createdAt: now,
+      supersedes: supersedes,
     );
 
     final main = observe(
       PriceOffer(price: input.price, condition: input.condition, regularPrice: input.regularPrice),
+      supersedes: input.supersedes,
     );
     // Uma observação por condição: repetir a do principal duplicaria o preço.
     final recorded = {input.condition};

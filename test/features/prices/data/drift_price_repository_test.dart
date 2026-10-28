@@ -136,6 +136,24 @@ void main() {
     expect(latest.last.package, isNull);
   });
 
+  test('uma leitura corrigida sai do histórico e dos preços do mercado', () async {
+    final errada = observation('errada', 'm1', 2190, DateTime(2026, 10, 9));
+    final correcao = PriceObservation(
+      id: 'certa',
+      productId: 'leite',
+      marketId: 'm1',
+      price: const Money.cents(2790),
+      source: PriceSource.manual,
+      observedAt: DateTime(2026, 10, 9, 0, 1),
+      createdAt: DateTime(2026, 10, 9, 0, 1),
+      supersedes: 'errada',
+    );
+    await prices.addAll([errada, correcao]);
+
+    expect((await prices.watchHistory('leite').first).map((e) => e.observation), [correcao]);
+    expect((await prices.watchLatestInMarket('m1').first).map((p) => p.observation), [correcao]);
+  });
+
   test('grava e lê a condição de cada preço', () async {
     final at = DateTime(2026, 10, 27);
     final saved = [

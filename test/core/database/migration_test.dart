@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:bipa/core/database/app_database.dart';
+import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
@@ -46,7 +47,7 @@ void main() {
         .insert(ShoppingListItemsCompanion.insert(id: 'pao', name: 'Pão', addedAt: at));
     await current.close();
 
-    final migrated = reopenAt(9, ['shopping_list_items.quantity']);
+    final migrated = reopenAt(9, ['shopping_list_items.quantity', 'price_observations.supersedes_id']);
     final item = await migrated.select(migrated.shoppingListItems).getSingle();
     await migrated.close();
 
@@ -83,12 +84,46 @@ void main() {
         .insert(ShoppingListItemsCompanion.insert(id: 'cafe', productId: const Value('cafe'), name: 'Café', addedAt: at));
     await current.close();
 
-    final migrated = reopenAt(8, ['cart_items.price_estimated', 'shopping_list_items.quantity']);
+    final migrated = reopenAt(8, [
+      'cart_items.price_estimated',
+      'shopping_list_items.quantity',
+      'price_observations.supersedes_id',
+    ]);
     final cart = await migrated.select(migrated.cartItems).getSingle();
     final listItem = await migrated.select(migrated.shoppingListItems).getSingle();
     await migrated.close();
 
     expect((cart.priceCents, cart.priceEstimated), (1899, false));
     expect(listItem.quantity, 1);
+  });
+
+  test('v10 → v11: os preços que já estavam não corrigem nenhum outro', () async {
+    final current = AppDatabase(NativeDatabase(file));
+    await current
+        .into(current.products)
+        .insert(ProductsCompanion.insert(id: 'cafe', name: 'Café', unit: MeasureUnit.gram, createdAt: at, updatedAt: at));
+    await current
+        .into(current.markets)
+        .insert(MarketsCompanion.insert(id: 'vila', name: 'Vila', createdAt: at, updatedAt: at));
+    await current
+        .into(current.priceObservations)
+        .insert(
+          PriceObservationsCompanion.insert(
+            id: 'p1',
+            productId: 'cafe',
+            marketId: 'vila',
+            priceCents: 1899,
+            source: PriceSource.priceTag,
+            observedAt: at,
+            createdAt: at,
+          ),
+        );
+    await current.close();
+
+    final migrated = reopenAt(10, ['price_observations.supersedes_id']);
+    final price = await migrated.select(migrated.priceObservations).getSingle();
+    await migrated.close();
+
+    expect((price.priceCents, price.supersedesId), (1899, null));
   });
 }

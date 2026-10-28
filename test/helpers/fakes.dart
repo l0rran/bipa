@@ -92,10 +92,12 @@ final class InMemoryPriceRepository implements PriceRepository {
   Stream<List<PriceHistoryEntry>> watchHistory(String productId) => watchHistoryOfProducts({productId});
 
   @override
-  Stream<List<PriceHistoryEntry>> watchHistoryOfProducts(Set<String> productIds) => Stream.value([
-    for (final o in observations.reversed)
-      if (productIds.contains(o.productId)) PriceHistoryEntry(observation: o, marketName: o.marketId),
-  ]);
+  Stream<List<PriceHistoryEntry>> watchHistoryOfProducts(Set<String> productIds) => Stream.value(
+    withoutSuperseded([
+      for (final o in observations.reversed)
+        if (productIds.contains(o.productId)) PriceHistoryEntry(observation: o, marketName: o.marketId),
+    ], (entry) => entry.observation),
+  );
 
   @override
   Stream<Map<String, DateTime>> watchLatestPerMarket() {
@@ -109,7 +111,9 @@ final class InMemoryPriceRepository implements PriceRepository {
 
   @override
   Stream<List<MarketPrice>> watchLatestInMarket(String marketId) {
-    final sorted = observations.where((o) => o.marketId == marketId && o.condition is AnyCustomer).toList()
+    final sorted = withoutSuperseded(observations, (o) => o)
+        .where((o) => o.marketId == marketId && o.condition is AnyCustomer)
+        .toList()
       ..sort((a, b) => b.observedAt.compareTo(a.observedAt));
     final latest = <(String, String?), MarketPrice>{};
     for (final o in sorted) {

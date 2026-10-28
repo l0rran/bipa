@@ -20,6 +20,7 @@ final class PriceObservation {
     this.packageId,
     this.regularPrice,
     this.condition = const AnyCustomer(),
+    this.supersedes,
   });
 
   final String id;
@@ -42,6 +43,10 @@ final class PriceObservation {
   final DateTime observedAt;
   final DateTime createdAt;
 
+  /// O id da observação que esta corrige (ADR 0017): uma leitura errada não
+  /// é apagada nem editada, mas sai do histórico quando outra a corrige.
+  final String? supersedes;
+
   bool get isPromotion {
     final regular = regularPrice;
     return regular != null && regular > price;
@@ -59,7 +64,8 @@ final class PriceObservation {
       other.condition == condition &&
       other.source == source &&
       other.observedAt == observedAt &&
-      other.createdAt == createdAt;
+      other.createdAt == createdAt &&
+      other.supersedes == supersedes;
 
   @override
   int get hashCode => Object.hash(
@@ -73,6 +79,7 @@ final class PriceObservation {
     source,
     observedAt,
     createdAt,
+    supersedes,
   );
 
   @override
@@ -95,4 +102,16 @@ final class PriceHistoryEntry {
 
   @override
   int get hashCode => Object.hash(observation, marketName);
+}
+
+/// Tira do histórico as observações corrigidas por outra (ADR 0017). A
+/// correção fica no lugar da leitura errada.
+List<T> withoutSuperseded<T>(Iterable<T> items, PriceObservation Function(T item) observationOf) {
+  final superseded = {
+    for (final item in items) ?observationOf(item).supersedes,
+  };
+  return [
+    for (final item in items)
+      if (!superseded.contains(observationOf(item).id)) item,
+  ];
 }

@@ -35,6 +35,7 @@ final class DriftPriceRepository implements PriceRepository {
     source: observation.source,
     observedAt: observation.observedAt,
     createdAt: observation.createdAt,
+    supersedesId: Value(observation.supersedes),
   );
 
   @override
@@ -75,10 +76,13 @@ final class DriftPriceRepository implements PriceRepository {
       ..orderBy([OrderingTerm.desc(prices.observedAt), OrderingTerm.desc(prices.createdAt)]);
 
     return query.watch().map((rows) {
+      // Uma leitura corrigida não conta (ADR 0017); a correção está no mesmo
+      // mercado, então vem na mesma consulta.
+      final current = withoutSuperseded(rows, (row) => row.readTable(prices).toEntity());
       // Do mais recente para o mais antigo: o primeiro de cada produto e
       // embalagem é o que vale. O mapa guarda a ordem de chegada.
       final latest = <(String, String?), MarketPrice>{};
-      for (final row in rows) {
+      for (final row in current) {
         final price = row.readTable(prices);
         latest.putIfAbsent(
           (price.productId, price.packageId),
@@ -106,13 +110,16 @@ final class DriftPriceRepository implements PriceRepository {
       ..orderBy([OrderingTerm.desc(prices.observedAt)]);
 
     return query.watch().map(
-      (rows) => [
-        for (final row in rows)
-          PriceHistoryEntry(
-            observation: row.readTable(prices).toEntity(),
-            marketName: row.readTable(markets).name,
-          ),
-      ],
+      (rows) => withoutSuperseded(
+        [
+          for (final row in rows)
+            PriceHistoryEntry(
+              observation: row.readTable(prices).toEntity(),
+              marketName: row.readTable(markets).name,
+            ),
+        ],
+        (entry) => entry.observation,
+      ),
     );
   }
 }
@@ -131,6 +138,7 @@ extension PriceObservationRowMapper on PriceObservationRow {
       source: source,
       observedAt: observedAt,
       createdAt: createdAt,
+      supersedes: supersedesId,
     );
   }
 }
