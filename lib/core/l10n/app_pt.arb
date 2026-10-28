@@ -390,7 +390,7 @@
   "productPickSearch": "Buscar ou criar",
   "productPickSearchOnly": "Buscar produto",
   "productPickNone": "Nenhum produto com esse nome.",
-  "productPickCreate": "Criar \u201c{name}\u201d",
+  "productPickCreate": "Criar “{name}”",
   "@productPickCreate": {
     "placeholders": {
       "name": {
@@ -518,5 +518,47 @@
       }
     }
   },
-  "productMergeConfirm": "Juntar"
+  "productMergeConfirm": "Juntar",
+  "marketsRefreshLocation": "Atualizar localização",
+  "marketsNew": "Novo mercado",
+  "marketsNoLocation": "{reason} Os mercados estão em ordem alfabética.",
+  "@marketsNoLocation": {
+    "description": "Aviso na tela de Mercados quando a localização não está disponível; {reason} vem do serviço de localização.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "marketsEmpty": "Nenhum mercado cadastrado.\nCadastre os mercados onde você costuma comprar.",
+  "marketsEmptyAction": "Cadastrar mercado",
+  "marketsHere": "Você está aqui",
+  "marketsNoPoint": "Sem localização",
+  "marketSaveFailed": "Não foi possível salvar o mercado.",
+  "marketEdit": "Editar mercado",
+  "formNameRequired": "Nome *",
+  "@formNameRequired": {
+    "description": "Rótulo de campo de nome obrigatório nos formulários."
+  },
+  "formOptional": "Opcional",
+  "marketNameMissing": "Informe o nome do mercado",
+  "marketAddress": "Endereço ou referência",
+  "marketLocation": "Localização",
+  "marketLocationMissing": "Sem localização. Com ela, o app reconhece quando você está neste mercado.",
+  "marketCoordinates": "Lat {latitude}, Lng {longitude}",
+  "@marketCoordinates": {
+    "placeholders": {
+      "latitude": {
+        "type": "String"
+      },
+      "longitude": {
+        "type": "String"
+      }
+    }
+  },
+  "marketUseLocation": "Usar minha localização",
+  "marketRemoveLocation": "Remover",
+  "marketPickTitle": "Em qual mercado você está?",
+  "marketPickNew": "Cadastrar novo mercado",
+  "retry": "Tentar de novo"
 }

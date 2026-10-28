@@ -1,4 +1,5 @@
 import 'package:bipa/core/formatting/formatters.dart';
+import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/location/location_service.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
@@ -17,18 +18,19 @@ class MarketsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final markets = ref.watch(rankedMarketsProvider);
     final location = ref.watch(currentLocationProvider);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mercados'),
+        title: Text(l10n.navMarkets),
         actions: [
           IconButton(
-            tooltip: 'Atualizar localização',
+            tooltip: l10n.marketsRefreshLocation,
             icon: const Icon(Icons.my_location),
             onPressed: () => ref.invalidate(currentLocationProvider),
           ),
           IconButton(
-            tooltip: 'Novo mercado',
+            tooltip: l10n.marketsNew,
             icon: const Icon(Icons.add_business_outlined),
             onPressed: () => context.push(Routes.newMarket),
           ),
@@ -38,12 +40,12 @@ class MarketsPage extends ConsumerWidget {
         children: [
           if (location case AsyncData(value: LocationUnavailable(:final failure)))
             MaterialBanner(
-              content: Text('${failure.message} Os mercados estão em ordem alfabética.'),
+              content: Text(l10n.marketsNoLocation(failure.message)),
               leading: const Icon(Icons.location_off_outlined),
               actions: [
                 TextButton(
                   onPressed: () => ref.invalidate(currentLocationProvider),
-                  child: const Text('Tentar de novo'),
+                  child: Text(l10n.retry),
                 ),
               ],
             ),
@@ -53,9 +55,8 @@ class MarketsPage extends ConsumerWidget {
               data: (ranked) => ranked.isEmpty
                   ? EmptyState(
                       icon: Icons.storefront_outlined,
-                      message:
-                          'Nenhum mercado cadastrado.\nCadastre os mercados onde você costuma comprar.',
-                      actionLabel: 'Cadastrar mercado',
+                      message: l10n.marketsEmpty,
+                      actionLabel: l10n.marketsEmptyAction,
                       onAction: () => context.push(Routes.newMarket),
                     )
                   : ListView.separated(
@@ -90,6 +91,7 @@ class MarketTile extends ConsumerWidget {
     final distance = ranked.distanceMeters;
     final isHere = ref.watch(nearestMarketFinderProvider).isInside(ranked);
     final colors = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return ListTile(
       selected: selected,
@@ -100,9 +102,9 @@ class MarketTile extends ConsumerWidget {
       title: Text(market.name),
       subtitle: Text(
         [
-          if (isHere) 'Você está aqui',
+          if (isHere) l10n.marketsHere,
           ?market.address,
-          if (market.location == null) 'Sem localização',
+          if (market.location == null) l10n.marketsNoPoint,
         ].join(' · '),
       ),
       trailing: distance == null ? null : Text(Formatters.distance(distance)),

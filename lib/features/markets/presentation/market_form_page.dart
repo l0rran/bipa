@@ -1,4 +1,5 @@
 import 'package:bipa/core/di/core_providers.dart';
+import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/location/geo_point.dart';
 import 'package:bipa/core/location/location_service.dart';
 import 'package:bipa/core/widgets/messages.dart';
@@ -97,7 +98,7 @@ class _MarketFormPageState extends ConsumerState<MarketFormPage> {
       await ref.read(marketRepositoryProvider).save(market);
       if (mounted) context.pop(market);
     } on Exception {
-      if (mounted) context.showMessage('Não foi possível salvar o mercado.');
+      if (mounted) context.showMessage(AppLocalizations.of(context).marketSaveFailed);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -105,8 +106,9 @@ class _MarketFormPageState extends ConsumerState<MarketFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditing ? 'Editar mercado' : 'Novo mercado')),
+      appBar: AppBar(title: Text(_isEditing ? l10n.marketEdit : l10n.marketsNew)),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : Form(
@@ -118,18 +120,14 @@ class _MarketFormPageState extends ConsumerState<MarketFormPage> {
                     controller: _name,
                     autofocus: !_isEditing,
                     textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(labelText: 'Nome *'),
-                    validator: (value) =>
-                        (value == null || value.trim().isEmpty) ? 'Informe o nome do mercado' : null,
+                    decoration: InputDecoration(labelText: l10n.formNameRequired),
+                    validator: (value) => (value == null || value.trim().isEmpty) ? l10n.marketNameMissing : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _address,
                     textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(
-                      labelText: 'Endereço ou referência',
-                      helperText: 'Opcional',
-                    ),
+                    decoration: InputDecoration(labelText: l10n.marketAddress, helperText: l10n.formOptional),
                   ),
                   const SizedBox(height: 24),
                   _LocationCard(
@@ -142,7 +140,7 @@ class _MarketFormPageState extends ConsumerState<MarketFormPage> {
                   FilledButton.icon(
                     onPressed: _saving ? null : _save,
                     icon: const Icon(Icons.check),
-                    label: const Text('Salvar'),
+                    label: Text(l10n.save),
                   ),
                 ],
               ),
@@ -168,6 +166,7 @@ class _LocationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final point = location;
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Card.outlined(
       child: Padding(
@@ -175,13 +174,12 @@ class _LocationCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Localização', style: theme.textTheme.titleMedium),
+            Text(l10n.marketLocation, style: theme.textTheme.titleMedium),
             const SizedBox(height: 4),
             Text(
               point == null
-                  ? 'Sem localização. Com ela, o app reconhece quando você está neste mercado.'
-                  : 'Lat ${point.latitude.toStringAsFixed(5)}, '
-                        'Lng ${point.longitude.toStringAsFixed(5)}',
+                  ? l10n.marketLocationMissing
+                  : l10n.marketCoordinates(point.latitude.toStringAsFixed(5), point.longitude.toStringAsFixed(5)),
               style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 12),
@@ -196,10 +194,10 @@ class _LocationCard extends StatelessWidget {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.my_location),
-                  label: const Text('Usar minha localização'),
+                  label: Text(l10n.marketUseLocation),
                 ),
                 if (point != null)
-                  TextButton(onPressed: onClear, child: const Text('Remover')),
+                  TextButton(onPressed: onClear, child: Text(l10n.marketRemoveLocation)),
               ],
             ),
           ],

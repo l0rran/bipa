@@ -1,3 +1,4 @@
+import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
 import 'package:bipa/features/markets/domain/market.dart';
@@ -40,7 +41,10 @@ class MarketPickerSheet extends ConsumerWidget {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: Text('Em qual mercado você está?', style: Theme.of(context).textTheme.titleMedium),
+              child: Text(
+                AppLocalizations.of(context).marketPickTitle,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             ),
             for (final item in ranked)
               MarketTile(
@@ -50,7 +54,7 @@ class MarketPickerSheet extends ConsumerWidget {
               ),
             ListTile(
               leading: const CircleAvatar(child: Icon(Icons.add)),
-              title: const Text('Cadastrar novo mercado'),
+              title: Text(AppLocalizations.of(context).marketPickNew),
               onTap: () => _createMarket(context),
             ),
           ],
