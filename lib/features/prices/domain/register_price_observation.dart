@@ -119,7 +119,12 @@ final class RegisterPriceObservation {
         null => byBarcode,
       };
       // Uma embalagem de outro produto não vale para este.
-      return (product, package?.productId == product.id ? package : null);
+      if (package != null && package.productId == product.id) return (product, package);
+      // Um código que ainda não é de ninguém vira embalagem deste produto.
+      if (barcode != null && byBarcode == null && input.packageId == null) {
+        return (product, await _newPackage(product, barcode, input.newProductUnit));
+      }
+      return (product, null);
     }
 
     if (byBarcode != null) {
@@ -140,17 +145,21 @@ final class RegisterPriceObservation {
     );
     await _products.save(product);
     if (barcode == null) return (product, null);
+    return (product, await _newPackage(product, barcode, input.newProductUnit));
+  }
 
+  Future<ProductPackage> _newPackage(Product product, String barcode, MeasureUnit unit) async {
+    final now = _clock();
     final package = ProductPackage(
       id: _ids.newId(),
       productId: product.id,
       barcode: barcode,
-      unit: input.newProductUnit,
+      unit: unit,
       createdAt: now,
       updatedAt: now,
     );
     await _products.savePackage(package);
-    return (product, package);
+    return package;
   }
 }
 

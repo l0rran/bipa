@@ -49,7 +49,7 @@ class AppDatabase extends _$AppDatabase {
       if (from < 4) await migrator.createTable(shoppingListItems);
       if (from < 5) await migrator.createTable(shoppingTrips);
       if (from < 6) await migrator.createTable(cartItems);
-      if (from < 7) await _splitProductsIntoPackages(migrator);
+      if (from < 7) await _splitProductsIntoPackages(migrator, hadCart: from >= 6);
     },
     beforeOpen: (details) async {
       // SQLite não aplica chaves estrangeiras sem este pragma.
@@ -59,20 +59,39 @@ class AppDatabase extends _$AppDatabase {
 
   /// v7: cada produto vira um produto e uma embalagem com o mesmo id, que
   /// leva o código, a marca e o tamanho. Os preços antigos apontam para essa
-  /// embalagem. As chaves estrangeiras ainda estão desligadas aqui (o pragma
-  /// é ligado em `beforeOpen`), então recriar `products` não apaga nada.
-  Future<void> _splitProductsIntoPackages(Migrator migrator) async {
-    await migrator.createTable(productPackages);
-    await migrator.createIndex(productPackagesProduct);
-    await customStatement(
-      'INSERT INTO product_packages '
-      '(id, product_id, barcode, brand, size, unit, created_at, updated_at, synced_at) '
-      'SELECT id, id, barcode, brand, package_size, unit, created_at, updated_at, NULL FROM products',
-    );
-    await migrator.addColumn(priceObservations, priceObservations.packageId);
-    await customStatement('UPDATE price_observations SET package_id = product_id');
-    // Recria a tabela sem código, marca e tamanho.
-    await migrator.alterTable(TableMigration(products));
+  /// embalagem, e os itens do carrinho também. As chaves estrangeiras ainda
+  /// estão desligadas aqui (o pragma é ligado em `beforeOpen`), então recriar
+  /// `products` não apaga nada.
+  ///
+  /// Tudo numa transação: se o app fechar no meio, a próxima abertura refaz
+  /// a migração do começo, em vez de encontrar metade dela feita.
+  Future<void> _splitProductsIntoPackages(Migrator migrator, {required bool hadCart}) async {
+    await transaction(() async {
+      await migrator.createTable(productPackages);
+      await migrator.createIndex(productPackagesProduct);
+      await customStatement(
+        'INSERT INTO product_packages '
+        '(id, product_id, barcode, brand, size, unit, created_at, updated_at, synced_at) '
+        'SELECT id, id, barcode, brand, package_size, unit, created_at, updated_at, NULL FROM products',
+      );
+      await migrator.addColumn(priceObservations, priceObservations.packageId);
+      await migrator.createIndex(priceObservationsPackage);
+      await customStatement('UPDATE price_observations SET package_id = product_id');
+      // Recria a tabela sem código, marca e tamanho.
+      await migrator.alterTable(TableMigration(products));
+      // Um carrinho criado agora (de uma versão antes da 6) já nasce no
+      // formato novo; o da v6 ganha a embalagem e perde a chave única por
+      // produto.
+      if (hadCart) {
+        await migrator.alterTable(
+          TableMigration(
+            cartItems,
+            newColumns: [cartItems.packageId],
+            columnTransformer: {cartItems.packageId: cartItems.productId},
+          ),
+        );
+      }
+    });
   }
 
   static QueryExecutor _openConnection() => driftDatabase(name: 'bipa');

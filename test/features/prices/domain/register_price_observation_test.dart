@@ -96,6 +96,23 @@ void main() {
     expect(observation.packageId, 'leite-1l');
   });
 
+  test('um código novo informado com o produto vira embalagem dele', () async {
+    existingProduct();
+
+    final observation = await register(
+      const RegisterPriceInput(
+        marketId: 'mercado',
+        productId: 'leite',
+        barcode: '7891000100103',
+        price: Money.cents(549),
+        source: PriceSource.priceTag,
+      ),
+    );
+
+    final package = products.packages[observation.packageId]!;
+    expect((package.productId, package.barcode), ('leite', '7891000100103'));
+  });
+
   test('cadastra o produto quando o código ainda não existe', () async {
     final observation = await register(
       const RegisterPriceInput(

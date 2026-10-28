@@ -60,7 +60,8 @@ void main() {
     expect(package.sizeLabel, '395 g');
     expect(package.label, 'Moça · 395 g');
     expect(package.sizeInBaseUnit, closeTo(0.395, 1e-9));
-    expect(package.unitPrice(const Money.cents(799))?.format(), r'R$ 20,23/kg');
+    // O formato de moeda usa espaço não separável depois do "R$".
+    expect(package.unitPrice(const Money.cents(799))?.format().replaceAll('\u00a0', ' '), r'R$ 20,23/kg');
 
     final bare = ProductPackage(id: '2', productId: 'pao', unit: MeasureUnit.unit, createdAt: now, updatedAt: now);
     expect(bare.label, isNull);

@@ -72,6 +72,7 @@ class Markets extends Table {
 /// Observações de preço: apenas inseridas, nunca atualizadas.
 @DataClassName('PriceObservationRow')
 @TableIndex(name: 'price_observations_product_date', columns: {#productId, #observedAt})
+@TableIndex(name: 'price_observations_package', columns: {#packageId})
 class PriceObservations extends Table {
   TextColumn get id => text()();
   TextColumn get productId =>
@@ -154,12 +155,18 @@ class ShoppingTrips extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
-/// Carrinho de cada compra: um registro por produto, com a quantidade bipada.
+/// Carrinho de cada compra: um registro por embalagem, com a quantidade
+/// bipada. O repositório garante um item por embalagem (ou por produto, sem
+/// embalagem): como a embalagem pode ser nula, uma chave única no SQLite não
+/// garantiria isso.
 @DataClassName('CartItemRow')
 class CartItems extends Table {
   TextColumn get id => text()();
   TextColumn get tripId => text().references(ShoppingTrips, #id, onDelete: KeyAction.cascade)();
   TextColumn get productId => text().references(Products, #id, onDelete: KeyAction.cascade)();
+
+  /// A embalagem bipada (esquema v7).
+  TextColumn get packageId => text().nullable().references(ProductPackages, #id, onDelete: KeyAction.setNull)();
   IntColumn get quantity => integer().withDefault(const Constant(1))();
   IntColumn get priceCents => integer().nullable()();
   BoolColumn get take => boolean().withDefault(const Constant(true))();
@@ -167,9 +174,4 @@ class CartItems extends Table {
 
   @override
   Set<Column<Object>> get primaryKey => {id};
-
-  @override
-  List<Set<Column<Object>>> get uniqueKeys => [
-    {tripId, productId},
-  ];
 }
