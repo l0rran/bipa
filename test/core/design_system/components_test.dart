@@ -214,4 +214,16 @@ void main() {
     expect(take, isFalse);
     semantics.dispose();
   });
+
+  testWidgets('o aviso da leitura ao vivo mostra o preço e o destino, e o leitor de tela ouve os dois', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(
+      _app(const LiveReadChip(icon: Icons.sell_outlined, price: r'R$ 27,90', detail: 'Arroz Tio João 5 kg')),
+    );
+
+    expect(find.text(r'R$ 27,90'), findsOneWidget);
+    expect(find.text('Arroz Tio João 5 kg'), findsOneWidget);
+    expect(find.bySemanticsLabel(r'R$ 27,90, Arroz Tio João 5 kg'), findsOneWidget);
+    semantics.dispose();
+  });
 }

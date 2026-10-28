@@ -143,6 +143,7 @@ class ScanTrayItem extends StatelessWidget {
     required this.onPriceTap,
     required this.priceTapLabel,
     this.price,
+    this.justRead = false,
     super.key,
   });
 
@@ -160,6 +161,10 @@ class ScanTrayItem extends StatelessWidget {
 
   /// Rótulo acessível do preço: "Digitar o preço".
   final String priceTapLabel;
+
+  /// O preço acabou de ser lido da etiqueta: um anel em volta da mini
+  /// etiqueta, por um instante.
+  final bool justRead;
 
   @override
   Widget build(BuildContext context) {
@@ -193,20 +198,27 @@ class ScanTrayItem extends StatelessWidget {
               label: price ?? priceTapLabel,
               excludeSemantics: true,
               onTap: onPriceTap,
-              child: Material(
-                color: price == null ? colors.surfaceSunken : colors.price,
-                borderRadius: BorderRadius.circular(BipaRadius.sm),
-                child: InkWell(
-                  onTap: onPriceTap,
+              child: AnimatedContainer(
+                duration: BipaMotion.base,
+                decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(BipaRadius.sm),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    child: Text(
-                      price ?? '—',
-                      style: BipaText.number.copyWith(
-                        fontSize: 14,
-                        height: 18 / 14,
-                        color: price == null ? colors.inkMuted : colors.onPrice,
+                  boxShadow: [if (justRead) BoxShadow(color: colors.brandSoft, spreadRadius: 3)],
+                ),
+                child: Material(
+                  color: price == null ? colors.surfaceSunken : colors.price,
+                  borderRadius: BorderRadius.circular(BipaRadius.sm),
+                  child: InkWell(
+                    onTap: onPriceTap,
+                    borderRadius: BorderRadius.circular(BipaRadius.sm),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      child: Text(
+                        price ?? '—',
+                        style: BipaText.number.copyWith(
+                          fontSize: 14,
+                          height: 18 / 14,
+                          color: price == null ? colors.inkMuted : colors.onPrice,
+                        ),
                       ),
                     ),
                   ),
@@ -434,6 +446,59 @@ class CameraGlassChip extends StatelessWidget {
                   ],
                 ),
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Aviso da leitura ao vivo sobre a câmera (protótipo "Modo carrinho: preço
+/// lido"): o preço da etiqueta em destaque e, ao lado, o item que o recebeu
+/// ou o que falta fazer. Não é tocável; o leitor de tela anuncia a mudança.
+class LiveReadChip extends StatelessWidget {
+  const LiveReadChip({required this.icon, required this.price, required this.detail, super.key});
+
+  final IconData icon;
+
+  /// "R$ 27,90".
+  final String price;
+
+  /// O nome do item ou "bipe o produto".
+  final String detail;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Semantics(
+      liveRegion: true,
+      label: '$price, $detail',
+      excludeSemantics: true,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(BipaRadius.pill),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+          child: Container(
+            height: 40,
+            color: colors.camera.withValues(alpha: 0.55),
+            padding: const EdgeInsets.only(left: BipaSpacing.s3, right: BipaSpacing.s4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 18, color: colors.onCamera),
+                const SizedBox(width: BipaSpacing.s2),
+                Text(price, style: BipaText.number.copyWith(fontSize: 16, height: 20 / 16, color: colors.onCamera)),
+                const SizedBox(width: BipaSpacing.s2),
+                Flexible(
+                  child: Text(
+                    detail,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: BipaText.caption.copyWith(color: colors.onCamera.withValues(alpha: 0.75)),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
