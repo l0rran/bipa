@@ -81,7 +81,7 @@ final class TagPriceRead extends LiveScanEvent {
   int get hashCode => Object.hash(price, barcode, nameHint, perKilo, Object.hashAll(otherOffers));
 
   @override
-  String toString() => 'TagPriceRead($price, $barcode, $otherOffers)';
+  String toString() => 'TagPriceRead($price, $barcode, $nameHint, $otherOffers${perKilo ? ', /kg' : ''})';
 
   static bool _sameOffers(List<PriceOffer> a, List<PriceOffer> b) {
     if (a.length != b.length) return false;
@@ -236,7 +236,9 @@ final class LiveScanInterpreter {
         return null;
       }
     }
-    _priceHits.add(_PriceHit(at: at, cents: cents, barcode: code));
+    // O "por quilo" é do preço principal, que é o de varejo.
+    final perKilo = frame.tag.perKilo && frame.tag.offers.firstOrNull?.condition is AnyCustomer;
+    _priceHits.add(_PriceHit(at: at, cents: cents, barcode: code, perKilo: perKilo));
     final agreeing = _priceHits.where((hit) => hit.cents == cents && _sameTag(hit.barcode, code)).toList();
     if (agreeing.length < tagAgreement) return null;
 
@@ -251,8 +253,8 @@ final class LiveScanInterpreter {
         for (final offer in frame.tag.offers)
           if (offer.condition is! AnyCustomer) offer,
       ],
-      // O "por quilo" é do preço principal, que é o de varejo.
-      perKilo: frame.tag.perKilo && frame.tag.offers.firstOrNull?.condition is AnyCustomer,
+      // Basta um quadro ter lido o "KG": o OCR perde a unidade com facilidade.
+      perKilo: agreeing.any((hit) => hit.perKilo),
     );
   }
 
@@ -282,9 +284,12 @@ final class _Delivered {
 
 @immutable
 final class _PriceHit {
-  const _PriceHit({required this.at, required this.cents, this.barcode});
+  const _PriceHit({required this.at, required this.cents, this.barcode, this.perKilo = false});
 
   final DateTime at;
   final int cents;
   final String? barcode;
+
+  /// O quadro leu o preço como por quilo.
+  final bool perKilo;
 }
