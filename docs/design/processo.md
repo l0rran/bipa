@@ -79,6 +79,17 @@ O problema: **o preço da gôndola entrar no carrinho sem fotografar nem digitar
 - **Na dúvida, não escolhe:** etiqueta com vários preços do mesmo tamanho, ou só com preço de clube ou de atacado, não entra ao vivo. Para essas, o disparo continua fotografando a etiqueta.
 - **A mesma etiqueta não vale duas vezes:** para ler de novo, é preciso tirá-la da moldura, como no código de barras.
 
+### Produto e embalagens (outubro de 2026)
+
+O problema: **o arroz de outra marca, ou de outro tamanho, é o mesmo arroz em casa**, mas hoje cada código de barras é um produto, com marca e tamanho fixos.
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **Grocy** (produtos pai) | Um produto pode ter variações (um nível só); o estoque do pai soma o das variações, marcado com Σ | **Produto e variações em dois níveis**, com o estoque somado no produto | Sem conversão de unidades por produto: o tamanho da embalagem já diz quanto ela tem |
+| **Grocy na prática** (relato da Galaxus) | Unidades e conversões inventadas para cada produto; "o esforço supera o benefício" | Lição: **não pedir unidades nem conversões** | Contar embalagens, que é como se conta em casa, e somar o peso só para mostrar |
+| **Open Food Facts** e etiquetas de gôndola | O código identifica marca e tamanho; a etiqueta escreve "ARROZ BRANCO TIO JOAO 5KG" | Marca e tamanho **pertencem ao código**, não ao produto | O nome da etiqueta sugere o produto e preenche marca e tamanho, para conferir |
+| **Comparadores de preço** (preço por kg na gôndola) | O preço por unidade de medida compara tamanhos diferentes | **Preço por kg** para comparar as embalagens do mesmo produto | — |
+
 ## Fontes
 
 - [Menor Preço Brasil (Olhar Digital)](https://olhardigital.com.br/2025/08/03/dicas-e-tutoriais/quer-economizar-na-farmacia-e-supermercado-conheca-o-app-menor-preco-brasil/)
@@ -99,3 +110,5 @@ O problema: **o preço da gôndola entrar no carrinho sem fotografar nem digitar
 - [ShopCalc (App Store)](https://apps.apple.com/app/id6756393232)
 - [Calcula AI (Product Hunt)](https://www.producthunt.com/p/calcula-ai)
 - [Shelf to Cart](https://shelf-to-cart-marketing.pages.dev/)
+- [Grocy 2.5.0: produtos pai e estoque somado](https://newreleases.io/project/github/grocy/grocy/release/v2.5.0)
+- [Digitalizar a geladeira com o Grocy (Galaxus)](https://www.galaxus.de/en/page/wie-ich-meinen-kuehlschrankinhalt-digitalisieren-will-und-daran-scheitere-39565)
