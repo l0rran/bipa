@@ -447,6 +447,13 @@ class _HomeStockRow extends StatelessWidget {
               },
               onTap: () => showStockItemSheet(context, product),
             ),
+            // O resto do item (local, "Tirar de casa", produto) sem passar
+            // pelo chip do "ter sempre" (AB6).
+            IconButton(
+              tooltip: l10n.stockItemMore,
+              onPressed: () => showStockItemSheet(context, product),
+              icon: const Icon(Icons.more_horiz_rounded),
+            ),
           ],
         ),
       ),

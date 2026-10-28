@@ -1227,5 +1227,9 @@
   "tripCancelFailed": "Não deu para cancelar a compra. Tente de novo.",
   "@tripCancelFailed": {
     "description": "Falha ao cancelar a compra."
+  },
+  "stockItemMore": "Mais do item",
+  "@stockItemMore": {
+    "description": "Botão \"⋯\" no editor da linha do Início: abre a folha com o local, \"Tirar de casa\" e \"Ver produto\"."
   }
 }
