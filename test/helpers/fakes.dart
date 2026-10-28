@@ -1,4 +1,6 @@
 import 'package:bipa/core/id/id_generator.dart';
+import 'package:bipa/features/prices/domain/market_price.dart';
+import 'package:bipa/features/prices/domain/price_condition.dart';
 import 'package:bipa/features/prices/domain/price_observation.dart';
 import 'package:bipa/features/prices/domain/price_repository.dart';
 import 'package:bipa/features/products/domain/product.dart';
@@ -103,5 +105,16 @@ final class InMemoryPriceRepository implements PriceRepository {
       if (current == null || o.observedAt.isAfter(current)) latest[o.marketId] = o.observedAt;
     }
     return Stream.value(latest);
+  }
+
+  @override
+  Stream<List<MarketPrice>> watchLatestInMarket(String marketId) {
+    final sorted = observations.where((o) => o.marketId == marketId && o.condition is AnyCustomer).toList()
+      ..sort((a, b) => b.observedAt.compareTo(a.observedAt));
+    final latest = <(String, String?), MarketPrice>{};
+    for (final o in sorted) {
+      latest.putIfAbsent((o.productId, o.packageId), () => MarketPrice(observation: o, productName: o.productId));
+    }
+    return Stream.value(latest.values.toList());
   }
 }

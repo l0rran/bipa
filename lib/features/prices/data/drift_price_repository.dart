@@ -1,8 +1,10 @@
 import 'package:bipa/core/database/app_database.dart';
 import 'package:bipa/core/money/money.dart';
+import 'package:bipa/features/prices/domain/market_price.dart';
 import 'package:bipa/features/prices/domain/price_condition.dart';
 import 'package:bipa/features/prices/domain/price_observation.dart';
 import 'package:bipa/features/prices/domain/price_repository.dart';
+import 'package:bipa/features/products/data/product_mapper.dart';
 import 'package:drift/drift.dart';
 
 final class DriftPriceRepository implements PriceRepository {
@@ -57,6 +59,38 @@ final class DriftPriceRepository implements PriceRepository {
           if (row.read(latest) case final at?) row.read(prices.marketId)!: at,
       },
     );
+  }
+
+  @override
+  Stream<List<MarketPrice>> watchLatestInMarket(String marketId) {
+    final prices = _db.priceObservations;
+    final products = _db.products;
+    final packages = _db.productPackages;
+
+    final query = _db.select(prices).join([
+      innerJoin(products, products.id.equalsExp(prices.productId)),
+      leftOuterJoin(packages, packages.id.equalsExp(prices.packageId)),
+    ])
+      ..where(prices.marketId.equals(marketId) & prices.conditionKind.equalsValue(PriceConditionKind.anyCustomer))
+      ..orderBy([OrderingTerm.desc(prices.observedAt), OrderingTerm.desc(prices.createdAt)]);
+
+    return query.watch().map((rows) {
+      // Do mais recente para o mais antigo: o primeiro de cada produto e
+      // embalagem é o que vale. O mapa guarda a ordem de chegada.
+      final latest = <(String, String?), MarketPrice>{};
+      for (final row in rows) {
+        final price = row.readTable(prices);
+        latest.putIfAbsent(
+          (price.productId, price.packageId),
+          () => MarketPrice(
+            observation: price.toEntity(),
+            productName: row.readTable(products).name,
+            package: row.readTableOrNull(packages)?.toEntity(),
+          ),
+        );
+      }
+      return latest.values.toList();
+    });
   }
 
   Stream<List<PriceHistoryEntry>> _watchHistoryWhere(

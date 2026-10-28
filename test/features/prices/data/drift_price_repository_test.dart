@@ -10,6 +10,7 @@ import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/products/data/drift_product_repository.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/test_database.dart';
@@ -82,6 +83,57 @@ void main() {
     ]);
 
     expect(await prices.watchLatestPerMarket().first, {'m1': DateTime(2026, 10, 9), 'm2': DateTime(2026, 10, 20)});
+  });
+
+  test('mostra o preço mais recente de cada produto e embalagem no mercado', () async {
+    final created = DateTime(2026);
+    await DriftProductRepository(db).savePackage(
+      ProductPackage(
+        id: 'leite-1l',
+        productId: 'leite',
+        brand: 'Itambé',
+        size: 1,
+        unit: MeasureUnit.liter,
+        createdAt: created,
+        updatedAt: created,
+      ),
+    );
+    final semEmbalagem = observation('a', 'm1', 549, DateTime(2026, 10, 1));
+    final antiga = PriceObservation(
+      id: 'b',
+      productId: 'leite',
+      packageId: 'leite-1l',
+      marketId: 'm1',
+      price: Money.cents(519),
+      source: PriceSource.priceTag,
+      observedAt: DateTime(2026, 10, 2),
+      createdAt: DateTime(2026, 10, 2),
+    );
+    final recente = PriceObservation(
+      id: 'c',
+      productId: 'leite',
+      packageId: 'leite-1l',
+      marketId: 'm1',
+      price: Money.cents(499),
+      source: PriceSource.priceTag,
+      observedAt: DateTime(2026, 10, 9),
+      createdAt: DateTime(2026, 10, 9),
+    );
+    await prices.addAll([
+      semEmbalagem,
+      antiga,
+      recente,
+      // O de cartão e o de outro mercado ficam de fora.
+      observation('d', 'm1', 450, DateTime(2026, 10, 10), condition: const LoyaltyMembers()),
+      observation('e', 'm2', 399, DateTime(2026, 10, 11)),
+    ]);
+
+    final latest = await prices.watchLatestInMarket('m1').first;
+
+    expect(latest.map((p) => p.observation), [recente, semEmbalagem]);
+    expect(latest.map((p) => p.productName), ['Leite', 'Leite']);
+    expect(latest.first.package?.label, 'Itambé · 1 L');
+    expect(latest.last.package, isNull);
   });
 
   test('grava e lê a condição de cada preço', () async {
