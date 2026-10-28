@@ -10,6 +10,7 @@ import 'package:bipa/features/stock/domain/stock_location.dart';
 import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
 import 'package:bipa/features/stock/domain/stock_lot.dart';
 import 'package:bipa/features/stock/domain/stock_repository.dart';
+import 'package:bipa/features/stock/domain/suggested_location.dart';
 import 'package:drift/drift.dart';
 
 final class DriftStockRepository implements StockRepository {
@@ -59,7 +60,7 @@ final class DriftStockRepository implements StockRepository {
               StockItemsCompanion.insert(
                 productId: productId,
                 quantity: quantity,
-                location: StockLocation.pantry,
+                location: await _suggestedLocationFor(productId),
                 updatedAt: now,
               ),
             );
@@ -249,13 +250,19 @@ final class DriftStockRepository implements StockRepository {
               StockItemsCompanion.insert(
                 productId: productId,
                 quantity: 0,
-                location: StockLocation.pantry,
+                location: await _suggestedLocationFor(productId),
                 updatedAt: now,
               ),
             );
       }
       await _updateItem(productId, changes.copyWith(updatedAt: Value(now)));
     });
+  }
+
+  /// Local do item que nasce agora, pelo nome do produto.
+  Future<StockLocation> _suggestedLocationFor(String productId) async {
+    final product = await (_db.select(_db.products)..where((t) => t.id.equals(productId))).getSingleOrNull();
+    return product == null ? StockLocation.pantry : suggestedLocation(product.name);
   }
 
   SimpleSelectStatement<$StockItemsTable, StockItemRow> _selectItem(String productId) =>
