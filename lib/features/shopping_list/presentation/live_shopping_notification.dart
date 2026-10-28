@@ -120,23 +120,12 @@ class _LiveShoppingNotificationState extends ConsumerState<LiveShoppingNotificat
         final trip = await ref.read(activeTripProvider.future);
         if (!mounted || trip == null) return;
         router.go(Routes.shoppingList);
-        // Um toque no bolso não pode encerrar a compra: pergunta antes. O
-        // diálogo precisa de um contexto abaixo do Navigator.
+        // Um toque no bolso não pode encerrar a compra: a folha "Fim da
+        // compra" pede a confirmação. Ela precisa de um contexto abaixo do
+        // Navigator.
         final navigatorContext = router.routerDelegate.navigatorKey.currentContext;
         if (navigatorContext == null) return;
-        final l10n = AppLocalizations.of(navigatorContext);
-        final confirmed = await showDialog<bool>(
-          context: navigatorContext,
-          builder: (context) => AlertDialog(
-            title: Text(l10n.tripFinishTitle),
-            content: Text(l10n.tripFinishBody),
-            actions: [
-              TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.tripKeep)),
-              FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.tripFinish)),
-            ],
-          ),
-        );
-        if (confirmed == true && navigatorContext.mounted) await finishShopping(navigatorContext, ref, trip.id);
+        await finishShopping(navigatorContext, ref, trip.id);
     }
   }
 

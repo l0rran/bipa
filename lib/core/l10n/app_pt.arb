@@ -212,13 +212,14 @@
   "@tripFinish": {
     "description": "Termina a compra: o comprado vai para o estoque."
   },
-  "tripFinished": "{count, plural, =0{Compra terminada} =1{Compra terminada: 1 item foi para o estoque} other{Compra terminada: {count} itens foram para o estoque}}",
+  "tripFinished": "{count, plural, =0{Compra terminada} =1{Compra terminada: 1 embalagem foi para casa} other{Compra terminada: {count} embalagens foram para casa}}",
   "@tripFinished": {
     "placeholders": {
       "count": {
         "type": "int"
       }
-    }
+    },
+    "description": "Aviso depois do \"Terminei\", com o Desfazer; conta embalagens, não produtos."
   },
   "tripSemantics": "Compra em andamento: {done} de {total}. Continuar no carrinho",
   "@tripSemantics": {
@@ -678,8 +679,6 @@
   "@listEmptyFirst": {
     "description": "Lista vazia quando ainda não há itens de sempre."
   },
-  "tripFinishTitle": "Terminar a compra?",
-  "tripFinishBody": "O que está no carrinho e o que foi marcado na lista vão para o estoque.",
   "marketLocationSaved": "Localização salva: o app reconhece quando você está neste mercado.",
   "productMerged": "{from} agora faz parte de {into}.",
   "@productMerged": {
@@ -843,5 +842,95 @@
   "listChangeQuantity": "Mudar a quantidade",
   "@listChangeQuantity": {
     "description": "Ação do leitor de tela no item da lista; com o dedo, é o toque longo."
+  },
+  "tripReviewTitle": "Fim da compra",
+  "@tripReviewTitle": {
+    "description": "Título da folha que aparece antes de terminar a compra."
+  },
+  "tripReviewPackages": "{count, plural, =0{Nada vai para casa} =1{1 embalagem para casa} other{{count} embalagens para casa}}",
+  "@tripReviewPackages": {
+    "description": "Linha da etiqueta do total na folha \"Fim da compra\".",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tripReviewEstimated": "com preço estimado",
+  "@tripReviewEstimated": {
+    "description": "Junto do total quando algum preço do carrinho é do histórico."
+  },
+  "tripReviewSavings": "{amount} a menos que no {market}",
+  "@tripReviewSavings": {
+    "description": "Economia da compra contra o mercado mais barato depois deste: \"R$ 6,20 a menos que no Centro\".",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "market": {
+        "type": "String"
+      }
+    }
+  },
+  "tripReviewMissing": "{count, plural, =1{Faltou 1} other{Faltaram {count}}}",
+  "@tripReviewMissing": {
+    "description": "Itens da lista que não foram comprados.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tripReviewMissingDetail": "{count, plural, =1{{names} continua na lista} other{{names} continuam na lista}}",
+  "@tripReviewMissingDetail": {
+    "description": "Os nomes do que faltou, que fica na lista.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "tripReviewConfirm": "Terminar compra",
+  "@tripReviewConfirm": {
+    "description": "Confirma o fim da compra na folha \"Fim da compra\"."
+  },
+  "namesPair": "{first}, {second}",
+  "@namesPair": {
+    "description": "Junta nomes numa enumeração.",
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "second": {
+        "type": "String"
+      }
+    }
+  },
+  "namesLast": "{first} e {last}",
+  "@namesLast": {
+    "description": "O último nome de uma enumeração.",
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "last": {
+        "type": "String"
+      }
+    }
+  },
+  "namesMore": "{names} e mais {count}",
+  "@namesMore": {
+    "description": "Enumeração cortada: \"Arroz, Feijão e mais 3\".",
+    "placeholders": {
+      "names": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

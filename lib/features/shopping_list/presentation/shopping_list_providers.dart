@@ -19,6 +19,7 @@ import 'package:bipa/features/shopping_list/domain/aisle_order.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/finish_shopping_trip.dart';
 import 'package:bipa/features/shopping_list/domain/put_product_on_list.dart';
+import 'package:bipa/features/shopping_list/domain/review_shopping_trip.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_repository.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_sections.dart';
@@ -181,6 +182,16 @@ final putProductOnListProvider = Provider<PutProductOnList>(
   (ref) => PutProductOnList(
     list: ref.watch(shoppingListRepositoryProvider),
     stock: ref.watch(stockRepositoryProvider),
+  ),
+);
+
+final reviewShoppingTripProvider = Provider<ReviewShoppingTrip>(
+  (ref) => ReviewShoppingTrip(
+    trips: ref.watch(shoppingTripRepositoryProvider),
+    list: ref.watch(shoppingListRepositoryProvider),
+    cart: ref.watch(cartRepositoryProvider),
+    prices: ref.watch(priceRepositoryProvider),
+    products: ref.watch(productRepositoryProvider),
   ),
 );
 

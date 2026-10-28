@@ -4,6 +4,9 @@ import 'package:bipa/core/database/drift_unit_of_work.dart';
 import 'package:bipa/core/money/money.dart';
 import 'package:bipa/features/markets/data/drift_market_repository.dart';
 import 'package:bipa/features/markets/domain/market.dart';
+import 'package:bipa/features/prices/data/drift_price_repository.dart';
+import 'package:bipa/features/prices/domain/price_observation.dart';
+import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/products/data/drift_product_repository.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
@@ -15,6 +18,7 @@ import 'package:bipa/features/shopping_list/data/drift_shopping_trip_repository.
 import 'package:bipa/features/shopping_list/domain/aisle_order.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/finish_shopping_trip.dart';
+import 'package:bipa/features/shopping_list/domain/review_shopping_trip.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
 import 'package:bipa/features/stock/data/drift_stock_repository.dart';
@@ -112,6 +116,45 @@ void main() {
 
     expect(finished.stocked, {'cafe': 3});
     expect((await stock.findByProduct('cafe'))?.quantity, 3);
+  });
+
+  test('a revisão do fim mostra o total, o que faltou e a economia contra outro mercado', () async {
+    final markets = DriftMarketRepository(db);
+    for (final (id, name) in [('vila', 'Vila'), ('centro', 'Centro')]) {
+      await markets.save(Market(id: id, name: name, createdAt: now, updatedAt: now));
+    }
+    final prices = DriftPriceRepository(db);
+    for (final (id, market, cents) in [('p1', 'vila', 1899), ('p2', 'centro', 2099)]) {
+      await prices.add(
+        PriceObservation(
+          id: id,
+          productId: 'cafe',
+          marketId: market,
+          price: Money.cents(cents),
+          source: PriceSource.priceTag,
+          observedAt: now,
+          createdAt: now,
+        ),
+      );
+    }
+    final trip = await trips.start(marketId: 'vila');
+    await cart.addProduct(trip.id, 'cafe', price: const Money.cents(1899));
+    await list.addProduct(productId: 'arroz', name: 'Arroz');
+    final review = ReviewShoppingTrip(
+      trips: trips,
+      list: list,
+      cart: cart,
+      prices: prices,
+      products: DriftProductRepository(db),
+    );
+
+    final result = (await review(trip.id))!;
+
+    expect(result.spent, const Money.cents(1899));
+    expect(result.packages, 1);
+    expect(result.missing, ['Arroz']);
+    expect(result.savings, (marketName: 'Centro', amount: const Money.cents(200)));
+    expect(await review('outra'), isNull);
   });
 
   test('cancelar a compra descarta o carrinho e não mexe no estoque nem na lista', () async {
