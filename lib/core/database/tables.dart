@@ -1,3 +1,4 @@
+import 'package:bipa/features/prices/domain/price_condition.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/stock/domain/stock_location.dart';
@@ -61,6 +62,12 @@ class PriceObservations extends Table {
       text().references(Markets, #id, onDelete: KeyAction.cascade)();
   IntColumn get priceCents => integer()();
   IntColumn get regularPriceCents => integer().nullable()();
+
+  /// Condição do preço (ADR 0011, esquema v3). Observações antigas são de varejo.
+  TextColumn get conditionKind => textEnum<PriceConditionKind>().withDefault(const Constant('anyCustomer'))();
+
+  /// Mínimo de unidades do preço de atacado, quando a etiqueta informa.
+  IntColumn get minimumQuantity => integer().nullable()();
   TextColumn get source => textEnum<PriceSource>()();
   DateTimeColumn get observedAt => dateTime()();
   DateTimeColumn get createdAt => dateTime()();

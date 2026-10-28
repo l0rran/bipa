@@ -1,5 +1,6 @@
 import 'package:bipa/core/database/app_database.dart';
 import 'package:bipa/core/money/money.dart';
+import 'package:bipa/features/prices/domain/price_condition.dart';
 import 'package:bipa/features/prices/domain/price_observation.dart';
 import 'package:bipa/features/prices/domain/price_repository.dart';
 import 'package:drift/drift.dart';
@@ -18,6 +19,11 @@ final class DriftPriceRepository implements PriceRepository {
         marketId: observation.marketId,
         priceCents: observation.price.cents,
         regularPriceCents: Value(observation.regularPrice?.cents),
+        conditionKind: Value(observation.condition.kind),
+        minimumQuantity: Value(switch (observation.condition) {
+          Wholesale(:final minimumQuantity) => minimumQuantity,
+          AnyCustomer() || LoyaltyMembers() => null,
+        }),
         source: observation.source,
         observedAt: observation.observedAt,
         createdAt: observation.createdAt,
@@ -57,6 +63,7 @@ extension PriceObservationRowMapper on PriceObservationRow {
       marketId: marketId,
       price: Money.cents(priceCents),
       regularPrice: regular == null ? null : Money.cents(regular),
+      condition: PriceCondition.from(conditionKind, minimumQuantity: minimumQuantity),
       source: source,
       observedAt: observedAt,
       createdAt: createdAt,

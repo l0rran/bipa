@@ -1,17 +1,24 @@
 import 'package:bipa/core/money/money.dart';
 import 'package:bipa/features/prices/domain/price_comparison.dart';
+import 'package:bipa/features/prices/domain/price_condition.dart';
 import 'package:bipa/features/prices/domain/price_observation.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-PriceHistoryEntry entry(String market, int cents, DateTime at) => PriceHistoryEntry(
+PriceHistoryEntry entry(
+  String market,
+  int cents,
+  DateTime at, {
+  PriceCondition condition = const AnyCustomer(),
+}) => PriceHistoryEntry(
   marketName: market,
   observation: PriceObservation(
-    id: '$market-$cents',
+    id: '$market-$cents-$condition',
     productId: 'leite',
     marketId: market,
     price: Money.cents(cents),
     source: PriceSource.manual,
+    condition: condition,
     observedAt: at,
     createdAt: at,
   ),
@@ -33,6 +40,30 @@ void main() {
       ('B', 600),
       ('A', 650),
     ]);
+  });
+
+  test('compara pelo preço sem condição, mesmo que o de cartão seja mais recente', () {
+    final at = DateTime(2026, 10, 27);
+    final history = [
+      entry('Assaí', 805, at),
+      entry('Assaí', 785, at.add(const Duration(minutes: 1)), condition: const LoyaltyMembers()),
+      entry('Assaí', 785, at, condition: const Wholesale(minimumQuantity: 10)),
+      entry('Bairro', 799, at),
+    ];
+
+    final latest = latestPricePerMarket(history);
+
+    expect(latest.map((e) => (e.marketName, e.observation.price.cents)), [('Bairro', 799), ('Assaí', 805)]);
+  });
+
+  test('sem preço de varejo, o mercado entra com o preço condicional', () {
+    final at = DateTime(2026, 10, 27);
+    final history = [
+      entry('Assaí', 179, at, condition: const LoyaltyMembers()),
+      entry('Bairro', 229, at),
+    ];
+
+    expect(latestPricePerMarket(history).map((e) => e.marketName), ['Assaí', 'Bairro']);
   });
 
   test('histórico vazio resulta em lista vazia', () {

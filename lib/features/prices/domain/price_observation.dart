@@ -1,4 +1,5 @@
 import 'package:bipa/core/money/money.dart';
+import 'package:bipa/features/prices/domain/price_condition.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:meta/meta.dart';
 
@@ -17,6 +18,7 @@ final class PriceObservation {
     required this.observedAt,
     required this.createdAt,
     this.regularPrice,
+    this.condition = const AnyCustomer(),
   });
 
   final String id;
@@ -28,6 +30,9 @@ final class PriceObservation {
 
   /// Preço sem desconto, quando o produto estava em promoção.
   final Money? regularPrice;
+
+  /// Para quem o preço vale: qualquer cliente, cartão da loja ou atacado.
+  final PriceCondition condition;
   final PriceSource source;
   final DateTime observedAt;
   final DateTime createdAt;
@@ -45,6 +50,7 @@ final class PriceObservation {
       other.marketId == marketId &&
       other.price == price &&
       other.regularPrice == regularPrice &&
+      other.condition == condition &&
       other.source == source &&
       other.observedAt == observedAt &&
       other.createdAt == createdAt;
@@ -56,6 +62,7 @@ final class PriceObservation {
     marketId,
     price,
     regularPrice,
+    condition,
     source,
     observedAt,
     createdAt,

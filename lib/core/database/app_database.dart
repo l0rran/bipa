@@ -1,5 +1,6 @@
 import 'package:bipa/core/database/tables.dart';
 // Os enums abaixo são usados pelo código gerado (app_database.g.dart).
+import 'package:bipa/features/prices/domain/price_condition.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/stock/domain/stock_location.dart';
@@ -19,13 +20,18 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   // v2: produtos ganham photoPath.
-  int get schemaVersion => 2;
+  // v3: observações de preço ganham a condição (ADR 0011).
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (migrator) => migrator.createAll(),
     onUpgrade: (migrator, from, to) async {
       if (from < 2) await migrator.addColumn(products, products.photoPath);
+      if (from < 3) {
+        await migrator.addColumn(priceObservations, priceObservations.conditionKind);
+        await migrator.addColumn(priceObservations, priceObservations.minimumQuantity);
+      }
     },
     beforeOpen: (details) async {
       // SQLite não aplica chaves estrangeiras sem este pragma.
