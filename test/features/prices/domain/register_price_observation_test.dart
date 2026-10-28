@@ -62,6 +62,25 @@ void main() {
     expect(prices.observations, [observation]);
   });
 
+  test('o preço visto antes guarda a hora em que foi visto, e o registro, a de agora', () async {
+    existingProduct();
+    final seen = now.subtract(const Duration(minutes: 40));
+
+    final observation = await register(
+      RegisterPriceInput(
+        marketId: 'mercado',
+        productId: 'leite',
+        price: const Money.cents(549),
+        source: PriceSource.priceTag,
+        otherOffers: const [PriceOffer(price: Money.cents(499), condition: LoyaltyMembers())],
+        observedAt: seen,
+      ),
+    );
+
+    expect((observation.observedAt, observation.createdAt), (seen, now));
+    expect(prices.observations.map((o) => o.observedAt), everyElement(seen));
+  });
+
   test('um preço digitado corrige a leitura errada sem apagá-la', () async {
     existingProduct();
     final wrong = await register(

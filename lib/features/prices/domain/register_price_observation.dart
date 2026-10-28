@@ -38,6 +38,7 @@ final class RegisterPriceInput {
     this.newProductName,
     this.newProductUnit = MeasureUnit.unit,
     this.supersedes,
+    this.observedAt,
   });
 
   final String marketId;
@@ -55,6 +56,11 @@ final class RegisterPriceInput {
   /// A observação que este preço corrige (ADR 0017): a etiqueta lida errado
   /// e depois digitada certa, por exemplo. Vale só para o preço principal.
   final String? supersedes;
+
+  /// Quando o preço foi visto, se não agora: o preço lido no carrinho antes
+  /// de a compra ter mercado é gravado depois, com a hora da leitura (ADR
+  /// 0020).
+  final DateTime? observedAt;
 }
 
 /// Caso de uso: registra o preço de um produto em um mercado, cadastrando o
@@ -91,7 +97,7 @@ final class RegisterPriceObservation {
       regularPrice: _promotionRegularPrice(offer),
       condition: offer.condition,
       source: input.source,
-      observedAt: now,
+      observedAt: input.observedAt ?? now,
       createdAt: now,
       supersedes: supersedes,
     );
