@@ -9,6 +9,7 @@ import 'package:bipa/core/notifications/notifications_provider.dart';
 import 'package:bipa/features/shopping_list/presentation/aisle_label.dart';
 import 'package:bipa/features/shopping_list/presentation/finish_shopping.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
+import 'package:bipa/features/shopping_list/presentation/trip_summary_label.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -79,10 +80,10 @@ class _LiveShoppingNotificationState extends ConsumerState<LiveShoppingNotificat
     final summary = shopping.summary;
     final hasList = summary.total > 0;
     final items = hasList ? l10n.tripItems(summary.done, summary.total) : l10n.liveShopping;
-    final spent = summary.spent;
+    final spent = summary.spentLabel(l10n);
     return LiveNotificationContent(
       tripId: shopping.tripId,
-      title: spent == null ? items : l10n.liveTitle(items, spent.format()),
+      title: spent == null ? items : l10n.liveTitle(items, spent),
       text: switch (shopping.next) {
         (:final aisle, :final items) => l10n.liveNext(aisle.localizedLabel(l10n), items.join(', ')),
         null when hasList => l10n.liveAllPicked,

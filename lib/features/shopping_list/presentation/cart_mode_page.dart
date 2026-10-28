@@ -4,6 +4,7 @@ import 'package:bipa/core/camera/viewfinder_region.dart';
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/quantity_stepper.dart';
 import 'package:bipa/core/design_system/components/scan_tray.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/money/money.dart';
@@ -24,6 +25,7 @@ import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
 import 'package:bipa/features/shopping_list/presentation/finish_shopping.dart';
 import 'package:bipa/features/shopping_list/presentation/live_scanner.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
+import 'package:bipa/features/shopping_list/presentation/trip_summary_label.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -87,6 +89,9 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
   var _locked = false;
   Timer? _unlock;
   var _finishing = false;
+
+  /// A bandeja aberta mostra mais itens (a alça alterna).
+  var _trayExpanded = false;
   var _cameraDenied = false;
 
   /// A câmera não abriu por outro motivo (ocupada por outro app, por
@@ -259,7 +264,9 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
     final barcode = package.barcode;
     final fromTag =
         registeredWith ??
-        (pending != null && barcode != null && _router.fits(pending, barcode: barcode, now: DateTime.now())
+        (pending != null &&
+                barcode != null &&
+                _router.fits(pending, barcode: barcode, now: DateTime.now(), productName: product.name)
             ? pending.read
             : null);
     // Consumido na hora: outro bipe durante a gravação não leva o mesmo preço.
@@ -269,9 +276,19 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
         ? null
         : latestPriceAt(await prices.watchHistory(product.id).first, marketId, packageId: package.id);
 
-    await cart.addProduct(trip.id, product.id, packageId: package.id, price: fromTag?.price ?? expected);
+    await cart.addProduct(
+      trip.id,
+      product.id,
+      packageId: package.id,
+      price: fromTag?.price ?? expected,
+      // O preço do histórico é uma estimativa até a etiqueta ser lida.
+      estimated: fromTag == null,
+    );
     await list.checkProduct(product.id);
     unawaited(HapticFeedback.mediumImpact());
+    // O bipe: o som de clique do sistema, que segue a configuração de sons de
+    // toque do aparelho (desligado lá, desligado aqui).
+    unawaited(SystemSound.play(SystemSoundType.click));
     final key = CartItem.keyOf(product.id, package.id);
     if (fromTag != null) {
       _settledItems.add(key);
@@ -473,6 +490,44 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
     }
   }
 
+  /// Tocar no nome: quantas unidades vão.
+  Future<void> _setQuantity(CartEntry entry) async {
+    final l10n = AppLocalizations.of(context);
+    final cart = ref.read(cartRepositoryProvider);
+    var quantity = entry.item.quantity;
+    final chosen = await _withAnalysisPaused(
+      () => showDialog<int>(
+        context: context,
+        builder: (context) => StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            title: Text(entry.name),
+            content: Center(
+              heightFactor: 1,
+              child: QuantityStepper(
+                value: '$quantity',
+                unit: l10n.unitPackages,
+                decrementLabel: l10n.cartQuantityLess,
+                incrementLabel: l10n.cartQuantityMore,
+                onIncrement: () => setState(() => quantity++),
+                onDecrement: quantity > 1 ? () => setState(() => quantity--) : null,
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.cancel)),
+              FilledButton(onPressed: () => Navigator.of(context).pop(quantity), child: Text(l10n.save)),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (chosen == null || chosen == entry.item.quantity) return;
+    try {
+      await cart.setQuantity(entry.item.id, chosen);
+    } on Exception catch (error, stack) {
+      _report(error, stack);
+    }
+  }
+
   Future<void> _chooseMarket(ShoppingTrip trip) async {
     final market = await _withScannerPaused(() => pickMarket(context, selectedId: trip.marketId));
     if (market != null) await ref.read(shoppingTripRepositoryProvider).setMarket(trip.id, market.id);
@@ -632,9 +687,12 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
                       child: Center(
                         child: switch ((notice, _cameraDenied)) {
                           ((:final price, :final detail, :final waiting)?, _) => LiveReadChip(
+                            // O preço que espera mostra o tempo que falta.
+                            key: ValueKey((price, waiting)),
                             icon: waiting ? Icons.qr_code_scanner_rounded : Icons.sell_outlined,
                             price: price.format(),
                             detail: detail,
+                            countdown: waiting ? _router.waitFor : null,
                           ),
                           (null, true) => Text(
                             l10n.cartCameraDenied,
@@ -688,7 +746,12 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
               title: l10n.cartTitle,
               countLabel: summary == null || summary.total == 0 ? null : l10n.cartFromList(summary.done, summary.total),
               totalLabel: l10n.cartTotal,
-              totalValue: summary?.spent?.format(),
+              // Com preço do histórico no meio, o total é uma estimativa ("≈").
+              totalValue: summary?.spentLabel(l10n),
+              totalNote: (summary?.unpriced ?? 0) > 0 ? l10n.marketsMissingPrices(summary!.unpriced) : null,
+              maxListHeight: _trayExpanded ? MediaQuery.sizeOf(context).height * 0.55 : 196,
+              handleLabel: _trayExpanded ? l10n.cartTrayLess : l10n.cartTrayMore,
+              onHandleTap: () => setState(() => _trayExpanded = !_trayExpanded),
               items: [
                 for (final entry in cart)
                   ScanTrayItem(
@@ -696,7 +759,14 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
                     name: entry.item.quantity > 1
                         ? l10n.cartQuantity(entry.item.quantity, entry.name)
                         : entry.name,
-                    price: entry.item.price?.format(),
+                    price: switch (entry.item.price) {
+                      final price? when entry.item.priceEstimated => l10n.priceEstimate(price.format()),
+                      final price? => price.format(),
+                      null => null,
+                    },
+                    priceEstimated: entry.item.priceEstimated,
+                    onNameTap: () => _setQuantity(entry),
+                    nameTapLabel: l10n.cartQuantityOf(entry.name),
                     justRead: entry.item.key == _justReadKey,
                     take: entry.item.take,
                     takeLabel: l10n.cartTake(entry.name),
@@ -713,7 +783,8 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
                     child: Align(
                       alignment: AlignmentDirectional.centerStart,
                       child: IconButton.filledTonal(
-                        tooltip: l10n.cartTypePrice,
+                        // Digita o preço do último bipado: o rótulo diz qual.
+                        tooltip: cart.isEmpty ? l10n.cartTypePrice : l10n.cartTypePriceOf(cart.first.name),
                         onPressed: trip == null || cart.isEmpty ? null : () => _typePrice(trip, cart.first),
                         style: IconButton.styleFrom(
                           backgroundColor: colors.surfaceSunken,

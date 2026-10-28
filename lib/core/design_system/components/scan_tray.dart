@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
 import 'package:bipa/core/design_system/bipa_metrics.dart';
@@ -17,7 +18,10 @@ class ScanTray extends StatelessWidget {
     required this.footer,
     this.countLabel,
     this.totalValue,
+    this.totalNote,
     this.maxListHeight = 196,
+    this.handleLabel,
+    this.onHandleTap,
     super.key,
   });
 
@@ -31,6 +35,13 @@ class ScanTray extends StatelessWidget {
 
   /// "R$ 54,88"; sem nenhum preço, o total não aparece.
   final String? totalValue;
+
+  /// Uma ressalva sob o total: "sem preço de 2 itens".
+  final String? totalNote;
+
+  /// A alça expande ou recolhe a lista: o rótulo diz o que o toque faz.
+  final String? handleLabel;
+  final VoidCallback? onHandleTap;
   final List<Widget> items;
   final Widget footer;
 
@@ -42,6 +53,13 @@ class ScanTray extends StatelessWidget {
     final colors = context.colors;
     final countLabel = this.countLabel;
     final totalValue = this.totalValue;
+    final totalNote = this.totalNote;
+    final onHandleTap = this.onHandleTap;
+    final handle = Container(
+      width: 36,
+      height: 4,
+      decoration: ShapeDecoration(color: colors.line, shape: const StadiumBorder()),
+    );
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -57,14 +75,25 @@ class ScanTray extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: ShapeDecoration(color: colors.line, shape: const StadiumBorder()),
+              // A alça: tocar ou arrastar para cima mostra mais itens.
+              if (onHandleTap == null)
+                Center(child: handle)
+              else
+                Semantics(
+                  button: true,
+                  label: handleLabel,
+                  excludeSemantics: true,
+                  onTap: onHandleTap,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: onHandleTap,
+                    onVerticalDragEnd: (details) {
+                      if ((details.primaryVelocity ?? 0).abs() > 100) onHandleTap();
+                    },
+                    child: SizedBox(height: 24, child: Center(child: handle)),
+                  ),
                 ),
-              ),
-              const SizedBox(height: BipaSpacing.s3),
+              const SizedBox(height: BipaSpacing.s2),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s1),
                 child: Row(
@@ -105,6 +134,8 @@ class ScanTray extends StatelessWidget {
                             totalValue,
                             style: BipaText.price.copyWith(fontSize: 22, height: 26 / 22, color: colors.ink),
                           ),
+                          if (totalNote != null)
+                            Text(totalNote, style: BipaText.caption.copyWith(color: colors.inkMuted)),
                         ],
                       ),
                   ],
@@ -143,7 +174,10 @@ class ScanTrayItem extends StatelessWidget {
     required this.onPriceTap,
     required this.priceTapLabel,
     this.price,
+    this.priceEstimated = false,
     this.justRead = false,
+    this.onNameTap,
+    this.nameTapLabel,
     super.key,
   });
 
@@ -152,6 +186,16 @@ class ScanTrayItem extends StatelessWidget {
 
   /// "R$ 27,90"; `null` mostra um traço para digitar.
   final String? price;
+
+  /// O preço é o do histórico, não o lido hoje: a etiqueta fica vazada (só o
+  /// contorno), e a cheia fica para o preço confirmado.
+  final bool priceEstimated;
+
+  /// Tocar no nome muda a quantidade.
+  final VoidCallback? onNameTap;
+
+  /// Rótulo acessível do nome: "Quantidade de Café".
+  final String? nameTapLabel;
   final bool take;
 
   /// Rótulo acessível do interruptor: "Levar Café Pilão".
@@ -171,23 +215,58 @@ class ScanTrayItem extends StatelessWidget {
     final colors = context.colors;
     final price = this.price;
     final dimmed = take ? 1.0 : 0.45;
+    final onNameTap = this.onNameTap;
+    final nameText = AnimatedOpacity(
+      opacity: dimmed,
+      duration: BipaMotion.base,
+      child: Text(
+        name,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: BipaText.label.copyWith(fontWeight: FontWeight.w600, color: colors.ink),
+      ),
+    );
+    // Preço confirmado: etiqueta cheia; estimado: só o contorno; sem preço:
+    // o traço para digitar.
+    final Color tagColor;
+    final Color tagText;
+    var tagBorder = BorderSide.none;
+    if (price == null) {
+      tagColor = colors.surfaceSunken;
+      tagText = colors.inkMuted;
+    } else if (priceEstimated) {
+      tagColor = colors.surface;
+      tagText = colors.ink;
+      tagBorder = BorderSide(color: colors.price, width: 2);
+    } else {
+      tagColor = colors.price;
+      tagText = colors.onPrice;
+    }
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(BipaSpacing.s3, BipaSpacing.s2, BipaSpacing.s2, BipaSpacing.s2),
+      padding: const EdgeInsets.fromLTRB(BipaSpacing.s3, BipaSpacing.s1, BipaSpacing.s1, BipaSpacing.s1),
       decoration: BoxDecoration(color: colors.ground, borderRadius: BorderRadius.circular(BipaRadius.md)),
       child: Row(
         children: [
           Expanded(
-            child: AnimatedOpacity(
-              opacity: dimmed,
-              duration: BipaMotion.base,
-              child: Text(
-                name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: BipaText.label.copyWith(fontWeight: FontWeight.w600, color: colors.ink),
-              ),
-            ),
+            child: onNameTap == null
+                ? nameText
+                : Semantics(
+                    button: true,
+                    label: nameTapLabel,
+                    hint: name,
+                    excludeSemantics: true,
+                    onTap: onNameTap,
+                    child: InkWell(
+                      onTap: onNameTap,
+                      borderRadius: BorderRadius.circular(BipaRadius.sm),
+                      // A área de toque tem a altura mínima de 48.
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: 48),
+                        child: Align(alignment: AlignmentDirectional.centerStart, child: nameText),
+                      ),
+                    ),
+                  ),
           ),
           const SizedBox(width: BipaSpacing.s3),
           AnimatedOpacity(
@@ -198,26 +277,36 @@ class ScanTrayItem extends StatelessWidget {
               label: price ?? priceTapLabel,
               excludeSemantics: true,
               onTap: onPriceTap,
-              child: AnimatedContainer(
-                duration: BipaMotion.base,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(BipaRadius.sm),
-                  boxShadow: [if (justRead) BoxShadow(color: colors.brandSoft, spreadRadius: 3)],
-                ),
-                child: Material(
-                  color: price == null ? colors.surfaceSunken : colors.price,
-                  borderRadius: BorderRadius.circular(BipaRadius.sm),
-                  child: InkWell(
-                    onTap: onPriceTap,
-                    borderRadius: BorderRadius.circular(BipaRadius.sm),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      child: Text(
-                        price ?? '—',
-                        style: BipaText.number.copyWith(
-                          fontSize: 14,
-                          height: 18 / 14,
-                          color: price == null ? colors.inkMuted : colors.onPrice,
+              // A etiqueta é pequena, mas a área de toque tem 48 de altura.
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onPriceTap,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 48),
+                  child: Center(
+                    widthFactor: 1,
+                    child: AnimatedContainer(
+                      duration: BipaMotion.base,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(BipaRadius.sm),
+                        boxShadow: [if (justRead) BoxShadow(color: colors.brandSoft, spreadRadius: 3)],
+                      ),
+                      child: Material(
+                        color: tagColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(BipaRadius.sm),
+                          side: tagBorder,
+                        ),
+                        child: InkWell(
+                          onTap: onPriceTap,
+                          borderRadius: BorderRadius.circular(BipaRadius.sm),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            child: Text(
+                              price ?? '—',
+                              style: BipaText.number.copyWith(fontSize: 14, height: 18 / 14, color: tagText),
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -251,23 +340,30 @@ class BipaToggle extends StatelessWidget {
       excludeSemantics: true,
       onTap: () => onChanged(!value),
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: () => onChanged(!value),
-        child: AnimatedContainer(
-          duration: BipaMotion.base,
-          width: 44,
-          height: 28,
-          padding: const EdgeInsets.all(3),
-          alignment: value ? AlignmentDirectional.centerEnd : AlignmentDirectional.centerStart,
-          decoration: ShapeDecoration(color: value ? colors.ink : colors.line, shape: const StadiumBorder()),
-          child: Container(
-            width: 22,
-            height: 22,
-            decoration: BoxDecoration(
-              color: colors.surface,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(color: colors.ink.withValues(alpha: 0.25), blurRadius: 3, offset: const Offset(0, 1)),
-              ],
+        // O trilho tem 44×28; a área de toque, 48×48.
+        child: Container(
+          width: 48,
+          height: 48,
+          alignment: Alignment.center,
+          child: AnimatedContainer(
+            duration: BipaMotion.base,
+            width: 44,
+            height: 28,
+            padding: const EdgeInsets.all(3),
+            alignment: value ? AlignmentDirectional.centerEnd : AlignmentDirectional.centerStart,
+            decoration: ShapeDecoration(color: value ? colors.ink : colors.line, shape: const StadiumBorder()),
+            child: Container(
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                color: colors.surface,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(color: colors.ink.withValues(alpha: 0.25), blurRadius: 3, offset: const Offset(0, 1)),
+                ],
+              ),
             ),
           ),
         ),
@@ -288,7 +384,20 @@ class ScanViewfinder extends StatefulWidget {
 }
 
 class _ScanViewfinderState extends State<ScanViewfinder> with SingleTickerProviderStateMixin {
-  late final _sweep = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
+  late final _sweep = AnimationController(vsync: this, duration: const Duration(seconds: 2));
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Com "remover animações" ligado no aparelho, o laser fica parado no meio.
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _sweep
+        ..stop()
+        ..value = 0.5;
+    } else if (!_sweep.isAnimating) {
+      _sweep.repeat(reverse: true);
+    }
+  }
 
   @override
   void dispose() {
@@ -458,9 +567,13 @@ class CameraGlassChip extends StatelessWidget {
 /// lido"): o preço da etiqueta em destaque e, ao lado, o item que o recebeu
 /// ou o que falta fazer. Não é tocável; o leitor de tela anuncia a mudança.
 class LiveReadChip extends StatelessWidget {
-  const LiveReadChip({required this.icon, required this.price, required this.detail, super.key});
+  const LiveReadChip({required this.icon, required this.price, required this.detail, this.countdown, super.key});
 
   final IconData icon;
+
+  /// Quanto tempo o aviso espera: um anel em volta do ícone esvazia nesse
+  /// tempo (o preço que espera o produto).
+  final Duration? countdown;
 
   /// "R$ 27,90".
   final String price;
@@ -486,7 +599,14 @@ class LiveReadChip extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, size: 18, color: colors.onCamera),
+                if (countdown case final countdown?)
+                  _CountdownRing(
+                    duration: countdown,
+                    color: colors.onCamera,
+                    child: Icon(icon, size: 14, color: colors.onCamera),
+                  )
+                else
+                  Icon(icon, size: 18, color: colors.onCamera),
                 const SizedBox(width: BipaSpacing.s2),
                 Text(price, style: BipaText.number.copyWith(fontSize: 16, height: 20 / 16, color: colors.onCamera)),
                 const SizedBox(width: BipaSpacing.s2),
@@ -505,6 +625,59 @@ class LiveReadChip extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Um anel que esvazia em [duration], em volta de [child]. Com animações
+/// desligadas no aparelho, fica cheio.
+class _CountdownRing extends StatelessWidget {
+  const _CountdownRing({required this.duration, required this.color, required this.child});
+
+  final Duration duration;
+  final Color color;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final still = MediaQuery.disableAnimationsOf(context);
+    return SizedBox.square(
+      dimension: 22,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 1, end: still ? 1 : 0),
+        duration: still ? Duration.zero : duration,
+        builder: (context, left, child) => CustomPaint(
+          painter: _RingPainter(fraction: left, color: color),
+          child: Center(child: child),
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _RingPainter extends CustomPainter {
+  const _RingPainter({required this.fraction, required this.color});
+
+  final double fraction;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = (Offset.zero & size).deflate(1.5);
+    canvas.drawArc(
+      rect,
+      -math.pi / 2,
+      2 * math.pi * fraction,
+      false,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_RingPainter oldDelegate) => oldDelegate.fraction != fraction || oldDelegate.color != color;
 }
 
 /// O disparo amarelo da câmera.

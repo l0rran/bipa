@@ -748,5 +748,34 @@
     }
   },
   "marketDeleteBody": "Os preços anotados nele e a ordem das seções que o app aprendeu também são apagados. Não dá para desfazer.",
-  "marketDeleteFailed": "Não foi possível apagar o mercado."
+  "marketDeleteFailed": "Não foi possível apagar o mercado.",
+  "priceEstimate": "≈ {price}",
+  "@priceEstimate": {
+    "description": "Preço estimado (do histórico): \"≈ R$ 27,90\".",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "cartTrayMore": "Mostrar mais itens",
+  "cartTrayLess": "Mostrar menos itens",
+  "cartQuantityOf": "Quantidade de {name}",
+  "@cartQuantityOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cartQuantityLess": "Uma a menos",
+  "cartQuantityMore": "Uma a mais",
+  "cartTypePriceOf": "Digitar o preço de {name}",
+  "@cartTypePriceOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

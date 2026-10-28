@@ -216,6 +216,34 @@ void main() {
     await tester.tap(find.bySemanticsLabel('Levar Café Pilão'));
     await tester.pumpAndSettle();
     expect(take, isFalse);
+    // O interruptor é pequeno, mas a área de toque tem 48×48.
+    expect(tester.getSize(find.byType(BipaToggle)), const Size(48, 48));
+    semantics.dispose();
+  });
+
+  testWidgets('o item com preço estimado e quantidade: o nome abre a quantidade', (tester) async {
+    final semantics = tester.ensureSemantics();
+    var nameTaps = 0;
+    await tester.pumpWidget(
+      _app(
+        ScanTrayItem(
+          name: 'Café Pilão',
+          price: r'≈ R$ 18,99',
+          priceEstimated: true,
+          take: true,
+          takeLabel: 'Levar Café Pilão',
+          onTakeChanged: (_) {},
+          priceTapLabel: 'Digitar o preço',
+          onPriceTap: () {},
+          onNameTap: () => nameTaps++,
+          nameTapLabel: 'Quantidade de Café Pilão',
+        ),
+      ),
+    );
+
+    expect(find.text(r'≈ R$ 18,99'), findsOneWidget);
+    await tester.tap(find.bySemanticsLabel('Quantidade de Café Pilão'));
+    expect(nameTaps, 1);
     semantics.dispose();
   });
 

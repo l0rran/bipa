@@ -22,6 +22,7 @@ import 'package:bipa/features/shopping_list/presentation/finish_shopping.dart';
 import 'package:bipa/features/shopping_list/presentation/list_preview.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:bipa/features/shopping_list/presentation/start_shopping.dart';
+import 'package:bipa/features/shopping_list/presentation/trip_summary_label.dart';
 import 'package:bipa/features/stock/domain/stock_item.dart';
 import 'package:bipa/features/stock/presentation/stock_providers.dart';
 import 'package:flutter/material.dart';
@@ -264,7 +265,7 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                         ShoppingProgress(
                           label: l10n.listProgress(tripSummary.done, tripSummary.total),
                           value: tripSummary.progress,
-                          leading: tripSummary.spent?.format(),
+                          leading: tripSummary.spentLabel(l10n),
                         ),
                         const SizedBox(height: BipaSpacing.s3),
                         // O destaque é voltar a bipar; terminar é a ação de

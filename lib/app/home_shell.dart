@@ -4,6 +4,7 @@ import 'package:bipa/core/design_system/components/shopping_list.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
+import 'package:bipa/features/shopping_list/presentation/trip_summary_label.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -46,7 +47,7 @@ class HomeShell extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(BipaSpacing.s3, 0, BipaSpacing.s3, BipaSpacing.s2),
               child: ShoppingBar(
                 title: l10n.tripItems(summary.done, summary.total),
-                subtitle: _subtitle(summary.spent?.format(), marketName),
+                subtitle: _subtitle(summary.spentLabel(l10n), marketName),
                 actionLabel: l10n.tripContinue,
                 progress: summary.progress,
                 semanticLabel: l10n.tripSemantics(summary.done, summary.total),
