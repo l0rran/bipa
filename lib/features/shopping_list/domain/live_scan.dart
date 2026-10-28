@@ -56,12 +56,11 @@ final class TagPriceRead extends LiveScanEvent {
   });
 
   /// A etiqueta lida numa foto (o disparo), no formato da leitura ao vivo,
-  /// para seguir o mesmo caminho. Como ao vivo, o preço é o de varejo; uma
-  /// etiqueta com vários preços e nenhum de varejo lido não serve, porque
-  /// na dúvida nada é escolhido. `null` sem preço.
+  /// para seguir o mesmo caminho. Como ao vivo, o preço é o de varejo: uma
+  /// etiqueta em que só o preço do cartão ou do atacado foi lido não serve,
+  /// porque ele não pode entrar como varejo. `null` sem preço de varejo.
   static TagPriceRead? fromPhoto(PriceTagReading reading) {
-    final retail = reading.offers.where((offer) => offer.condition is AnyCustomer).firstOrNull;
-    final price = retail?.price ?? (reading.offers.length <= 1 ? reading.price : null);
+    final price = reading.offers.where((offer) => offer.condition is AnyCustomer).firstOrNull?.price;
     if (price == null) return null;
     return TagPriceRead(
       price: price,

@@ -263,7 +263,7 @@ void main() {
       );
     });
 
-    test('sem preço, ou com vários e nenhum de varejo, não serve', () {
+    test('sem preço de varejo não serve, nem com só o do cartão lido', () {
       expect(TagPriceRead.fromPhoto(PriceTagReading.empty), isNull);
       const onlyConditions = PriceTagReading(
         price: Money.cents(1799),
@@ -273,10 +273,19 @@ void main() {
         ],
       );
       expect(TagPriceRead.fromPhoto(onlyConditions), isNull);
+      const onlyLoyalty = PriceTagReading(
+        price: Money.cents(1799),
+        offers: [PriceOffer(price: Money.cents(1799), condition: LoyaltyMembers())],
+      );
+      expect(TagPriceRead.fromPhoto(onlyLoyalty), isNull);
     });
 
     test('um preço só, mesmo sem condição lida, serve', () {
-      const reading = PriceTagReading(price: Money.cents(899), offers: [PriceOffer(price: Money.cents(899))], perKilo: true);
+      const reading = PriceTagReading(
+        price: Money.cents(899),
+        offers: [PriceOffer(price: Money.cents(899))],
+        perKilo: true,
+      );
 
       expect(TagPriceRead.fromPhoto(reading), const TagPriceRead(price: Money.cents(899), perKilo: true));
     });
