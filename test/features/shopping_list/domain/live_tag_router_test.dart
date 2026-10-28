@@ -47,6 +47,26 @@ void main() {
     expect(destination, isA<WaitForProduct>());
   });
 
+  test('a etiqueta do último item, lida de novo, não espera o próximo produto', () {
+    final rice = _inCart('rice', secondsAgo: 40);
+    final priced = CartEntry(
+      item: CartItem(
+        id: rice.item.id,
+        tripId: 't',
+        productId: 'rice',
+        packageId: 'rice-pkg',
+        addedAt: rice.item.addedAt,
+        price: _read.price,
+      ),
+      product: rice.product,
+    );
+
+    expect(_router.route(_read, cart: [priced], now: _now, settled: {'item-rice'}), SameTagAgain(priced));
+    // Outro preço, com o item firmado: é outra etiqueta, que espera o produto.
+    const other = TagPriceRead(price: Money.cents(1899));
+    expect(_router.route(other, cart: [priced], now: _now, settled: {'item-rice'}), isA<WaitForProduct>());
+  });
+
   test('etiqueta com código: o preço é da embalagem do código, esteja onde estiver no carrinho', () {
     final coffee = _inCart('coffee', secondsAgo: 300);
     final cart = [_inCart('rice', secondsAgo: 2), coffee];

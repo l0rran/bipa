@@ -47,6 +47,24 @@ final class PriceCartItem extends LiveTagDestination {
   String toString() => 'PriceCartItem(${entry.item.id})';
 }
 
+/// A etiqueta do item que acabou de receber o preço, de volta à moldura
+/// (o celular baixou para guardar o pacote e subiu de novo): não vale para
+/// nada, e não espera o próximo produto.
+final class SameTagAgain extends LiveTagDestination {
+  const SameTagAgain(this.entry);
+
+  final CartEntry entry;
+
+  @override
+  bool operator ==(Object other) => other is SameTagAgain && other.entry == entry;
+
+  @override
+  int get hashCode => entry.hashCode;
+
+  @override
+  String toString() => 'SameTagAgain(${entry.item.id})';
+}
+
 /// O preço espera o próximo produto bipado.
 final class WaitForProduct extends LiveTagDestination {
   const WaitForProduct(this.pending);
@@ -74,7 +92,9 @@ final class WaitForProduct extends LiveTagDestination {
 ///    [recent] e o preço dele ainda não foi firmado (lido ao vivo, digitado
 ///    ou fotografado). Assim, a etiqueta do lado, lida logo depois, não
 ///    sobrescreve o preço certo.
-/// 4. Senão, espera o próximo produto bipado por até [waitFor].
+/// 4. Sem código e com o mesmo preço já firmado no último item: é a
+///    etiqueta dele, lida de novo, e não serve a mais ninguém.
+/// 5. Senão, espera o próximo produto bipado por até [waitFor].
 final class LiveTagRouter {
   const LiveTagRouter({this.recent = const Duration(seconds: 20), this.waitFor = const Duration(seconds: 20)});
 
@@ -103,6 +123,9 @@ final class LiveTagRouter {
     final newest = cart.firstOrNull;
     if (newest != null && !settled.contains(newest.item.id) && now.difference(newest.item.addedAt) <= recent) {
       return PriceCartItem(newest);
+    }
+    if (newest != null && settled.contains(newest.item.id) && newest.item.price == read.price) {
+      return SameTagAgain(newest);
     }
     return WaitForProduct(PendingTagPrice(read: read, readAt: now));
   }
