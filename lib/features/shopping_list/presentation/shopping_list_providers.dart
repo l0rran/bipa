@@ -25,9 +25,12 @@ final shoppingListProvider = StreamProvider.autoDispose<List<ShoppingListEntry>>
 
 /// Preço de referência dos produtos da lista, para estimar o total.
 final shoppingListPricesProvider = StreamProvider.autoDispose<Map<String, Money>>((ref) async* {
+  // O ref não pode ser usado depois do await: o provider pode ter sido
+  // reconstruído nesse meio-tempo.
+  final prices = ref.watch(priceRepositoryProvider);
   final entries = await ref.watch(shoppingListProvider.future);
   final productIds = {for (final entry in entries) ?entry.item.productId};
-  yield* ref.watch(priceRepositoryProvider).watchHistoryOfProducts(productIds).map(referencePrices);
+  yield* prices.watchHistoryOfProducts(productIds).map(referencePrices);
 });
 
 final shoppingListSummaryProvider = Provider.autoDispose<ShoppingListSummary>((ref) {

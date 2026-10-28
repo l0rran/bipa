@@ -30,10 +30,18 @@ List<ShoppingListSection> shoppingListSections(Iterable<ShoppingListEntry> entri
 }
 
 List<ShoppingListEntry> _shoppingOrder(List<ShoppingListEntry> entries) {
+  // O id desempata horários iguais: o sort do Dart não é estável.
+  int byId(ShoppingListEntry a, ShoppingListEntry b) => a.item.id.compareTo(b.item.id);
   final missing = entries.where((e) => !e.item.isChecked).toList()
-    ..sort((a, b) => a.item.addedAt.compareTo(b.item.addedAt));
+    ..sort((a, b) {
+      final byTime = a.item.addedAt.compareTo(b.item.addedAt);
+      return byTime != 0 ? byTime : byId(a, b);
+    });
   final bought = entries.where((e) => e.item.isChecked).toList()
-    ..sort((a, b) => a.item.checkedAt!.compareTo(b.item.checkedAt!));
+    ..sort((a, b) {
+      final byTime = a.item.checkedAt!.compareTo(b.item.checkedAt!);
+      return byTime != 0 ? byTime : byId(a, b);
+    });
   return [...missing, ...bought];
 }
 

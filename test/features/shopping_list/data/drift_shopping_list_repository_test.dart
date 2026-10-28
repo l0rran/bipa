@@ -11,9 +11,13 @@ import '../../../helpers/test_database.dart';
 void main() {
   late AppDatabase db;
   late DriftShoppingListRepository list;
-  var now = DateTime(2026, 10, 28, 9);
+  late DateTime now;
+
+  /// O banco guarda as datas em segundos: cada item entra um minuto depois.
+  void tick() => now = now.add(const Duration(minutes: 1));
 
   setUp(() async {
+    now = DateTime(2026, 10, 28, 9);
     db = createTestDatabase();
     list = DriftShoppingListRepository(db, ids: SequentialIdGenerator(), clock: () => now);
     final created = DateTime(2026);
@@ -26,7 +30,7 @@ void main() {
 
   test('produto e item escrito à mão, na ordem em que entraram', () async {
     await list.addProduct(productId: 'cafe', name: 'Café');
-    now = now.add(const Duration(minutes: 1));
+    tick();
     await list.addCustom('  Pão  ');
 
     final entries = await list.watchAll().first;
@@ -50,6 +54,7 @@ void main() {
 
   test('remove, desfaz e tira os comprados', () async {
     await list.addProduct(productId: 'cafe', name: 'Café');
+    tick();
     await list.addCustom('Pão');
     final [cafe, pao] = await list.watchAll().first;
 
@@ -62,6 +67,24 @@ void main() {
     await list.setChecked(cafe.item.id, checked: true);
     await list.removeChecked();
     expect((await list.watchAll().first).map((e) => e.name), ['Pão']);
+  });
+
+  test('escrever de novo o mesmo item não duplica', () async {
+    await list.addCustom('Pão');
+    await list.addCustom('pão ');
+
+    expect((await list.watchAll().first).map((e) => e.name), ['Pão']);
+  });
+
+  test('desfazer não duplica um produto que já voltou à lista', () async {
+    await list.addProduct(productId: 'cafe', name: 'Café');
+    final removed = (await list.watchAll().first).single.item;
+    await list.remove(removed.id);
+    await list.addProduct(productId: 'cafe', name: 'Café');
+
+    await list.restore(removed);
+
+    expect(await list.watchAll().first, hasLength(1));
   });
 
   test('tira um produto pelo id e ignora itens vazios', () async {

@@ -51,9 +51,22 @@ final class DriftShoppingListRepository implements ShoppingListRepository {
   }
 
   @override
-  Future<void> addCustom(String name) async {
+  Future<void> addCustom(String name) {
     final trimmed = name.trim();
-    if (trimmed.isNotEmpty) await _insert(name: trimmed);
+    if (trimmed.isEmpty) return Future.value();
+    return _db.transaction(() async {
+      // Como no produto: escrever de novo o mesmo item não duplica. A
+      // comparação é feita no Dart porque o lower() do SQLite ignora acentos
+      // maiúsculos ("PÃO").
+      final written = await (_db.select(_db.shoppingListItems)..where((t) => t.productId.isNull())).get();
+      final key = trimmed.toLowerCase();
+      final existing = written.where((row) => row.name.toLowerCase() == key).firstOrNull;
+      if (existing == null) {
+        await _insert(name: trimmed);
+      } else if (existing.checkedAt != null) {
+        await _write(existing.id, const ShoppingListItemsCompanion(checkedAt: Value(null)));
+      }
+    });
   }
 
   @override
@@ -76,7 +89,16 @@ final class DriftShoppingListRepository implements ShoppingListRepository {
   }
 
   @override
-  Future<void> restore(ShoppingListItem item) async {
+  Future<void> restore(ShoppingListItem item) => _db.transaction(() async {
+    // O produto pode ter voltado à lista antes do "Desfazer": não duplica.
+    final productId = item.productId;
+    if (productId != null) {
+      final back = await (_db.select(_db.shoppingListItems)
+            ..where((t) => t.productId.equals(productId))
+            ..limit(1))
+          .getSingleOrNull();
+      if (back != null) return;
+    }
     await _db.into(_db.shoppingListItems).insertOnConflictUpdate(
       ShoppingListItemsCompanion.insert(
         id: item.id,
@@ -86,7 +108,7 @@ final class DriftShoppingListRepository implements ShoppingListRepository {
         checkedAt: Value(item.checkedAt),
       ),
     );
-  }
+  });
 
   Future<void> _insert({required String name, String? productId}) async {
     await _db.into(_db.shoppingListItems).insert(

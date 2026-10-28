@@ -9,6 +9,7 @@ import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/money/money.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
 import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_sections.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
@@ -34,6 +35,10 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
   final _inputFocus = FocusNode();
   String _query = '';
 
+  /// Itens que saíram por gesto e ainda não sumiram do banco: o Dismissible
+  /// não pode continuar na árvore depois de dispensado.
+  final _dismissed = <String>{};
+
   @override
   void dispose() {
     _input.dispose();
@@ -43,21 +48,23 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
 
   Future<void> _addProduct(Product product) async {
     await ref.read(shoppingListRepositoryProvider).addProduct(productId: product.id, name: product.name);
-    _clearInput();
+    if (mounted) _clearInput();
   }
 
-  /// Escreveu o nome de um produto cadastrado: usa o produto. Senão, entra
-  /// como item escrito à mão.
-  Future<void> _submit(List<Product> suggestions) async {
+  /// Escreveu o nome de um produto cadastrado: usa o produto (que não
+  /// duplica). Senão, entra como item escrito à mão.
+  Future<void> _submit() async {
     final text = _input.text.trim();
     if (text.isEmpty) return;
-    final exact = suggestions.where((p) => p.name.toLowerCase() == text.toLowerCase()).firstOrNull;
+    final list = ref.read(shoppingListRepositoryProvider);
+    final matches = await ref.read(productRepositoryProvider).watchAll(query: text).first;
+    final exact = matches.where((p) => p.name.toLowerCase() == text.toLowerCase()).firstOrNull;
     if (exact != null) {
-      await _addProduct(exact);
+      await list.addProduct(productId: exact.id, name: exact.name);
     } else {
-      await ref.read(shoppingListRepositoryProvider).addCustom(text);
-      _clearInput();
+      await list.addCustom(text);
     }
+    if (mounted) _clearInput();
   }
 
   void _clearInput() {
@@ -75,6 +82,7 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
 
   Future<void> _remove(ShoppingListEntry entry) async {
     final repository = ref.read(shoppingListRepositoryProvider);
+    setState(() => _dismissed.add(entry.item.id));
     await repository.remove(entry.item.id);
     if (!mounted) return;
     final l10n = AppLocalizations.of(context);
@@ -84,7 +92,13 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
         SnackBar(
           content: Text(l10n.listItemRemoved(entry.name)),
           duration: const Duration(seconds: 4),
-          action: SnackBarAction(label: l10n.undo, onPressed: () => repository.restore(entry.item)),
+          action: SnackBarAction(
+            label: l10n.undo,
+            onPressed: () {
+              if (mounted) setState(() => _dismissed.remove(entry.item.id));
+              repository.restore(entry.item);
+            },
+          ),
         ),
       );
   }
@@ -108,7 +122,10 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
     return Scaffold(
       body: AsyncValueView(
         value: list,
-        data: (entries) {
+        data: (all) {
+          // Os dispensados que o banco já apagou não precisam mais ser escondidos.
+          _dismissed.removeWhere((id) => !all.any((e) => e.item.id == id));
+          final entries = [for (final e in all) if (!_dismissed.contains(e.item.id)) e];
           final sections = shoppingListSections(entries);
           return CustomScrollView(
             slivers: [
@@ -140,7 +157,7 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                         hint: l10n.listAddHint,
                         submitLabel: l10n.listAdd,
                         onChanged: (value) => setState(() => _query = value),
-                        onSubmitted: () => _submit(suggestions),
+                        onSubmitted: _submit,
                       ),
                       for (final product in suggestions)
                         ListTile(
