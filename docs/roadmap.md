@@ -71,7 +71,7 @@ Consistência e acessibilidade:
 - [ ] H2 (resto): exceções do domínio traduzidas pelo ARB e falha tratada no stepper do produto (os textos de falha já seguem "Não deu para … Tente de novo.")
 - [ ] H3 (resto): teste com fonte em 200% em cada tela (o stepper e o número da seção já crescem; os selos não têm altura fixa)
 - [ ] A barra de navegação encolhe ao rolar, como no design system
-- [ ] Revisar no protótipo: o granel sem código, o aviso tocável do preço esperando e o "1 de 2" na bandeja do "Modo carrinho"; "Guardar em casa" no "Menu do bipar"; a idade dos preços e a pergunta "Levar os preços?" em "Mercados"; o mercado na "Confirmação"; o "2× Leite" e o "Cancelar compra" no "Fim da compra"; o "⋯" no editor da linha do "Início"; o "2 sem preço" na prévia da "Lista"; a "Folha do preço", nova; o mercado e a idade no preço em destaque do produto velho, sem quadro; e o "Desfazer" no aviso da câmera em "Comprei" e "Usei", que ainda não tem quadro
+- [ ] Desenhar no protótipo o que o app já faz sem quadro: o "Desfazer" no aviso da câmera em "Comprei" e "Usei", o mercado e a idade no preço em destaque velho do produto, o chip "Ter sempre" no editor da linha do Início e a folha "Editar embalagem"
 
 ## Fase 2: base comunitária
 
