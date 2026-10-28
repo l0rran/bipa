@@ -12,6 +12,7 @@ import 'package:bipa/core/design_system/components/scan_tray.dart';
 import 'package:bipa/core/design_system/components/shopping_list.dart';
 import 'package:bipa/core/design_system/components/stock_gauge.dart';
 import 'package:bipa/core/design_system/components/stock_list.dart';
+import 'package:bipa/core/design_system/components/tap_target.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -153,9 +154,11 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('o item da lista mostra a quantidade antes do nome e a muda no toque longo', (tester) async {
+  testWidgets('o item da lista mostra a quantidade antes do nome, e tocar nela a muda sem marcar', (tester) async {
     final semantics = tester.ensureSemantics();
     var longPresses = 0;
+    var quantityTaps = 0;
+    bool? checked;
     await tester.pumpWidget(
       _app(
         ShoppingListRow(
@@ -164,16 +167,23 @@ void main() {
           quantitySpoken: '3 embalagens',
           price: '4,79',
           checked: false,
-          onChanged: (_) {},
+          onChanged: (value) => checked = value,
+          onQuantityTap: () => quantityTaps++,
           onLongPress: () => longPresses++,
         ),
       ),
     );
 
-    expect(find.text('3× Leite'), findsOneWidget);
+    expect(find.text('3×'), findsOneWidget);
     expect(find.bySemanticsLabel('Leite, 3 embalagens, 4,79'), findsOneWidget);
-    await tester.longPress(find.text('3× Leite'));
+    await tester.tap(find.text('3×'));
+    expect((quantityTaps, checked), (1, null));
+    await tester.tap(find.text('Leite'));
+    expect(checked, isTrue);
+    await tester.longPress(find.text('Leite'));
     expect(longPresses, 1);
+    final target = find.ancestor(of: find.text('3×'), matching: find.byType(TapTarget));
+    expect(tester.getSize(target).height, greaterThanOrEqualTo(48));
     semantics.dispose();
   });
 

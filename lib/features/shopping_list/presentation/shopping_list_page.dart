@@ -96,7 +96,8 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
       ? ref.read(shoppingListRepositoryProvider).removeProduct(product.id)
       : ref.read(putProductOnListProvider)(product);
 
-  /// O toque longo (ou a ação do leitor de tela) muda a quantidade.
+  /// Tocar no "3×", o toque longo ou a ação do leitor de tela mudam a
+  /// quantidade.
   Future<void> _setQuantity(ShoppingListEntry entry) async {
     final repository = ref.read(shoppingListRepositoryProvider);
     final chosen = await showQuantityDialog(context, title: entry.name, initial: entry.item.quantity);
@@ -425,6 +426,7 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                                   },
                                   quantity: _quantityLabel(l10n, entry.item, taken),
                                   quantitySpoken: _quantityLabel(l10n, entry.item, taken, spoken: true),
+                                  onQuantityTap: () => _setQuantity(entry),
                                   onLongPress: () => _setQuantity(entry),
                                   onChanged: (checked) => _setChecked(entry, checked: checked),
                                 ),

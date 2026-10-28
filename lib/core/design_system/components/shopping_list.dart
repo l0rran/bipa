@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/tap_target.dart';
 import 'package:bipa/core/design_system/text_scale.dart';
 import 'package:flutter/material.dart';
 
@@ -347,6 +348,9 @@ class ShoppingSectionCard extends StatelessWidget {
 
 /// Item da lista: a caixa de marcar, a quantidade (quando é mais de uma), o
 /// nome e o preço esperado. Comprado, o nome fica riscado e a linha esmaece.
+///
+/// Tocar na quantidade ("3×", ou "1 de 3" na compra) a muda, sem marcar o
+/// item; o resto da linha marca.
 class ShoppingListRow extends StatelessWidget {
   const ShoppingListRow({
     required this.name,
@@ -355,6 +359,7 @@ class ShoppingListRow extends StatelessWidget {
     this.price,
     this.quantity,
     this.quantitySpoken,
+    this.onQuantityTap,
     this.onLongPress,
     super.key,
   });
@@ -366,11 +371,16 @@ class ShoppingListRow extends StatelessWidget {
   /// O preço esperado, já formatado ("≈ 7,90").
   final String? price;
 
-  /// "3×", em cinza antes do nome; `null` para uma embalagem só.
+  /// "3×" (ou "1 de 3", quando o carrinho tem só uma parte), em cinza antes
+  /// do nome; `null` para uma embalagem só.
   final String? quantity;
 
   /// A quantidade para o leitor de tela ("3 embalagens").
   final String? quantitySpoken;
+
+  /// Tocar na [quantity] a muda. O leitor de tela chega a isso por uma ação
+  /// de quem monta a linha.
+  final VoidCallback? onQuantityTap;
 
   /// O toque longo muda a quantidade.
   final VoidCallback? onLongPress;
@@ -411,22 +421,13 @@ class ShoppingListRow extends StatelessWidget {
                     child: checked ? Icon(Icons.check_rounded, size: 18, color: colors.surface) : null,
                   ),
                   const SizedBox(width: BipaSpacing.s3),
+                  if (quantity != null) ...[
+                    _Quantity(label: quantity, onTap: onQuantityTap),
+                    const SizedBox(width: BipaSpacing.s1),
+                  ],
                   Expanded(
-                    child: Text.rich(
-                      TextSpan(
-                        children: [
-                          if (quantity != null)
-                            TextSpan(
-                              text: '$quantity ',
-                              style: TextStyle(
-                                color: colors.inkMuted,
-                                fontWeight: FontWeight.w600,
-                                fontFeatures: const [FontFeature.tabularFigures()],
-                              ),
-                            ),
-                          TextSpan(text: name),
-                        ],
-                      ),
+                    child: Text(
+                      name,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: BipaText.bodyLarge.copyWith(
@@ -453,6 +454,43 @@ class ShoppingListRow extends StatelessWidget {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A quantidade antes do nome, tocável quando há [onTap]: a área de toque
+/// tem 48 dp, e o desenho continua o de um texto em cinza.
+class _Quantity extends StatelessWidget {
+  const _Quantity({required this.label, this.onTap});
+
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final text = Text(
+      label,
+      style: BipaText.bodyLarge.copyWith(
+        fontSize: 15,
+        height: 20 / 15,
+        fontWeight: FontWeight.w600,
+        color: colors.inkMuted,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
+    );
+    final onTap = this.onTap;
+    if (onTap == null) return text;
+    return TapTarget(
+      onTap: onTap,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(BipaRadius.sm),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s1, vertical: 2),
+          child: text,
         ),
       ),
     );
