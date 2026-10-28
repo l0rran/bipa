@@ -6,6 +6,7 @@ import 'package:bipa/core/di/core_providers.dart';
 import 'package:bipa/core/formatting/formatters.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
+import 'package:bipa/core/widgets/confirm_destructive.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:bipa/features/stock/domain/stock_item.dart';
@@ -61,18 +62,13 @@ class StockItemSheet extends ConsumerWidget {
   Future<void> _remove(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context);
     final repository = ref.read(stockRepositoryProvider);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.stockRemoveTitle(product.name)),
-        content: Text(l10n.stockRemoveBody),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
-          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.stockRemove)),
-        ],
-      ),
+    final confirmed = await confirmDestructive(
+      context,
+      title: l10n.stockRemoveTitle(product.name),
+      body: l10n.stockRemoveBody,
+      confirmLabel: l10n.stockRemove,
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     await repository.remove(product.id);
     if (context.mounted) Navigator.of(context).pop();
   }

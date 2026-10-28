@@ -8,6 +8,7 @@ import 'package:bipa/core/design_system/components/shopping_list.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
+import 'package:bipa/core/widgets/confirm_destructive.dart';
 import 'package:bipa/core/widgets/quantity_dialog.dart';
 import 'package:bipa/features/markets/presentation/market_picker_sheet.dart';
 import 'package:bipa/features/products/domain/product.dart';
@@ -171,18 +172,14 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
   Future<void> _cancelTrip(ShoppingTrip trip) async {
     final l10n = AppLocalizations.of(context);
     final cancel = ref.read(cancelShoppingTripProvider);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.tripCancelTitle),
-        content: Text(l10n.tripCancelBody),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.tripKeep)),
-          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.tripCancel)),
-        ],
-      ),
+    final confirmed = await confirmDestructive(
+      context,
+      title: l10n.tripCancelTitle,
+      body: l10n.tripCancelBody,
+      confirmLabel: l10n.tripCancel,
+      cancelLabel: l10n.tripKeep,
     );
-    if (confirmed == true) await cancel(trip.id);
+    if (confirmed) await cancel(trip.id);
   }
 
   Future<void> _finish(ShoppingTrip trip) async {

@@ -10,6 +10,7 @@ import 'package:bipa/core/formatting/calendar_days.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
+import 'package:bipa/core/widgets/confirm_destructive.dart';
 import 'package:bipa/core/widgets/empty_state.dart';
 import 'package:bipa/features/markets/domain/nearest_market_finder.dart';
 import 'package:bipa/features/markets/presentation/market_meta.dart';
@@ -62,24 +63,19 @@ class _MarketView extends ConsumerWidget {
 
   final RankedMarket item;
 
-  /// "Apagar": confirma dizendo o que vai junto (ADR 0016).
+  /// "Apagar mercado": confirma dizendo o que vai junto (ADR 0016).
   Future<void> _delete(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context);
     final market = item.market;
     final repository = ref.read(marketRepositoryProvider);
     final messenger = ScaffoldMessenger.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.marketDeleteTitle(market.name)),
-        content: Text(l10n.marketDeleteBody),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
-          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.marketDelete)),
-        ],
-      ),
+    final confirmed = await confirmDestructive(
+      context,
+      title: l10n.marketDeleteTitle(market.name),
+      body: l10n.marketDeleteBody,
+      confirmLabel: l10n.marketDelete,
     );
-    if (confirmed != true || !context.mounted) return;
+    if (!confirmed || !context.mounted) return;
     // Sai da tela antes de apagar: ela não chega a mostrar o mercado sumindo.
     context.pop();
     try {

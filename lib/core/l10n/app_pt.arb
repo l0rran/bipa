@@ -424,7 +424,7 @@
     }
   },
   "productMoreOptions": "Mais opções",
-  "productEdit": "Editar",
+  "productEdit": "Editar produto",
   "productRegisterPrice": "Registrar preço",
   "productCheapest": "menor preço",
   "productCheapestPerUnit": "menor por {unit}",
@@ -733,9 +733,9 @@
   },
   "productDeleteBody": "As embalagens, os preços, o que está em casa e o item da lista dele também são apagados. Não dá para desfazer.",
   "productDeleteFailed": "Não foi possível apagar o produto.",
-  "marketDelete": "Apagar",
+  "marketDelete": "Apagar mercado",
   "@marketDelete": {
-    "description": "Ação de apagar o mercado, na barra do formulário."
+    "description": "Apagar o mercado: item do menu da tela do mercado e botão da confirmação."
   },
   "marketDeleteTitle": "Apagar {name}?",
   "@marketDeleteTitle": {

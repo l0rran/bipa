@@ -16,6 +16,7 @@ import 'package:bipa/core/formatting/formatters.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
+import 'package:bipa/core/widgets/confirm_destructive.dart';
 import 'package:bipa/core/widgets/empty_state.dart';
 import 'package:bipa/features/prices/domain/package_prices.dart';
 import 'package:bipa/features/prices/domain/price_trend.dart';
@@ -125,18 +126,13 @@ class _ProductView extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final repository = ref.read(productRepositoryProvider);
     final messenger = ScaffoldMessenger.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.productDeleteTitle(product.name)),
-        content: Text(l10n.productDeleteBody),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
-          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.productDelete)),
-        ],
-      ),
+    final confirmed = await confirmDestructive(
+      context,
+      title: l10n.productDeleteTitle(product.name),
+      body: l10n.productDeleteBody,
+      confirmLabel: l10n.productDelete,
     );
-    if (confirmed != true || !context.mounted) return;
+    if (!confirmed || !context.mounted) return;
     // Sai da tela antes de apagar: ela não chega a mostrar o produto sumindo.
     context.pop();
     try {
