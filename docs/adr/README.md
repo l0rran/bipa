@@ -14,6 +14,7 @@ Cada arquivo registra uma decisão importante: o contexto, o que foi decidido e 
 | [0008](0008-design-system-proprio.md) | Design system próprio sobre o Material 3 | Aceito |
 | [0009](0009-cores-semanticas-e-paleta-trocavel.md) | Cores semânticas, com a paleta trocável num lugar só | Aceito |
 | [0010](0010-fotos-dos-produtos.md) | Foto do produto, com o ícone da categoria como reserva | Aceito |
+| [0011](0011-precos-com-condicao.md) | Cada preço da etiqueta com a sua condição (atacado, cartão, varejo) | Aceito |
 
 ## Modelo
 
