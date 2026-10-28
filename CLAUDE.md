@@ -34,4 +34,4 @@ App Android em Flutter para controlar o estoque da casa e o histórico de preço
 
 - Na nuvem não há Flutter nem Dart instalados, e o pub.dev pode estar bloqueado. Por isso o código não é compilado ali, e quem compila e roda é o mantenedor, no Windows.
 - Escreva código conferindo as APIs na documentação oficial e deixe claro o que não pôde ser compilado.
-- Lógica pura pode ser validada com um port rápido em Python ou JavaScript, como já foi feito com o `PriceTagParser`.
+- Lógica pura pode ser validada com um port rápido em Python ou JavaScript. O `PriceTagParser` tem um port mantido em `tool/ocr_bench`, com banco de testes; mudou o parser em Dart, mude o port e rode `python3 tool/ocr_bench/testes.py`.

@@ -57,3 +57,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Banco de testes do OCR (tool/ocr_bench)
+tool/ocr_bench/tessdata/
+__pycache__/

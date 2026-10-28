@@ -12,11 +12,18 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - Design system no código: paleta semântica gerada de `design/tokens.json`, tema do Material 3 e fontes embutidas.
 - Miniatura do produto com foto ou ícone da categoria, e o campo de foto no banco (esquema 2).
 - Textos da Casa em ARB (`flutter gen-l10n`).
+- Preços com condição (ADR 0011): a etiqueta de atacarejo vira até três preços (varejo, cartão da loja e atacado a partir de N unidades), todos salvos e mostrados no histórico. O esquema vai à versão 3.
+- Banco de testes do OCR em `tool/ocr_bench`, com etiquetas sintéticas e transcrições de etiquetas reais.
 
 ### Alterado
 - Paleta: o amarelo da etiqueta é a cor da marca, com o coral como única cor de alerta.
 - "Mínimo" virou "ter sempre": o item está acabando quando fica abaixo desse número.
+- O preço clube deixa de ser tratado como promoção: vira o preço com cartão da loja.
+- A comparação entre mercados usa o preço sem condição.
 - Gradle 9.3.1, Android Gradle Plugin 9.1.0 e Kotlin 2.4.0; o app pede Flutter 3.47 ou mais novo.
+
+### Corrigido
+- Leitura da etiqueta: centavos sobrescritos lidos à parte, milhar ("1.299,90"), preço seguido de KG ou UN, parcelas confundidas com o preço, dígitos espaçados pelo OCR e rótulos como "LEVE 3 PAGUE 2" tomados pelo nome do produto.
 
 ## [0.1.0] - 2026-10-27
 
