@@ -63,7 +63,6 @@ Câmera e modo carrinho:
 
 Preços, mercados e produto:
 
-- [ ] G1: "Editar produto" edita só o nome e a unidade; cada embalagem tem a própria edição
 - [ ] G2: mover uma embalagem para outro produto e apagar uma embalagem (com ADR)
 
 Consistência e acessibilidade:
