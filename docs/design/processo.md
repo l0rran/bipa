@@ -15,7 +15,7 @@ Toda decisão de interface começa por ver como outros apps resolvem o mesmo pro
 | Referência | Área | O que levamos |
 | --- | --- | --- |
 | iFood / iFood Mercado | Delivery e mercado | Lista que serve para qualquer mercado, lista a partir de foto e voz, barra persistente da compra em andamento, erros que dizem o que fazer |
-| Scandit | Leitura de código | Confirmação com som, vibração e visual; pausa de 150ms; leitura contínua |
+| Scandit | Leitura de código | Confirmação com som, vibração e visual; pausa de 150ms; leitura contínua; código e preço da etiqueta lidos juntos |
 | Open Food Facts | Base aberta de produtos | Produto desconhecido sem erro, com cadastro colaborativo |
 | Walmart Scan & Go | Mercado | Total acumulado enquanto se compra |
 | Bring! e AnyList | Lista de compras | Adicionar com um toque; lista na ordem dos corredores |
@@ -60,6 +60,25 @@ A lição principal para o Bipa: **o cupom fiscal é a melhor fonte de preço**.
 - **Idade do preço sempre visível** e comparação da lista inteira entre mercados.
 - **Itens de sempre** ao abrir a lista; widget de adicionar rápido; voz ("acabou o café").
 
+### Ler a etiqueta ao vivo (outubro de 2026)
+
+O problema: **o preço da gôndola entrar no carrinho sem fotografar nem digitar**, com a câmera que já está aberta no modo carrinho.
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **Scandit Smart Label Capture** | Lê o código de barras e o preço da mesma etiqueta de gôndola num processo só, e confere o par com uma base | **Código e preço no mesmo quadro são uma etiqueta**: o preço vai para aquele produto, e o código não conta como mais uma unidade | Sem base de referência: o histórico de preços do próprio app é a referência |
+| **Stripe CardScan** e leitores de cartão | Só termina a leitura depois de vários quadros seguidos com o cartão centrado e em foco | **Consenso entre quadros**: o preço só vale quando se repete em quadros seguidos | O leitor não fecha: a câmera continua aberta para o próximo item |
+| **ShopCalc** e **Calcula AI** | Apontar para a etiqueta põe o item e o preço na lista, e o total sobe na hora | Total que sobe na hora, sem tela de confirmação | O produto vem do código de barras, não do nome da etiqueta, que costuma vir abreviado ("ARROZ TIO JOAO 5KG") |
+| **Shelf to Cart** | Depois da leitura, mostra nome e preço para confirmar ou editar | A **correção sempre à mão**: tocar no preço do item para digitar | Nada de confirmação a cada item: a leitura entra direto e o aviso some sozinho |
+| **Google Lens** e tradução ao vivo | Destaca na imagem o texto que está lendo | Mostrar **o que foi lido** perto de onde a pessoa está olhando | Só o que está dentro da moldura é lido, porque na gôndola a etiqueta do lado é o erro mais provável |
+
+**Do nosso jeito:**
+
+- **Bipa primeiro, preço depois**, ou o contrário. Um preço lido logo depois de bipar vai para o último item. Um preço lido antes de bipar fica esperando o próximo produto por alguns segundos.
+- **Um sinal por leitura:** a moldura trava, uma vibração curta e um chip com o preço e o nome do item. O chip some sozinho, e o preço do item na bandeja muda.
+- **Na dúvida, não escolhe:** etiqueta com vários preços do mesmo tamanho, ou só com preço de clube ou de atacado, não entra ao vivo. Para essas, o disparo continua fotografando a etiqueta.
+- **A mesma etiqueta não vale duas vezes:** para ler de novo, é preciso tirá-la da moldura, como no código de barras.
+
 ## Fontes
 
 - [Menor Preço Brasil (Olhar Digital)](https://olhardigital.com.br/2025/08/03/dicas-e-tutoriais/quer-economizar-na-farmacia-e-supermercado-conheca-o-app-menor-preco-brasil/)
@@ -75,3 +94,8 @@ A lição principal para o Bipa: **o cupom fiscal é a melhor fonte de preço**.
 - [Linear: bastidores do redesenho](https://linear.app/now/behind-the-latest-design-refresh)
 - [Shortcut: um app mais calmo](https://www.shortcut.com/blog/designing-a-calmer-clearer-faster-shortcut)
 - [Flo: widgets do ciclo na tela principal](https://medium.com/flo-health/how-we-evolved-and-enriched-the-main-screen-of-the-flo-app-part-2-cycle-widgets-b73d5ccb948d)
+- [Scandit Smart Label Capture](https://docs.scandit.com/next/sdks/web/label-capture/intro/)
+- [Stripe CardScan: quadros exigidos antes de terminar](https://stripe.dev/stripe-android/stripecardscan/com.stripe.android.stripecardscan.cardimageverification/-card-image-verification-sheet/-configuration/strict-mode-frames.html)
+- [ShopCalc (App Store)](https://apps.apple.com/app/id6756393232)
+- [Calcula AI (Product Hunt)](https://www.producthunt.com/p/calcula-ai)
+- [Shelf to Cart](https://shelf-to-cart-marketing.pages.dev/)
