@@ -469,8 +469,8 @@ class _AtHomeCard extends StatelessWidget {
               QuantityStepper(
                 value: Formatters.quantity(stock?.item.quantity ?? 0),
                 unit: l10n.unitPackages,
-                decrementLabel: l10n.stockUsedOne,
-                incrementLabel: l10n.stockBoughtOne,
+                decrementLabel: l10n.stockOneLess,
+                incrementLabel: l10n.stockOneMore,
                 onIncrement: onIncrement,
                 onDecrement: onDecrement,
                 highlighted: stock?.item.isLow ?? false,

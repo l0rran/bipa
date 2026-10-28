@@ -376,8 +376,8 @@ class _HomeStockRow extends StatelessWidget {
         stepper: QuantityStepper(
           value: item.quantityLabel,
           unit: l10n.unitPackages,
-          decrementLabel: l10n.stockUsedOne,
-          incrementLabel: l10n.stockBoughtOne,
+          decrementLabel: l10n.stockOneLess,
+          incrementLabel: l10n.stockOneMore,
           highlighted: item.isLow,
           onIncrement: () => onAdjust(1),
           onDecrement: item.isOut ? null : () => onAdjust(-1),

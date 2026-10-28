@@ -114,8 +114,8 @@ class StockItemSheet extends ConsumerWidget {
               child: QuantityStepper(
                 value: item.quantityLabel,
                 unit: l10n.unitPackages,
-                decrementLabel: l10n.stockUsedOne,
-                incrementLabel: l10n.stockBoughtOne,
+                decrementLabel: l10n.stockOneLess,
+                incrementLabel: l10n.stockOneMore,
                 highlighted: item.isLow,
                 onIncrement: () => _adjust(ref, 1),
                 onDecrement: item.isOut ? null : () => _adjust(ref, -1),

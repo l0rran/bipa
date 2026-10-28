@@ -14,7 +14,6 @@
   "sectionAtHome": "Em casa",
   "placeAll": "Tudo",
   "stockUsedOne": "Usei um",
-  "stockBoughtOne": "Comprei um",
   "stockLevelOut": "Acabou",
   "stockLevelLow": "{quantity} de {target} {unit}",
   "@stockLevelLow": {
@@ -1158,5 +1157,13 @@
   "scanMenuBought": "Guardar em casa",
   "@scanMenuBought": {
     "description": "Item do menu do bipar: abre a câmera que soma em casa cada código e tira da lista (modo \"Comprei\")."
+  },
+  "stockOneLess": "Uma embalagem a menos",
+  "@stockOneLess": {
+    "description": "Rótulo acessível do − do stepper de estoque: corrige a quantidade, sem mexer na lista (ADR 0019)."
+  },
+  "stockOneMore": "Uma embalagem a mais",
+  "@stockOneMore": {
+    "description": "Rótulo acessível do + do stepper de estoque: corrige a quantidade, sem mexer na lista (ADR 0019)."
   }
 }

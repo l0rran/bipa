@@ -6,7 +6,8 @@ import 'package:bipa/core/design_system/text_scale.dart';
 import 'package:flutter/material.dart';
 
 /// Cartão de produto da prateleira "Acabando": a imagem grande, o medidor no
-/// canto e, se houver lista, o "+" para pôr na lista. Tocar abre o produto.
+/// canto e, se houver lista, o "+" para pôr na lista. Tocar abre o editor do
+/// item, e segurar abre o produto.
 class ProductCard extends StatelessWidget {
   const ProductCard({
     required this.name,
