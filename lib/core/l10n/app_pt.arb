@@ -436,9 +436,9 @@
       }
     }
   },
-  "productBestUnitPrice": "o {unit} · {package}",
+  "productBestUnitPrice": "/{unit} · {package}",
   "@productBestUnitPrice": {
-    "description": "Linha sob o melhor preço por unidade: \"o kg · Camil 10 kg\".",
+    "description": "Linha sob o melhor preço por unidade: \"/kg · Camil 10 kg\".",
     "placeholders": {
       "unit": {
         "type": "String"
@@ -448,9 +448,9 @@
       }
     }
   },
-  "productUnitPriceOnly": "o {unit}",
+  "productUnitPriceOnly": "/{unit}",
   "@productUnitPriceOnly": {
-    "description": "Linha sob o melhor preço por unidade quando a embalagem não tem nome: \"o kg\".",
+    "description": "Linha sob o melhor preço por unidade quando a embalagem não tem nome: \"/kg\".",
     "placeholders": {
       "unit": {
         "type": "String"
