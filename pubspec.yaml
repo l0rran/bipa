@@ -16,6 +16,8 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
+  # Quadros da câmera no modo carrinho, para ler código e etiqueta juntos (ADR 0012).
+  camera: ^0.12.2
   # Banco de dados local (SQLite) com consultas tipadas e streams reativas.
   drift: ^2.26.0
   drift_flutter: ^0.2.4
