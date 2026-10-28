@@ -60,8 +60,10 @@ class QuantityStepper extends StatelessWidget {
           Semantics(
             label: valueSpoken,
             excludeSemantics: valueSpoken != null,
-            child: SizedBox(
-              width: 48,
+            // Largura mínima, não fixa: com fonte grande, um número de dois ou
+            // três dígitos cabe em vez de quebrar a linha (H3).
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 48),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
