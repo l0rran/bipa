@@ -368,17 +368,22 @@ class _PriceHistory extends StatelessWidget {
 
   final PriceTrend trend;
 
-  /// Um rótulo a cada dois meses a partir do primeiro, e "hoje" na ponta.
-  static List<String> _axisLabels(PriceTrend trend, AppLocalizations l10n) {
+  /// Um rótulo a cada dois meses a partir do primeiro, no começo do mês, e
+  /// "hoje" na ponta.
+  static List<({String label, double at})> _axisLabels(PriceTrend trend, AppLocalizations l10n) {
     final month = DateFormat.MMM(l10n.localeName);
     final from = trend.from;
     final to = trend.to;
+    final span = to.difference(from).inMilliseconds;
     final months = (to.year - from.year) * 12 + to.month - from.month;
     return [
       for (var offset = 0; offset < months; offset += 2)
-        // "mai." vira "mai", como no protótipo.
-        month.format(DateTime(from.year, from.month + offset)).replaceAll('.', ''),
-      l10n.productHistoryToday,
+        (
+          // "mai." vira "mai", como no protótipo.
+          label: month.format(DateTime(from.year, from.month + offset)).replaceAll('.', ''),
+          at: DateTime(from.year, from.month + offset).difference(from).inMilliseconds / span,
+        ),
+      (label: l10n.productHistoryToday, at: 1.0),
     ];
   }
 

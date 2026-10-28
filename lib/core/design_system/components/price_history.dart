@@ -21,8 +21,9 @@ class PriceHistoryChart extends StatelessWidget {
   /// Do mais antigo para o mais recente; o último ganha o ponto.
   final List<Offset> points;
 
-  /// Rótulos espalhados de ponta a ponta: "mai", "jul", "set", "hoje".
-  final List<String> axisLabels;
+  /// Os rótulos do eixo e onde ficam, de 0 a 1 (a mesma escala de x dos
+  /// [points]): "mai" no começo de maio, "hoje" na ponta.
+  final List<({String label, double at})> axisLabels;
 
   /// O gráfico por extenso, ex.: "Preço do kg nos últimos 6 meses, de R$ 5,90
   /// a R$ 4,99".
@@ -48,11 +49,18 @@ class PriceHistoryChart extends StatelessWidget {
                 child: CustomPaint(painter: _HistoryPainter(points: points, colors: colors)),
               ),
               const SizedBox(height: BipaSpacing.s2),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  for (final label in axisLabels) Text(label, style: BipaText.caption.copyWith(color: colors.inkMuted)),
-                ],
+              // Cada rótulo no seu lugar; nas pontas, encostado na borda.
+              SizedBox(
+                height: 16,
+                child: Stack(
+                  children: [
+                    for (final (:label, :at) in axisLabels)
+                      Align(
+                        alignment: Alignment(at.clamp(0.0, 1.0) * 2 - 1, 0),
+                        child: Text(label, style: BipaText.caption.copyWith(color: colors.inkMuted)),
+                      ),
+                  ],
+                ),
               ),
             ],
           ),

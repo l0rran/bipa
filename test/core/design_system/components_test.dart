@@ -267,7 +267,7 @@ void main() {
           width: 320,
           child: PriceHistoryChart(
             points: [Offset(0, 1), Offset(0.5, 0.4), Offset(1, 0)],
-            axisLabels: ['mai', 'jul', 'set', 'hoje'],
+            axisLabels: [(label: 'mai', at: 0), (label: 'jul', at: 0.4), (label: 'set', at: 0.8), (label: 'hoje', at: 1)],
             semanticsLabel: r'Preço do kg nos últimos 6 meses, de R$ 5,90 a R$ 4,99',
           ),
         ),
