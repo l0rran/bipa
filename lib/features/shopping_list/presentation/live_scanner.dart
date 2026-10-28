@@ -125,13 +125,15 @@ final class LiveScanner extends ChangeNotifier {
     await _enqueue(() async {
       final controller = _controller;
       if (controller == null || _disposed) return;
-      if (controller.value.isStreamingImages) await controller.stopImageStream();
       try {
+        if (controller.value.isStreamingImages) await controller.stopImageStream();
         path = (await controller.takePicture()).path;
       } finally {
-        if (_controller == controller && !_disposed) {
+        // A leitura ao vivo volta mesmo se a foto falhar. Uma falha aqui não
+        // perde a foto já tirada: só é relatada.
+        if (_controller == controller && !_disposed && !controller.value.isStreamingImages) {
           _interpreter.restart(DateTime.now());
-          await controller.startImageStream((image) => _onImage(controller, image));
+          await _quietly(() => controller.startImageStream((image) => _onImage(controller, image)));
         }
       }
     });
