@@ -61,12 +61,17 @@ List<PackagePrice> bestPricePerMarket(Iterable<PriceHistoryEntry> history, List<
   return bestByMarket.values.toList()..sort(_byUnitPrice);
 }
 
-/// Pelo preço por kg; sem ele, pelo preço, depois dos que têm.
+/// Pelo preço por kg; sem ele, pelo preço, depois dos que têm. Preços por
+/// unidades diferentes (kg e L) não se comparam: ficam agrupados pela
+/// unidade, para a ordem ser sempre a mesma.
 int _byUnitPrice(PackagePrice a, PackagePrice b) {
   final aUnit = a.unitPrice;
   final bUnit = b.unitPrice;
-  if (aUnit != null && bUnit != null && aUnit.unit == bUnit.unit) return aUnit.price.compareTo(bUnit.price);
-  if (aUnit != null && bUnit == null) return -1;
-  if (aUnit == null && bUnit != null) return 1;
-  return a.price.compareTo(b.price);
+  if (aUnit == null || bUnit == null) {
+    if (aUnit != null) return -1;
+    if (bUnit != null) return 1;
+    return a.price.compareTo(b.price);
+  }
+  final byUnit = aUnit.unit.index.compareTo(bUnit.unit.index);
+  return byUnit != 0 ? byUnit : aUnit.price.compareTo(bUnit.price);
 }
