@@ -47,10 +47,14 @@ final class ProductScanned extends LiveScanEvent {
 /// Uma etiqueta foi lida: o mesmo preço de varejo se repetiu em quadros
 /// seguidos. [barcode] é o código impresso na etiqueta, quando havia um.
 final class TagPriceRead extends LiveScanEvent {
-  const TagPriceRead({required this.price, this.barcode, this.otherOffers = const []});
+  const TagPriceRead({required this.price, this.barcode, this.nameHint, this.otherOffers = const []});
 
   final Money price;
   final String? barcode;
+
+  /// O nome do produto como a etiqueta escreve ("ARROZ BRANCO TIO JOAO
+  /// 5KG"), para sugerir no cadastro.
+  final String? nameHint;
 
   /// Os outros preços da mesma etiqueta (cartão, atacado), para o histórico.
   final List<PriceOffer> otherOffers;
@@ -60,10 +64,11 @@ final class TagPriceRead extends LiveScanEvent {
       other is TagPriceRead &&
       other.price == price &&
       other.barcode == barcode &&
+      other.nameHint == nameHint &&
       _sameOffers(other.otherOffers, otherOffers);
 
   @override
-  int get hashCode => Object.hash(price, barcode, Object.hashAll(otherOffers));
+  int get hashCode => Object.hash(price, barcode, nameHint, Object.hashAll(otherOffers));
 
   @override
   String toString() => 'TagPriceRead($price, $barcode, $otherOffers)';
@@ -231,6 +236,7 @@ final class LiveScanInterpreter {
     return TagPriceRead(
       price: retail.price,
       barcode: barcode,
+      nameHint: frame.tag.productNameHint,
       otherOffers: [
         for (final offer in frame.tag.offers)
           if (offer.condition is! AnyCustomer) offer,

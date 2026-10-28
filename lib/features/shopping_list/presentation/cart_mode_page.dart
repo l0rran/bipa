@@ -211,8 +211,13 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
   Future<void> _register(String code) async {
     // O aviso pode ser tocado depois de o carrinho fechar.
     if (!mounted) return;
+    // A etiqueta lida há pouco sugere o nome; a pessoa confere no formulário.
+    final pending = _pending;
+    final nameHint = pending != null && _router.fitsUnknownProduct(pending, barcode: code, now: DateTime.now())
+        ? pending.read.nameHint
+        : null;
     final product = await _withScannerPaused(
-      () => context.push<Product>(Routes.newProduct, extra: ProductFormArgs(barcode: code)),
+      () => context.push<Product>(Routes.newProduct, extra: ProductFormArgs(barcode: code, name: nameHint)),
     );
     if (product == null || !mounted) return;
     try {

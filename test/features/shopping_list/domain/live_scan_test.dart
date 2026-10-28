@@ -184,4 +184,16 @@ void main() {
       expect(_run(scan, _frames(1200, 1800, codes: [_coffee])), [const ProductScanned(_coffee)]);
     });
   });
+
+  test('a leitura da etiqueta leva o nome dela, para sugerir no cadastro', () {
+    const reading = PriceTagReading(
+      price: Money.cents(2790),
+      offers: [PriceOffer(price: Money.cents(2790))],
+      productNameHint: 'Arroz Branco Tio Joao 5kg',
+    );
+
+    final events = _run(LiveScanInterpreter(), _frames(0, 600, tag: reading));
+
+    expect(events, [const TagPriceRead(price: Money.cents(2790), nameHint: 'Arroz Branco Tio Joao 5kg')]);
+  });
 }

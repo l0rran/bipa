@@ -117,6 +117,14 @@ final class LiveTagRouter {
     return WaitForProduct(PendingTagPrice(read: read, readAt: now));
   }
 
+  /// Se o preço que espera serve para um produto ainda não cadastrado, bipado
+  /// com [barcode]: a etiqueta é desse código ou não tinha código. Serve para
+  /// sugerir o nome da etiqueta no cadastro.
+  bool fitsUnknownProduct(PendingTagPrice pending, {required String barcode, required DateTime now}) {
+    if (now.difference(pending.readAt) > waitFor || pending.productId != null) return false;
+    return pending.barcode == null || pending.barcode == barcode;
+  }
+
   /// Se o preço que espera vale para o produto que acabou de ser bipado com
   /// [barcode].
   bool fits(PendingTagPrice pending, {required String productId, required String barcode, required DateTime now}) {

@@ -89,4 +89,17 @@ void main() {
     expect(_router.fits(byCode, productId: 'rice', barcode: _riceCode, now: _now), isTrue);
     expect(_router.fits(byCode, productId: 'coffee', barcode: '7891000100103', now: _now), isFalse);
   });
+
+  test('o nome da etiqueta que espera vale para cadastrar um produto novo com o mesmo código, ou sem código', () {
+    final byCode = PendingTagPrice(read: _read, readAt: _now, barcode: _riceCode);
+    final noCode = PendingTagPrice(read: _read, readAt: _now);
+    final byProduct = PendingTagPrice(read: _read, readAt: _now, productId: 'milk');
+    final tooLate = _now.add(const Duration(seconds: 30));
+
+    expect(_router.fitsUnknownProduct(byCode, barcode: _riceCode, now: _now), isTrue);
+    expect(_router.fitsUnknownProduct(byCode, barcode: '7891000100103', now: _now), isFalse);
+    expect(_router.fitsUnknownProduct(noCode, barcode: _riceCode, now: _now), isTrue);
+    expect(_router.fitsUnknownProduct(noCode, barcode: _riceCode, now: tooLate), isFalse);
+    expect(_router.fitsUnknownProduct(byProduct, barcode: _riceCode, now: _now), isFalse);
+  });
 }
