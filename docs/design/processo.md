@@ -107,6 +107,15 @@ Quem cadastrou o mesmo produto uma vez por marca precisa de um jeito de juntar o
 | **Grocy** (juntar tarefas) | Item no menu "mais" da lista; a API diz qual fica e qual sai (`merge/{manter}/{remover}`) | **"Juntar com…" no menu** da tela do produto, com o produto atual saindo | — |
 | **Readysell** (juntar produtos no ERP) | Digita-se o código do produto que fica; o histórico dos dois é mantido; não há desfazer | **O histórico vai junto**: preços, estoque, lista e carrinho passam para o que fica | A confirmação diz em uma frase o que passa e que o outro deixa de existir |
 
+### Granel sem código (outubro de 2026)
+
+A etiqueta de gôndola do granel ("TOMATE ITALIANO R$ 8,99 o kg") não tem código, e o preço dela é por quilo: o que a pessoa paga depende do peso.
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **FairPrice Scan&Go** ([produtos sem código](https://help.fairprice.com.sg/hc/en-us/articles/360029616171-How-do-I-scan-fresh-produce-that-do-not-have-barcodes)) | A pessoa pesa na balança da loja, escolhe o item, imprime uma etiqueta com código e a bipa no app | **A pesagem vem da balança**: o valor entra pela etiqueta dela (ADR 0018) | A etiqueta da gôndola também serve: o preço por kg vai para o histórico |
+| **Shipt** ([itens pesados](https://shoppers.shipt.com/app-functionality/shopping-for-weighted-items)) | O item pesado é adicionado pelo peso, e o código da embalagem é opcional | **Escolher o produto sem código**, pela busca | Não pedimos o peso: o total vem da etiqueta da balança ou do preço digitado |
+
 ### Motivo das permissões (outubro de 2026)
 
 O "Ir às compras" pedia a localização e as notificações seguidas, sem dizer por quê, e a tela de Mercados pedia a localização só por abrir.
