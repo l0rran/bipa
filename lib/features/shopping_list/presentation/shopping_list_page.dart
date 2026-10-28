@@ -73,20 +73,34 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
 
   /// Escreveu o nome de um produto cadastrado: usa o produto (que não
   /// duplica). Senão, entra como item escrito à mão. A quantidade pode vir
-  /// junto, antes ou depois do nome: "2 leite", "leite 2", "2x leite".
+  /// junto, antes ou depois do nome: "2 leite", "leite 2", "2x leite". O
+  /// texto inteiro vale primeiro, para não cortar o número do nome de um
+  /// produto ("Omega 3", "3 Corações").
   Future<void> _submit() async {
-    final ListEntryText(:name, :quantity) = ListEntryText.parse(_input.text);
-    if (name.isEmpty) return;
+    final text = _input.text.trim();
+    if (text.isEmpty) return;
     final list = ref.read(shoppingListRepositoryProvider);
     final put = ref.read(putProductOnListProvider);
-    final matches = await ref.read(productRepositoryProvider).watchAll(query: name).first;
-    final exact = matches.where((p) => p.name.toLowerCase() == name.toLowerCase()).firstOrNull;
-    if (exact != null) {
-      await put(exact, quantity: quantity);
+    final trip = ref.read(activeTripProvider).value;
+    final matchList = ref.read(matchListToCartProvider);
+    final whole = await _productNamed(text);
+    final ListEntryText(:name, :quantity) = whole == null ? ListEntryText.parse(text) : ListEntryText(text);
+    final product = whole ?? (name == text ? null : await _productNamed(name));
+    if (product != null) {
+      await put(product, quantity: quantity);
+      // Na compra, a quantidade nova acerta a marcação pelo carrinho.
+      if (trip != null && quantity != null) await matchList(trip.id, product.id, CartListChange.listQuantity);
     } else {
       await list.addCustom(name, quantity: quantity);
     }
     if (mounted) _clearInput();
+  }
+
+  /// O produto cadastrado com exatamente esse nome, sem diferenciar
+  /// maiúsculas.
+  Future<Product?> _productNamed(String name) async {
+    final matches = await ref.read(productRepositoryProvider).watchAll(query: name).first;
+    return matches.where((p) => p.name.toLowerCase() == name.toLowerCase()).firstOrNull;
   }
 
   void _clearInput() {

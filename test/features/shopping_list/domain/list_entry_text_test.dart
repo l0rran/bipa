@@ -13,8 +13,12 @@ void main() {
     expect(ListEntryText.parse('  pilhas aa 4 '), const ListEntryText('pilhas aa', quantity: 4));
   });
 
-  test('número que é parte do nome, ou fora de 1 a 99, fica no nome', () {
-    const names = ['coca 2l', 'pão 7 grãos', 'arroz 5 kg', 'leite 1 l', '0 leite', '100 leite', '2', 'x2', 'leite'];
+  test('número que é parte do nome, fora de 1 a 99 ou um 1 no fim fica no nome', () {
+    const names = [
+      ...['coca 2l', 'pão 7 grãos', 'arroz 5 kg', 'leite 1 l', '0 leite', '100 leite', '2', 'x2', 'leite'],
+      // Um "1" no fim costuma ser do nome.
+      ...['Leite Ninho Fase 1', 'Shampoo 2 em 1'],
+    ];
     for (final text in names) {
       expect(ListEntryText.parse(text), ListEntryText(text), reason: text);
     }
