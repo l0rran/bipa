@@ -63,8 +63,6 @@ Primeira abertura e em casa:
 Lista e compra:
 
 - [ ] CE4: o marcado à mão entra no total pelo preço esperado, com "≈", ou como "sem preço"; a prévia da lista diz "sem preço de N"
-- [ ] CE5: sem localização, a compra começa no mercado que o chip da Lista mostra
-- [ ] CE7: "Cancelar compra" também no carrinho, e o menu da Lista no canto direito
 
 Câmera e modo carrinho:
 
@@ -89,7 +87,7 @@ Consistência e acessibilidade:
 - [ ] H5: as linhas de "Nos mercados" e da comparação abrem o mercado, e os alfinetes do mapa levam à linha
 - [ ] A barra de navegação encolhe ao rolar, como no design system
 - [ ] Movimento reduzido respeitado em todas as animações (barras da comparação e stepper)
-- [ ] Revisar no protótipo: "Modo carrinho: granel sem código", "Menu do bipar" com "Guardar em casa", "Mercados" com a idade dos preços e a pergunta "Levar os preços?", o mercado na "Confirmação", o aviso tocável em "Modo carrinho: preço esperando", o "1 de 2" no "Modo carrinho" e o "2× Leite" no "Fim da compra"
+- [ ] Revisar no protótipo: "Modo carrinho: granel sem código", "Menu do bipar" com "Guardar em casa", "Mercados" com a idade dos preços e a pergunta "Levar os preços?", o mercado na "Confirmação", o aviso tocável em "Modo carrinho: preço esperando", o "1 de 2" no "Modo carrinho", e o "2× Leite" e o "Cancelar compra" no "Fim da compra"
 
 ## Fase 2: base comunitária
 
