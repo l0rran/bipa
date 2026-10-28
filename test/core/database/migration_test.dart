@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:bipa/core/database/app_database.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
+import 'package:bipa/features/stock/domain/stock_location.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -53,6 +54,7 @@ void main() {
     11: ['price_observations.supersedes_id'],
     12: ['scale_items'],
     13: ['trip_prices'],
+    14: ['remembered_locations'],
   };
 
   /// Tudo o que veio depois da [version].
@@ -165,5 +167,28 @@ void main() {
     await migrated.close();
 
     expect(prices, isEmpty);
+  });
+
+  test('v13 → v14: os locais lembrados começam vazios, e o que está em casa fica onde está', () async {
+    final current = AppDatabase(NativeDatabase(file));
+    await current
+        .into(current.products)
+        .insert(
+          ProductsCompanion.insert(id: 'atum', name: 'Atum', unit: MeasureUnit.unit, createdAt: at, updatedAt: at),
+        );
+    await current
+        .into(current.stockItems)
+        .insert(
+          StockItemsCompanion.insert(productId: 'atum', quantity: 2, location: StockLocation.pantry, updatedAt: at),
+        );
+    await current.close();
+
+    final migrated = reopenAt(13, after(13));
+    final remembered = await migrated.select(migrated.rememberedLocations).get();
+    final item = await migrated.select(migrated.stockItems).getSingle();
+    await migrated.close();
+
+    expect(remembered, isEmpty);
+    expect((item.quantity, item.location), (2, StockLocation.pantry));
   });
 }

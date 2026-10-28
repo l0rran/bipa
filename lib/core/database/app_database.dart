@@ -30,6 +30,7 @@ part 'app_database.g.dart';
     MarketAisles,
     ScaleItems,
     TripPrices,
+    RememberedLocations,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -49,7 +50,8 @@ class AppDatabase extends _$AppDatabase {
   // v11: um preço pode corrigir outro (ADR 0017).
   // v12: itens da balança de cada mercado (ADR 0018).
   // v13: preços da compra guardados com ela (ADR 0020).
-  int get schemaVersion => 13;
+  // v14: o local do item que saiu de casa (ADR 0021).
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -75,6 +77,7 @@ class AppDatabase extends _$AppDatabase {
       if (from < 11) await migrator.addColumn(priceObservations, priceObservations.supersedesId);
       if (from < 12) await migrator.createTable(scaleItems);
       if (from < 13) await migrator.createTable(tripPrices);
+      if (from < 14) await migrator.createTable(rememberedLocations);
     }),
     beforeOpen: (details) async {
       // SQLite não aplica chaves estrangeiras sem este pragma.

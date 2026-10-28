@@ -266,3 +266,15 @@ class TripPrices extends Table {
   @override
   Set<Column<Object>> get primaryKey => {tripId, itemKey};
 }
+
+/// O local em que o item estava quando saiu de casa (ADR 0021, esquema
+/// v14), para ele voltar a nascer ali. Privado, como o estoque: nunca é
+/// sincronizado.
+@DataClassName('RememberedLocationRow')
+class RememberedLocations extends Table {
+  TextColumn get productId => text().references(Products, #id, onDelete: KeyAction.cascade)();
+  TextColumn get location => textEnum<StockLocation>()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {productId};
+}
