@@ -1,11 +1,12 @@
+import 'package:bipa/core/formatting/calendar_days.dart';
 import 'package:bipa/core/formatting/formatters.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/l10n/meta_join.dart';
 import 'package:bipa/features/markets/domain/nearest_market_finder.dart';
 import 'package:flutter/material.dart';
 
-/// A linha de apoio de um mercado: "você está aqui", ou "850 m · preços de
-/// 5 dias". Sem distância nem preço, o endereço (ou que não tem ponto no
+/// A linha de apoio de um mercado: "você está aqui", ou "850 m · atualizado
+/// há 5 dias" (o preço mais recente registrado ali). Sem distância nem preço, o endereço (ou que não tem ponto no
 /// mapa). Usada na lista de Mercados e na tela do mercado.
 String marketMeta(
   AppLocalizations l10n,
@@ -17,7 +18,7 @@ String marketMeta(
   if (isHere) return l10n.marketsHere;
   final distance = item.distanceMeters;
   // Em dias do calendário, como a idade do preço na tela do produto.
-  final days = latestPrice == null ? null : DateUtils.dateOnly(now).difference(DateUtils.dateOnly(latestPrice)).inDays;
+  final days = latestPrice == null ? null : calendarDaysSince(latestPrice, now);
   return l10n.joinMeta([
     if (distance != null) Formatters.distance(distance),
     if (days != null) l10n.marketsPriceAge(days),

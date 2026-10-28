@@ -11,6 +11,7 @@ import 'package:bipa/core/design_system/components/product_thumb.dart';
 import 'package:bipa/core/design_system/components/quantity_stepper.dart';
 import 'package:bipa/core/design_system/components/section_header.dart';
 import 'package:bipa/core/di/core_providers.dart';
+import 'package:bipa/core/formatting/calendar_days.dart';
 import 'package:bipa/core/formatting/formatters.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
@@ -324,7 +325,7 @@ class _ProductView extends ConsumerWidget {
   /// Em dias do calendário: um preço de ontem à noite visto hoje cedo é de
   /// "ontem", não de "hoje".
   static int _ageInDays(DateTime now, PackagePrice price) =>
-      DateUtils.dateOnly(now).difference(DateUtils.dateOnly(price.entry.observation.observedAt)).inDays;
+      calendarDaysSince(price.entry.observation.observedAt, now);
 
   /// "menor por kg", só para a primeira de várias, quando ela tem tamanho.
   static String? _cheapestPerUnit(AppLocalizations l10n, PackagePrice? price, {required bool isFirst}) {

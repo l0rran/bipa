@@ -6,6 +6,7 @@ import 'package:bipa/core/design_system/components/price_rows.dart';
 import 'package:bipa/core/design_system/components/product_category_icon.dart';
 import 'package:bipa/core/design_system/components/section_header.dart';
 import 'package:bipa/core/di/core_providers.dart';
+import 'package:bipa/core/formatting/calendar_days.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
@@ -249,7 +250,7 @@ class _MarketView extends ConsumerWidget {
 
   /// Em dias do calendário, como na tela do produto.
   static int _ageInDays(DateTime now, MarketPrice price) =>
-      DateUtils.dateOnly(now).difference(DateUtils.dateOnly(price.observation.observedAt)).inDays;
+      calendarDaysSince(price.observation.observedAt, now);
 }
 
 /// As seções na ordem do percurso, numeradas.
