@@ -184,6 +184,8 @@ void main() {
     expect(longPresses, 1);
     final target = find.ancestor(of: find.text('3×'), matching: find.byType(TapTarget));
     expect(tester.getSize(target).height, greaterThanOrEqualTo(48));
+    // O alvo maior não muda a altura da linha.
+    expect(tester.getSize(find.byType(ShoppingListRow)).height, 52);
     semantics.dispose();
   });
 

@@ -390,6 +390,10 @@ class ShoppingListRow extends StatelessWidget {
     final colors = context.colors;
     final price = this.price;
     final quantity = this.quantity;
+    // A quantidade tocável tem 48 dp de toque: a folga dela substitui o
+    // espaço entre a caixa e o nome e o respiro de cima e de baixo, e a
+    // linha continua com a altura e o desenho das outras.
+    final tappable = quantity != null && onQuantityTap != null;
 
     return Semantics(
       button: true,
@@ -406,7 +410,7 @@ class ShoppingListRow extends StatelessWidget {
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 52),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s4, vertical: BipaSpacing.s2),
+              padding: EdgeInsets.symmetric(horizontal: BipaSpacing.s4, vertical: tappable ? 2 : BipaSpacing.s2),
               child: Row(
                 children: [
                   AnimatedContainer(
@@ -420,10 +424,14 @@ class ShoppingListRow extends StatelessWidget {
                     ),
                     child: checked ? Icon(Icons.check_rounded, size: 18, color: colors.surface) : null,
                   ),
-                  const SizedBox(width: BipaSpacing.s3),
-                  if (quantity != null) ...[
-                    _Quantity(label: quantity, onTap: onQuantityTap),
-                    const SizedBox(width: BipaSpacing.s1),
+                  if (quantity != null && tappable)
+                    _Quantity(label: quantity, onTap: onQuantityTap)
+                  else ...[
+                    const SizedBox(width: BipaSpacing.s3),
+                    if (quantity != null) ...[
+                      _Quantity(label: quantity),
+                      const SizedBox(width: BipaSpacing.s1),
+                    ],
                   ],
                   Expanded(
                     child: Text(
