@@ -52,6 +52,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           packageId: state.uri.queryParameters['embalagem'],
           fromCart: state.uri.queryParameters['carrinho'] == '1',
           photoFirst: state.uri.queryParameters['foto'] == '1',
+          marketId: state.uri.queryParameters['mercado'],
         ),
       ),
       // "/produto/novo" precisa vir antes de "/produto/:id".

@@ -32,11 +32,19 @@ import 'package:image_picker/image_picker.dart';
 /// Fluxo principal do app: registrar um preço no mercado com o mínimo de
 /// digitação.
 ///
-/// 1. O mercado é detectado pela localização.
+/// 1. O mercado vem da compra ou do chip da câmera; sem eles, é detectado
+///    pela localização.
 /// 2. A foto da etiqueta preenche preço, código de barras e nome.
 /// 3. O usuário confere e salva; "Salvar e bipar outro" agiliza a sequência.
 class CapturePricePage extends ConsumerStatefulWidget {
-  const CapturePricePage({this.productId, this.packageId, this.fromCart = false, this.photoFirst = false, super.key});
+  const CapturePricePage({
+    this.productId,
+    this.packageId,
+    this.fromCart = false,
+    this.photoFirst = false,
+    this.marketId,
+    super.key,
+  });
 
   /// Quando informado, registra o preço deste produto (vindo da tela dele).
   final String? productId;
@@ -50,6 +58,10 @@ class CapturePricePage extends ConsumerStatefulWidget {
 
   /// Aberta pelo disparo da câmera: fotografa a etiqueta logo de cara.
   final bool photoFirst;
+
+  /// O mercado já escolhido (o da compra ou o do chip da câmera). Vale no
+  /// lugar do que a localização acharia: lojas vizinhas confundem o GPS.
+  final String? marketId;
 
   @override
   ConsumerState<CapturePricePage> createState() => _CapturePricePageState();
@@ -128,6 +140,18 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
   }
 
   Future<void> _detectMarket() async {
+    final chosenId = widget.marketId;
+    if (chosenId != null) {
+      final chosen = await ref.read(marketRepositoryProvider).findById(chosenId);
+      if (!mounted) return;
+      if (chosen != null) {
+        setState(() {
+          _detectingMarket = false;
+          _market ??= chosen;
+        });
+        return;
+      }
+    }
     // Abrir a tela não pede a localização: sem ela, o mercado é escolhido no
     // chip.
     final location = await ref.read(locationServiceProvider).currentLocation(request: false);

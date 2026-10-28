@@ -480,13 +480,13 @@ class _CameraPageState extends ConsumerState<CameraPage> {
                             icon: Icons.keyboard_alt_outlined,
                             label: l10n.cartTypePrice,
                             // O formulário de sempre, para digitar tudo.
-                            onPressed: () => _withScannerPaused(() => context.push<void>(Routes.capturePrice)),
+                            onPressed: () => _withScannerPaused(() => context.push<void>(Routes.capturePriceAt(_market?.id))),
                           ),
                         ),
                       ),
                       ShutterButton(
                         label: l10n.cartPhotoTag,
-                        onPressed: () => _withScannerPaused(() => context.push<void>(Routes.capturePricePhoto)),
+                        onPressed: () => _withScannerPaused(() => context.push<void>(Routes.capturePricePhoto(_market?.id))),
                       ),
                       Expanded(
                         child: Align(

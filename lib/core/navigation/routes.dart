@@ -24,11 +24,18 @@ abstract final class Routes {
   static String capturePriceFor(String productId, {String? packageId}) =>
       Uri(path: capturePrice, queryParameters: {'produto': productId, 'embalagem': ?packageId}).toString();
 
-  /// A foto da etiqueta aberta pelo modo carrinho.
-  static const capturePriceFromCart = '$capturePrice?carrinho=1';
+  /// O formulário do preço com o mercado já escolhido (o do chip da
+  /// câmera): o preço não vai para o mercado que a localização achar.
+  static String capturePriceAt(String? marketId) =>
+      marketId == null ? capturePrice : Uri(path: capturePrice, queryParameters: {'mercado': marketId}).toString();
+
+  /// A foto da etiqueta aberta pelo modo carrinho, no mercado da compra.
+  static String capturePriceFromCart(String? marketId) =>
+      Uri(path: capturePrice, queryParameters: {'carrinho': '1', 'mercado': ?marketId}).toString();
 
   /// O formulário do preço, já abrindo a câmera para fotografar a etiqueta.
-  static const capturePricePhoto = '$capturePrice?foto=1';
+  static String capturePricePhoto(String? marketId) =>
+      Uri(path: capturePrice, queryParameters: {'foto': '1', 'mercado': ?marketId}).toString();
 
   /// A câmera somando em casa cada código ("Comprei", o Início vazio).
   static const cameraBought = '$camera?modo=comprei';

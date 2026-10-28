@@ -545,7 +545,8 @@ class _CartModePageState extends ConsumerState<CartModePage> {
   /// O disparo abre a foto da etiqueta; o preço salvo lá entra no carrinho
   /// e fica firmado: a etiqueta lida ao vivo na volta não o sobrescreve.
   Future<void> _photographTag() async {
-    final priced = await _withScannerPaused(() => context.push<Set<String>>(Routes.capturePriceFromCart));
+    final marketId = ref.read(activeTripProvider).value?.marketId;
+    final priced = await _withScannerPaused(() => context.push<Set<String>>(Routes.capturePriceFromCart(marketId)));
     if (priced != null) _settledItems.addAll(priced);
   }
 
