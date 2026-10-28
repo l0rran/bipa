@@ -1,7 +1,5 @@
-import 'package:bipa/core/id/id_generator.dart';
 import 'package:bipa/core/money/money.dart';
-import 'package:bipa/core/time/clock.dart';
-import 'package:bipa/features/products/domain/measure_unit.dart';
+import 'package:bipa/features/products/domain/create_product_by_weight.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_repository.dart';
 import 'package:bipa/features/products/domain/scale_label.dart';
@@ -22,19 +20,16 @@ final class ScaleItems {
     required ScaleItemRepository scale,
     required ProductRepository products,
     required CartRepository cart,
-    required IdGenerator ids,
-    required Clock clock,
+    required CreateProductByWeight createProduct,
   }) : _scale = scale,
        _products = products,
        _cart = cart,
-       _ids = ids,
-       _clock = clock;
+       _createProduct = createProduct;
 
   final ScaleItemRepository _scale;
   final ProductRepository _products;
   final CartRepository _cart;
-  final IdGenerator _ids;
-  final Clock _clock;
+  final CreateProductByWeight _createProduct;
 
   /// O produto já lembrado para o item neste mercado; sem mercado, nenhum.
   Future<Product?> productFor(String? marketId, ScaleLabel label) async {
@@ -47,7 +42,7 @@ final class ScaleItems {
   /// [newName], vendido por kg). Sem mercado, só cria o produto, se for o
   /// caso: o código não diz nada fora daquele mercado.
   Future<Product> remember(String? marketId, ScaleLabel label, {Product? product, String? newName}) async {
-    final chosen = product ?? await _create(newName ?? (throw ArgumentError('Sem produto nem nome.')));
+    final chosen = product ?? await _createProduct(newName ?? (throw ArgumentError('Sem produto nem nome.')));
     if (marketId != null) await _scale.remember(marketId, label.itemKey, chosen.id);
     return chosen;
   }
@@ -73,18 +68,5 @@ final class ScaleItems {
     await _cart.setPrice(existing.id, previous + label.total);
     if (existing.quantity != 1) await _cart.setQuantity(existing.id, 1);
     if (!existing.take) await _cart.setTake(existing.id, take: true);
-  }
-
-  Future<Product> _create(String name) async {
-    final now = _clock();
-    final product = Product(
-      id: _ids.newId(),
-      name: name.trim(),
-      unit: MeasureUnit.kilogram,
-      createdAt: now,
-      updatedAt: now,
-    );
-    await _products.save(product);
-    return product;
   }
 }

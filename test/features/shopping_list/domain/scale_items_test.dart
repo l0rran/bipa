@@ -3,6 +3,7 @@ import 'package:bipa/core/money/money.dart';
 import 'package:bipa/features/markets/data/drift_market_repository.dart';
 import 'package:bipa/features/markets/domain/market.dart';
 import 'package:bipa/features/products/data/drift_product_repository.dart';
+import 'package:bipa/features/products/domain/create_product_by_weight.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/scale_label.dart';
 import 'package:bipa/features/shopping_list/data/drift_cart_repository.dart';
@@ -32,8 +33,7 @@ void main() {
       scale: DriftScaleItemRepository(db),
       products: DriftProductRepository(db),
       cart: cart,
-      ids: ids,
-      clock: () => now,
+      createProduct: CreateProductByWeight(products: DriftProductRepository(db), ids: ids, clock: () => now),
     );
     await DriftMarketRepository(db).save(Market(id: 'vila', name: 'Vila', createdAt: now, updatedAt: now));
   });

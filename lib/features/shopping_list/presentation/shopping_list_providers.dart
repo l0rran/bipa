@@ -190,8 +190,7 @@ final scaleItemsProvider = Provider<ScaleItems>(
     scale: DriftScaleItemRepository(ref.watch(appDatabaseProvider)),
     products: ref.watch(productRepositoryProvider),
     cart: ref.watch(cartRepositoryProvider),
-    ids: ref.watch(idGeneratorProvider),
-    clock: ref.watch(clockProvider),
+    createProduct: ref.watch(createProductByWeightProvider),
   ),
 );
 

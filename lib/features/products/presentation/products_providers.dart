@@ -1,6 +1,7 @@
 import 'package:bipa/core/database/database_provider.dart';
 import 'package:bipa/core/di/core_providers.dart';
 import 'package:bipa/features/products/data/drift_product_repository.dart';
+import 'package:bipa/features/products/domain/create_product_by_weight.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/product_repository.dart';
@@ -39,6 +40,15 @@ final productPackagesProvider = StreamProvider.autoDispose.family<List<ProductPa
 
 final registerPackageProvider = Provider<RegisterPackage>(
   (ref) => RegisterPackage(
+    products: ref.watch(productRepositoryProvider),
+    ids: ref.watch(idGeneratorProvider),
+    clock: ref.watch(clockProvider),
+  ),
+);
+
+/// Cadastra um produto vendido por quilo (ADR 0018).
+final createProductByWeightProvider = Provider<CreateProductByWeight>(
+  (ref) => CreateProductByWeight(
     products: ref.watch(productRepositoryProvider),
     ids: ref.watch(idGeneratorProvider),
     clock: ref.watch(clockProvider),
