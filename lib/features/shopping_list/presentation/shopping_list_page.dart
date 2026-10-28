@@ -2,6 +2,7 @@ import 'package:bipa/core/catalog/product_kind.dart';
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/dropdown_chip.dart';
 import 'package:bipa/core/design_system/components/product_category_icon.dart';
 import 'package:bipa/core/design_system/components/section_header.dart';
 import 'package:bipa/core/design_system/components/shopping_list.dart';
@@ -9,6 +10,7 @@ import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/money/money.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
+import 'package:bipa/features/markets/presentation/market_picker_sheet.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/presentation/product_photos.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
@@ -115,6 +117,20 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
       );
   }
 
+  /// Durante a compra, troca o mercado dela; fora, escolhe o mercado em que
+  /// a lista se arruma e com que o "Ir às compras" começa.
+  Future<void> _chooseMarket(ShoppingTrip? trip) async {
+    final trips = ref.read(shoppingTripRepositoryProvider);
+    final chosen = ref.read(listChosenMarketProvider.notifier);
+    final market = await pickMarket(context, selectedId: ref.read(listMarketIdProvider));
+    if (market == null) return;
+    if (trip != null) {
+      await trips.setMarket(trip.id, market.id);
+    } else {
+      chosen.choose(market.id);
+    }
+  }
+
   Future<void> _finish(ShoppingTrip trip) async {
     setState(() => _finishing = true);
     try {
@@ -156,8 +172,9 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
               .take(5)
               .toList();
 
-    // No mercado da compra, as seções seguem a ordem aprendida nele (ADR 0014).
-    final aisleOrder = ref.watch(activeAisleOrderProvider).value ?? AisleOrder.empty;
+    // As seções seguem a ordem aprendida no mercado da lista (ADR 0014).
+    final aisleOrder = ref.watch(listAisleOrderProvider).value ?? AisleOrder.empty;
+    final marketName = ref.watch(listMarketNameProvider);
 
     return Scaffold(
       body: AsyncValueView(
@@ -175,9 +192,27 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                   padding: const EdgeInsets.fromLTRB(BipaSpacing.s4, BipaSpacing.s6, BipaSpacing.s4, 0),
                   sliver: SliverList.list(
                     children: [
-                      Semantics(
-                        header: true,
-                        child: Text(l10n.listTitle, style: BipaText.headline.copyWith(color: context.colors.ink)),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Semantics(
+                              header: true,
+                              child: Text(
+                                l10n.listTitle,
+                                style: BipaText.headline.copyWith(color: context.colors.ink),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: BipaSpacing.s3),
+                          Flexible(
+                            child: DropdownChip(
+                              icon: Icons.storefront_outlined,
+                              label: marketName ?? l10n.cartChooseMarket,
+                              semanticsLabel: marketName == null ? null : l10n.listMarketLabel(marketName),
+                              onTap: () => _chooseMarket(trip),
+                            ),
+                          ),
+                        ],
                       ),
                       if (trip != null && tripSummary != null) ...[
                         const SizedBox(height: BipaSpacing.s4),

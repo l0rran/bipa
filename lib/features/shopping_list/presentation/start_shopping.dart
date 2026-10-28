@@ -7,15 +7,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 /// "Ir às compras": começa a compra, abre a lista e, se a localização
-/// permitir, descobre em qual mercado a pessoa está.
+/// permitir, descobre em qual mercado a pessoa está. O mercado escolhido no
+/// chip da lista vale mais que a localização.
 Future<void> startShopping(BuildContext context, WidgetRef ref) async {
   // Tudo lido antes dos awaits: a tela pode sair da árvore no meio do caminho.
   final trips = ref.read(shoppingTripRepositoryProvider);
   final location = ref.read(locationServiceProvider);
   final markets = ref.read(marketRepositoryProvider);
   final finder = ref.read(nearestMarketFinderProvider);
+  final chosen = ref.read(listChosenMarketProvider);
 
-  final trip = await trips.start();
+  final trip = await trips.start(marketId: chosen);
   if (context.mounted) context.go(Routes.shoppingList);
   if (trip.marketId != null) return;
 

@@ -21,7 +21,7 @@ Cada tela tem uma imagem (390 px de largura, em 2x) e o HTML de origem em [`font
 | **Produto com embalagens**: o produto é o que se usa em casa; as embalagens (marca e tamanho) mostram o preço e o preço por kg, e o estoque conta embalagens com o total em kg. | [ProdutoEmbalagens.png](telas/ProdutoEmbalagens.png) | Feita (ADR 0013) |
 | **Juntar com…**: no menu da tela do produto, escolher o produto que fica (a busca não oferece criar um novo) e confirmar. O que vai passar para o outro produto é dito com texto, porque não dá para desfazer. | [ProdutoJuntar.png](telas/ProdutoJuntar.png), [ProdutoJuntarConfirmar.png](telas/ProdutoJuntarConfirmar.png) | Feita (ADR 0013) |
 | **Mercados**: mapa, a sua lista em cada mercado e os mercados perto de você. | [Mercados.png](telas/Mercados.png) | Visual antigo |
-| **Lista**: a prévia da lista, adicionar item (com foto de lista de papel e voz), os itens de sempre e a lista na ordem dos corredores. | [Lista.png](telas/Lista.png) | Feita, sem o seletor de mercado, sem foto e voz e com seções genéricas em vez dos corredores do mercado |
+| **Lista**: a prévia da lista, adicionar item (com foto de lista de papel e voz), os itens de sempre e a lista na ordem dos corredores. | [Lista.png](telas/Lista.png) | Feita, sem foto e voz; as seções seguem a ordem aprendida no mercado (ADR 0014) |
 | **Notificação ao vivo**: a compra em andamento na tela de bloqueio e na barra de status (Android 16). | [Notificacao.png](telas/Notificacao.png) | Falta |
 
 ## Ainda não desenhado

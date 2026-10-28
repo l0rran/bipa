@@ -277,6 +277,15 @@
   },
   "cartRegister": "Cadastrar",
   "cartChooseMarket": "Escolha o mercado",
+  "listMarketLabel": "Mercado da lista: {name}. Trocar",
+  "@listMarketLabel": {
+    "description": "Rótulo acessível do chip do mercado na lista.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "cartNeedMarket": "Escolha o mercado para registrar o preço.",
   "cartPhotoTag": "Fotografar a etiqueta",
   "cartClose": "Fechar",

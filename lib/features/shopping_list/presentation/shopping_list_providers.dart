@@ -93,10 +93,42 @@ final aisleOrderRepositoryProvider = Provider<AisleOrderRepository>(
   (ref) => DriftAisleOrderRepository(ref.watch(appDatabaseProvider)),
 );
 
-/// A ordem das seções no mercado da compra em andamento (ADR 0014); fora de
-/// uma compra, ou sem mercado, a ordem genérica.
-final activeAisleOrderProvider = StreamProvider.autoDispose<AisleOrder>((ref) {
-  final marketId = ref.watch(activeTripProvider).value?.marketId;
+/// O mercado escolhido no chip da lista, fora de uma compra; `null`
+/// enquanto a pessoa não escolhe.
+final listChosenMarketProvider = NotifierProvider<ListChosenMarket, String?>(ListChosenMarket.new);
+
+class ListChosenMarket extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void choose(String marketId) => state = marketId;
+}
+
+/// O mercado da compra mais recente que teve mercado.
+final lastMarketIdProvider = StreamProvider.autoDispose<String?>(
+  (ref) => ref.watch(shoppingTripRepositoryProvider).watchLastMarketId(),
+);
+
+/// O mercado da lista: o da compra em andamento; fora dela, o escolhido no
+/// chip ou, sem escolha, o da última compra.
+final listMarketIdProvider = Provider.autoDispose<String?>((ref) {
+  final trip = ref.watch(activeTripProvider).value;
+  if (trip != null) return trip.marketId;
+  return ref.watch(listChosenMarketProvider) ?? ref.watch(lastMarketIdProvider).value;
+});
+
+/// O nome do mercado da lista, quando há um.
+final listMarketNameProvider = Provider.autoDispose<String?>((ref) {
+  final marketId = ref.watch(listMarketIdProvider);
+  if (marketId == null) return null;
+  final markets = ref.watch(marketsProvider).value ?? const [];
+  return markets.where((m) => m.id == marketId).firstOrNull?.name;
+});
+
+/// A ordem das seções no mercado da lista (ADR 0014); sem mercado, a
+/// genérica.
+final listAisleOrderProvider = StreamProvider.autoDispose<AisleOrder>((ref) {
+  final marketId = ref.watch(listMarketIdProvider);
   return marketId == null
       ? Stream.value(AisleOrder.empty)
       : ref.watch(aisleOrderRepositoryProvider).watch(marketId);
