@@ -138,15 +138,17 @@ class _ConfirmPriceSheetState extends ConsumerState<ConfirmPriceSheet> {
   }
 
   /// Quanto este preço fica abaixo do menor dos outros mercados, para a
-  /// mesma embalagem; `null` se não fica.
+  /// mesma embalagem; `null` se não fica. Sem a embalagem ou sem saber o
+  /// mercado, a comparação não seria justa: não há selo.
   Money? _cheaperBy() {
     final marketId = widget.marketId;
     final packageId = _package?.id;
+    if (marketId == null || packageId == null) return null;
     final history = ref.watch(priceHistoryProvider(_product.id)).value ?? const [];
     final others = [
       for (final entry in latestPricePerMarket([
         for (final entry in history)
-          if (packageId == null || entry.observation.packageId == packageId) entry,
+          if (entry.observation.packageId == packageId) entry,
       ]))
         if (entry.observation.marketId != marketId) entry.observation.price,
     ];
@@ -216,9 +218,11 @@ class _ConfirmPriceSheetState extends ConsumerState<ConfirmPriceSheet> {
           ),
           const SizedBox(height: BipaSpacing.s4),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              PriceTagHero(price: _price, unitLine: unitPrice?.format()),
-              const Spacer(),
+              // Flexível: com letra grande, a etiqueta encolhe antes de passar da tela.
+              Flexible(child: PriceTagHero(price: _price, unitLine: unitPrice?.format())),
+              const SizedBox(width: BipaSpacing.s3),
               IconButton.filledTonal(
                 tooltip: l10n.confirmEditPrice,
                 onPressed: _editPrice,
