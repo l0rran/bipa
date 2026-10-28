@@ -77,7 +77,7 @@ final class LiveScanner extends ChangeNotifier {
         await controller.dispose();
         return;
       }
-      _interpreter.reset();
+      _interpreter.restart(DateTime.now());
       _torch = false;
       _controller = controller;
       _notify();

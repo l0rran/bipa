@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:ui' show Rect;
+import 'dart:ui' show Offset, Rect;
 
 import 'package:bipa/core/camera/live_frame_analyzer.dart';
 import 'package:bipa/core/camera/viewfinder_region.dart';
@@ -27,9 +27,16 @@ final class MlKitLiveFrameAnalyzer implements LiveFrameAnalyzer {
 
     bool inside(Rect box) => crop == null || crop.contains(box.center.dx, box.center.dy);
 
+    // Com mais de um código na moldura, vale o mais perto do centro dela.
+    final inFrame = barcodes.where((barcode) => inside(barcode.boundingBox)).toList();
+    if (crop != null) {
+      final center = Offset(crop.left + crop.width / 2, crop.top + crop.height / 2);
+      double distance(Barcode barcode) => (barcode.boundingBox.center - center).distanceSquared;
+      inFrame.sort((a, b) => distance(a).compareTo(distance(b)));
+    }
     final codes = [
-      for (final barcode in barcodes)
-        if (barcode.rawValue case final value? when inside(barcode.boundingBox)) value,
+      for (final barcode in inFrame)
+        if (barcode.rawValue case final value?) value,
     ];
     final lines = [
       for (final block in text.blocks)

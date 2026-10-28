@@ -33,6 +33,8 @@ As opções consideradas foram estas:
   - sem código: vai para o último item bipado, se ele entrou há até 20 s e o preço dele ainda não foi firmado (lido ao vivo, digitado ou fotografado);
   - senão, o preço espera o próximo produto bipado, por até 20 s.
 - **O bipe espera um instante.** O código precisa aparecer sem preço em 2 quadros, o primeiro com pelo menos 0,6 s. É o tempo de o OCR achar o preço de uma etiqueta cujo código foi lido antes. Um produto segurado na frente de uma etiqueta conta como etiqueta, até o preço sair da moldura.
+- **Ao abrir a câmera, o que já está na moldura não conta** durante o primeiro segundo: vale como já lido e só volta a valer depois de sair da moldura. Assim, voltar do cadastro com o produto na frente não soma outra unidade.
+- **Com mais de um código na moldura**, vale o mais perto do centro dela.
 - **Duas etiquetas vizinhas com o mesmo preço** valem as duas quando têm códigos diferentes. Sem código, valem uma vez só, se lidas sem pausa entre elas.
 - **Na dúvida, nada é escolhido.** A leitura ao vivo é ignorada quando a etiqueta tem vários preços do mesmo tamanho ou só traz preço com condição (clube, cartão, atacado). Para essas etiquetas, continua valendo o disparo, que fotografa a etiqueta e abre a confirmação.
 - A análise para quando o app vai para o fundo e quando outra tela usa a câmera.

@@ -76,7 +76,7 @@ def sheet(parts: list[Canvas], gap: int, bg: tuple[int, int, int]) -> Canvas:
 
 
 sheet([tag_rice(), tag_coffee(), tag_ambiguous()], 140, (60, 60, 70)).img.save(OUT / "parede.png")
-sheet([package("ARROZ TIO JOAO 5 KG", RICE), package("CAFE PILAO 500 G", COFFEE)], 120, (180, 160, 130)).img.save(
+sheet([package("ARROZ TIO JOAO 5 KG", RICE), package("CAFE PILAO 500 G", COFFEE)], 420, (180, 160, 130)).img.save(
     OUT / "mesa.png"
 )
 print(f"arroz {RICE}, café {COFFEE}; imagens em {OUT}")

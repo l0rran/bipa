@@ -93,6 +93,10 @@ final class TagPriceRead extends LiveScanEvent {
 ///   sumir da moldura por [rescanPause].
 /// * Um produto segurado na frente de uma etiqueta conta como etiqueta, e só
 ///   é bipado quando o preço sai da moldura.
+/// * **Ao abrir a câmera**, o que já está na moldura não conta: nos primeiros
+///   [startupQuiet], códigos e preços vistos ficam como já lidos e só voltam a
+///   valer depois de sair da moldura. Assim, voltar do cadastro com o produto
+///   ainda na frente não soma outra unidade (ver [restart]).
 ///
 /// Não guarda estado entre compras: crie um por tela de carrinho.
 final class LiveScanInterpreter {
@@ -105,6 +109,7 @@ final class LiveScanInterpreter {
     this.codeWindow = const Duration(seconds: 1),
     this.rescanPause = const Duration(milliseconds: 2500),
     this.tagCodeMemory = const Duration(seconds: 2),
+    this.startupQuiet = const Duration(seconds: 1),
   }) : assert(tagAgreement > 0 && codeAgreement > 0),
        assert(codeSettle < codeWindow);
 
@@ -118,6 +123,11 @@ final class LiveScanInterpreter {
 
   /// Por quanto tempo um código visto numa etiqueta deixa de valer como bipe.
   final Duration tagCodeMemory;
+
+  /// Quanto dura o silêncio depois de [restart].
+  final Duration startupQuiet;
+
+  DateTime? _quietUntil;
 
   final _priceHits = <_PriceHit>[];
 
@@ -140,6 +150,12 @@ final class LiveScanInterpreter {
 
     final retail = frame.retailOffer;
     final code = frame.validBarcode;
+    final quietUntil = _quietUntil;
+    if (quietUntil != null && at.isBefore(quietUntil)) {
+      if (code != null) _deliveredCodes[code] = at;
+      if (retail != null) _deliveredPrices[retail.price.cents] = _Delivered(lastSeen: at, barcode: code);
+      return const [];
+    }
     final events = <LiveScanEvent>[];
 
     if (code != null) {
@@ -158,8 +174,16 @@ final class LiveScanInterpreter {
     return events;
   }
 
-  /// Esquece tudo, como ao voltar de outra tela.
+  /// Recomeça ao abrir a câmera, em [at]: esquece o que foi lido e ignora o
+  /// que já está na moldura.
+  void restart(DateTime at) {
+    reset();
+    _quietUntil = at.add(startupQuiet);
+  }
+
+  /// Esquece tudo.
   void reset() {
+    _quietUntil = null;
     _priceHits.clear();
     _deliveredPrices.clear();
     _codeHits.clear();

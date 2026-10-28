@@ -163,4 +163,25 @@ void main() {
 
     expect(_run(scan, _frames(900, 1500, codes: [_coffee])), [const ProductScanned(_coffee)]);
   });
+
+  group('ao abrir a câmera', () {
+    test('o código que já está na moldura não é bipado, até sair e voltar', () {
+      final scan = LiveScanInterpreter()..restart(_start);
+
+      expect(_run(scan, _frames(0, 3000, codes: [_coffee])), isEmpty);
+      expect(_run(scan, _frames(6000, 6600, codes: [_coffee])), [const ProductScanned(_coffee)]);
+    });
+
+    test('a etiqueta que já está na moldura também não vale', () {
+      final scan = LiveScanInterpreter()..restart(_start);
+
+      expect(_run(scan, _frames(0, 3000, tag: _tag(2790))), isEmpty);
+    });
+
+    test('o que entra na moldura depois do primeiro segundo vale normalmente', () {
+      final scan = LiveScanInterpreter()..restart(_start);
+
+      expect(_run(scan, _frames(1200, 1800, codes: [_coffee])), [const ProductScanned(_coffee)]);
+    });
+  });
 }
