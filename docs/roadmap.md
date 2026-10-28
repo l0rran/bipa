@@ -59,9 +59,7 @@ Primeira abertura e em casa:
 
 Câmera e modo carrinho:
 
-- [ ] D3: o granel escolhido entra na bandeja sem preço, com o preço por kg como estimativa, e marca a lista
-- [ ] D6: trocar o produto lembrado para um código da balança
-- [ ] D7: em "Comprei" e "Usei", o Desfazer no aviso do visor quando a lista não muda, sem repetir o fato num snackbar
+- [ ] D3 (resto): o preço por kg do granel como estimativa na bandeja; hoje a linha entra sem preço
 
 Preços, mercados e produto:
 
@@ -80,7 +78,7 @@ Consistência e acessibilidade:
 - [ ] H5: as linhas de "Nos mercados" e da comparação abrem o mercado, e os alfinetes do mapa levam à linha
 - [ ] A barra de navegação encolhe ao rolar, como no design system
 - [ ] Movimento reduzido respeitado em todas as animações (barras da comparação e stepper)
-- [ ] Revisar no protótipo: o granel sem código, o aviso tocável do preço esperando e o "1 de 2" na bandeja do "Modo carrinho"; "Guardar em casa" no "Menu do bipar"; a idade dos preços e a pergunta "Levar os preços?" em "Mercados"; o mercado na "Confirmação"; o "2× Leite" e o "Cancelar compra" no "Fim da compra"; o "⋯" no editor da linha do "Início"; e o "2 sem preço" na prévia da "Lista"
+- [ ] Revisar no protótipo: o granel sem código, o aviso tocável do preço esperando e o "1 de 2" na bandeja do "Modo carrinho"; "Guardar em casa" no "Menu do bipar"; a idade dos preços e a pergunta "Levar os preços?" em "Mercados"; o mercado na "Confirmação"; o "2× Leite" e o "Cancelar compra" no "Fim da compra"; o "⋯" no editor da linha do "Início"; o "2 sem preço" na prévia da "Lista"; e o "Desfazer" no aviso da câmera em "Comprei" e "Usei", que ainda não tem quadro
 
 ## Fase 2: base comunitária
 
