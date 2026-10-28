@@ -11,7 +11,7 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - Barra de navegação de vidro com o botão de bipar no centro e a aba Lista (por enquanto, um aviso).
 - Design system no código: paleta semântica gerada de `design/tokens.json`, tema do Material 3 e fontes embutidas.
 - Miniatura do produto com foto ou ícone da categoria, e o campo de foto no banco (esquema 2).
-- Textos do Início em ARB (`flutter gen-l10n`).
+- Textos de todas as telas em ARB (`flutter gen-l10n`).
 - Preços com condição (ADR 0011): a etiqueta de atacarejo vira até três preços (varejo, cartão da loja e atacado a partir de N unidades), todos salvos e mostrados no histórico. O esquema vai à versão 3.
 - Lista de compras: a aba Lista com progresso, adicionar com sugestões, itens de sempre, seções do mercado, preço esperado e desfazer; a prévia da lista no Início; e "Pôr na lista" no cartão de Acabando e no gesto para a direita da linha. O esquema vai à versão 4.
 - Modo compra: "Ir às compras" começa a compra e detecta o mercado; a barra da compra mostra o progresso e o total acima da navegação; registrar o preço de um item da lista o marca; "Terminei" leva o comprado ao estoque, com Desfazer. O esquema vai à versão 5.

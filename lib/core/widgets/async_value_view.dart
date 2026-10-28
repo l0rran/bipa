@@ -1,3 +1,4 @@
+import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -16,10 +17,7 @@ class AsyncValueView<T> extends StatelessWidget {
       error: (error, stackTrace) => Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Text(
-            'Algo deu errado ao carregar os dados.\n$error',
-            textAlign: TextAlign.center,
-          ),
+          child: Text(AppLocalizations.of(context).loadFailed('$error'), textAlign: TextAlign.center),
         ),
       ),
     );

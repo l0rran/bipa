@@ -146,7 +146,7 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
         imageQuality: 90,
       );
     } on Exception {
-      if (mounted) context.showMessage('Não foi possível abrir a câmera.');
+      if (mounted) context.showMessage(AppLocalizations.of(context).captureCameraFailed);
       return;
     }
     if (photo == null || !mounted) return;
@@ -162,7 +162,7 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
       if (mounted) _applyReading(reading);
     } on Exception {
       if (mounted) {
-        context.showMessage('Não foi possível ler a etiqueta. Preencha os campos manualmente.');
+        context.showMessage(AppLocalizations.of(context).captureReadFailed);
       }
     } finally {
       if (mounted) setState(() => _reading = false);
@@ -189,7 +189,7 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
     if (reading.price == null && reading.candidates.isNotEmpty) {
       context.showMessage(AppLocalizations.of(context).captureChoosePrice);
     } else if (reading.isEmpty) {
-      context.showMessage('Nenhum preço encontrado. Aproxime a câmera da etiqueta e tente de novo.');
+      context.showMessage(AppLocalizations.of(context).captureNoPrice);
     }
   }
 
@@ -226,7 +226,7 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
   Future<void> _save({required bool captureAnother}) async {
     final market = _market;
     if (market == null) {
-      context.showMessage('Escolha o mercado antes de salvar.');
+      context.showMessage(AppLocalizations.of(context).captureMarketMissing);
       return;
     }
     if (!_formKey.currentState!.validate()) return;
@@ -278,7 +278,7 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
       }
       if (!mounted) return;
 
-      context.showMessage('${price.format()} registrado em ${market.name}.');
+      context.showMessage(AppLocalizations.of(context).capturePriceSaved(price.format(), market.name));
       if (captureAnother) {
         _resetForNextItem();
       } else {
@@ -288,7 +288,7 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
     } on DomainException catch (error) {
       if (mounted) context.showMessage(error.message);
     } on Exception {
-      if (mounted) context.showMessage('Não foi possível salvar o preço.');
+      if (mounted) context.showMessage(AppLocalizations.of(context).capturePriceFailed);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -321,17 +321,17 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
 
   String? _validatePrice(String? value) {
     final money = Money.tryParse(value ?? '');
-    return money == null || !money.isPositive ? 'Informe o preço' : null;
+    return money == null || !money.isPositive ? AppLocalizations.of(context).capturePriceMissing : null;
   }
 
   String? _validateOptionalPrice(String? value) {
     final text = value?.trim() ?? '';
-    return text.isEmpty || Money.tryParse(text) != null ? null : 'Valor inválido';
+    return text.isEmpty || Money.tryParse(text) != null ? null : AppLocalizations.of(context).formInvalidValue;
   }
 
   String? _validateBarcode(String? value) {
     final code = value?.trim() ?? '';
-    return code.isEmpty || Gtin.isValid(code) ? null : 'Código de barras inválido';
+    return code.isEmpty || Gtin.isValid(code) ? null : AppLocalizations.of(context).barcodeInvalid;
   }
 
   @override
@@ -348,7 +348,7 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
     const priceKeyboard = TextInputType.numberWithOptions(decimal: true);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Bipar preço')),
+      appBar: AppBar(title: Text(l10n.captureTitle)),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -368,7 +368,7 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
             ),
             if (otherValues.isNotEmpty) ...[
               const SizedBox(height: 8),
-              Text('Outros valores na etiqueta:', style: theme.textTheme.bodySmall),
+              Text(l10n.captureOtherValues, style: theme.textTheme.bodySmall),
               Wrap(
                 spacing: 8,
                 children: [
@@ -381,7 +381,7 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
               ),
             ],
             const SizedBox(height: 24),
-            Text('Produto', style: theme.textTheme.titleMedium),
+            Text(l10n.captureProduct, style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             if (_productLocked)
               _ProductSummary(product: _product, package: _package)
@@ -390,9 +390,9 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
                 controller: _barcode,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
-                  labelText: 'Código de barras',
+                  labelText: l10n.barcodeLabel,
                   suffixIcon: IconButton(
-                    tooltip: 'Ler com a câmera',
+                    tooltip: l10n.barcodeScan,
                     icon: const Icon(Icons.qr_code_scanner),
                     onPressed: _scanBarcode,
                   ),
@@ -407,16 +407,15 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
                 TextFormField(
                   controller: _name,
                   textCapitalization: TextCapitalization.sentences,
-                  decoration: const InputDecoration(
-                    labelText: 'Nome do produto',
-                    helperText: 'Produto novo: será cadastrado ao salvar',
+                  decoration: InputDecoration(
+                    labelText: l10n.captureProductName,
+                    helperText: l10n.captureNewProduct,
                   ),
-                  validator: (value) =>
-                      (value == null || value.trim().isEmpty) ? 'Informe o nome do produto' : null,
+                  validator: (value) => (value == null || value.trim().isEmpty) ? l10n.productNameMissing : null,
                 ),
             ],
             const SizedBox(height: 24),
-            Text('Preço', style: theme.textTheme.titleMedium),
+            Text(l10n.capturePrice, style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -428,8 +427,8 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
                     // Atualiza a condição mostrada e os outros valores.
                     onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
-                      labelText: 'Preço pago',
-                      prefixText: 'R\$ ',
+                      labelText: l10n.capturePaid,
+                      prefixText: '${Money.symbol} ',
                       helperText: _mainCondition.label(l10n),
                     ),
                     validator: _validatePrice,
@@ -440,10 +439,10 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
                   child: TextFormField(
                     controller: _regularPrice,
                     keyboardType: priceKeyboard,
-                    decoration: const InputDecoration(
-                      labelText: 'Sem desconto',
-                      prefixText: 'R\$ ',
-                      helperText: 'Opcional, se em promoção',
+                    decoration: InputDecoration(
+                      labelText: l10n.captureRegular,
+                      prefixText: '${Money.symbol} ',
+                      helperText: l10n.captureRegularHint,
                     ),
                     validator: _validateOptionalPrice,
                   ),
@@ -477,14 +476,14 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
             FilledButton.icon(
               onPressed: _saving ? null : () => _save(captureAnother: false),
               icon: const Icon(Icons.check),
-              label: const Text('Salvar'),
+              label: Text(l10n.save),
             ),
             if (!_productLocked) ...[
               const SizedBox(height: 8),
               OutlinedButton.icon(
                 onPressed: _saving ? null : () => _save(captureAnother: true),
                 icon: const Icon(Icons.document_scanner_outlined),
-                label: const Text('Salvar e bipar outro'),
+                label: Text(l10n.captureSaveAndNext),
               ),
             ],
           ],
@@ -510,18 +509,19 @@ class _MarketSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final current = market;
+    final l10n = AppLocalizations.of(context);
     final String subtitle;
     if (current == null) {
-      subtitle = detecting ? 'Procurando mercados próximos…' : 'Toque para escolher';
+      subtitle = detecting ? l10n.captureMarketSearching : l10n.captureMarketChoose;
     } else {
-      subtitle = detected ? 'Detectado pela sua localização' : 'Toque para trocar';
+      subtitle = detected ? l10n.captureMarketDetected : l10n.captureMarketChange;
     }
 
     return Card.filled(
       margin: EdgeInsets.zero,
       child: ListTile(
         leading: Icon(detected ? Icons.where_to_vote : Icons.storefront_outlined),
-        title: Text(current?.name ?? 'Em qual mercado você está?'),
+        title: Text(current?.name ?? l10n.marketPickTitle),
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.expand_more),
         onTap: onTap,
@@ -541,6 +541,7 @@ class _TagPhotoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final path = photoPath;
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Card.outlined(
       margin: EdgeInsets.zero,
@@ -566,9 +567,7 @@ class _TagPhotoCard extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      path == null
-                          ? 'Fotografe a etiqueta: preço, código e nome são preenchidos automaticamente.'
-                          : (reading ? 'Lendo a etiqueta…' : 'Tirar outra foto'),
+                      path == null ? l10n.capturePhotoHint : (reading ? l10n.captureReading : l10n.capturePhotoAgain),
                       style: theme.textTheme.bodyMedium,
                     ),
                   ),
@@ -592,12 +591,13 @@ class _ProductSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final current = product;
     final subtitle = package?.label;
+    final l10n = AppLocalizations.of(context);
     return Card.outlined(
       margin: EdgeInsets.zero,
       child: ListTile(
         leading: const Icon(Icons.check_circle_outline),
-        title: Text(current?.name ?? 'Carregando…'),
-        subtitle: Text(subtitle ?? 'Produto já cadastrado'),
+        title: Text(current?.name ?? l10n.loading),
+        subtitle: Text(subtitle ?? l10n.captureKnownProduct),
       ),
     );
   }

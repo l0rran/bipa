@@ -593,5 +593,49 @@
         "type": "String"
       }
     }
+  },
+  "captureCameraFailed": "Não foi possível abrir a câmera.",
+  "captureReadFailed": "Não foi possível ler a etiqueta. Preencha os campos manualmente.",
+  "captureNoPrice": "Nenhum preço encontrado. Aproxime a câmera da etiqueta e tente de novo.",
+  "captureMarketMissing": "Escolha o mercado antes de salvar.",
+  "capturePriceSaved": "{price} registrado em {market}.",
+  "@capturePriceSaved": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      },
+      "market": {
+        "type": "String"
+      }
+    }
+  },
+  "capturePriceFailed": "Não foi possível salvar o preço.",
+  "capturePriceMissing": "Informe o preço",
+  "captureTitle": "Bipar preço",
+  "captureOtherValues": "Outros valores na etiqueta:",
+  "captureProduct": "Produto",
+  "captureProductName": "Nome do produto",
+  "captureNewProduct": "Produto novo: será cadastrado ao salvar",
+  "capturePrice": "Preço",
+  "capturePaid": "Preço pago",
+  "captureRegular": "Sem desconto",
+  "captureRegularHint": "Opcional, se em promoção",
+  "captureSaveAndNext": "Salvar e bipar outro",
+  "captureMarketSearching": "Procurando mercados próximos…",
+  "captureMarketChoose": "Toque para escolher",
+  "captureMarketDetected": "Detectado pela sua localização",
+  "captureMarketChange": "Toque para trocar",
+  "capturePhotoHint": "Fotografe a etiqueta: preço, código e nome são preenchidos automaticamente.",
+  "captureReading": "Lendo a etiqueta…",
+  "capturePhotoAgain": "Tirar outra foto",
+  "loading": "Carregando…",
+  "captureKnownProduct": "Produto já cadastrado",
+  "loadFailed": "Algo deu errado ao carregar os dados.\n{error}",
+  "@loadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   }
 }
