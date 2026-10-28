@@ -16,6 +16,7 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - Lista de compras: a aba Lista com progresso, adicionar com sugestões, itens de sempre, seções do mercado, preço esperado e desfazer; a prévia da lista no Início; e "Pôr na lista" no cartão de Acabando e no gesto para a direita da linha. O esquema vai à versão 4.
 - Modo compra: "Ir às compras" começa a compra e detecta o mercado; a barra da compra mostra o progresso e o total acima da navegação; registrar o preço de um item da lista o marca; "Terminei" leva o comprado ao estoque, com Desfazer. O esquema vai à versão 5.
 - Modo carrinho: a câmera fica aberta e cada código lido entra no carrinho com o último preço do mercado; a bandeja mostra o "levar", o preço (que dá para digitar) e o total do que vai ser levado. O "Terminei" leva ao estoque a quantidade bipada. O esquema vai à versão 6. O preço da etiqueta fotografada entra no carrinho, e marcar ou desmarcar na lista decide se o item vai ser levado.
+- Etiqueta lida ao vivo no modo carrinho (ADR 0012): a câmera lê o código e a etiqueta no mesmo quadro, só dentro da moldura. O preço que se repete em quadros seguidos vai para o último item bipado ou espera o próximo produto, e um chip mostra o que foi lido. Etiqueta com código não soma unidade. O modo carrinho passa a usar o plugin `camera`.
 - Cópias exportadas do design system e do protótipo em `docs/design/`.
 - Banco de testes do OCR em `tool/ocr_bench`, com etiquetas sintéticas e transcrições de etiquetas reais.
 

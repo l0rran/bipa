@@ -15,7 +15,7 @@ Cada arquivo registra uma decisão importante: o contexto, o que foi decidido e 
 | [0009](0009-cores-semanticas-e-paleta-trocavel.md) | Cores semânticas, com a paleta trocável num lugar só | Aceito |
 | [0010](0010-fotos-dos-produtos.md) | Foto do produto, com o ícone da categoria como reserva | Aceito |
 | [0011](0011-precos-com-condicao.md) | Cada preço da etiqueta com a sua condição (atacado, cartão, varejo) | Aceito |
-| [0012](0012-quadros-da-camera-no-modo-carrinho.md) | Quadros da câmera no modo carrinho com o plugin `camera` e o ML Kit | Proposto |
+| [0012](0012-quadros-da-camera-no-modo-carrinho.md) | Quadros da câmera no modo carrinho com o plugin `camera` e o ML Kit | Aceito |
 
 ## Modelo
 

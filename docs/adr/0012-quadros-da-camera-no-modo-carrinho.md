@@ -1,6 +1,6 @@
 # 0012. Analisar os quadros da câmera no modo carrinho com o plugin camera e o ML Kit
 
-- Status: Proposto
+- Status: Aceito
 - Data: 2026-10-28
 
 ## Contexto
