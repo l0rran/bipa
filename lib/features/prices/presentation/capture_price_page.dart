@@ -108,7 +108,7 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
     final found = packageId == null ? null : await repository.findPackageById(packageId);
     // Só vale a embalagem que é deste produto.
     final chosen = found?.productId == id ? found : null;
-    final package = chosen ??(await repository.watchPackages(id).first).firstOrNull;
+    final package = chosen ?? (await repository.watchPackages(id).first).firstOrNull;
     if (!mounted) return;
     setState(() {
       _product = product;
