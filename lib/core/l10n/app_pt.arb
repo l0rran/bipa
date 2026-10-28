@@ -232,5 +232,70 @@
       }
     }
   },
-  "tripFinishFailed": "Não foi possível terminar a compra. Tente de novo."
+  "tripFinishFailed": "Não foi possível terminar a compra. Tente de novo.",
+  "cartTitle": "Carrinho",
+  "cartFromList": "{done} de {total} da lista",
+  "@cartFromList": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "cartTotal": "Vou levar",
+  "@cartTotal": {
+    "description": "Total do que vai ser levado no carrinho."
+  },
+  "cartTake": "Levar {name}",
+  "@cartTake": {
+    "description": "Rótulo acessível do interruptor de cada item.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cartTypePrice": "Digitar o preço",
+  "cartPriceTitle": "Preço de {name}",
+  "@cartPriceTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cartUnknown": "Código {code} não cadastrado",
+  "@cartUnknown": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "cartRegister": "Cadastrar",
+  "cartChooseMarket": "Escolha o mercado",
+  "cartNeedMarket": "Escolha o mercado para registrar o preço.",
+  "cartPhotoTag": "Fotografar a etiqueta",
+  "cartClose": "Fechar",
+  "cartTorch": "Lanterna",
+  "cartHint": "Aponte para o código de barras",
+  "@cartHint": {
+    "description": "Dica sob o visor, enquanto o carrinho está vazio."
+  },
+  "cartQuantity": "{count}× {name}",
+  "@cartQuantity": {
+    "description": "Nome do item quando foi bipado mais de uma vez.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cancel": "Cancelar"
 }

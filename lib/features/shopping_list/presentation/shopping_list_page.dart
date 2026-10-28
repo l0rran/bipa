@@ -7,13 +7,15 @@ import 'package:bipa/core/design_system/components/section_header.dart';
 import 'package:bipa/core/design_system/components/shopping_list.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/money/money.dart';
+import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
 import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/products/presentation/product_photos.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_sections.dart';
-import 'package:bipa/features/products/presentation/product_photos.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
+import 'package:bipa/features/shopping_list/presentation/finish_shopping.dart';
 import 'package:bipa/features/shopping_list/presentation/list_preview.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:bipa/features/shopping_list/presentation/start_shopping.dart';
@@ -21,6 +23,7 @@ import 'package:bipa/features/stock/domain/stock_item.dart';
 import 'package:bipa/features/stock/presentation/stock_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 /// A lista de compras (protótipo "Lista"): o progresso, o campo de adicionar,
 /// os itens de sempre e a lista agrupada pelas seções do mercado.
@@ -111,38 +114,10 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
       );
   }
 
-  /// "Terminei": o comprado vai para o estoque e sai da lista, com Desfazer.
   Future<void> _finish(ShoppingTrip trip) async {
-    final finish = ref.read(finishShoppingTripProvider);
-    final messenger = ScaffoldMessenger.of(context);
-    final l10n = AppLocalizations.of(context);
     setState(() => _finishing = true);
-    try {
-      final finished = await finish(trip.id);
-      if (finished == null) return;
-      messenger
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(l10n.tripFinished(finished.stocked.length)),
-            duration: const Duration(seconds: 6),
-            action: SnackBarAction(
-              label: l10n.undo,
-              onPressed: () async {
-                try {
-                  await finish.undo(finished);
-                } on Exception {
-                  messenger.showSnackBar(SnackBar(content: Text(l10n.tripFinishFailed)));
-                }
-              },
-            ),
-          ),
-        );
-    } on Exception {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.tripFinishFailed)));
-    } finally {
-      if (mounted) setState(() => _finishing = false);
-    }
+    await finishShopping(context, ref, trip.id);
+    if (mounted) setState(() => _finishing = false);
   }
 
   @override
@@ -192,16 +167,24 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                           leading: tripSummary.spent?.format(),
                         ),
                         const SizedBox(height: BipaSpacing.s3),
-                        Align(
-                          alignment: AlignmentDirectional.centerEnd,
-                          child: FilledButton(
-                            onPressed: _finishing ? null : () => _finish(trip),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: context.colors.ink,
-                              foregroundColor: context.colors.surface,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            OutlinedButton.icon(
+                              onPressed: () => context.push(Routes.cartMode),
+                              icon: const Icon(Icons.qr_code_scanner_rounded),
+                              label: Text(l10n.cartTitle),
                             ),
-                            child: Text(l10n.tripFinish),
-                          ),
+                            const SizedBox(width: BipaSpacing.s2),
+                            FilledButton(
+                              onPressed: _finishing ? null : () => _finish(trip),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: context.colors.ink,
+                                foregroundColor: context.colors.surface,
+                              ),
+                              child: Text(l10n.tripFinish),
+                            ),
+                          ],
                         ),
                       ] else if (summary.remaining > 0) ...[
                         const SizedBox(height: BipaSpacing.s4),

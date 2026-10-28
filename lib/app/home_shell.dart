@@ -11,7 +11,8 @@ import 'package:go_router/go_router.dart';
 /// Estrutura com as abas principais e o botão de bipar no centro da barra.
 ///
 /// Durante uma compra, a barra da compra fica acima da navegação em todas as
-/// abas, menos na Lista, que já mostra o mesmo progresso.
+/// abas, menos na Lista, que já mostra o mesmo progresso. "Continuar" abre o
+/// modo carrinho.
 class HomeShell extends ConsumerWidget {
   const HomeShell({required this.navigationShell, super.key});
 
@@ -49,7 +50,8 @@ class HomeShell extends ConsumerWidget {
                 actionLabel: l10n.tripContinue,
                 progress: summary.progress,
                 semanticLabel: l10n.tripSemantics(summary.done, summary.total),
-                onTap: () => goBranch(_listBranch),
+                // "Continuar" volta para o modo carrinho.
+                onTap: () => context.push(Routes.cartMode),
               ),
             ),
           ScanNavBar(

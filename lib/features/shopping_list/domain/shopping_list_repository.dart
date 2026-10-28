@@ -18,6 +18,10 @@ abstract interface class ShoppingListRepository {
   /// que acontece quando a pessoa registra o preço dele durante a compra.
   Future<void> checkProduct(String productId);
 
+  /// Volta a deixar o produto como faltando (por exemplo, quando ele sai do
+  /// carrinho com o "levar" desligado).
+  Future<void> uncheckProduct(String productId);
+
   Future<void> remove(String itemId);
 
   /// Tira o produto da lista, esteja ele comprado ou não.

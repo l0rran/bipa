@@ -9,6 +9,7 @@ abstract final class Routes {
   // Telas em tela cheia (fora das abas).
   static const scanner = '/scanner';
   static const capturePrice = '/bipar';
+  static const cartMode = '/carrinho';
   static const newProduct = '/produto/novo';
   static const newMarket = '/mercado/novo';
 

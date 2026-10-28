@@ -81,6 +81,12 @@ final class DriftShoppingListRepository implements ShoppingListRepository {
   }
 
   @override
+  Future<void> uncheckProduct(String productId) async {
+    await (_db.update(_db.shoppingListItems)..where((t) => t.productId.equals(productId)))
+        .write(const ShoppingListItemsCompanion(checkedAt: Value(null)));
+  }
+
+  @override
   Future<void> remove(String itemId) async {
     await (_db.delete(_db.shoppingListItems)..where((t) => t.id.equals(itemId))).go();
   }
