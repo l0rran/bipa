@@ -17,10 +17,14 @@ Os preços lidos no carrinho só viravam observações (ADR 0007) quando a compr
 - O caso de uso `RecordTripPrice` grava o preço:
   - com mercado, registra a observação na hora e guarda o id dela. Se o item já tinha uma, a nova a corrige (`supersedes`, ADR 0017);
   - sem mercado, a linha fica pendente;
-  - a mesma etiqueta lida de novo, com o mesmo preço, não repete a observação.
+  - a mesma etiqueta lida de novo, com o mesmo preço, não repete a observação;
+  - só corrige no mesmo mercado: quem passou por duas lojas tem um preço certo em cada uma;
+  - no mesmo mercado, uma etiqueta não corrige um preço digitado, que já é a correção dela;
+  - o preço por quilo do granel tem chave própria no item, e não corrige nem é corrigido pelo total da pesagem (ADR 0018).
 - O caso de uso `SetTripMarket` muda o mercado da compra e, na mesma transação:
   - registra as pendentes no mercado escolhido, com a hora em que foram lidas (`RegisterPriceInput.observedAt`);
-  - se a pessoa pedir, leva para o novo mercado os preços já gravados no anterior: cada um ganha uma correção no novo mercado (`supersedes`), sem apagar nada.
+  - se a pessoa pedir, leva para o novo mercado os preços gravados no mercado que está sendo trocado (não os deixados numa loja anterior): cada um ganha uma correção no novo mercado (`supersedes`), sem apagar nada;
+  - escolher de novo o mesmo mercado só grava as pendentes. A localização do "Ir às compras" também passa por aqui.
 - Trocar o mercado com preços já gravados pergunta uma vez: "Levar os 12 preços lidos para o Assaí?". Quem foi a duas lojas na mesma compra deixa os preços onde estão.
 - O "Terminei", de qualquer lugar (carrinho, Lista ou notificação), pergunta o mercado quando há preços pendentes e a compra não tem mercado.
 - Cancelar a compra apaga as linhas dela (chave estrangeira em cascata). As observações já gravadas ficam, porque são preços vistos de verdade.
@@ -33,4 +37,5 @@ Os preços lidos no carrinho só viravam observações (ADR 0007) quando a compr
 - **Limites:**
   - ao mover para outro mercado, os outros preços da etiqueta (cartão e atacado) entram também no novo mercado, mas os do anterior não são corrigidos, porque a correção vale só para o preço principal (ADR 0017);
   - a foto da etiqueta pelo formulário antigo, aberta pelo disparo do carrinho, ainda grava por conta própria, fora da tabela. Ela some quando o disparo passar a usar a câmera ao vivo;
-  - as linhas das compras terminadas ficam no banco. São poucas, e o desfazer do "Terminei" precisa delas.
+  - as linhas das compras terminadas ficam no banco. São poucas, e o desfazer do "Terminei" precisa delas;
+  - apagar a embalagem no meio da compra muda a chave do item, e o próximo preço dele vira outra linha.
