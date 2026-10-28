@@ -25,6 +25,7 @@ Future<void> startShopping(BuildContext context, WidgetRef ref) async {
   final chosenMarket = ref.read(listChosenMarketProvider.notifier);
   final chosen = ref.read(listChosenMarketProvider);
   final notifications = ref.read(liveNotificationsProvider);
+  final setMarket = ref.read(setTripMarketProvider);
 
   final explained = ref.read(_permissionsExplainedProvider.notifier);
   // Uma vez por vez que o app abre: quem disse "Agora não" não ouve o mesmo
@@ -51,7 +52,9 @@ Future<void> startShopping(BuildContext context, WidgetRef ref) async {
   final position = await location.currentLocation(request: false);
   if (position is! LocationFound) return;
   final market = finder.marketAt(position.point, await markets.all());
-  if (market != null) await trips.setMarket(trip.id, market.id);
+  // Pelo caso de uso: o que foi lido no carrinho enquanto a localização não
+  // vinha espera um mercado (ADR 0020).
+  if (market != null) await setMarket(trip.id, market.id);
 }
 
 /// As permissões da compra, com o motivo antes do pedido do sistema: a

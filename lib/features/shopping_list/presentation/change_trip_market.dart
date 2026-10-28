@@ -1,5 +1,6 @@
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/features/markets/domain/market.dart';
+import 'package:bipa/features/markets/presentation/markets_providers.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:flutter/material.dart';
@@ -10,17 +11,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// tinha preços gravados em outro mercado, pergunta se eles vão junto (ADR
 /// 0020): leva quem começou no mercado errado; deixa quem foi a duas lojas.
 ///
-/// Fechar a pergunta sem responder não muda nada.
+/// Fechar a pergunta sem responder não muda nada. Escolher de novo o mesmo
+/// mercado só grava o que ainda esperava por ele.
 Future<void> changeTripMarket(BuildContext context, WidgetRef ref, ShoppingTrip trip, Market market) async {
-  if (market.id == trip.marketId) return;
   final l10n = AppLocalizations.of(context);
   final messenger = ScaffoldMessenger.of(context);
   final setMarket = ref.read(setTripMarketProvider);
-  final previousName = ref.read(activeTripMarketNameProvider);
+  final markets = ref.read(marketRepositoryProvider);
   try {
     var move = false;
-    final recorded = trip.marketId == null ? 0 : await setMarket.recordedPrices(trip.id);
-    if (recorded > 0 && previousName != null) {
+    final previousId = trip.marketId;
+    final recorded = previousId == null || previousId == market.id ? 0 : await setMarket.recordedPrices(trip.id);
+    // O nome vem do banco: o provider do chip pode ainda estar carregando.
+    final previousName = previousId == null || recorded == 0 ? null : (await markets.findById(previousId))?.name;
+    if (previousName != null) {
       if (!context.mounted) return;
       final answer = await showDialog<bool>(
         context: context,

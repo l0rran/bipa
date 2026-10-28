@@ -357,6 +357,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
       price: read.price,
       source: PriceSource.priceTag,
       otherOffers: read.otherOffers,
+      perKilo: read.perKilo,
     );
   }
 
