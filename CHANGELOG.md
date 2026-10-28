@@ -33,6 +33,7 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - Granel sem código: a etiqueta de gôndola por quilo vira um aviso tocável no carrinho e na câmera, que escolhe o produto pelo nome lido e guarda o preço por kg no histórico. O leitor de etiquetas marca o preço por kg.
 - Casa e lista no mesmo gesto (ADR 0019): o "Comprei" da câmera e o "Também comprei" tiram o produto da lista (ou diminuem o que falta), e o "Usei" da câmera e o deslizar "Usei um" do Início põem na lista o que ficou abaixo do "ter sempre". O aviso diz o que mudou na lista, e o Desfazer volta estoque e lista juntos.
 - Mercados: o selo "mais barato" só aparece quando a comparação é justa (o mercado tem a lista inteira e sai mais barato que cada um dos outros nos itens que os dois têm), e cada mercado mostra a idade do preço mais antigo que entrou no total.
+- Preços da compra guardados com ela (ADR 0020): o que é lido ou digitado no carrinho fica numa tabela própria (esquema v13), com ou sem mercado. Sem mercado, o preço espera, sobrevive ao fechamento do carrinho e vai para o mercado escolhido com a hora da leitura; o "Terminei" do carrinho, da Lista ou da notificação pergunta o mercado. Trocar o mercado da compra pergunta se os preços já gravados vão junto, e corrigir um preço funciona depois de reabrir o carrinho.
 - Cópias exportadas do design system e do protótipo em `docs/design/`.
 - Banco de testes do OCR em `tool/ocr_bench`, com etiquetas sintéticas e transcrições de etiquetas reais.
 

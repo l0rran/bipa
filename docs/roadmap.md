@@ -35,6 +35,9 @@
 - [x] Produto e embalagens (ADR 0013): marca e tamanho por código de barras, folha de embalagem nova, estoque por embalagem com o total em kg, preço por kg e "Juntar com…"
 - [x] Tela do produto: gráfico do preço nos últimos 6 meses (protótipo "Produto com embalagens")
 - [x] Ordem dos corredores aprendida por mercado, a partir da ordem em que a pessoa bipa e marca (ADR 0014)
+- [x] Preços da compra guardados com ela: sobrevivem ao fechamento do carrinho, esperam o mercado e vão junto quando ele muda (ADR 0020)
+- [ ] Uma câmera só: o disparo e o teclado usam a câmera ao vivo e a folha "Conferir e salvar", aposentando o formulário "Bipar preço" e o leitor antigo
+- [ ] Quantidade na compra: "1 de 3" na lista e na bandeja, e o que faltou continua na lista
 - [ ] Itens de sempre pelo ritmo de consumo (hoje são os produtos com "ter sempre")
 - [x] Fechar o ciclo: o que é bipado em "Comprei" sai da lista e entra no estoque (o "Terminei" do modo compra já faz isso com o que foi marcado)
 - [x] Sugestão de onde comprar a lista mais barata, comparando a lista inteira e mostrando a idade de cada preço
