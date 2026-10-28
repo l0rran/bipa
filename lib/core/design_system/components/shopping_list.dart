@@ -49,10 +49,12 @@ class ListPreviewCard extends StatelessWidget {
         Center(child: Text('+$extraCount', style: BipaText.label.copyWith(fontSize: 13, color: colors.ink))),
     ];
 
+    // excludeSemantics descarta a ação do InkWell: ela vai no próprio Semantics.
     return Semantics(
       button: true,
       label: semanticLabel,
       excludeSemantics: true,
+      onTap: onTap,
       child: Material(
         color: colors.surface,
         borderRadius: BorderRadius.circular(BipaRadius.lg),
@@ -176,6 +178,8 @@ class ShoppingProgress extends StatelessWidget {
                   duration: BipaMotion.slow,
                   curve: BipaMotion.spring,
                   builder: (context, fraction, _) => FractionallySizedBox(
+                    alignment: AlignmentDirectional.centerStart,
+                    heightFactor: 1,
                     // A mola passa um pouco do alvo: o fim fica entre 0 e 1.
                     widthFactor: fraction.clamp(0.0, 1.0),
                     child: DecoratedBox(
@@ -222,6 +226,7 @@ class QuickTile extends StatelessWidget {
       toggled: selected,
       label: label,
       excludeSemantics: true,
+      onTap: onTap,
       child: SizedBox.square(
         dimension: size,
         child: Material(
@@ -232,21 +237,23 @@ class QuickTile extends StatelessWidget {
             onTap: onTap,
             child: Stack(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(BipaSpacing.s2),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(icon, size: 28, color: selected ? colors.brandText : colors.inkMuted),
-                      const SizedBox(height: 6),
-                      Text(
-                        label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: BipaText.caption.copyWith(letterSpacing: 0, color: foreground),
-                      ),
-                    ],
+                Positioned.fill(
+                  child: Padding(
+                    padding: const EdgeInsets.all(BipaSpacing.s2),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(icon, size: 28, color: selected ? colors.brandText : colors.inkMuted),
+                        const SizedBox(height: 6),
+                        Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: BipaText.caption.copyWith(letterSpacing: 0, color: foreground),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 Positioned(
@@ -337,9 +344,11 @@ class ShoppingListRow extends StatelessWidget {
     final price = this.price;
 
     return Semantics(
+      button: true,
       checked: checked,
       label: [name, ?price].join(', '),
       excludeSemantics: true,
+      onTap: () => onChanged(!checked),
       child: InkWell(
         onTap: () => onChanged(!checked),
         child: AnimatedOpacity(
