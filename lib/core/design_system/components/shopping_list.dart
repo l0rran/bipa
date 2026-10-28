@@ -406,3 +406,151 @@ class ShoppingListRow extends StatelessWidget {
     );
   }
 }
+
+/// A compra em andamento (ShoppingBar do design system): fica acima da
+/// navegação com o progresso da lista e o total, e "Continuar" volta à lista.
+class ShoppingBar extends StatelessWidget {
+  const ShoppingBar({
+    required this.title,
+    required this.actionLabel,
+    required this.progress,
+    required this.onTap,
+    required this.semanticLabel,
+    this.subtitle,
+    super.key,
+  });
+
+  /// "3 de 7 itens".
+  final String title;
+
+  /// O total e o mercado: "R$ 32,10 · Atacarejo Vila Nova".
+  final String? subtitle;
+  final String actionLabel;
+
+  /// De 0 a 1.
+  final double progress;
+  final VoidCallback onTap;
+  final String semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final subtitle = this.subtitle;
+
+    return Semantics(
+      button: true,
+      label: semanticLabel,
+      excludeSemantics: true,
+      onTap: onTap,
+      child: TweenAnimationBuilder<double>(
+        // Entra subindo com mola.
+        tween: Tween(begin: 0, end: 1),
+        duration: BipaMotion.slow,
+        curve: BipaMotion.spring,
+        builder: (context, t, child) => Transform.translate(offset: Offset(0, 24 * (1 - t)), child: child),
+        child: Material(
+          color: colors.brand,
+          shape: const StadiumBorder(),
+          elevation: 6,
+          shadowColor: colors.ink.withValues(alpha: 0.3),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: SizedBox(
+              height: 60,
+              child: Stack(
+                // O conteúdo fica centrado na altura da barra.
+                alignment: AlignmentDirectional.centerStart,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 10, right: BipaSpacing.s2),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: colors.onBrand.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.shopping_cart_outlined, size: 20, color: colors.onBrand),
+                        ),
+                        const SizedBox(width: BipaSpacing.s3),
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: BipaText.number.copyWith(fontSize: 16, color: colors.onBrand),
+                              ),
+                              if (subtitle != null)
+                                Text(
+                                  subtitle,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: BipaText.label.copyWith(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: colors.onBrand.withValues(alpha: 0.75),
+                                    fontFeatures: const [FontFeature.tabularFigures()],
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: BipaSpacing.s2),
+                        Container(
+                          height: 44,
+                          padding: const EdgeInsets.only(left: BipaSpacing.s4, right: 14),
+                          decoration: ShapeDecoration(color: colors.ink, shape: const StadiumBorder()),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(actionLabel, style: BipaText.label.copyWith(color: colors.surface)),
+                              const SizedBox(width: BipaSpacing.s1),
+                              Icon(Icons.chevron_right_rounded, size: 18, color: colors.surface),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // O fio de progresso na base da barra.
+                  Positioned(
+                    left: 24,
+                    right: 24,
+                    bottom: 6,
+                    height: 3,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(2),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          ColoredBox(color: colors.onBrand.withValues(alpha: 0.14)),
+                          TweenAnimationBuilder<double>(
+                            tween: Tween(end: progress.clamp(0.0, 1.0)),
+                            duration: BipaMotion.slow,
+                            curve: BipaMotion.spring,
+                            builder: (context, fraction, _) => FractionallySizedBox(
+                              alignment: AlignmentDirectional.centerStart,
+                              widthFactor: fraction.clamp(0.0, 1.0),
+                              child: ColoredBox(color: colors.ink),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -162,4 +162,26 @@ void main() {
     await tester.tap(find.text('Abrir a lista'));
     expect(tapped, isTrue);
   });
+
+  testWidgets('a barra da compra mostra o progresso e o total e leva à lista', (tester) async {
+    var tapped = false;
+    await tester.pumpWidget(
+      _app(
+        ShoppingBar(
+          title: '3 de 7 itens',
+          subtitle: 'R\$ 32,10 · Atacarejo',
+          actionLabel: 'Continuar',
+          progress: 3 / 7,
+          semanticLabel: 'Compra em andamento: 3 de 7',
+          onTap: () => tapped = true,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('3 de 7 itens'), findsOneWidget);
+    expect(find.text('R\$ 32,10 · Atacarejo'), findsOneWidget);
+    await tester.tap(find.text('Continuar'));
+    expect(tapped, isTrue);
+  });
 }
