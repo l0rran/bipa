@@ -35,9 +35,12 @@ class QuantityStepper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    // Com movimento reduzido no aparelho, o número troca sem deslizar.
+    final duration = MediaQuery.disableAnimationsOf(context) ? Duration.zero : BipaMotion.base;
     return AnimatedContainer(
-      duration: BipaMotion.base,
-      height: 52,
+      duration: duration,
+      // Mínima, não fixa: com fonte grande, o número cabe (H3).
+      constraints: const BoxConstraints(minHeight: 52),
       // O círculo de 40 fica a 6 da borda; a área de toque, de 48, a 2.
       padding: const EdgeInsets.symmetric(horizontal: 2),
       decoration: ShapeDecoration(
@@ -54,7 +57,7 @@ class QuantityStepper extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 AnimatedSwitcher(
-                  duration: BipaMotion.base,
+                  duration: duration,
                   switchInCurve: BipaMotion.spring,
                   transitionBuilder: (child, animation) => FadeTransition(
                     opacity: animation,
