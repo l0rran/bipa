@@ -45,6 +45,7 @@ a{color:#1C1B22}a:hover{color:#B00E28}
 .tray-foot .shutter{width:68px;height:68px}
 .read-wrap{position:absolute;left:0;right:0;top:340px;display:flex;justify-content:center;z-index:3}
 .read-chip{cursor:default}
+.read-chip.is-action{cursor:pointer;border:0;font:inherit}
 .read-chip b{font:800 16px/20px var(--font-display);font-variant-numeric:tabular-nums}
 .bipa-tray__item-price.is-updated{box-shadow:0 0 0 3px var(--brand-soft)}
 </style>
@@ -55,7 +56,7 @@ a{color:#1C1B22}a:hover{color:#B00E28}
     <b>ARROZ TIO JOAO 5KG</b><strong><small>R$</small>27,90</strong><span>R$ 5,58/kg</span>
   </div>
   <div class="frame-wrap"><div class="bipa-frame is-locked" style="left: 84px; top: 196px; width: 222px; height: 124px; transform: none;"><span class="bipa-frame__corner bipa-frame__corner--tl"></span><span class="bipa-frame__corner bipa-frame__corner--tr"></span><span class="bipa-frame__corner bipa-frame__corner--bl"></span><span class="bipa-frame__corner bipa-frame__corner--br"></span><span class="bipa-frame__laser"></span></div></div>
-  <div class="read-wrap"><span class="bipa-chip bipa-chip--glass read-chip" role="status"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6v12M8 6v12M11 6v12M15 6v12M18 6v12M20 6v12"/></svg><b>R$ 27,90</b><span class="bipa-chip__meta">bipe o produto</span></span></div>
+  <div class="read-wrap"><button class="bipa-chip bipa-chip--glass read-chip is-action" type="button" aria-label="R$ 27,90. Bipe o produto ou toque para escolher pelo nome"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6v12M8 6v12M11 6v12M15 6v12M18 6v12M20 6v12"/></svg><b>R$ 27,90</b><span class="bipa-chip__meta">bipe o produto</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button></div>
   <div class="topbar">
     <a class="glass-btn" href="CasaCompra.dc.html" aria-label="Fechar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></a>
     <a class="bipa-chip bipa-chip--glass" href="Mercados.dc.html" style="text-decoration: none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5L5.5 4h13L20 9.5M4 9.5h16M4 9.5v10h16v-10M9.5 19.5v-5h5v5"/></svg>Atacarejo Vila Nova <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></a>
