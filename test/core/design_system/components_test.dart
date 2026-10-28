@@ -1,6 +1,7 @@
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/components/camera_mode_switch.dart';
 import 'package:bipa/core/design_system/components/dropdown_chip.dart';
+import 'package:bipa/core/design_system/components/error_line.dart';
 import 'package:bipa/core/design_system/components/list_cost_compare.dart';
 import 'package:bipa/core/design_system/components/market_map.dart';
 import 'package:bipa/core/design_system/components/place_filter.dart';
@@ -474,5 +475,12 @@ void main() {
 
     expect(find.text('Café · 3 em casa'), findsOneWidget);
     expect(find.bySemanticsLabel('Café · 3 em casa'), findsOneWidget);
+  });
+
+  testWidgets('o erro vem com o ícone, não só com a cor', (tester) async {
+    await tester.pumpWidget(_app(const ErrorLine('Escolha o mercado para registrar o preço.')));
+
+    expect(find.byIcon(Icons.error_outline_rounded), findsOneWidget);
+    expect(find.text('Escolha o mercado para registrar o preço.'), findsOneWidget);
   });
 }

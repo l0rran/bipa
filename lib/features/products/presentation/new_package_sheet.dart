@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/error_line.dart';
 import 'package:bipa/core/design_system/components/price_tag.dart';
 import 'package:bipa/core/design_system/components/product_category_icon.dart';
 import 'package:bipa/core/design_system/components/product_thumb.dart';
@@ -273,7 +274,7 @@ class _NewPackageSheetState extends ConsumerState<NewPackageSheet> {
             ],
             if (_error case final error?) ...[
               const SizedBox(height: BipaSpacing.s3),
-              Text(error, style: BipaText.label.copyWith(color: colors.alertText)),
+              ErrorLine(error),
             ],
             const SizedBox(height: BipaSpacing.s4),
             FilledButton(
