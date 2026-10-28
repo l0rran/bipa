@@ -184,7 +184,7 @@ class _ProductView extends ConsumerWidget {
                   fallbackIcon: productCategoryIcon(product.name),
                   photo: productPhotoFile(product, photos),
                   size: 132,
-                  radius: BipaSpacing.s8,
+                  radius: BipaRadius.lg,
                 ),
               ),
               const SizedBox(height: BipaSpacing.s3),
@@ -208,7 +208,7 @@ class _ProductView extends ConsumerWidget {
                         icon: Icons.inventory_2_outlined,
                         title: row.package.label ?? row.package.barcode ?? l10n.packageTitle,
                         meta: row.price?.unitPrice?.format(),
-                        value: row.price?.price.format() ?? '—',
+                        value: row.price?.price.format() ?? l10n.productNoPriceShort,
                         badge: _cheapestPerUnit(l10n, row.price, isFirst: index == 0 && perPackage.length > 1),
                       ),
                   ],
@@ -292,10 +292,12 @@ class _BestPrice extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final unitPrice = best.unitPrice;
     final label = best.package?.label;
-    if (unitPrice == null) return PriceTagHero(value: best.price.formatDecimal(), unitLine: label);
+    if (unitPrice == null) return PriceTagHero(price: best.price, unitLine: label);
     return PriceTagHero(
-      value: unitPrice.price.formatDecimal(),
-      unitLine: l10n.productBestUnitPrice(unitPrice.unit.symbol, label ?? ''),
+      price: unitPrice.price,
+      unitLine: label == null
+          ? l10n.productUnitPriceOnly(unitPrice.unit.symbol)
+          : l10n.productBestUnitPrice(unitPrice.unit.symbol, label),
     );
   }
 }

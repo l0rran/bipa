@@ -13,7 +13,11 @@ final class Money implements Comparable<Money> {
 
   final int cents;
 
-  static final _currency = NumberFormat.currency(locale: 'pt_BR', symbol: r'R$');
+  /// O símbolo da moeda, para quem mostra o valor em partes (a etiqueta de
+  /// preço põe o "R$" menor que o número).
+  static const symbol = r'R$';
+
+  static final _currency = NumberFormat.currency(locale: 'pt_BR', symbol: symbol);
 
   static final _pattern = RegExp(r'^(\d{1,3}(?:\.\d{3})+|\d+)(?:[,.](\d{1,2}))?$');
 

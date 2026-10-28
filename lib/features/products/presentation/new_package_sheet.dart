@@ -146,7 +146,7 @@ class _NewPackageSheetState extends ConsumerState<NewPackageSheet> {
             // O produto sugerido; tocar troca.
             Semantics(
               button: true,
-              label: name == null ? l10n.packageChooseProduct : '${l10n.packageNewOf} $name, ${widget.barcode}',
+              label: name == null ? l10n.packageChooseProduct : l10n.packageNewOfLabel(name, widget.barcode),
               excludeSemantics: true,
               onTap: _chooseProduct,
               child: InkWell(
@@ -234,7 +234,7 @@ class _NewPackageSheetState extends ConsumerState<NewPackageSheet> {
               const SizedBox(height: BipaSpacing.s4),
               Align(
                 alignment: AlignmentDirectional.centerStart,
-                child: PriceTagHero(value: price.formatDecimal(), unitLine: unitPrice?.format()),
+                child: PriceTagHero(price: price, unitLine: unitPrice?.format()),
               ),
             ],
             if (_error case final error?) ...[

@@ -1,15 +1,15 @@
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/money/money.dart';
 import 'package:flutter/material.dart';
 
 /// A etiqueta amarela de preço em destaque (PriceTag, variante "hero" do
 /// design system): o valor grande e, embaixo, o preço por kg.
 class PriceTagHero extends StatelessWidget {
-  const PriceTagHero({required this.value, this.unitLine, super.key});
+  const PriceTagHero({required this.price, this.unitLine, super.key});
 
-  /// O valor sem o "R$": "27,90".
-  final String value;
+  final Money price;
 
   /// "R$ 5,58/kg"; sem ele, a etiqueta só mostra o valor.
   final String? unitLine;
@@ -19,7 +19,7 @@ class PriceTagHero extends StatelessWidget {
     final colors = context.colors;
     final unitLine = this.unitLine;
     return Semantics(
-      label: [r'R$ ' + value, ?unitLine].join(', '),
+      label: [price.format(), ?unitLine].join(', '),
       excludeSemantics: true,
       child: Container(
         padding: const EdgeInsets.fromLTRB(BipaSpacing.s4, BipaSpacing.s3, BipaSpacing.s6, BipaSpacing.s3),
@@ -31,8 +31,8 @@ class PriceTagHero extends StatelessWidget {
             Text.rich(
               TextSpan(
                 children: [
-                  TextSpan(text: r'R$', style: BipaText.title.copyWith(color: colors.onPrice)),
-                  TextSpan(text: value, style: BipaText.priceHero.copyWith(color: colors.onPrice)),
+                  TextSpan(text: Money.symbol, style: BipaText.title.copyWith(color: colors.onPrice)),
+                  TextSpan(text: price.formatDecimal(), style: BipaText.priceHero.copyWith(color: colors.onPrice)),
                 ],
               ),
             ),

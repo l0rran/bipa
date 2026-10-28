@@ -310,6 +310,18 @@
   "@packageNewOf": {
     "description": "Rótulo acima do produto sugerido, ao bipar um código desconhecido."
   },
+  "packageNewOfLabel": "Embalagem nova de {name}, código {barcode}",
+  "@packageNewOfLabel": {
+    "description": "Rótulo acessível do produto sugerido na folha de embalagem nova.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "barcode": {
+        "type": "String"
+      }
+    }
+  },
   "packageChooseProduct": "Escolher o produto",
   "packageOtherProduct": "Escolher outro produto",
   "packageTitle": "Embalagem",
@@ -354,6 +366,20 @@
         "type": "String"
       }
     }
+  },
+  "productUnitPriceOnly": "o {unit}",
+  "@productUnitPriceOnly": {
+    "description": "Linha sob o melhor preço por unidade quando a embalagem não tem nome: \"o kg\".",
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "productNotFound": "Produto não encontrado.",
+  "productNoPriceShort": "—",
+  "@productNoPriceShort": {
+    "description": "Valor de uma embalagem que ainda não tem preço."
   },
   "productTargetCount": "Ter sempre {count}",
   "@productTargetCount": {
