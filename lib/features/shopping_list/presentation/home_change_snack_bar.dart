@@ -28,13 +28,22 @@ void showHomeChangeSnackBar(
       _ => l10n.cameraUsedPart(Formatters.quantity(applied.abs()), product.name),
     },
   };
+
+  Future<void> undo() async {
+    try {
+      await record.undo(change);
+    } on Exception {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.cameraAdjustFailed)));
+    }
+  }
+
   messenger
     ..hideCurrentSnackBar()
     ..showSnackBar(
       SnackBar(
         content: Text(message),
         duration: const Duration(seconds: 4),
-        action: SnackBarAction(label: l10n.undo, onPressed: () => unawaited(record.undo(change))),
+        action: SnackBarAction(label: l10n.undo, onPressed: () => unawaited(undo())),
       ),
     );
 }

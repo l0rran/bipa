@@ -20,11 +20,13 @@ import 'package:bipa/core/widgets/empty_state.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/presentation/product_photos.dart';
 import 'package:bipa/features/products/presentation/scan_product.dart';
+import 'package:bipa/features/shopping_list/domain/record_at_home.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/presentation/home_change_snack_bar.dart';
 import 'package:bipa/features/shopping_list/presentation/list_preview.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:bipa/features/shopping_list/presentation/start_shopping.dart';
+import 'package:bipa/features/stock/domain/stock_item.dart';
 import 'package:bipa/features/stock/domain/stock_location.dart';
 import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
 import 'package:bipa/features/stock/presentation/stock_display.dart';
@@ -80,7 +82,13 @@ class _HomePageState extends ConsumerState<HomePage> {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final record = ref.read(recordAtHomeProvider);
-    final change = await record.used(product);
+    final HomeChange? change;
+    try {
+      change = await record.used(product);
+    } on Exception {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.cameraAdjustFailed)));
+      return;
+    }
     if (change == null || !mounted) return;
     showHomeChangeSnackBar(messenger, l10n: l10n, record: record, product: product, change: change);
   }
