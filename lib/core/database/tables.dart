@@ -189,6 +189,10 @@ class CartItems extends Table {
   TextColumn get packageId => text().nullable().references(ProductPackages, #id, onDelete: KeyAction.setNull)();
   IntColumn get quantity => integer().withDefault(const Constant(1))();
   IntColumn get priceCents => integer().nullable()();
+
+  /// O preço veio do histórico do mercado, não foi lido nem digitado nesta
+  /// compra (esquema v9).
+  BoolColumn get priceEstimated => boolean().withDefault(const Constant(false))();
   BoolColumn get take => boolean().withDefault(const Constant(true))();
   DateTimeColumn get addedAt => dateTime()();
 

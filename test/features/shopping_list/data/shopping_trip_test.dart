@@ -260,6 +260,26 @@ void main() {
     expect(lots.map((lot) => (lot.packageId, lot.quantity)), [('tio-joao', 1.0)]);
   });
 
+  test('o preço do histórico é estimado e não apaga o lido na etiqueta', () async {
+    final trip = await trips.start();
+    await cart.addProduct(trip.id, 'cafe', price: const Money.cents(1899), estimated: true);
+    var item = (await cart.watchTrip(trip.id).first).single.item;
+    expect((item.price?.cents, item.priceEstimated), (1899, true));
+
+    await cart.setPrice(item.id, const Money.cents(1799));
+    // Bipar de novo com o preço do histórico não troca o lido.
+    await cart.addProduct(trip.id, 'cafe', price: const Money.cents(1899), estimated: true);
+
+    item = (await cart.watchTrip(trip.id).first).single.item;
+    expect((item.price?.cents, item.priceEstimated, item.quantity), (1799, false, 2));
+
+    final summary = ShoppingTripSummary.of(const [], await cart.watchTrip(trip.id).first);
+    expect((summary.spent?.cents, summary.estimated), (3598, false));
+
+    await cart.setQuantity(item.id, 0);
+    expect((await cart.watchTrip(trip.id).first).single.item.quantity, 1);
+  });
+
   test('o resumo da compra soma só o que vai levar, com os preços conhecidos', () async {
     ShoppingListEntry entry(String id, {bool checked = false}) => ShoppingListEntry(
       item: ShoppingListItem(id: id, productId: id, name: id, addedAt: now, checkedAt: checked ? now : null),
@@ -278,7 +298,8 @@ void main() {
       ],
     );
 
-    expect(summary, const ShoppingTripSummary(done: 2, total: 3, spent: Money.cents(3598)));
+    // O leite vai sem preço: fica fora do total e é contado à parte.
+    expect(summary, const ShoppingTripSummary(done: 2, total: 3, spent: Money.cents(3598), unpriced: 1));
     expect(ShoppingTripSummary.of(const [], const []).spent, isNull);
   });
 

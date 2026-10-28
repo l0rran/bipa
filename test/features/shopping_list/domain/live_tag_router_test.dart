@@ -89,4 +89,16 @@ void main() {
     expect(_router.fits(byCode, barcode: _riceCode, now: _now), isTrue);
     expect(_router.fits(byCode, barcode: _coffeeCode, now: _now), isFalse);
   });
+
+  test('uma etiqueta sem código com nome não vale para um produto de outra seção', () {
+    final pending = PendingTagPrice(
+      read: const TagPriceRead(price: Money.cents(2790), nameHint: 'ARROZ BRANCO TIO JOAO 5KG'),
+      readAt: _now,
+    );
+
+    expect(_router.fits(pending, barcode: _riceCode, now: _now, productName: 'Arroz branco'), isTrue);
+    expect(_router.fits(pending, barcode: _coffeeCode, now: _now, productName: 'Detergente Ypê'), isFalse);
+    // Sem seção conhecida de um dos lados, não há como dizer que não bate.
+    expect(_router.fits(pending, barcode: _coffeeCode, now: _now, productName: 'Coisa'), isTrue);
+  });
 }

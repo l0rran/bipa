@@ -61,10 +61,15 @@ abstract interface class ShoppingTripRepository {
 /// soma o carrinho.
 @immutable
 final class ShoppingTripSummary {
-  const ShoppingTripSummary({required this.done, required this.total, this.spent});
+  const ShoppingTripSummary({
+    required this.done,
+    required this.total,
+    this.spent,
+    this.estimated = false,
+    this.unpriced = 0,
+  });
 
-  /// [spent] é a soma do que vai ser levado no carrinho, com os preços lidos
-  /// ou digitados: é um total real, sem estimativa ("≈"). Sem nenhum preço
+  /// [spent] é a soma do que vai ser levado no carrinho. Sem nenhum preço
   /// ainda, é `null`.
   factory ShoppingTripSummary.of(Iterable<ShoppingListEntry> entries, Iterable<CartEntry> cart) {
     var done = 0;
@@ -74,23 +79,42 @@ final class ShoppingTripSummary {
       if (entry.item.isChecked) done++;
     }
     Money? spent;
+    var estimated = false;
+    var unpriced = 0;
     for (final entry in cart) {
+      if (!entry.item.take) continue;
       final subtotal = entry.item.subtotal;
-      if (subtotal != null) spent = (spent ?? Money.zero) + subtotal;
+      if (subtotal == null) {
+        unpriced++;
+        continue;
+      }
+      spent = (spent ?? Money.zero) + subtotal;
+      if (entry.item.priceEstimated) estimated = true;
     }
-    return ShoppingTripSummary(done: done, total: total, spent: spent);
+    return ShoppingTripSummary(done: done, total: total, spent: spent, estimated: estimated, unpriced: unpriced);
   }
 
   final int done;
   final int total;
   final Money? spent;
 
+  /// Algum preço do total ainda é o do histórico: o total leva "≈".
+  final bool estimated;
+
+  /// Itens que vão ser levados sem preço: ficam fora do total.
+  final int unpriced;
+
   double get progress => total == 0 ? 0 : done / total;
 
   @override
   bool operator ==(Object other) =>
-      other is ShoppingTripSummary && other.done == done && other.total == total && other.spent == spent;
+      other is ShoppingTripSummary &&
+      other.done == done &&
+      other.total == total &&
+      other.spent == spent &&
+      other.estimated == estimated &&
+      other.unpriced == unpriced;
 
   @override
-  int get hashCode => Object.hash(done, total, spent);
+  int get hashCode => Object.hash(done, total, spent, estimated, unpriced);
 }

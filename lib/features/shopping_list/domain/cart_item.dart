@@ -19,6 +19,7 @@ final class CartItem {
     this.packageId,
     this.quantity = 1,
     this.price,
+    this.priceEstimated = false,
     this.take = true,
   }) : assert(quantity > 0);
 
@@ -33,6 +34,10 @@ final class CartItem {
 
   /// Preço de uma unidade; `null` enquanto ninguém leu nem digitou.
   final Money? price;
+
+  /// O [price] é o último do mercado, do histórico: uma estimativa até a
+  /// etiqueta ser lida ou o preço digitado nesta compra.
+  final bool priceEstimated;
   final bool take;
 
   /// Quando foi bipado pela última vez: os mais recentes aparecem primeiro.
@@ -60,11 +65,12 @@ final class CartItem {
       other.packageId == packageId &&
       other.quantity == quantity &&
       other.price == price &&
+      other.priceEstimated == priceEstimated &&
       other.take == take &&
       other.addedAt == addedAt;
 
   @override
-  int get hashCode => Object.hash(id, tripId, productId, packageId, quantity, price, take, addedAt);
+  int get hashCode => Object.hash(id, tripId, productId, packageId, quantity, price, priceEstimated, take, addedAt);
 }
 
 /// Item do carrinho com o produto e a embalagem.
@@ -97,10 +103,15 @@ abstract interface class CartRepository {
 
   /// Põe a embalagem (ou o produto, sem [packageId]) no carrinho. Se ela já
   /// está, soma uma unidade e a traz para o topo; [price], quando informado,
-  /// substitui o preço.
-  Future<void> addProduct(String tripId, String productId, {String? packageId, Money? price});
+  /// substitui o preço. Um preço [estimated] (do histórico) nunca substitui
+  /// um lido ou digitado nesta compra.
+  Future<void> addProduct(String tripId, String productId, {String? packageId, Money? price, bool estimated = false});
 
+  /// Preço lido ou digitado: deixa de ser estimado.
   Future<void> setPrice(String itemId, Money price);
+
+  /// Quantas unidades vão (pelo menos uma).
+  Future<void> setQuantity(String itemId, int quantity);
 
   /// Guarda o preço lido na etiqueta. Se a embalagem (ou o produto, sem
   /// [packageId]) ainda não está no carrinho, entra com uma unidade; se já

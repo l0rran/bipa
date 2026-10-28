@@ -40,7 +40,8 @@ class AppDatabase extends _$AppDatabase {
   // v6: carrinho da compra.
   // v7: produto e embalagens (ADR 0013).
   // v8: ordem das seções aprendida por mercado (ADR 0014).
-  int get schemaVersion => 8;
+  // v9: o carrinho sabe se o preço é estimado (do histórico).
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -58,6 +59,9 @@ class AppDatabase extends _$AppDatabase {
       if (from < 6) await migrator.createTable(cartItems);
       if (from < 7) await _splitProductsIntoPackages(migrator, hadCart: from >= 6);
       if (from < 8) await migrator.createTable(marketAisles);
+      // Antes da v7, o carrinho é recriado (v6) ou refeito (v7) já com a
+      // coluna nova.
+      if (from >= 7 && from < 9) await migrator.addColumn(cartItems, cartItems.priceEstimated);
     }),
     beforeOpen: (details) async {
       // SQLite não aplica chaves estrangeiras sem este pragma.
@@ -101,7 +105,9 @@ class AppDatabase extends _$AppDatabase {
       await migrator.alterTable(
         TableMigration(
           cartItems,
-          newColumns: [cartItems.packageId],
+          // A v7 refaz a tabela com a definição atual: as colunas que vieram
+          // depois dela também são novas aqui.
+          newColumns: [cartItems.packageId, cartItems.priceEstimated],
           columnTransformer: {cartItems.packageId: cartItems.productId},
         ),
       );

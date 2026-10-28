@@ -1,3 +1,4 @@
+import 'package:bipa/core/catalog/product_kind.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/live_scan.dart';
 import 'package:meta/meta.dart';
@@ -111,8 +112,21 @@ final class LiveTagRouter {
   /// Se o preço que espera vale para a embalagem que acabou de ser bipada
   /// (ou cadastrada) com [barcode]: a etiqueta não tinha código ou tinha
   /// esse mesmo.
-  bool fits(PendingTagPrice pending, {required String barcode, required DateTime now}) {
+  ///
+  /// Uma etiqueta sem código que trouxe o nome ("ARROZ BRANCO TIO JOAO")
+  /// não vale para um produto de outra seção ([productName] "Detergente"):
+  /// a pessoa desistiu daquele e bipou outro.
+  bool fits(PendingTagPrice pending, {required String barcode, required DateTime now, String? productName}) {
     if (now.difference(pending.readAt) > waitFor) return false;
-    return pending.barcode == null || pending.barcode == barcode;
+    if (pending.barcode != null) return pending.barcode == barcode;
+    return productName == null || _sameAisle(pending.read.nameHint, productName);
+  }
+
+  /// "Outros" não decide nada: pode ser qualquer coisa.
+  static bool _sameAisle(String? hint, String productName) {
+    if (hint == null) return true;
+    final tag = ProductKind.of(hint).aisle;
+    final product = ProductKind.of(productName).aisle;
+    return tag == Aisle.other || product == Aisle.other || tag == product;
   }
 }

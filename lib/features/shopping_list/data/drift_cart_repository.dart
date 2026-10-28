@@ -41,7 +41,13 @@ final class DriftCartRepository implements CartRepository {
   }
 
   @override
-  Future<void> addProduct(String tripId, String productId, {String? packageId, Money? price}) {
+  Future<void> addProduct(
+    String tripId,
+    String productId, {
+    String? packageId,
+    Money? price,
+    bool estimated = false,
+  }) {
     return _db.transaction(() async {
       final existing = await _selectItem(tripId, productId, packageId).getSingleOrNull();
       final now = _clock();
@@ -53,15 +59,19 @@ final class DriftCartRepository implements CartRepository {
             productId: productId,
             packageId: Value(packageId),
             priceCents: Value(price?.cents),
+            priceEstimated: Value(price != null && estimated),
             addedAt: now,
           ),
         );
       } else {
+        // Uma estimativa não apaga o preço lido ou digitado nesta compra.
+        final keepPrice = price == null || (estimated && existing.priceCents != null && !existing.priceEstimated);
         await _write(
           existing.id,
           CartItemsCompanion(
             quantity: Value(existing.quantity + 1),
-            priceCents: price == null ? const Value.absent() : Value(price.cents),
+            priceCents: keepPrice ? const Value.absent() : Value(price.cents),
+            priceEstimated: keepPrice ? const Value.absent() : Value(estimated),
             take: const Value(true),
             addedAt: Value(now),
           ),
@@ -72,7 +82,11 @@ final class DriftCartRepository implements CartRepository {
 
   @override
   Future<void> setPrice(String itemId, Money price) =>
-      _write(itemId, CartItemsCompanion(priceCents: Value(price.cents)));
+      _write(itemId, CartItemsCompanion(priceCents: Value(price.cents), priceEstimated: const Value(false)));
+
+  @override
+  Future<void> setQuantity(String itemId, int quantity) =>
+      _write(itemId, CartItemsCompanion(quantity: Value(quantity < 1 ? 1 : quantity)));
 
   @override
   Future<void> setPriceForProduct(String tripId, String productId, Money price, {String? packageId}) {
@@ -90,7 +104,7 @@ final class DriftCartRepository implements CartRepository {
           ),
         );
       } else {
-        await _write(existing.id, CartItemsCompanion(priceCents: Value(price.cents)));
+        await _write(existing.id, CartItemsCompanion(priceCents: Value(price.cents), priceEstimated: const Value(false)));
       }
     });
   }
@@ -129,6 +143,7 @@ extension CartItemRowMapper on CartItemRow {
       packageId: packageId,
       quantity: quantity,
       price: cents == null ? null : Money.cents(cents),
+      priceEstimated: priceEstimated,
       take: take,
       addedAt: addedAt,
     );
