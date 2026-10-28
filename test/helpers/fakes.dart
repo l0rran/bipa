@@ -53,6 +53,14 @@ final class InMemoryProductRepository implements ProductRepository {
   Future<void> savePackage(ProductPackage package) async {
     packages[package.id] = package;
   }
+
+  @override
+  Future<void> merge({required String fromId, required String intoId}) async {
+    for (final package in packages.values.where((p) => p.productId == fromId).toList()) {
+      packages[package.id] = package.copyWith(productId: intoId);
+    }
+    products.remove(fromId);
+  }
 }
 
 final class InMemoryPriceRepository implements PriceRepository {

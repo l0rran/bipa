@@ -30,6 +30,11 @@ abstract interface class ProductRepository {
   /// Lança [DuplicateBarcodeException] se o código já pertencer a outra
   /// embalagem.
   Future<void> savePackage(ProductPackage package);
+
+  /// Junta o produto [fromId] em [intoId], que fica com as embalagens, os
+  /// preços, o estoque, a lista e o carrinho dele; [fromId] deixa de existir.
+  /// É o caminho para quem cadastrou o mesmo produto uma vez por marca.
+  Future<void> merge({required String fromId, required String intoId});
 }
 
 final class DuplicateBarcodeException extends DomainException {

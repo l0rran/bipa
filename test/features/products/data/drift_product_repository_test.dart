@@ -4,8 +4,12 @@ import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/product_repository.dart';
+import 'package:bipa/features/shopping_list/data/drift_shopping_list_repository.dart';
+import 'package:bipa/features/stock/data/drift_stock_repository.dart';
+import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/fakes.dart';
 import '../../../helpers/test_database.dart';
 
 void main() {
@@ -102,5 +106,27 @@ void main() {
 
     final byName = await repository.watchAll(query: 'arr').first;
     expect(byName.map((p) => p.id), ['2']);
+  });
+
+  test('juntar leva embalagens, preços, estoque e lista para o outro produto', () async {
+    await repository.save(product('tio', 'Arroz Tio João'));
+    await repository.save(product('arroz', 'Arroz branco'));
+    await repository.savePackage(package('tio-5', 'tio', barcode: '7896006711155', brand: 'Tio João', size: 5));
+    await repository.savePackage(package('camil-10', 'arroz', brand: 'Camil', size: 10));
+    final stock = DriftStockRepository(db, ids: SequentialIdGenerator(), clock: () => now);
+    await stock.adjust(productId: 'tio', delta: 1, reason: StockMovementReason.purchase);
+    await stock.adjust(productId: 'arroz', delta: 2, reason: StockMovementReason.purchase);
+    final list = DriftShoppingListRepository(db, ids: SequentialIdGenerator(), clock: () => now);
+    await list.addProduct(productId: 'tio', name: 'Arroz Tio João');
+    await list.addProduct(productId: 'arroz', name: 'Arroz branco');
+
+    await repository.merge(fromId: 'tio', intoId: 'arroz');
+
+    expect(await repository.findById('tio'), isNull);
+    expect(await repository.findByBarcode('7896006711155'), product('arroz', 'Arroz branco'));
+    expect((await repository.watchPackages('arroz').first).map((p) => p.id), unorderedEquals(['tio-5', 'camil-10']));
+    expect((await stock.findByProduct('arroz'))?.quantity, 3);
+    expect((await stock.watchPackages('arroz').first).map((c) => c.package.id), unorderedEquals(['tio-5', 'camil-10']));
+    expect((await list.watchAll().first).map((e) => e.item.productId), ['arroz']);
   });
 }

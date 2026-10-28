@@ -8,7 +8,7 @@ import 'package:bipa/features/products/domain/register_package.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final productRepositoryProvider = Provider<ProductRepository>(
-  (ref) => DriftProductRepository(ref.watch(appDatabaseProvider)),
+  (ref) => DriftProductRepository(ref.watch(appDatabaseProvider), clock: ref.watch(clockProvider)),
 );
 
 /// Texto digitado na busca da lista de produtos.
