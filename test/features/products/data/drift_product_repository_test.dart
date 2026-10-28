@@ -2,6 +2,7 @@ import 'package:bipa/core/database/app_database.dart';
 import 'package:bipa/features/products/data/drift_product_repository.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/product_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -19,24 +20,40 @@ void main() {
 
   tearDown(() => db.close());
 
-  Product product(String id, String name, {String? barcode, String? brand}) => Product(
-    id: id,
-    name: name,
-    barcode: barcode,
-    brand: brand,
-    unit: MeasureUnit.gram,
-    packageSize: 500,
-    createdAt: now,
-    updatedAt: now,
-  );
+  Product product(String id, String name) =>
+      Product(id: id, name: name, unit: MeasureUnit.kilogram, createdAt: now, updatedAt: now);
 
-  test('salva e busca por id e por código de barras', () async {
-    final cafe = product('1', 'Café', barcode: '7891910000197', brand: 'Pilão');
-    await repository.save(cafe);
+  ProductPackage package(String id, String productId, {String? barcode, String? brand, double? size, int day = 1}) =>
+      ProductPackage(
+        id: id,
+        productId: productId,
+        barcode: barcode,
+        brand: brand,
+        size: size,
+        unit: MeasureUnit.kilogram,
+        createdAt: DateTime(2026, 10, day),
+        updatedAt: DateTime(2026, 10, day),
+      );
 
-    expect(await repository.findById('1'), cafe);
-    expect(await repository.findByBarcode('7891910000197'), cafe);
+  test('salva e busca o produto por id e pelo código de uma embalagem', () async {
+    final rice = product('arroz', 'Arroz branco');
+    await repository.save(rice);
+    await repository.savePackage(package('tio-joao', 'arroz', barcode: '7896006711155', brand: 'Tio João', size: 5));
+
+    expect(await repository.findById('arroz'), rice);
+    expect(await repository.findByBarcode('7896006711155'), rice);
+    expect((await repository.findPackageByBarcode('7896006711155'))?.brand, 'Tio João');
     expect(await repository.findByBarcode('4006381333931'), isNull);
+  });
+
+  test('um produto tem várias embalagens, das mais novas para as mais antigas', () async {
+    await repository.save(product('arroz', 'Arroz branco'));
+    await repository.savePackage(package('tio-joao', 'arroz', brand: 'Tio João', size: 5, day: 1));
+    await repository.savePackage(package('camil', 'arroz', brand: 'Camil', size: 10, day: 2));
+
+    final packages = await repository.watchPackages('arroz').first;
+
+    expect(packages.map((p) => p.label), ['Camil · 10 kg', 'Tio João · 5 kg']);
   });
 
   test('save atualiza um produto existente', () async {
@@ -47,26 +64,32 @@ void main() {
     expect(all.map((p) => p.name), ['Café torrado']);
   });
 
-  test('impede o mesmo código de barras em dois produtos', () async {
-    await repository.save(product('1', 'Café', barcode: '7891910000197'));
+  test('impede o mesmo código de barras em duas embalagens', () async {
+    await repository.save(product('cafe', 'Café'));
+    await repository.save(product('outro', 'Outro'));
+    await repository.savePackage(package('pilao', 'cafe', barcode: '7891910000197'));
 
     expect(
-      () => repository.save(product('2', 'Outro', barcode: '7891910000197')),
+      () => repository.savePackage(package('outra', 'outro', barcode: '7891910000197')),
       throwsA(isA<DuplicateBarcodeException>()),
     );
   });
 
-  test('produtos sem código de barras não conflitam', () async {
-    await repository.save(product('1', 'Banana'));
-    await repository.save(product('2', 'Maçã'));
+  test('embalagens sem código de barras não conflitam', () async {
+    await repository.save(product('frutas', 'Banana'));
+    await repository.savePackage(package('cacho', 'frutas'));
+    await repository.savePackage(package('penca', 'frutas'));
 
-    expect(await repository.watchAll().first, hasLength(2));
+    expect(await repository.watchPackages('frutas').first, hasLength(2));
   });
 
-  test('watchAll ordena por nome e filtra por nome, marca ou código', () async {
-    await repository.save(product('1', 'feijão', brand: 'Camil'));
-    await repository.save(product('2', 'Arroz', brand: 'Camil'));
-    await repository.save(product('3', 'Café', barcode: '7891910000197'));
+  test('watchAll ordena por nome e filtra por nome, marca ou código da embalagem', () async {
+    await repository.save(product('1', 'feijão'));
+    await repository.save(product('2', 'Arroz'));
+    await repository.save(product('3', 'Café'));
+    await repository.savePackage(package('a', '1', brand: 'Camil'));
+    await repository.savePackage(package('b', '2', brand: 'Camil'));
+    await repository.savePackage(package('c', '3', barcode: '7891910000197'));
 
     final all = await repository.watchAll().first;
     expect(all.map((p) => p.name), ['Arroz', 'Café', 'feijão']);
@@ -76,5 +99,8 @@ void main() {
 
     final byBarcode = await repository.watchAll(query: '7891910000197').first;
     expect(byBarcode.map((p) => p.id), ['3']);
+
+    final byName = await repository.watchAll(query: 'arr').first;
+    expect(byName.map((p) => p.id), ['2']);
   });
 }

@@ -5,6 +5,8 @@ import 'package:bipa/core/widgets/messages.dart';
 import 'package:bipa/features/products/domain/gtin.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/products/domain/product_package.dart';
+import 'package:bipa/features/products/domain/product_repository.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,6 +22,10 @@ class ProductFormArgs {
 }
 
 /// Cadastro e edição de produto. Ao salvar, devolve o [Product] via `pop`.
+///
+/// Marca, código e tamanho são da embalagem (ADR 0013): o formulário edita a
+/// embalagem mais recente do produto, ou cria uma quando algum deles é
+/// preenchido.
 class ProductFormPage extends ConsumerStatefulWidget {
   const ProductFormPage({this.productId, this.args = const ProductFormArgs(), super.key});
 
@@ -39,6 +45,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
   final _packageSize = TextEditingController();
   var _unit = MeasureUnit.unit;
   Product? _original;
+  ProductPackage? _originalPackage;
   var _loading = false;
   var _saving = false;
 
@@ -67,17 +74,20 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
   }
 
   Future<void> _load(String id) async {
-    final product = await ref.read(productRepositoryProvider).findById(id);
+    final repository = ref.read(productRepositoryProvider);
+    final product = await repository.findById(id);
+    final package = product == null ? null : (await repository.watchPackages(id).first).firstOrNull;
     if (!mounted) return;
     setState(() {
       _loading = false;
       if (product == null) return;
       _original = product;
+      _originalPackage = package;
       _name.text = product.name;
-      _brand.text = product.brand ?? '';
-      _barcode.text = product.barcode ?? '';
-      _unit = product.unit;
-      final size = product.packageSize;
+      _brand.text = package?.brand ?? '';
+      _barcode.text = package?.barcode ?? '';
+      _unit = package?.unit ?? product.unit;
+      final size = package?.size;
       _packageSize.text = size == null
           ? ''
           : (size == size.truncateToDouble() ? size.toStringAsFixed(0) : '$size'.replaceAll('.', ','));
@@ -94,22 +104,47 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
     setState(() => _saving = true);
 
     final now = ref.read(clockProvider)();
+    final ids = ref.read(idGeneratorProvider);
+    final repository = ref.read(productRepositoryProvider);
     final original = _original;
     final product = Product(
-      id: original?.id ?? ref.read(idGeneratorProvider).newId(),
+      id: original?.id ?? ids.newId(),
       name: _name.text.trim(),
-      brand: _nullIfBlank(_brand.text),
-      barcode: _nullIfBlank(_barcode.text),
       unit: _unit,
-      packageSize: _parseSize(_packageSize.text),
       // A foto não é editada neste formulário: mantém a que já existe.
       photoPath: original?.photoPath,
       createdAt: original?.createdAt ?? now,
       updatedAt: now,
     );
+    final brand = _nullIfBlank(_brand.text);
+    final barcode = _nullIfBlank(_barcode.text);
+    final size = _parseSize(_packageSize.text);
+    final originalPackage = _originalPackage;
+    final package = originalPackage == null && brand == null && barcode == null && size == null
+        ? null
+        : ProductPackage(
+            id: originalPackage?.id ?? ids.newId(),
+            productId: product.id,
+            brand: brand,
+            barcode: barcode,
+            size: size,
+            unit: _unit,
+            createdAt: originalPackage?.createdAt ?? now,
+            updatedAt: now,
+          );
 
     try {
-      await ref.read(productRepositoryProvider).save(product);
+      // O código é conferido antes de gravar o produto: um código repetido
+      // não deixa um produto sem embalagem para trás.
+      if (barcode != null) {
+        final owner = await repository.findPackageByBarcode(barcode);
+        if (owner != null && owner.id != package?.id) {
+          final ownerProduct = await repository.findById(owner.productId);
+          throw DuplicateBarcodeException(barcode: barcode, productName: ownerProduct?.name ?? barcode);
+        }
+      }
+      await repository.save(product);
+      if (package != null) await repository.savePackage(package);
       if (mounted) context.pop(product);
     } on DomainException catch (error) {
       if (mounted) context.showMessage(error.message);

@@ -18,6 +18,7 @@ import 'package:bipa/features/prices/presentation/price_condition_label.dart';
 import 'package:bipa/features/prices/presentation/prices_providers.dart';
 import 'package:bipa/features/products/domain/gtin.dart';
 import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:flutter/material.dart';
@@ -59,8 +60,10 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
   var _marketDetected = false;
   var _detectingMarket = true;
 
-  /// Produto já cadastrado que corresponde ao código de barras.
+  /// Produto já cadastrado que corresponde ao código de barras, e a
+  /// embalagem com esse código (ADR 0013).
   Product? _product;
+  ProductPackage? _package;
   String? _photoPath;
   List<Money> _candidates = const [];
 
@@ -189,13 +192,25 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
 
   void _onBarcodeChanged(String value) {
     final code = value.trim();
-    if (_product != null && _product!.barcode != code) setState(() => _product = null);
+    if (_product != null && _package?.barcode != code) {
+      setState(() {
+        _product = null;
+        _package = null;
+      });
+    }
     if (Gtin.isValid(code)) unawaited(_lookupBarcode(code));
   }
 
   Future<void> _lookupBarcode(String code) async {
-    final product = await ref.read(productRepositoryProvider).findByBarcode(code);
-    if (mounted && _barcode.text.trim() == code) setState(() => _product = product);
+    final repository = ref.read(productRepositoryProvider);
+    final package = await repository.findPackageByBarcode(code);
+    final product = package == null ? null : await repository.findById(package.productId);
+    if (mounted && _barcode.text.trim() == code) {
+      setState(() {
+        _product = product;
+        _package = product == null ? null : package;
+      });
+    }
   }
 
   Future<void> _save({required bool captureAnother}) async {
@@ -227,6 +242,7 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
           ],
           source: _source,
           productId: _product?.id,
+          packageId: _package?.id,
           barcode: barcode.isEmpty ? null : barcode,
           newProductName: _name.text,
         ),
@@ -271,6 +287,7 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
       _price.clear();
       _regularPrice.clear();
       _product = null;
+      _package = null;
       _photoPath = null;
       _candidates = const [];
       _mainOffer = null;
@@ -370,7 +387,7 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
               ),
               const SizedBox(height: 12),
               if (_product case final product?)
-                _ProductSummary(product: product)
+                _ProductSummary(product: product, package: _package)
               else
                 TextFormField(
                   controller: _name,
@@ -551,14 +568,15 @@ class _TagPhotoCard extends StatelessWidget {
 }
 
 class _ProductSummary extends StatelessWidget {
-  const _ProductSummary({required this.product});
+  const _ProductSummary({required this.product, this.package});
 
   final Product? product;
+  final ProductPackage? package;
 
   @override
   Widget build(BuildContext context) {
     final current = product;
-    final subtitle = current?.subtitle;
+    final subtitle = package?.label;
     return Card.outlined(
       margin: EdgeInsets.zero,
       child: ListTile(

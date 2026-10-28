@@ -81,14 +81,15 @@ class ProductsPage extends ConsumerWidget {
   }
 }
 
-class _ProductTile extends StatelessWidget {
+class _ProductTile extends ConsumerWidget {
   const _ProductTile({required this.product});
 
   final Product product;
 
   @override
-  Widget build(BuildContext context) {
-    final subtitle = product.subtitle;
+  Widget build(BuildContext context, WidgetRef ref) {
+    // A embalagem mais recente resume o produto: marca e tamanho.
+    final subtitle = ref.watch(productPackagesProvider(product.id)).value?.firstOrNull?.label;
     return ListTile(
       leading: const CircleAvatar(child: Icon(Icons.shopping_basket_outlined)),
       title: Text(product.name),

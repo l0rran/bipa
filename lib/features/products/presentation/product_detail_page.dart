@@ -9,7 +9,7 @@ import 'package:bipa/features/prices/domain/price_observation.dart';
 import 'package:bipa/features/prices/presentation/price_condition_label.dart';
 import 'package:bipa/features/prices/presentation/prices_providers.dart';
 import 'package:bipa/features/products/domain/product.dart';
-import 'package:bipa/features/products/domain/unit_price.dart';
+import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
 import 'package:bipa/features/stock/presentation/stock_providers.dart';
@@ -63,7 +63,7 @@ class ProductDetailPage extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _ProductInfo(product: product),
+          _ProductInfo(packages: ref.watch(productPackagesProvider(product.id)).value ?? const []),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -92,17 +92,18 @@ class ProductDetailPage extends ConsumerWidget {
   }
 }
 
+/// As embalagens do produto: marca e tamanho, com o código ao lado.
 class _ProductInfo extends StatelessWidget {
-  const _ProductInfo({required this.product});
+  const _ProductInfo({required this.packages});
 
-  final Product product;
+  final List<ProductPackage> packages;
 
   @override
   Widget build(BuildContext context) {
     final details = [
-      if (product.brand case final brand?) ('Marca', brand),
-      if (product.packageLabel case final package?) ('Embalagem', package),
-      if (product.barcode case final barcode?) ('Código de barras', barcode),
+      for (final package in packages)
+        if (package.label != null || package.barcode != null)
+          (package.label ?? 'Embalagem', package.barcode ?? ''),
     ];
     if (details.isEmpty) return const SizedBox.shrink();
 
@@ -138,6 +139,10 @@ class _PriceSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final history = ref.watch(priceHistoryProvider(product.id));
+    final packages = {
+      for (final package in ref.watch(productPackagesProvider(product.id)).value ?? const <ProductPackage>[])
+        package.id: package,
+    };
     final theme = Theme.of(context);
 
     return AsyncValueView(
@@ -160,11 +165,16 @@ class _PriceSection extends ConsumerWidget {
             Text('Último preço em cada mercado', style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             for (final (index, entry) in latest.indexed)
-              _PriceTile(product: product, entry: entry, isCheapest: index == 0 && latest.length > 1),
+              _PriceTile(
+                entry: entry,
+                package: packages[entry.observation.packageId],
+                isCheapest: index == 0 && latest.length > 1,
+              ),
             const SizedBox(height: 24),
             Text('Histórico', style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
-            for (final entry in entries) _PriceTile(product: product, entry: entry, dense: true),
+            for (final entry in entries)
+              _PriceTile(entry: entry, package: packages[entry.observation.packageId], dense: true),
           ],
         );
       },
@@ -174,28 +184,27 @@ class _PriceSection extends ConsumerWidget {
 
 class _PriceTile extends StatelessWidget {
   const _PriceTile({
-    required this.product,
     required this.entry,
+    this.package,
     this.isCheapest = false,
     this.dense = false,
   });
 
-  final Product product;
   final PriceHistoryEntry entry;
+
+  /// A embalagem do preço, para o preço por kg.
+  final ProductPackage? package;
   final bool isCheapest;
   final bool dense;
 
   @override
   Widget build(BuildContext context) {
     final observation = entry.observation;
-    final unitPrice = UnitPrice.of(
-      price: observation.price,
-      packageSize: product.packageSize,
-      unit: product.unit,
-    );
+    final unitPrice = package?.unitPrice(observation.price);
     final colors = Theme.of(context).colorScheme;
     final subtitle = [
       Formatters.date(observation.observedAt),
+      ?package?.label,
       ?observation.condition.label(AppLocalizations.of(context)),
       observation.source.label,
       ?unitPrice?.format(),

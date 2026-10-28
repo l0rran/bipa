@@ -1,6 +1,6 @@
 # 0013. Separar o produto das embalagens
 
-- Status: Proposto
+- Status: Aceito
 - Data: 2026-10-28
 
 ## Contexto

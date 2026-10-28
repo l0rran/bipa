@@ -9,13 +9,16 @@ import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/prices/domain/price_tag.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/product_repository.dart';
 import 'package:meta/meta.dart';
 
 /// Dados informados pelo usuário ao registrar um preço.
 ///
-/// O produto é resolvido nesta ordem: [productId], [barcode] de um produto já
-/// cadastrado ou, por fim, um produto novo chamado [newProductName].
+/// O produto é resolvido nesta ordem: [productId], [barcode] de uma embalagem
+/// já cadastrada ou, por fim, um produto novo chamado [newProductName]. A
+/// embalagem do preço é [packageId] ou a do [barcode]; um produto novo com
+/// código ganha uma embalagem com ele (ADR 0013).
 ///
 /// [otherOffers] são os outros preços da mesma etiqueta, com outras condições
 /// (ADR 0011): cada um vira uma observação, no mesmo horário.
@@ -29,6 +32,7 @@ final class RegisterPriceInput {
     this.condition = const AnyCustomer(),
     this.otherOffers = const [],
     this.productId,
+    this.packageId,
     this.barcode,
     this.newProductName,
     this.newProductUnit = MeasureUnit.unit,
@@ -41,6 +45,7 @@ final class RegisterPriceInput {
   final List<PriceOffer> otherOffers;
   final PriceSource source;
   final String? productId;
+  final String? packageId;
   final String? barcode;
   final String? newProductName;
   final MeasureUnit newProductUnit;
@@ -68,12 +73,13 @@ final class RegisterPriceObservation {
   Future<PriceObservation> call(RegisterPriceInput input) async {
     if (!input.price.isPositive) throw const InvalidPriceException();
 
-    final product = await _resolveProduct(input);
+    final (product, package) = await _resolve(input);
     final now = _clock();
 
     PriceObservation observe(PriceOffer offer) => PriceObservation(
       id: _ids.newId(),
       productId: product.id,
+      packageId: package?.id,
       marketId: input.marketId,
       price: offer.price,
       regularPrice: _promotionRegularPrice(offer),
@@ -102,15 +108,23 @@ final class RegisterPriceObservation {
     return regular != null && regular > offer.price ? regular : null;
   }
 
-  Future<Product> _resolveProduct(RegisterPriceInput input) async {
+  Future<(Product, ProductPackage?)> _resolve(RegisterPriceInput input) async {
+    final barcode = input.barcode;
+    final byBarcode = barcode == null ? null : await _products.findPackageByBarcode(barcode);
+
     if (input.productId case final id?) {
-      return await _products.findById(id) ?? (throw ProductNotFoundException(id));
+      final product = await _products.findById(id) ?? (throw ProductNotFoundException(id));
+      final package = switch (input.packageId) {
+        final packageId? => await _products.findPackageById(packageId),
+        null => byBarcode,
+      };
+      // Uma embalagem de outro produto não vale para este.
+      return (product, package?.productId == product.id ? package : null);
     }
 
-    final barcode = input.barcode;
-    if (barcode != null) {
-      final existing = await _products.findByBarcode(barcode);
-      if (existing != null) return existing;
+    if (byBarcode != null) {
+      final product = await _products.findById(byBarcode.productId);
+      if (product != null) return (product, byBarcode);
     }
 
     final name = input.newProductName?.trim() ?? '';
@@ -120,13 +134,23 @@ final class RegisterPriceObservation {
     final product = Product(
       id: _ids.newId(),
       name: name,
-      barcode: barcode,
       unit: input.newProductUnit,
       createdAt: now,
       updatedAt: now,
     );
     await _products.save(product);
-    return product;
+    if (barcode == null) return (product, null);
+
+    final package = ProductPackage(
+      id: _ids.newId(),
+      productId: product.id,
+      barcode: barcode,
+      unit: input.newProductUnit,
+      createdAt: now,
+      updatedAt: now,
+    );
+    await _products.savePackage(package);
+    return (product, package);
   }
 }
 

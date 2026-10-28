@@ -1,6 +1,6 @@
 import 'package:bipa/core/money/money.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
-import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/unit_price.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -46,27 +46,24 @@ void main() {
     });
   });
 
-  test('Product.subtitle combina marca e embalagem', () {
+  test('a embalagem descreve marca e tamanho e calcula o preço por kg', () {
     final now = DateTime(2026);
-    final product = Product(
+    final package = ProductPackage(
       id: '1',
-      name: 'Leite condensado',
+      productId: 'leite-condensado',
       brand: 'Moça',
-      packageSize: 395,
+      size: 395,
       unit: MeasureUnit.gram,
       createdAt: now,
       updatedAt: now,
     );
-    expect(product.packageLabel, '395 g');
-    expect(product.subtitle, 'Moça · 395 g');
+    expect(package.sizeLabel, '395 g');
+    expect(package.label, 'Moça · 395 g');
+    expect(package.sizeInBaseUnit, closeTo(0.395, 1e-9));
+    expect(package.unitPrice(const Money.cents(799))?.format(), r'R$ 20,23/kg');
 
-    final semDetalhes = Product(
-      id: '2',
-      name: 'Pão',
-      unit: MeasureUnit.unit,
-      createdAt: now,
-      updatedAt: now,
-    );
-    expect(semDetalhes.subtitle, isNull);
+    final bare = ProductPackage(id: '2', productId: 'pao', unit: MeasureUnit.unit, createdAt: now, updatedAt: now);
+    expect(bare.label, isNull);
+    expect(bare.unitPrice(const Money.cents(100)), isNull);
   });
 }

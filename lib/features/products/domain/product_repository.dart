@@ -1,22 +1,35 @@
 import 'package:bipa/core/errors/domain_exception.dart';
 import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/products/domain/product_package.dart';
 
-/// Acesso aos produtos cadastrados.
+/// Acesso aos produtos e às suas embalagens (ADR 0013).
 abstract interface class ProductRepository {
-  /// Produtos ordenados por nome, filtrados por nome, marca ou código.
+  /// Produtos ordenados por nome, filtrados pelo nome do produto ou pela
+  /// marca ou código de uma das suas embalagens.
   Stream<List<Product>> watchAll({String query = ''});
 
   Stream<Product?> watchById(String id);
 
   Future<Product?> findById(String id);
 
+  /// O produto da embalagem com este código.
   Future<Product?> findByBarcode(String barcode);
 
   /// Cria ou atualiza o produto.
-  ///
-  /// Lança [DuplicateBarcodeException] se o código de barras já pertencer a
-  /// outro produto.
   Future<void> save(Product product);
+
+  /// As embalagens do produto, das mais novas para as mais antigas.
+  Stream<List<ProductPackage>> watchPackages(String productId);
+
+  Future<ProductPackage?> findPackageById(String id);
+
+  Future<ProductPackage?> findPackageByBarcode(String barcode);
+
+  /// Cria ou atualiza a embalagem.
+  ///
+  /// Lança [DuplicateBarcodeException] se o código já pertencer a outra
+  /// embalagem.
+  Future<void> savePackage(ProductPackage package);
 }
 
 final class DuplicateBarcodeException extends DomainException {

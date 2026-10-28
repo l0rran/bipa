@@ -10,14 +10,13 @@ import 'package:drift/drift.dart';
 // * `syncedAt` marca o que já foi enviado à base comunitária (nulo = pendente).
 //   Só dados compartilháveis têm essa coluna: estoque é sempre privado.
 
+/// O que se usa em casa (ADR 0013). Até o esquema v6, código, marca e
+/// tamanho ficavam aqui; no v7 passaram para [ProductPackages].
 @DataClassName('ProductRow')
 class Products extends Table {
   TextColumn get id => text()();
-  TextColumn get barcode => text().nullable()();
   TextColumn get name => text().withLength(min: 1, max: 160)();
-  TextColumn get brand => text().nullable()();
   TextColumn get unit => textEnum<MeasureUnit>()();
-  RealColumn get packageSize => real().nullable()();
 
   /// Caminho relativo da foto na pasta de fotos do app (esquema v2).
   TextColumn get photoPath => text().nullable()();
@@ -27,8 +26,27 @@ class Products extends Table {
 
   @override
   Set<Column<Object>> get primaryKey => {id};
+}
 
-  // SQLite permite vários NULLs em uma coluna UNIQUE: produtos sem código
+/// As embalagens de cada produto: código, marca e tamanho (ADR 0013,
+/// esquema v7).
+@DataClassName('ProductPackageRow')
+@TableIndex(name: 'product_packages_product', columns: {#productId})
+class ProductPackages extends Table {
+  TextColumn get id => text()();
+  TextColumn get productId => text().references(Products, #id, onDelete: KeyAction.cascade)();
+  TextColumn get barcode => text().nullable()();
+  TextColumn get brand => text().nullable()();
+  RealColumn get size => real().nullable()();
+  TextColumn get unit => textEnum<MeasureUnit>()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get syncedAt => dateTime().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+
+  // SQLite permite vários NULLs em uma coluna UNIQUE: embalagens sem código
   // de barras não conflitam entre si.
   @override
   List<Set<Column<Object>>> get uniqueKeys => [
@@ -60,6 +78,11 @@ class PriceObservations extends Table {
       text().references(Products, #id, onDelete: KeyAction.cascade)();
   TextColumn get marketId =>
       text().references(Markets, #id, onDelete: KeyAction.cascade)();
+
+  /// A embalagem que tinha esse preço (esquema v7). Nula em preços de produto
+  /// sem embalagem, como os a granel.
+  TextColumn get packageId =>
+      text().nullable().references(ProductPackages, #id, onDelete: KeyAction.setNull)();
   IntColumn get priceCents => integer()();
   IntColumn get regularPriceCents => integer().nullable()();
 

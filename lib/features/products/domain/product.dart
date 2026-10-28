@@ -1,8 +1,9 @@
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:meta/meta.dart';
 
-/// Produto que pode ser comprado, identificado opcionalmente por um código de
-/// barras (GTIN/EAN).
+/// O que se usa em casa: "Arroz branco", "Café". Estoque, lista e "ter
+/// sempre" ficam no produto; marca, tamanho e código de barras ficam em cada
+/// uma das suas embalagens (ADR 0013).
 @immutable
 final class Product {
   const Product({
@@ -11,20 +12,15 @@ final class Product {
     required this.unit,
     required this.createdAt,
     required this.updatedAt,
-    this.barcode,
-    this.brand,
-    this.packageSize,
     this.photoPath,
   });
 
   final String id;
   final String name;
-  final String? barcode;
-  final String? brand;
 
-  /// Unidade em que [packageSize] é expresso (ex.: 395 g, 1 L, 12 un).
+  /// Unidade em que o produto se mede (kg para o arroz, un para ovos): a
+  /// sugerida para as embalagens novas e a do total em casa.
   final MeasureUnit unit;
-  final double? packageSize;
 
   /// Foto do produto guardada no aparelho, relativa à pasta de fotos do app.
   /// Sem foto, a interface mostra o ícone da categoria.
@@ -32,47 +28,27 @@ final class Product {
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  /// Descrição curta da embalagem, como `395 g` ou `1,5 L`.
-  String? get packageLabel {
-    final size = packageSize;
-    if (size == null) return null;
-    final formatted = size == size.truncateToDouble()
-        ? size.toStringAsFixed(0)
-        : size.toString().replaceAll('.', ',');
-    return '$formatted ${unit.symbol}';
-  }
-
-  /// Linha de apoio para listas: marca e embalagem, quando conhecidas.
-  String? get subtitle {
-    final parts = [?brand, ?packageLabel];
-    return parts.isEmpty ? null : parts.join(' · ');
-  }
+  Product copyWith({String? name, MeasureUnit? unit, String? photoPath, DateTime? updatedAt}) => Product(
+    id: id,
+    name: name ?? this.name,
+    unit: unit ?? this.unit,
+    photoPath: photoPath ?? this.photoPath,
+    createdAt: createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
 
   @override
   bool operator ==(Object other) =>
       other is Product &&
       other.id == id &&
       other.name == name &&
-      other.barcode == barcode &&
-      other.brand == brand &&
       other.unit == unit &&
-      other.packageSize == packageSize &&
       other.photoPath == photoPath &&
       other.createdAt == createdAt &&
       other.updatedAt == updatedAt;
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    name,
-    barcode,
-    brand,
-    unit,
-    packageSize,
-    photoPath,
-    createdAt,
-    updatedAt,
-  );
+  int get hashCode => Object.hash(id, name, unit, photoPath, createdAt, updatedAt);
 
   @override
   String toString() => 'Product($id, $name)';

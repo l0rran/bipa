@@ -17,12 +17,17 @@ final class PriceObservation {
     required this.source,
     required this.observedAt,
     required this.createdAt,
+    this.packageId,
     this.regularPrice,
     this.condition = const AnyCustomer(),
   });
 
   final String id;
   final String productId;
+
+  /// A embalagem que tinha esse preço (ADR 0013); nula para produto sem
+  /// embalagem, como os a granel.
+  final String? packageId;
   final String marketId;
 
   /// Preço efetivamente cobrado.
@@ -47,6 +52,7 @@ final class PriceObservation {
       other is PriceObservation &&
       other.id == id &&
       other.productId == productId &&
+      other.packageId == packageId &&
       other.marketId == marketId &&
       other.price == price &&
       other.regularPrice == regularPrice &&
@@ -59,6 +65,7 @@ final class PriceObservation {
   int get hashCode => Object.hash(
     id,
     productId,
+    packageId,
     marketId,
     price,
     regularPrice,

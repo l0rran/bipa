@@ -5,6 +5,7 @@ import 'package:bipa/features/prices/domain/price_tag.dart';
 import 'package:bipa/features/prices/domain/register_price_observation.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/fakes.dart';
@@ -28,15 +29,19 @@ void main() {
   });
 
   Product existingProduct({String? barcode}) {
-    final product = Product(
-      id: 'leite',
-      name: 'Leite',
-      barcode: barcode,
-      unit: MeasureUnit.liter,
-      createdAt: now,
-      updatedAt: now,
-    );
+    final product = Product(id: 'leite', name: 'Leite', unit: MeasureUnit.liter, createdAt: now, updatedAt: now);
     products.products[product.id] = product;
+    if (barcode != null) {
+      products.packages['leite-1l'] = ProductPackage(
+        id: 'leite-1l',
+        productId: 'leite',
+        barcode: barcode,
+        size: 1,
+        unit: MeasureUnit.liter,
+        createdAt: now,
+        updatedAt: now,
+      );
+    }
     return product;
   }
 
@@ -71,7 +76,24 @@ void main() {
     );
 
     expect(observation.productId, 'leite');
+    expect(observation.packageId, 'leite-1l');
     expect(products.products, hasLength(1));
+  });
+
+  test('o preço de um produto pelo id leva a embalagem do código, se for dele', () async {
+    existingProduct(barcode: '7891910000197');
+
+    final observation = await register(
+      const RegisterPriceInput(
+        marketId: 'mercado',
+        productId: 'leite',
+        barcode: '7891910000197',
+        price: Money.cents(549),
+        source: PriceSource.priceTag,
+      ),
+    );
+
+    expect(observation.packageId, 'leite-1l');
   });
 
   test('cadastra o produto quando o código ainda não existe', () async {
@@ -87,7 +109,8 @@ void main() {
 
     final created = products.products[observation.productId]!;
     expect(created.name, 'Leite condensado');
-    expect(created.barcode, '7891000100103');
+    final package = products.packages[observation.packageId]!;
+    expect((package.productId, package.barcode), (created.id, '7891000100103'));
   });
 
   test('guarda o preço normal apenas se for maior que o pago', () async {

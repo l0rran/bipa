@@ -21,6 +21,7 @@ final class DriftPriceRepository implements PriceRepository {
   static PriceObservationsCompanion _toCompanion(PriceObservation observation) => PriceObservationsCompanion.insert(
     id: observation.id,
     productId: observation.productId,
+    packageId: Value(observation.packageId),
     marketId: observation.marketId,
     priceCents: observation.price.cents,
     regularPriceCents: Value(observation.regularPrice?.cents),
@@ -73,6 +74,7 @@ extension PriceObservationRowMapper on PriceObservationRow {
     return PriceObservation(
       id: id,
       productId: productId,
+      packageId: packageId,
       marketId: marketId,
       price: Money.cents(priceCents),
       regularPrice: regular == null ? null : Money.cents(regular),
