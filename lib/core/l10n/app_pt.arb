@@ -1231,5 +1231,23 @@
   "stockItemMore": "Mais do item",
   "@stockItemMore": {
     "description": "Botão \"⋯\" no editor da linha do Início: abre a folha com o local, \"Tirar de casa\" e \"Ver produto\"."
+  },
+  "stockBelowTarget": "{name} ficou abaixo do \"ter sempre\"",
+  "@stockBelowTarget": {
+    "description": "Ao fechar o editor da linha, quando o stepper deixou o item abaixo do \"ter sempre\" e ele não está na lista. A ação é \"Pôr na lista\".",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "stockBackToTarget": "{name} voltou ao \"ter sempre\"",
+  "@stockBackToTarget": {
+    "description": "Ao fechar o editor da linha, quando o stepper levou o item de volta ao \"ter sempre\" e ele está na lista. A ação é \"Tirar da lista\".",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

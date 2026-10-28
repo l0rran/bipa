@@ -57,6 +57,10 @@ class _HomePageState extends ConsumerState<HomePage> {
   /// Só uma linha fica aberta por vez.
   String? _expandedProductId;
 
+  /// Se a linha aberta estava abaixo do "ter sempre" ao abrir: ao fechar,
+  /// cruzar a linha num sentido ou no outro oferece mexer na lista (AB1).
+  var _openedLow = false;
+
   /// As linhas que acabaram de receber "Usei um" e ficam em "Em casa"
   /// enquanto o aviso está na tela (AB3).
   final _settling = <String>{};
@@ -71,6 +75,40 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   /// O stepper da linha aberta: corrige o estoque. Não mexe na lista nem
   /// avisa: o botão do lado oposto já desfaz.
+  /// Abre ou fecha o editor da linha. Ao fechar uma linha cujo stepper
+  /// cruzou o "ter sempre", oferece pôr na lista ou tirar dela: o stepper é
+  /// correção e não mexe na lista sozinho (ADR 0019).
+  void _toggleExpanded(StockEntry entry, List<StockEntry> entries, Set<String> onList) {
+    final closingId = _expandedProductId;
+    final closingWasLow = _openedLow;
+    setState(() {
+      final id = entry.product.id;
+      _expandedProductId = closingId == id ? null : id;
+      _openedLow = entry.item.isLow;
+    });
+    final closing = entries.where((e) => e.product.id == closingId).firstOrNull;
+    if (closing == null || closing.item.isLow == closingWasLow) return;
+    final listed = onList.contains(closing.product.id);
+    final l10n = AppLocalizations.of(context);
+    final (message, action) = switch ((closing.item.isLow, listed)) {
+      (true, false) => (l10n.stockBelowTarget(closing.product.name), l10n.listAddToList),
+      (false, true) => (l10n.stockBackToTarget(closing.product.name), l10n.listRemoveFromList),
+      _ => (null, null),
+    };
+    if (message == null || action == null) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          action: SnackBarAction(
+            label: action,
+            onPressed: () => unawaited(_toggleList(closing.product, onList: listed, notify: true)),
+          ),
+        ),
+      );
+  }
+
   Future<void> _adjust(Product product, double delta) async {
     await ref
         .read(stockRepositoryProvider)
@@ -307,10 +345,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                             onList: onList.contains(entry.product.id),
                             onToggleList: () =>
                                 _toggleList(entry.product, onList: onList.contains(entry.product.id), notify: true),
-                            onTap: () => setState(() {
-                              final id = entry.product.id;
-                              _expandedProductId = _expandedProductId == id ? null : id;
-                            }),
+                            onTap: () => _toggleExpanded(entry, visible, onList),
                             onAdjust: (delta) => _adjust(entry.product, delta),
                             onUsed: () => _used(entry.product),
                           ),
