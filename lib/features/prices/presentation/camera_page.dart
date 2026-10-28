@@ -522,7 +522,12 @@ class _CameraPageState extends ConsumerState<CameraPage> {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final record = ref.read(recordAtHomeProvider);
+    final stock = ref.read(stockRepositoryProvider);
     final HomeChange? change;
+    // O local só é dito quando o item nasce neste bipe (AB9): é a hora em que
+    // a sugestão pode estar errada e a pessoa ainda lembra do que bipou.
+    final wasNew = bought && await stock.findByProduct(product.id) == null;
+    if (!mounted) return;
     try {
       change = bought
           ? await record.bought(product, packageId: package?.id)
@@ -546,13 +551,17 @@ class _CameraPageState extends ConsumerState<CameraPage> {
       return;
     }
     final applied = change.stock.applied;
-    final atHome = (await ref.read(stockRepositoryProvider).findByProduct(product.id))?.quantity ?? 0;
+    final item = await stock.findByProduct(product.id);
     if (!mounted) return;
+    final atHome = item?.quantity ?? 0;
+    final placed = wasNew ? item?.location : null;
     final amount = Formatters.quantity(applied.abs());
     final notice = (
       icon: applied > 0 ? Icons.add_rounded : Icons.remove_rounded,
       value: applied > 0 ? l10n.cameraDeltaUp(amount) : l10n.cameraDeltaDown(amount),
-      detail: l10n.cameraAtHome(product.name, Formatters.quantity(atHome)),
+      detail: placed == null
+          ? l10n.cameraAtHome(product.name, Formatters.quantity(atHome))
+          : l10n.cameraAtHomePlaced(product.name, Formatters.quantity(atHome), placed.name),
       waiting: false,
     );
     if (change.list is ListUnchanged) {
