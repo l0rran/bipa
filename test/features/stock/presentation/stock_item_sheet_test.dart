@@ -6,6 +6,7 @@ import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
+import 'package:bipa/features/stock/data/drift_stock_repository.dart';
 import 'package:bipa/features/stock/domain/stock_location.dart';
 import 'package:bipa/features/stock/presentation/stock_item_sheet.dart';
 import 'package:bipa/features/stock/presentation/stock_providers.dart';
@@ -14,6 +15,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/failing_stock_repository.dart';
 import '../../../helpers/fakes.dart';
 import '../../../helpers/test_database.dart';
 
@@ -23,13 +25,18 @@ Product _product(String id, String name) =>
     Product(id: id, name: name, unit: MeasureUnit.unit, createdAt: _now, updatedAt: _now);
 
 /// Abre a folha do item de [product] como o app abre, por cima de uma tela.
-Future<ProviderContainer> _openSheet(WidgetTester tester, Product product) async {
+Future<ProviderContainer> _openSheet(WidgetTester tester, Product product, {bool failingWrites = false}) async {
   final AppDatabase db = createTestDatabase();
   final container = ProviderContainer(
     overrides: [
       appDatabaseProvider.overrideWithValue(db),
       clockProvider.overrideWithValue(() => _now),
       idGeneratorProvider.overrideWithValue(SequentialIdGenerator()),
+      // As leituras seguem no banco; só as escritas falham.
+      if (failingWrites)
+        stockRepositoryProvider.overrideWithValue(
+          FailingStockRepository(DriftStockRepository(db, ids: SequentialIdGenerator(), clock: () => _now)),
+        ),
     ],
   );
   addTearDown(() async {
@@ -103,6 +110,38 @@ void main() {
       expect(_selectedLocation(tester), StockLocation.fridge);
       final item = await tester.runAsync(() => container.read(stockRepositoryProvider).findByProduct('leite'));
       expect(item?.location, StockLocation.fridge);
+    });
+  });
+
+  group('falhas do banco avisam (H11)', () {
+    const failed = 'Não deu para atualizar o estoque. Tente de novo.';
+
+    testWidgets('o stepper de "Em casa" mostra o aviso', (tester) async {
+      await _openSheet(tester, _product('leite', 'Leite integral 1 L'), failingWrites: true);
+      await tester.tap(find.bySemanticsLabel('Uma embalagem a mais'));
+      await _settle(tester);
+      expect(find.text(failed), findsOneWidget);
+    });
+
+    testWidgets('o stepper do "ter sempre" mostra o aviso', (tester) async {
+      await _openSheet(tester, _product('leite', 'Leite integral 1 L'), failingWrites: true);
+      await tester.tap(find.bySemanticsLabel('Ter sempre mais'));
+      await _settle(tester);
+      expect(find.text(failed), findsOneWidget);
+    });
+
+    testWidgets('trocar o local mostra o aviso', (tester) async {
+      await _openSheet(tester, _product('leite', 'Leite integral 1 L'), failingWrites: true);
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Despensa'));
+      await _settle(tester);
+      expect(find.text(failed), findsOneWidget);
+    });
+
+    testWidgets('sem falha, nenhum aviso aparece', (tester) async {
+      await _openSheet(tester, _product('leite', 'Leite integral 1 L'));
+      await tester.tap(find.bySemanticsLabel('Uma embalagem a mais'));
+      await _settle(tester);
+      expect(find.text(failed), findsNothing);
     });
   });
 }

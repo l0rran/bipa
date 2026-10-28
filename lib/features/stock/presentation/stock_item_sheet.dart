@@ -39,20 +39,38 @@ class StockItemSheet extends ConsumerWidget {
   final Product product;
   final bool fromProduct;
 
-  Future<void> _adjust(WidgetRef ref, double delta) async {
-    await ref
+  /// Executa uma mudança no estoque e, se o banco falhar, avisa como a tela
+  /// do produto (H11): sem isso o número não muda e nada diz por quê.
+  Future<void> _guard(BuildContext context, Future<void> Function() change) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final message = AppLocalizations.of(context).stockAdjustFailed;
+    try {
+      await change();
+    } on Exception {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
+  Future<void> _adjust(BuildContext context, WidgetRef ref, double delta) => _guard(
+    context,
+    () => ref
         .read(stockRepositoryProvider)
         .adjust(
           productId: product.id,
           delta: delta,
           reason: delta > 0 ? StockMovementReason.purchase : StockMovementReason.consumption,
-        );
-  }
+        ),
+  );
 
   /// "Ter sempre": − até 1 e depois some (sem alerta); + a partir do nada
   /// começa em 1.
-  Future<void> _setTarget(WidgetRef ref, double? target) =>
-      ref.read(stockRepositoryProvider).setTargetQuantity(product.id, target);
+  Future<void> _setTarget(BuildContext context, WidgetRef ref, double? target) =>
+      _guard(context, () => ref.read(stockRepositoryProvider).setTargetQuantity(product.id, target));
+
+  Future<void> _setLocation(BuildContext context, WidgetRef ref, StockLocation location) =>
+      _guard(context, () => ref.read(stockRepositoryProvider).setLocation(product.id, location));
 
   Future<void> _toggleList(WidgetRef ref, {required bool onList}) => onList
       ? ref.read(shoppingListRepositoryProvider).removeProduct(product.id)
@@ -117,8 +135,8 @@ class StockItemSheet extends ConsumerWidget {
                 decrementLabel: l10n.stockOneLess,
                 incrementLabel: l10n.stockOneMore,
                 highlighted: item.isLow,
-                onIncrement: () => _adjust(ref, 1),
-                onDecrement: item.isOut ? null : () => _adjust(ref, -1),
+                onIncrement: () => _adjust(context, ref, 1),
+                onDecrement: item.isOut ? null : () => _adjust(context, ref, -1),
               ),
             ),
             const SizedBox(height: BipaSpacing.s3),
@@ -133,8 +151,8 @@ class StockItemSheet extends ConsumerWidget {
                     : l10n.stockTargetSpoken(target, Formatters.quantity(target)),
                 decrementLabel: l10n.stockTargetLess,
                 incrementLabel: l10n.stockTargetMore,
-                onIncrement: () => _setTarget(ref, (target ?? 0) + 1),
-                onDecrement: target == null ? null : () => _setTarget(ref, target <= 1 ? null : target - 1),
+                onIncrement: () => _setTarget(context, ref, (target ?? 0) + 1),
+                onDecrement: target == null ? null : () => _setTarget(context, ref, target <= 1 ? null : target - 1),
               ),
             ),
             const SizedBox(height: BipaSpacing.s4),
@@ -154,7 +172,7 @@ class StockItemSheet extends ConsumerWidget {
                   ChoiceChip(
                     label: Text(location.localizedLabel(l10n)),
                     selected: item.location == location,
-                    onSelected: (_) => ref.read(stockRepositoryProvider).setLocation(product.id, location),
+                    onSelected: (_) => _setLocation(context, ref, location),
                   ),
               ],
             ),
