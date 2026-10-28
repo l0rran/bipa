@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
@@ -41,18 +43,23 @@ class ProductDetailPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final product = ref.watch(productProvider(productId));
+    // Depois do "Juntar com…", o produto some enquanto esta tela ainda sai de
+    // cena: ela fica em branco em vez de avisar que ele não existe.
+    final leaving = !(ModalRoute.of(context)?.isCurrent ?? true);
 
     // Material garante tema e tipografia durante o carregamento, antes do Scaffold.
     return Material(
       color: context.colors.ground,
       child: AsyncValueView(
         value: product,
-        data: (product) => product == null
-            ? Scaffold(
-                appBar: AppBar(),
-                body: const EmptyState(icon: Icons.search_off, message: 'Produto não encontrado.'),
-              )
-            : _ProductView(product: product),
+        data: (product) => switch (product) {
+          final product? => _ProductView(product: product),
+          null when leaving => const SizedBox.expand(),
+          null => Scaffold(
+            appBar: AppBar(),
+            body: EmptyState(icon: Icons.search_off, message: AppLocalizations.of(context).productNotFound),
+          ),
+        },
       ),
     );
   }
@@ -95,8 +102,10 @@ class _ProductView extends ConsumerWidget {
       ),
     );
     if (confirmed != true || !context.mounted) return;
+    // Abre o produto que fica antes de juntar: esta tela sai sem depender do
+    // contexto depois do await.
+    unawaited(context.pushReplacement(Routes.productDetail(into.id)));
     await repository.merge(fromId: product.id, intoId: into.id);
-    if (context.mounted) context.pushReplacement(Routes.productDetail(into.id));
   }
 
   Future<void> _toggleList(WidgetRef ref, {required bool onList}) {

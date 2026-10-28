@@ -129,11 +129,22 @@ class _ProductPickerSheetState extends ConsumerState<ProductPickerSheet> {
                       if (product.id != widget.excludeId) product,
                   ];
                   final exact = items.any((p) => foldText(p.name) == foldText(_query));
+                  final canCreate = widget.allowCreate && _query.isNotEmpty && !exact;
+                  if (snapshot.hasData && items.isEmpty && !canCreate) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: BipaSpacing.s6),
+                      child: Text(
+                        l10n.productPickNone,
+                        textAlign: TextAlign.center,
+                        style: BipaText.body.copyWith(color: colors.inkMuted),
+                      ),
+                    );
+                  }
                   return ListView(
                     shrinkWrap: true,
                     padding: const EdgeInsets.only(bottom: BipaSpacing.s4),
                     children: [
-                      if (widget.allowCreate && _query.isNotEmpty && !exact)
+                      if (canCreate)
                         ListTile(
                           leading: CircleAvatar(
                             backgroundColor: colors.brandSoft,

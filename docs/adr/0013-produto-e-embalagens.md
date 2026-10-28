@@ -25,6 +25,7 @@ Em casa, o arroz é um só: o que muda de uma compra para outra é a embalagem. 
 - **Código novo vira embalagem com um toque.** O app sugere o produto pelo nome lido na etiqueta ou pela categoria, procurando entre os produtos que já existem; sem nenhum, sugere um nome genérico da categoria ("Arroz"). Marca e tamanho vêm do nome da etiqueta, para conferir. Trocar o produto sugerido abre a lista de produtos, com a opção de criar outro.
 - **Migração (esquema 7).** Cada produto atual vira um produto e uma embalagem com o mesmo id. Preços, carrinho e estoque continuam valendo sem conversão. Os produtos que eram o mesmo em embalagens diferentes podem ser juntados depois, por um "Juntar com…" na tela do produto.
 - **Sincronização (ADR 0007).** Embalagens têm UUID gerado no aparelho e `syncedAt`, como os produtos. As observações de preço continuam imutáveis e ganham a referência da embalagem.
+- **A exceção do "Juntar com…".** Juntar dois produtos apaga um deles, e as observações de preço dele não podem apontar para um produto que não existe. Elas são a única mudança permitida numa observação: trocam o `productId` pelo do produto que fica e voltam para a fila de sincronização (`syncedAt` nulo). Preço, mercado, data e embalagem não mudam. No servidor, o mesmo "juntar" precisa ser um evento próprio, para que outros aparelhos refaçam a troca em vez de verem um conflito.
 
 ## Consequências
 

@@ -1,12 +1,21 @@
 import 'package:bipa/core/database/app_database.dart';
+import 'package:bipa/core/money/money.dart';
+import 'package:bipa/features/markets/data/drift_market_repository.dart';
+import 'package:bipa/features/markets/domain/market.dart';
+import 'package:bipa/features/prices/data/drift_price_repository.dart';
+import 'package:bipa/features/prices/domain/price_observation.dart';
+import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/products/data/drift_product_repository.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/product_repository.dart';
+import 'package:bipa/features/shopping_list/data/drift_cart_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_list_repository.dart';
+import 'package:bipa/features/shopping_list/data/drift_shopping_trip_repository.dart';
 import 'package:bipa/features/stock/data/drift_stock_repository.dart';
 import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
+import 'package:drift/drift.dart' hide isNull;
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/fakes.dart';
@@ -128,5 +137,42 @@ void main() {
     expect((await stock.findByProduct('arroz'))?.quantity, 3);
     expect((await stock.watchLots('arroz').first).map((lot) => lot.packageId), unorderedEquals(['tio-5', 'camil-10']));
     expect((await list.watchAll().first).map((e) => e.item.productId), ['arroz']);
+  });
+
+  test('juntar soma as linhas sem embalagem do carrinho, mantém a lista marcada e ressincroniza os preços', () async {
+    await repository.save(product('tio', 'Arroz Tio João'));
+    await repository.save(product('arroz', 'Arroz branco'));
+    await DriftMarketRepository(db).save(Market(id: 'm', name: 'Central', createdAt: now, updatedAt: now));
+    await DriftPriceRepository(db).add(
+      PriceObservation(
+        id: 'preco',
+        productId: 'tio',
+        marketId: 'm',
+        price: const Money.cents(2790),
+        source: PriceSource.priceTag,
+        observedAt: now,
+        createdAt: now,
+      ),
+    );
+    await db.update(db.priceObservations).write(PriceObservationsCompanion(syncedAt: Value(now)));
+    final ids = SequentialIdGenerator();
+    final trip = await DriftShoppingTripRepository(db, ids: ids, clock: () => now).start();
+    final cart = DriftCartRepository(db, ids: ids, clock: () => now);
+    await cart.addProduct(trip.id, 'tio');
+    await cart.addProduct(trip.id, 'arroz');
+    await cart.addProduct(trip.id, 'arroz');
+    final list = DriftShoppingListRepository(db, ids: ids, clock: () => now);
+    await list.addProduct(productId: 'tio', name: 'Arroz Tio João');
+    await list.addProduct(productId: 'arroz', name: 'Arroz branco');
+    await list.checkProduct('tio');
+
+    await repository.merge(fromId: 'tio', intoId: 'arroz');
+
+    final items = await cart.watchTrip(trip.id).first;
+    expect(items.map((e) => (e.item.productId, e.item.quantity)), [('arroz', 3)]);
+    expect((await list.watchAll().first).single.item.isChecked, isTrue);
+    final observation = await db.select(db.priceObservations).getSingle();
+    expect(observation.productId, 'arroz');
+    expect(observation.syncedAt, isNull);
   });
 }

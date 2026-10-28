@@ -331,6 +331,7 @@
   "packageSaveFailed": "Não deu para salvar a embalagem.",
   "productPickTitle": "De que produto é?",
   "productPickSearch": "Buscar ou criar",
+  "productPickNone": "Nenhum produto com esse nome.",
   "productPickCreate": "Criar \u201c{name}\u201d",
   "@productPickCreate": {
     "placeholders": {

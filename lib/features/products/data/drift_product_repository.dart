@@ -109,16 +109,49 @@ final class DriftProductRepository implements ProductRepository {
         variables: [Variable.withString(intoId), Variable.withDateTime(now), Variable.withString(fromId)],
         updates: {_db.productPackages},
       );
-      for (final table in <TableInfo<Table, Object?>>[
-        _db.priceObservations,
-        _db.cartItems,
-        _db.stockMovements,
-        _db.stockLots,
-      ]) {
+      // As observações de preço são imutáveis (ADR 0007), mas o produto delas
+      // deixou de existir: mudam de produto e voltam para a fila de
+      // sincronização, a exceção registrada no ADR 0013.
+      await _db.customUpdate(
+        'UPDATE price_observations SET product_id = ?, synced_at = NULL WHERE product_id = ?',
+        variables: [Variable.withString(intoId), Variable.withString(fromId)],
+        updates: {_db.priceObservations},
+      );
+
+      // No carrinho, linhas sem embalagem dos dois produtos na mesma compra
+      // viram uma só, somando as quantidades.
+      final sameTripWithoutPackage =
+          'FROM cart_items other WHERE other.trip_id = cart_items.trip_id '
+          'AND other.product_id = ? AND other.package_id IS NULL';
+      await _db.customUpdate(
+        'UPDATE cart_items SET '
+        'quantity = quantity + (SELECT SUM(other.quantity) $sameTripWithoutPackage), '
+        'price_cents = COALESCE(price_cents, (SELECT MAX(other.price_cents) $sameTripWithoutPackage)) '
+        'WHERE product_id = ? AND package_id IS NULL AND EXISTS (SELECT 1 $sameTripWithoutPackage)',
+        variables: [for (final id in [fromId, fromId, intoId, fromId]) Variable.withString(id)],
+        updates: {_db.cartItems},
+      );
+      await _db.customUpdate(
+        'DELETE FROM cart_items WHERE product_id = ? AND package_id IS NULL '
+        'AND EXISTS (SELECT 1 $sameTripWithoutPackage)',
+        variables: [Variable.withString(fromId), Variable.withString(intoId)],
+        updates: {_db.cartItems},
+        updateKind: UpdateKind.delete,
+      );
+
+      for (final table in <TableInfo<Table, Object?>>[_db.cartItems, _db.stockMovements, _db.stockLots]) {
         await move(table);
       }
 
-      // Na lista, o item que já existe no destino fica; o outro sai.
+      // Na lista, o item que já existe no destino fica, marcado se um dos
+      // dois estava; o outro sai.
+      await _db.customUpdate(
+        'UPDATE shopping_list_items SET checked_at = '
+        '(SELECT MAX(other.checked_at) FROM shopping_list_items other WHERE other.product_id IN (?, ?)) '
+        'WHERE product_id = ? AND checked_at IS NULL',
+        variables: [Variable.withString(fromId), Variable.withString(intoId), Variable.withString(intoId)],
+        updates: {_db.shoppingListItems},
+      );
       await _db.customUpdate(
         'DELETE FROM shopping_list_items WHERE product_id = ? '
         'AND EXISTS (SELECT 1 FROM shopping_list_items WHERE product_id = ?)',
