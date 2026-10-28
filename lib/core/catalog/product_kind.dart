@@ -22,6 +22,7 @@ enum ProductKind {
   oils(Aisle.grocery),
   meat(Aisle.meat),
   fish(Aisle.meat),
+  shelfStable(Aisle.grocery),
   produce(Aisle.produce),
   frozen(Aisle.frozen),
   laundry(Aisle.cleaning),
@@ -49,25 +50,55 @@ enum ProductKind {
 }
 
 // A ordem importa: tipos mais específicos vêm antes ("leite condensado" é doce,
-// não laticínio; "água sanitária" é limpeza, não bebida).
+// não laticínio; "água sanitária" é limpeza, não bebida; "lasanha congelada"
+// é congelado, não massa; "leite longa vida" é de prateleira, não laticínio).
 const _keywords = <(List<String>, ProductKind)>[
-  (['leite condensado', 'creme de leite', 'doce de leite', 'chocolate', 'biscoito', 'bolacha'], ProductKind.sweets),
+  (
+    [
+      'leite condensado',
+      'creme de leite',
+      'doce de leite',
+      'chocolate',
+      'achocolatado',
+      'ovomaltine',
+      'nescau',
+      'biscoito',
+      'bolacha',
+    ],
+    ProductKind.sweets,
+  ),
+  (['congelad', 'sorvete', 'hamburguer', 'nuggets'], ProductKind.frozen),
+  (['cerveja', 'vinho', 'refrigerante', 'suco', 'agua mineral', 'agua com gas', 'agua sem gas'], ProductKind.drinks),
   (['cafe'], ProductKind.coffee),
   (['cha ', 'erva mate'], ProductKind.tea),
+  (
+    [
+      'longa vida',
+      'uht',
+      'caixinha',
+      'lata',
+      'enlatad',
+      'conserva',
+      'leite em po',
+      'leite de coco',
+      'atum',
+      'sardinha',
+    ],
+    ProductKind.shelfStable,
+  ),
   (['leite', 'iogurte', 'queijo', 'manteiga', 'requeijao', 'margarina'], ProductKind.dairy),
-  (['ovo'], ProductKind.eggs),
+  // "ovo " e "ovos", não "ovo": "ovomaltine" não é ovo.
+  (['ovo ', 'ovos'], ProductKind.eggs),
   (['pao', 'torrada', 'bisnaguinha'], ProductKind.bakery),
   (['arroz', 'feijao', 'lentilha', 'grao', 'milho', 'aveia'], ProductKind.grains),
   (['macarrao', 'massa', 'espaguete', 'lasanha'], ProductKind.pasta),
   (['farinha', 'acucar', 'sal ', 'fuba'], ProductKind.baking),
   (['oleo', 'azeite', 'vinagre'], ProductKind.oils),
   (['carne', 'frango', 'linguica', 'salsicha', 'bacon', 'presunto'], ProductKind.meat),
-  (['peixe', 'atum', 'sardinha'], ProductKind.fish),
+  (['peixe'], ProductKind.fish),
   (['banana', 'maca', 'laranja', 'tomate', 'batata', 'cebola', 'alface', 'fruta', 'legume'], ProductKind.produce),
-  (['sorvete'], ProductKind.frozen),
   (['sabao', 'amaciante', 'lava roupa'], ProductKind.laundry),
   (['detergente', 'desinfetante', 'agua sanitaria', 'limpador', 'esponja'], ProductKind.cleaning),
   (['papel higienico', 'sabonete', 'shampoo', 'creme dental', 'pasta de dente', 'desodorante'], ProductKind.hygiene),
   (['racao'], ProductKind.pet),
-  (['cerveja', 'vinho', 'refrigerante', 'suco', 'agua mineral', 'agua com gas', 'agua sem gas'], ProductKind.drinks),
 ];

@@ -20,6 +20,7 @@ extension ProductKindIcon on ProductKind {
     ProductKind.oils => Icons.water_drop_outlined,
     ProductKind.meat => Icons.kebab_dining_outlined,
     ProductKind.fish => Icons.set_meal_outlined,
+    ProductKind.shelfStable => Icons.shelves,
     ProductKind.produce => Icons.eco_outlined,
     ProductKind.frozen => Icons.icecream_outlined,
     ProductKind.laundry => Icons.local_laundry_service_outlined,

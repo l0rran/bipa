@@ -110,13 +110,23 @@ class _HomePageState extends ConsumerState<HomePage> {
   /// O stepper da linha aberta: corrige o estoque. Não mexe na lista nem
   /// avisa: o botão do lado oposto já desfaz.
   Future<void> _adjust(Product product, double delta) async {
-    await ref
-        .read(stockRepositoryProvider)
-        .adjust(
-          productId: product.id,
-          delta: delta,
-          reason: delta > 0 ? StockMovementReason.purchase : StockMovementReason.consumption,
-        );
+    final messenger = ScaffoldMessenger.of(context);
+    final message = AppLocalizations.of(context).stockAdjustFailed;
+    try {
+      await ref
+          .read(stockRepositoryProvider)
+          .adjust(
+            productId: product.id,
+            delta: delta,
+            reason: delta > 0 ? StockMovementReason.purchase : StockMovementReason.consumption,
+          );
+    } on Exception {
+      // Como na tela do produto (H11): sem o aviso, o número não muda e nada
+      // diz por quê.
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(message)));
+    }
   }
 
   /// Deslizar "Usei um": como o modo "Usei" da câmera, o que ficou abaixo do
