@@ -26,6 +26,7 @@ import 'package:bipa/features/prices/presentation/prices_providers.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/presentation/measure_unit_label.dart';
+import 'package:bipa/features/products/presentation/package_edit_sheet.dart';
 import 'package:bipa/features/products/presentation/product_photos.dart';
 import 'package:bipa/features/products/presentation/product_picker_sheet.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
@@ -96,25 +97,37 @@ class _ProductView extends ConsumerWidget {
   /// abrir a câmera, em vez de cair na mais recente sem dizer (G3). Uma
   /// etiqueta com o código de outra embalagem troca para ela na câmera.
   Future<void> _registerPrice(BuildContext context, List<ProductPackage> packages) async {
-    final l10n = AppLocalizations.of(context);
-    final package = packages.length < 2
-        ? packages.firstOrNull
-        : await showScanMenu<ProductPackage>(
-            context,
-            items: [
-              for (final package in packages)
-                (
-                  value: package,
-                  icon: Icons.inventory_2_outlined,
-                  label: package.label ?? package.barcode ?? l10n.packageTitle,
-                  hint: null,
-                ),
-            ],
-            closeLabel: l10n.cancel,
-          );
+    final package = await _choosePackage(context, packages);
     if (packages.length > 1 && package == null) return;
     if (!context.mounted) return;
     await context.push(Routes.cameraPriceFor(product.id, packageId: package?.id));
+  }
+
+  /// "Editar embalagem": a marca, o tamanho e a unidade de uma embalagem, sem
+  /// passar pelo "Editar produto", que muda só o produto (G1).
+  Future<void> _editPackage(BuildContext context, List<ProductPackage> packages) async {
+    final package = await _choosePackage(context, packages);
+    if (package == null || !context.mounted) return;
+    await showPackageEditSheet(context, package);
+  }
+
+  /// Com mais de uma embalagem, pergunta qual; com uma, é ela.
+  static Future<ProductPackage?> _choosePackage(BuildContext context, List<ProductPackage> packages) async {
+    if (packages.length < 2) return packages.firstOrNull;
+    final l10n = AppLocalizations.of(context);
+    return showScanMenu<ProductPackage>(
+      context,
+      items: [
+        for (final package in packages)
+          (
+            value: package,
+            icon: Icons.inventory_2_outlined,
+            label: package.label ?? package.barcode ?? l10n.packageTitle,
+            hint: null,
+          ),
+      ],
+      closeLabel: l10n.cancel,
+    );
   }
 
   /// "Juntar com…": escolhe o outro produto, confirma e abre o que ficou.
@@ -240,6 +253,11 @@ class _ProductView extends ConsumerWidget {
                         value: () => _registerPrice(context, packages),
                         child: Text(l10n.productRegisterPrice),
                       ),
+                      if (packages.isNotEmpty)
+                        PopupMenuItem(
+                          value: () => _editPackage(context, packages),
+                          child: Text(l10n.productEditPackage),
+                        ),
                       PopupMenuItem(value: () => _merge(context, ref), child: Text(l10n.productMerge)),
                       PopupMenuItem(value: () => _delete(context, ref), child: Text(l10n.productDelete)),
                     ],

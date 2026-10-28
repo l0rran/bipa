@@ -26,9 +26,10 @@ class ProductFormArgs {
 
 /// Cadastro e edição de produto. Ao salvar, devolve o [Product] via `pop`.
 ///
-/// Marca, código e tamanho são da embalagem (ADR 0013): o formulário edita a
-/// embalagem mais recente do produto, ou cria uma quando algum deles é
-/// preenchido.
+/// Marca, código e tamanho são da embalagem (ADR 0013): no cadastro, criam
+/// a primeira embalagem quando algum deles é preenchido. Na edição, o
+/// formulário muda só o nome e a unidade do produto; cada embalagem tem a
+/// própria edição, na tela do produto (G1).
 class ProductFormPage extends ConsumerStatefulWidget {
   const ProductFormPage({this.productId, this.args = const ProductFormArgs(), super.key});
 
@@ -48,7 +49,6 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
   final _packageSize = TextEditingController();
   var _unit = MeasureUnit.unit;
   Product? _original;
-  ProductPackage? _originalPackage;
   var _loading = false;
   var _saving = false;
 
@@ -79,21 +79,13 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
   Future<void> _load(String id) async {
     final repository = ref.read(productRepositoryProvider);
     final product = await repository.findById(id);
-    final package = product == null ? null : (await repository.watchPackages(id).first).firstOrNull;
     if (!mounted) return;
     setState(() {
       _loading = false;
       if (product == null) return;
       _original = product;
-      _originalPackage = package;
       _name.text = product.name;
-      _brand.text = package?.brand ?? '';
-      _barcode.text = package?.barcode ?? '';
-      _unit = package?.unit ?? product.unit;
-      final size = package?.size;
-      _packageSize.text = size == null
-          ? ''
-          : (size == size.truncateToDouble() ? size.toStringAsFixed(0) : '$size'.replaceAll('.', ','));
+      _unit = product.unit;
     });
   }
 
@@ -122,26 +114,26 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
     final brand = _nullIfBlank(_brand.text);
     final barcode = _nullIfBlank(_barcode.text);
     final size = _parseSize(_packageSize.text);
-    final originalPackage = _originalPackage;
-    final package = originalPackage == null && brand == null && barcode == null && size == null
+    // Só o cadastro cria a embalagem; a edição não mexe em nenhuma.
+    final package = _isEditing || (brand == null && barcode == null && size == null)
         ? null
         : ProductPackage(
-            id: originalPackage?.id ?? ids.newId(),
+            id: ids.newId(),
             productId: product.id,
             brand: brand,
             barcode: barcode,
             size: size,
             unit: _unit,
-            createdAt: originalPackage?.createdAt ?? now,
+            createdAt: now,
             updatedAt: now,
           );
 
     try {
       // O código é conferido antes de gravar o produto: um código repetido
       // não deixa um produto sem embalagem para trás.
-      if (barcode != null) {
+      if (package != null && barcode != null) {
         final owner = await repository.findPackageByBarcode(barcode);
-        if (owner != null && owner.id != package?.id) {
+        if (owner != null) {
           final ownerProduct = await repository.findById(owner.productId);
           throw DuplicateBarcodeException(barcode: barcode, productName: ownerProduct?.name ?? barcode);
         }
@@ -184,51 +176,55 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                     decoration: InputDecoration(labelText: l10n.formNameRequired),
                     validator: (value) => (value == null || value.trim().isEmpty) ? l10n.productNameMissing : null,
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _brand,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: InputDecoration(labelText: l10n.packageBrand),
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _barcode,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: l10n.barcodeLabel,
-                      suffixIcon: IconButton(
-                        tooltip: l10n.barcodeScan,
-                        icon: const Icon(Icons.qr_code_scanner),
-                        onPressed: _scanBarcode,
-                      ),
+                  if (!_isEditing) ...[
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _brand,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: InputDecoration(labelText: l10n.packageBrand),
                     ),
-                    validator: (value) {
-                      final code = value?.trim() ?? '';
-                      if (ScaleLabel.isScaleCode(code)) return l10n.barcodeScale;
-                      return code.isEmpty || Gtin.isValid(code) ? null : l10n.barcodeInvalid;
-                    },
-                  ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _barcode,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: l10n.barcodeLabel,
+                        suffixIcon: IconButton(
+                          tooltip: l10n.barcodeScan,
+                          icon: const Icon(Icons.qr_code_scanner),
+                          onPressed: _scanBarcode,
+                        ),
+                      ),
+                      validator: (value) {
+                        final code = value?.trim() ?? '';
+                        if (ScaleLabel.isScaleCode(code)) return l10n.barcodeScale;
+                        return code.isEmpty || Gtin.isValid(code) ? null : l10n.barcodeInvalid;
+                      },
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _packageSize,
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          decoration: InputDecoration(
-                            labelText: l10n.productPackageSize,
-                            helperText: l10n.productPackageSizeHint,
+                      if (!_isEditing) ...[
+                        Expanded(
+                          child: TextFormField(
+                            controller: _packageSize,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            decoration: InputDecoration(
+                              labelText: l10n.productPackageSize,
+                              helperText: l10n.productPackageSizeHint,
+                            ),
+                            validator: (value) {
+                              final text = value?.trim() ?? '';
+                              if (text.isEmpty) return null;
+                              final size = _parseSize(text);
+                              return size == null || size <= 0 ? l10n.formInvalidValue : null;
+                            },
                           ),
-                          validator: (value) {
-                            final text = value?.trim() ?? '';
-                            if (text.isEmpty) return null;
-                            final size = _parseSize(text);
-                            return size == null || size <= 0 ? l10n.formInvalidValue : null;
-                          },
                         ),
-                      ),
-                      const SizedBox(width: 12),
+                        const SizedBox(width: 12),
+                      ],
                       Expanded(
                         child: DropdownMenu<MeasureUnit>(
                           initialSelection: _unit,

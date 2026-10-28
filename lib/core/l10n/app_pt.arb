@@ -1361,5 +1361,13 @@
   "stockTargetNoneSpoken": "ter sempre: não definido",
   "@stockTargetNoneSpoken": {
     "description": "Leitor de tela do stepper do \"ter sempre\" sem valor."
+  },
+  "productEditPackage": "Editar embalagem",
+  "@productEditPackage": {
+    "description": "Item do menu da tela do produto: edita a marca, o tamanho e a unidade de uma embalagem."
+  },
+  "packageEditTitle": "Editar embalagem",
+  "@packageEditTitle": {
+    "description": "Título da folha de edição de uma embalagem."
   }
 }
