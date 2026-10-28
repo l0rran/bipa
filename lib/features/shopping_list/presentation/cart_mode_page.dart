@@ -61,8 +61,7 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
   PendingTagPrice? _pending;
 
   /// Produtos com o preço firmado nesta compra (lido ao vivo, digitado ou
-  /// fotografado):
-  /// uma etiqueta sem código lida depois não os sobrescreve.
+  /// fotografado): uma etiqueta sem código lida depois não os sobrescreve.
   final _settledProducts = <String>{};
 
   /// Preços de etiqueta já guardados no histórico, para não repetir a
