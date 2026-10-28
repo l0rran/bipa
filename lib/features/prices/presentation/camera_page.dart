@@ -174,7 +174,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
     );
     if (choice == null || !mounted) return;
     final product = switch (choice) {
-      ExistingProduct(:final product) => product,
+      ExistingProduct(product: final chosen) => chosen,
       NewProduct(:final name) => await createProduct(name),
     };
     await _confirm(product, null, read);

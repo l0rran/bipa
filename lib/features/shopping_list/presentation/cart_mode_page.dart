@@ -180,7 +180,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     try {
       if (trip.marketId == null) await trips.setMarket(trip.id, marketId);
       final product = switch (choice) {
-        ExistingProduct(:final product) => product,
+        ExistingProduct(product: final chosen) => chosen,
         NewProduct(:final name) => await createProduct(name),
       };
       await register(
