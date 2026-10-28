@@ -11,7 +11,8 @@
 - [ ] Textos em ARB (`flutter gen-l10n`): ligado, com a Casa; falta migrar as telas antigas
 - [ ] Redesenhar as telas conforme o protótipo: barra com botão de bipar, câmera direto, folha "Bipou!"
 - [x] Casa nova: busca com bipar, locais como categorias, prateleira de Acabando e lista com medidor de nível
-- [ ] Casa: prévia da lista e carrossel de insights (dependem da lista de compras e da previsão de consumo)
+- [x] Casa: prévia da lista
+- [ ] Casa: carrossel de insights (depende da previsão de consumo)
 - [ ] Modo compra: barra fixa acima da navegação com progresso e total, em todas as abas
 - [x] Trocar "mínimo" por "ter sempre" (`StockItem.targetQuantity`, acabando abaixo dele)
 - [ ] Fotos dos produtos (ADR 0010): miniatura com ícone da categoria pronta e `photoPath` no banco; falta tirar a foto ao bipar e buscar no Open Food Facts
@@ -25,7 +26,10 @@
 - [ ] Importar cupom fiscal (QR Code da NFC-e) com fila offline: registra os preços e abastece o estoque, e serve de onboarding
 - [ ] Modos do bipar: "Preço" no mercado, "Comprei" e "Usei" em casa (bipar a embalagem vazia dá baixa e põe na lista)
 - [ ] Desfazer em toda ação que muda o estoque; cada item bipado é salvo na hora
-- [ ] Lista de compras, alimentada pelo que está acabando, com os itens de sempre sugeridos pelo ritmo de consumo
+- [x] Lista de compras: itens de produto ou escritos à mão, os itens de sempre (os com "ter sempre"), seções do mercado, preço esperado e total estimado; "Pôr na lista" na Casa
+- [ ] Modo compra: "Ir às compras" na prévia, barra da compra acima da navegação e notificação ao vivo
+- [ ] Ordem dos corredores aprendida por mercado, a partir da ordem em que a pessoa bipa e marca
+- [ ] Itens de sempre pelo ritmo de consumo (hoje são os produtos com "ter sempre")
 - [ ] Fechar o ciclo: o que é bipado em "Comprei" sai da lista e entra no estoque
 - [ ] Sugestão de onde comprar a lista mais barata, comparando a lista inteira e mostrando a idade de cada preço
 - [ ] Lista a partir de foto de lista de papel e por voz ("acabou o café"); widget de adicionar rápido
