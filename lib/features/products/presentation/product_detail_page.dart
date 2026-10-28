@@ -1,34 +1,40 @@
+import 'package:bipa/core/design_system/bipa_metrics.dart';
+import 'package:bipa/core/design_system/bipa_theme.dart';
+import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/price_rows.dart';
+import 'package:bipa/core/design_system/components/price_tag.dart';
+import 'package:bipa/core/design_system/components/product_category_icon.dart';
+import 'package:bipa/core/design_system/components/product_thumb.dart';
+import 'package:bipa/core/design_system/components/quantity_stepper.dart';
+import 'package:bipa/core/design_system/components/section_header.dart';
+import 'package:bipa/core/di/core_providers.dart';
 import 'package:bipa/core/formatting/formatters.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
 import 'package:bipa/core/widgets/empty_state.dart';
-import 'package:bipa/core/widgets/messages.dart';
-import 'package:bipa/features/prices/domain/price_comparison.dart';
-import 'package:bipa/features/prices/domain/price_observation.dart';
-import 'package:bipa/features/prices/presentation/price_condition_label.dart';
+import 'package:bipa/features/prices/domain/package_prices.dart';
 import 'package:bipa/features/prices/presentation/prices_providers.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
+import 'package:bipa/features/products/presentation/product_photos.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
+import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
+import 'package:bipa/features/stock/domain/stock_item.dart';
 import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
+import 'package:bipa/features/stock/presentation/stock_item_sheet.dart';
 import 'package:bipa/features/stock/presentation/stock_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// Detalhes do produto e comparação de preços entre mercados.
+/// Tela do produto (protótipo "Produto com embalagens", ADR 0013): o melhor
+/// preço por kg, as embalagens com o preço de cada uma, o melhor preço em
+/// cada mercado e quanto há em casa.
 class ProductDetailPage extends ConsumerWidget {
   const ProductDetailPage({required this.productId, super.key});
 
   final String productId;
-
-  Future<void> _addToStock(BuildContext context, WidgetRef ref, Product product) async {
-    await ref
-        .read(stockRepositoryProvider)
-        .adjust(productId: product.id, delta: 1, reason: StockMovementReason.purchase);
-    if (context.mounted) context.showMessage('${product.name} adicionado ao estoque.');
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -36,6 +42,7 @@ class ProductDetailPage extends ConsumerWidget {
 
     // Material garante tema e tipografia durante o carregamento, antes do Scaffold.
     return Material(
+      color: context.colors.ground,
       child: AsyncValueView(
         value: product,
         data: (product) => product == null
@@ -43,197 +50,262 @@ class ProductDetailPage extends ConsumerWidget {
                 appBar: AppBar(),
                 body: const EmptyState(icon: Icons.search_off, message: 'Produto não encontrado.'),
               )
-            : _buildDetail(context, ref, product),
-      ),
-    );
-  }
-
-  Widget _buildDetail(BuildContext context, WidgetRef ref, Product product) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(product.name),
-        actions: [
-          IconButton(
-            tooltip: 'Editar',
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: () => context.push(Routes.editProduct(product.id)),
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _ProductInfo(packages: ref.watch(productPackagesProvider(product.id)).value ?? const []),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: () => context.push(Routes.capturePriceFor(product.id)),
-                  icon: const Icon(Icons.sell_outlined),
-                  label: const Text('Registrar preço'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => _addToStock(context, ref, product),
-                  icon: const Icon(Icons.add_home_outlined),
-                  label: const Text('Tenho em casa'),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          _PriceSection(product: product),
-        ],
+            : _ProductView(product: product),
       ),
     );
   }
 }
 
-/// As embalagens do produto: marca e tamanho, com o código ao lado.
-class _ProductInfo extends StatelessWidget {
-  const _ProductInfo({required this.packages});
+/// Uma linha de "Embalagens": a embalagem e o preço mais recente dela.
+typedef _PackageRow = ({ProductPackage package, PackagePrice? price});
 
-  final List<ProductPackage> packages;
-
-  @override
-  Widget build(BuildContext context) {
-    final details = [
-      for (final package in packages)
-        if (package.label != null || package.barcode != null)
-          (package.label ?? 'Embalagem', package.barcode ?? ''),
-    ];
-    if (details.isEmpty) return const SizedBox.shrink();
-
-    final theme = Theme.of(context);
-    return Card.outlined(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (final (label, value) in details)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
-                    Text(value, style: theme.textTheme.bodyLarge),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PriceSection extends ConsumerWidget {
-  const _PriceSection({required this.product});
+class _ProductView extends ConsumerWidget {
+  const _ProductView({required this.product});
 
   final Product product;
 
+  Future<void> _adjust(WidgetRef ref, double delta) => ref
+      .read(stockRepositoryProvider)
+      .adjust(
+        productId: product.id,
+        delta: delta,
+        reason: delta > 0 ? StockMovementReason.purchase : StockMovementReason.consumption,
+      );
+
+  Future<void> _toggleList(WidgetRef ref, {required bool onList}) {
+    final list = ref.read(shoppingListRepositoryProvider);
+    return onList ? list.removeProduct(product.id) : list.addProduct(productId: product.id, name: product.name);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final history = ref.watch(priceHistoryProvider(product.id));
-    final packages = {
-      for (final package in ref.watch(productPackagesProvider(product.id)).value ?? const <ProductPackage>[])
-        package.id: package,
-    };
-    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final colors = context.colors;
+    final packages = ref.watch(productPackagesProvider(product.id)).value ?? const <ProductPackage>[];
+    final history = ref.watch(priceHistoryProvider(product.id)).value ?? const [];
+    final stock = ref.watch(stockProvider).value?.where((e) => e.item.productId == product.id).firstOrNull;
+    final onList = ref.watch(productsOnListProvider).contains(product.id);
+    final photos = ref.watch(productPhotosDirectoryProvider).value;
+    final now = ref.watch(clockProvider)();
 
-    return AsyncValueView(
-      value: history,
-      data: (entries) {
-        if (entries.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.only(top: 32),
-            child: EmptyState(
-              icon: Icons.sell_outlined,
-              message: 'Nenhum preço registrado ainda.\nFotografe a etiqueta no mercado.',
+    final perPackage = latestPricePerPackage(history, packages);
+    final perMarket = bestPricePerMarket(history, packages);
+    final priced = {for (final price in perPackage) price.package?.id};
+    // As embalagens com preço, da mais barata por kg, e depois as sem preço.
+    final packageRows = <_PackageRow>[
+      for (final price in perPackage)
+        if (price.package case final package?) (package: package, price: price),
+      for (final package in packages)
+        if (!priced.contains(package.id)) (package: package, price: null),
+    ];
+    final best = perPackage.firstOrNull;
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    final roundButton = IconButton.styleFrom(
+      backgroundColor: colors.surface,
+      foregroundColor: colors.ink,
+      fixedSize: const Size.square(48),
+    );
+
+    return Scaffold(
+      backgroundColor: colors.ground,
+      body: Stack(
+        children: [
+          ListView(
+            padding: EdgeInsets.fromLTRB(
+              BipaSpacing.s4,
+              MediaQuery.paddingOf(context).top + BipaSpacing.s4,
+              BipaSpacing.s4,
+              bottom + 96,
             ),
-          );
-        }
-
-        final latest = latestPricePerMarket(entries);
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text('Último preço em cada mercado', style: theme.textTheme.titleMedium),
-            const SizedBox(height: 8),
-            for (final (index, entry) in latest.indexed)
-              _PriceTile(
-                entry: entry,
-                package: packages[entry.observation.packageId],
-                isCheapest: index == 0 && latest.length > 1,
+            children: [
+              Row(
+                children: [
+                  IconButton.filled(
+                    tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                    style: roundButton,
+                    onPressed: () => context.pop(),
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+                  ),
+                  const Spacer(),
+                  PopupMenuButton<VoidCallback>(
+                    tooltip: l10n.productMoreOptions,
+                    style: roundButton,
+                    icon: const Icon(Icons.more_horiz_rounded),
+                    onSelected: (action) => action(),
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: () => context.push(Routes.editProduct(product.id)),
+                        child: Text(l10n.productEdit),
+                      ),
+                      PopupMenuItem(
+                        value: () => context.push(Routes.capturePriceFor(product.id)),
+                        child: Text(l10n.productRegisterPrice),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            const SizedBox(height: 24),
-            Text('Histórico', style: theme.textTheme.titleMedium),
-            const SizedBox(height: 8),
-            for (final entry in entries)
-              _PriceTile(entry: entry, package: packages[entry.observation.packageId], dense: true),
-          ],
-        );
-      },
+              const SizedBox(height: BipaSpacing.s4),
+              Center(
+                child: ProductThumb(
+                  fallbackIcon: productCategoryIcon(product.name),
+                  photo: productPhotoFile(product, photos),
+                  size: 132,
+                  radius: BipaSpacing.s8,
+                ),
+              ),
+              const SizedBox(height: BipaSpacing.s3),
+              Text(
+                product.name,
+                textAlign: TextAlign.center,
+                style: BipaText.headline.copyWith(fontSize: 24, color: colors.ink),
+              ),
+              if (best != null) ...[
+                const SizedBox(height: BipaSpacing.s3),
+                Center(child: _BestPrice(best: best)),
+              ],
+              if (packageRows.isNotEmpty) ...[
+                const SizedBox(height: BipaSpacing.s6),
+                SectionHeader(title: l10n.productPackages, count: packages.length),
+                const SizedBox(height: BipaSpacing.s2),
+                PriceRowList(
+                  rows: [
+                    for (final (index, row) in packageRows.indexed)
+                      PriceRowData(
+                        icon: Icons.inventory_2_outlined,
+                        title: row.package.label ?? row.package.barcode ?? l10n.packageTitle,
+                        meta: row.price?.unitPrice?.format(),
+                        value: row.price?.price.format() ?? '—',
+                        badge: _cheapestPerUnit(l10n, row.price, isFirst: index == 0 && perPackage.length > 1),
+                      ),
+                  ],
+                ),
+              ],
+              const SizedBox(height: BipaSpacing.s6),
+              if (perMarket.isEmpty)
+                Text(
+                  l10n.productNoPrices,
+                  textAlign: TextAlign.center,
+                  style: BipaText.body.copyWith(color: colors.inkMuted),
+                )
+              else ...[
+                SectionHeader(title: l10n.productMarkets, count: perMarket.length),
+                const SizedBox(height: BipaSpacing.s2),
+                PriceRowList(
+                  rows: [
+                    for (final (index, price) in perMarket.indexed)
+                      PriceRowData(
+                        icon: Icons.storefront_outlined,
+                        title: price.entry.marketName,
+                        meta: l10n.priceAge(_ageInDays(now, price)),
+                        metaIcon: Icons.schedule_rounded,
+                        metaAlert: _ageInDays(now, price) > 30,
+                        value: price.unitPrice?.format() ?? price.price.format(),
+                        badge: index == 0 && perMarket.length > 1 ? l10n.productCheapest : null,
+                      ),
+                  ],
+                ),
+              ],
+              const SizedBox(height: BipaSpacing.s6),
+              SectionHeader(title: l10n.productAtHome),
+              const SizedBox(height: BipaSpacing.s2),
+              _AtHomeCard(
+                stock: stock,
+                onIncrement: () => _adjust(ref, 1),
+                onDecrement: (stock?.item.quantity ?? 0) > 0 ? () => _adjust(ref, -1) : null,
+              ),
+            ],
+          ),
+          Positioned(
+            left: BipaSpacing.s4,
+            right: BipaSpacing.s4,
+            bottom: bottom + BipaSpacing.s4,
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: colors.ink,
+                foregroundColor: colors.surface,
+                minimumSize: const Size.fromHeight(56),
+              ),
+              onPressed: () => _toggleList(ref, onList: onList),
+              icon: Icon(onList ? Icons.playlist_remove_rounded : Icons.playlist_add_rounded),
+              label: Text(onList ? l10n.listRemoveFromList : l10n.listAddToList),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static int _ageInDays(DateTime now, PackagePrice price) => now.difference(price.entry.observation.observedAt).inDays;
+
+  /// "menor por kg", só para a primeira de várias, quando ela tem tamanho.
+  static String? _cheapestPerUnit(AppLocalizations l10n, PackagePrice? price, {required bool isFirst}) {
+    final unitPrice = price?.unitPrice;
+    return isFirst && unitPrice != null ? l10n.productCheapestPerUnit(unitPrice.unit.symbol) : null;
+  }
+}
+
+/// A etiqueta do melhor preço: por kg, quando a embalagem tem tamanho.
+class _BestPrice extends StatelessWidget {
+  const _BestPrice({required this.best});
+
+  final PackagePrice best;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final unitPrice = best.unitPrice;
+    final label = best.package?.label;
+    if (unitPrice == null) return PriceTagHero(value: best.price.formatDecimal(), unitLine: label);
+    return PriceTagHero(
+      value: unitPrice.price.formatDecimal(),
+      unitLine: l10n.productBestUnitPrice(unitPrice.unit.symbol, label ?? ''),
     );
   }
 }
 
-class _PriceTile extends StatelessWidget {
-  const _PriceTile({
-    required this.entry,
-    this.package,
-    this.isCheapest = false,
-    this.dense = false,
-  });
+/// "Em casa": quanto há (o stepper) e o "ter sempre"; tocar abre os ajustes.
+class _AtHomeCard extends StatelessWidget {
+  const _AtHomeCard({required this.stock, required this.onIncrement, this.onDecrement});
 
-  final PriceHistoryEntry entry;
-
-  /// A embalagem do preço, para o preço por kg.
-  final ProductPackage? package;
-  final bool isCheapest;
-  final bool dense;
+  final StockEntry? stock;
+  final VoidCallback onIncrement;
+  final VoidCallback? onDecrement;
 
   @override
   Widget build(BuildContext context) {
-    final observation = entry.observation;
-    final unitPrice = package?.unitPrice(observation.price);
-    final colors = Theme.of(context).colorScheme;
-    final subtitle = [
-      Formatters.date(observation.observedAt),
-      ?package?.label,
-      ?observation.condition.label(AppLocalizations.of(context)),
-      observation.source.label,
-      ?unitPrice?.format(),
-    ].join(' · ');
-
-    return ListTile(
-      dense: dense,
-      contentPadding: EdgeInsets.zero,
-      title: Text(entry.marketName),
-      subtitle: Text(subtitle),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(
-            observation.price.format(),
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: isCheapest ? colors.primary : null,
-            ),
+    final l10n = AppLocalizations.of(context);
+    final colors = context.colors;
+    final stock = this.stock;
+    final target = stock?.item.targetQuantity;
+    return Material(
+      color: colors.surface,
+      borderRadius: BorderRadius.circular(BipaRadius.lg),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(BipaRadius.lg),
+        onTap: stock == null ? null : () => showStockItemSheet(context, stock),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(BipaSpacing.s4, BipaSpacing.s3, BipaSpacing.s3, BipaSpacing.s3),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  target == null ? l10n.stockSheetTarget : l10n.productTargetCount(Formatters.quantity(target)),
+                  style: BipaText.body.copyWith(color: colors.inkMuted),
+                ),
+              ),
+              QuantityStepper(
+                value: Formatters.quantity(stock?.item.quantity ?? 0),
+                unit: l10n.unitPackages,
+                decrementLabel: l10n.stockUsedOne,
+                incrementLabel: l10n.stockBoughtOne,
+                onIncrement: onIncrement,
+                onDecrement: onDecrement,
+                highlighted: stock?.item.isLow ?? false,
+              ),
+            ],
           ),
-          if (observation.regularPrice case final regular? when observation.isPromotion)
-            Text(
-              regular.format(),
-              style: const TextStyle(decoration: TextDecoration.lineThrough, fontSize: 12),
-            )
-          else if (isCheapest)
-            Text('Menor preço', style: TextStyle(color: colors.primary, fontSize: 12)),
-        ],
+        ),
       ),
     );
   }
