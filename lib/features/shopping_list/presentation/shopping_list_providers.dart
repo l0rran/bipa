@@ -187,10 +187,22 @@ final listAisleOrderProvider = StreamProvider.autoDispose<AisleOrder>((ref) {
   return marketId == null ? Stream.value(AisleOrder.empty) : ref.watch(aisleOrderRepositoryProvider).watch(marketId);
 });
 
+/// Os códigos da balança lembrados em cada mercado (ADR 0018).
+final scaleItemRepositoryProvider = Provider<ScaleItemRepository>(
+  (ref) => DriftScaleItemRepository(ref.watch(appDatabaseProvider)),
+);
+
+/// Os produtos que a balança do mercado da compra já conhece: a linha deles
+/// no carrinho troca o produto em vez da quantidade (D6).
+final weighedProductIdsProvider = StreamProvider.autoDispose<Set<String>>((ref) {
+  final marketId = ref.watch(activeTripProvider).value?.marketId;
+  return marketId == null ? Stream.value(const {}) : ref.watch(scaleItemRepositoryProvider).watchProductIdsIn(marketId);
+});
+
 /// As etiquetas da balança no carrinho (ADR 0018).
 final scaleItemsProvider = Provider<ScaleItems>(
   (ref) => ScaleItems(
-    scale: DriftScaleItemRepository(ref.watch(appDatabaseProvider)),
+    scale: ref.watch(scaleItemRepositoryProvider),
     products: ref.watch(productRepositoryProvider),
     cart: ref.watch(cartRepositoryProvider),
     createProduct: ref.watch(createProductByWeightProvider),

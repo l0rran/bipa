@@ -1258,5 +1258,23 @@
         "type": "int"
       }
     }
+  },
+  "cartSwapWeighed": "Trocar o produto de {name}",
+  "@cartSwapWeighed": {
+    "description": "Rótulo do toque no nome de uma pesagem na bandeja: troca o produto lembrado para o código da balança.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cartSwapWeighedTitle": "No lugar de {name}",
+  "@cartSwapWeighedTitle": {
+    "description": "Título da escolha do produto certo para uma pesagem lembrada errado.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

@@ -134,4 +134,7 @@ abstract interface class CartRepository {
   /// O mesmo, pelo produto: usado quando a pessoa marca ou desmarca o item
   /// na lista durante a compra. Não faz nada se ele não está no carrinho.
   Future<void> setTakeForProduct(String tripId, String productId, {required bool take});
+
+  /// Tira o item do carrinho (a pesagem passada para outro produto).
+  Future<void> remove(String itemId);
 }

@@ -452,6 +452,33 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     }
   }
 
+  /// Tocar no nome de uma pesagem: troca o produto que a balança lembra
+  /// para o código, e a linha vai para ele (D6). A quantidade de uma pesagem
+  /// é sempre uma.
+  Future<void> _swapWeighed(CartEntry entry) async {
+    final trip = ref.read(activeTripProvider).value;
+    if (trip == null) return;
+    final l10n = AppLocalizations.of(context);
+    final scale = ref.read(scaleItemsProvider);
+    final createProduct = ref.read(createProductByWeightProvider);
+    final matchList = ref.read(matchListToCartProvider);
+    final choice = await _withAnalysisPaused(
+      () => pickProduct(context, title: l10n.cartSwapWeighedTitle(entry.product.name)),
+    );
+    if (choice == null || !mounted) return;
+    try {
+      final product = switch (choice) {
+        ExistingProduct(product: final chosen) => chosen,
+        NewProduct(:final name) => await createProduct(name),
+      };
+      await scale.swapProduct(trip.id, trip.marketId, entry.item, product);
+      await matchList(trip.id, entry.product.id, CartListChange.removed);
+      await matchList(trip.id, product.id, CartListChange.added);
+    } on Exception catch (error, stack) {
+      _report(error, stack);
+    }
+  }
+
   /// Tocar no nome: quantas unidades vão. A lista acompanha ("2 de 3").
   Future<void> _setQuantity(CartEntry entry) async {
     final cart = ref.read(cartRepositoryProvider);
@@ -576,6 +603,8 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     final cart = ref.watch(activeCartProvider).value ?? const <CartEntry>[];
     final summary = ref.watch(shoppingTripSummaryProvider);
     final taken = ref.watch(takenInCartProvider);
+    final weighed = ref.watch(weighedProductIdsProvider).value ?? const <String>{};
+    bool isWeighed(CartEntry entry) => entry.item.packageId == null && weighed.contains(entry.product.id);
     // Com duas embalagens do mesmo produto, "2 de 3" em cada linha confunde.
     final rows = <String, int>{};
     for (final entry in cart) {
@@ -671,8 +700,9 @@ class _CartModePageState extends ConsumerState<CartModePage> {
                   final price? when entry.item.priceEstimated => l10n.cartPriceEstimated(price.format()),
                   _ => null,
                 },
-                onNameTap: () => _setQuantity(entry),
-                nameTapLabel: l10n.cartQuantityOf(entry.name),
+                // A pesagem troca o produto; as outras linhas, a quantidade.
+                onNameTap: isWeighed(entry) ? () => _swapWeighed(entry) : () => _setQuantity(entry),
+                nameTapLabel: isWeighed(entry) ? l10n.cartSwapWeighed(entry.name) : l10n.cartQuantityOf(entry.name),
                 justRead: entry.item.key == _justReadKey,
                 take: entry.item.take,
                 takeLabel: l10n.cartTake(entry.name),

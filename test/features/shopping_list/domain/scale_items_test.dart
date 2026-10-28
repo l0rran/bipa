@@ -74,4 +74,18 @@ void main() {
     final entry = (await cart.watchTrip(trip.id).first).single.item;
     expect((entry.quantity, entry.price, entry.priceEstimated), (1, const Money.cents(843), false));
   });
+
+  test('trocar o produto de uma pesagem regrava o código e leva a linha para o novo', () async {
+    final trip = await trips.start(marketId: 'vila');
+    final nanica = await scale.remember('vila', tomate, newName: 'Banana nanica');
+    await scale.addToCart(trip.id, nanica, tomate);
+    final prata = await scale.remember(null, tomate, newName: 'Banana prata');
+
+    final line = (await cart.watchTrip(trip.id).first).single.item;
+    await scale.swapProduct(trip.id, 'vila', line, prata);
+
+    expect((await scale.productFor('vila', outroSaco))?.id, prata.id);
+    final entry = (await cart.watchTrip(trip.id).first).single.item;
+    expect((entry.productId, entry.price), (prata.id, const Money.cents(843)));
+  });
 }

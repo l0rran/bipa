@@ -15,6 +15,20 @@ final class DriftScaleItemRepository implements ScaleItemRepository {
     return row?.productId;
   }
 
+  @override
+  Future<List<String>> keysFor(String marketId, String productId) async {
+    final rows = await (_db.select(
+      _db.scaleItems,
+    )..where((t) => t.marketId.equals(marketId) & t.productId.equals(productId))).get();
+    return [for (final row in rows) row.itemKey];
+  }
+
+  @override
+  Stream<Set<String>> watchProductIdsIn(String marketId) =>
+      (_db.select(_db.scaleItems)..where((t) => t.marketId.equals(marketId))).watch().map(
+        (rows) => {for (final row in rows) row.productId},
+      );
+
   /// Escolher outro produto para o mesmo código troca o lembrado.
   @override
   Future<void> remember(String marketId, String itemKey, String productId) async {

@@ -113,6 +113,11 @@ final class DriftCartRepository implements CartRepository {
   Future<void> setTake(String itemId, {required bool take}) => _write(itemId, CartItemsCompanion(take: Value(take)));
 
   @override
+  Future<void> remove(String itemId) async {
+    await (_db.delete(_db.cartItems)..where((t) => t.id.equals(itemId))).go();
+  }
+
+  @override
   Future<void> setTakeForProduct(String tripId, String productId, {required bool take}) async {
     await (_db.update(_db.cartItems)..where((t) => t.tripId.equals(tripId) & t.productId.equals(productId))).write(
       CartItemsCompanion(take: Value(take)),

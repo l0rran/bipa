@@ -10,6 +10,12 @@ abstract interface class ScaleItemRepository {
   Future<String?> productIdFor(String marketId, String itemKey);
 
   Future<void> remember(String marketId, String itemKey, String productId);
+
+  /// Os códigos lembrados para o produto no mercado.
+  Future<List<String>> keysFor(String marketId, String productId);
+
+  /// Os produtos com algum código lembrado no mercado.
+  Stream<Set<String>> watchProductIdsIn(String marketId);
 }
 
 /// Caso de uso: a etiqueta da balança no modo carrinho (ADR 0018). O código
@@ -68,5 +74,37 @@ final class ScaleItems {
     await _cart.setPrice(existing.id, previous + label.total);
     if (existing.quantity != 1) await _cart.setQuantity(existing.id, 1);
     if (!existing.take) await _cart.setTake(existing.id, take: true);
+  }
+
+  /// Troca o produto de uma pesagem lembrado errado ("Banana nanica" no lugar
+  /// de "Banana prata", D6): os códigos do produto antigo neste mercado
+  /// passam a ser do novo, e a linha do carrinho vai para ele. Se o novo já
+  /// tem uma linha de pesagens, o valor soma nela, como numa pesagem a mais.
+  Future<void> swapProduct(String tripId, String? marketId, CartItem item, Product to) async {
+    if (to.id == item.productId) return;
+    if (marketId != null) {
+      for (final key in await _scale.keysFor(marketId, item.productId)) {
+        await _scale.remember(marketId, key, to.id);
+      }
+    }
+    final cart = await _cart.watchTrip(tripId).first;
+    final existing = cart
+        .where((entry) => entry.item.productId == to.id && entry.item.packageId == null)
+        .firstOrNull
+        ?.item;
+    final price = item.price;
+    if (existing == null) {
+      await _cart.addProduct(tripId, to.id, price: price);
+      if (!item.take) {
+        final added = (await _cart.watchTrip(tripId).first)
+            .where((entry) => entry.item.productId == to.id && entry.item.packageId == null)
+            .first
+            .item;
+        await _cart.setTake(added.id, take: false);
+      }
+    } else if (price != null) {
+      await _cart.setPrice(existing.id, (existing.price ?? Money.zero) + price);
+    }
+    await _cart.remove(item.id);
   }
 }
