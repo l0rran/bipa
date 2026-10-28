@@ -27,6 +27,8 @@ final class MlKitPriceTagReader implements PriceTagReader {
             text: line.text,
             top: line.boundingBox.top,
             height: line.boundingBox.height,
+            left: line.boundingBox.left,
+            width: line.boundingBox.width,
           ),
     ];
     return _parser.parse(lines, barcodes: barcodes.map((b) => b.rawValue).nonNulls);

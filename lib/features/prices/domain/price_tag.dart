@@ -4,7 +4,7 @@ import 'package:meta/meta.dart';
 /// Linha de texto reconhecida por OCR em uma foto.
 @immutable
 final class OcrLine {
-  const OcrLine({required this.text, required this.top, required this.height});
+  const OcrLine({required this.text, required this.top, required this.height, this.left, this.width});
 
   final String text;
 
@@ -13,6 +13,18 @@ final class OcrLine {
 
   /// Altura da linha; em etiquetas, o preço principal costuma ter a maior fonte.
   final double height;
+
+  /// Posição horizontal, quando o OCR informa. Permite juntar os centavos
+  /// sobrescritos ao inteiro e saber a que preço um rótulo se refere.
+  final double? left;
+  final double? width;
+
+  double get bottom => top + height;
+
+  double? get right => switch ((left, width)) {
+    (final left?, final width?) => left + width,
+    _ => null,
+  };
 }
 
 /// Informações extraídas da foto de uma etiqueta de preço.

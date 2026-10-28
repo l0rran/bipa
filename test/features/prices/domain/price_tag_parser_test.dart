@@ -139,6 +139,72 @@ void main() {
     expect(reading.productNameHint, 'Feijao Carioca');
   });
 
+  test('preço seguido de KG ou UN continua sendo preço', () {
+    expect(parser.parse(tag([('TOMATE ITALIANO', 20), ('R\$ 8,99 KG', 70)])).price, const Money.cents(899));
+    expect(parser.parse(tag([('ACUCAR UNIAO 1KG', 20), ('R\$ 4,99 UN', 70)])).price, const Money.cents(499));
+  });
+
+  test('lê milhar e ignora o valor da parcela', () {
+    final reading = parser.parse(
+      tag([
+        ('GELADEIRA FROST FREE 375L', 20),
+        ('R\$ 1.299,90', 70),
+        ('OU 10X DE R\$ 129,99 SEM JUROS', 16),
+      ]),
+    );
+
+    expect(reading.price, const Money.cents(129990));
+    expect(reading.regularPrice, isNull);
+    expect(reading.candidates, [const Money.cents(129990)]);
+  });
+
+  test('junta dígitos que o OCR separou depois do R\$', () {
+    expect(parser.parse(tag([('R\$ 1 0,99', 70)])).price, const Money.cents(1099));
+  });
+
+  group('centavos sobrescritos lidos como linha à parte', () {
+    test('são juntados ao inteiro ao lado', () {
+      final reading = parser.parse(const [
+        OcrLine(text: 'CAFE PILAO 500G', top: 10, height: 30, left: 20, width: 400),
+        OcrLine(text: 'R\$ 18', top: 100, height: 120, left: 300, width: 200),
+        OcrLine(text: ',99', top: 104, height: 50, left: 506, width: 80),
+      ]);
+
+      expect(reading.price, const Money.cents(1899));
+    });
+
+    test('também sem a vírgula', () {
+      final reading = parser.parse(const [
+        OcrLine(text: '18', top: 100, height: 120, left: 300, width: 150),
+        OcrLine(text: '99', top: 100, height: 50, left: 455, width: 70),
+      ]);
+
+      expect(reading.price, const Money.cents(1899));
+    });
+
+    test('números longe um do outro não são juntados', () {
+      final reading = parser.parse(const [
+        OcrLine(text: 'R\$ 18', top: 100, height: 120, left: 300, width: 200),
+        OcrLine(text: '99', top: 300, height: 50, left: 506, width: 80),
+      ]);
+
+      expect(reading.price, isNull);
+    });
+  });
+
+  test('o nome ignora rótulos da etiqueta e lixo do OCR', () {
+    final reading = parser.parse(
+      tag([
+        ('LEVE 3 PAGUE 2', 30),
+        ('oooooooooooo', 20),
+        ('CAFE PILAO 500G', 20),
+        ('R\$ 18,99', 70),
+      ]),
+    );
+
+    expect(reading.productNameHint, 'Cafe Pilao 500g');
+  });
+
   test('etiqueta sem preço nem código é vazia', () {
     final reading = parser.parse(tag([('PAO FRANCES', 20)]));
 
