@@ -41,6 +41,7 @@ void main() {
 
     expect(reading.price, const Money.cents(2790));
     expect(reading.candidates, [const Money.cents(2790)]);
+    expect(reading.perKilo, isFalse);
   });
 
   test('usa o preço por quilo em produtos a granel', () {
@@ -52,6 +53,7 @@ void main() {
     );
 
     expect(reading.price, const Money.cents(3990));
+    expect(reading.perKilo, isTrue);
   });
 
   test('identifica promoção "de/por"', () {
@@ -141,9 +143,18 @@ void main() {
     expect(reading.productNameHint, 'Feijao Carioca');
   });
 
-  test('preço seguido de KG ou UN continua sendo preço', () {
-    expect(parser.parse(tag([('TOMATE ITALIANO', 20), ('R\$ 8,99 KG', 70)])).price, const Money.cents(899));
-    expect(parser.parse(tag([('ACUCAR UNIAO 1KG', 20), ('R\$ 4,99 UN', 70)])).price, const Money.cents(499));
+  test('preço seguido de KG ou UN continua sendo preço; com KG, é por quilo', () {
+    final kilo = parser.parse(tag([('TOMATE ITALIANO', 20), ('R\$ 8,99 KG', 70)]));
+    final unit = parser.parse(tag([('ACUCAR UNIAO 1KG', 20), ('R\$ 4,99 UN', 70)]));
+
+    expect((kilo.price, kilo.perKilo), (const Money.cents(899), true));
+    expect((unit.price, unit.perKilo), (const Money.cents(499), false));
+  });
+
+  test('o preço por litro não é por quilo', () {
+    final reading = parser.parse(tag([('AGUA MINERAL 5 L', 20), ('R\$ 1,20 /L', 60)]));
+
+    expect((reading.price, reading.perKilo), (const Money.cents(120), false));
   });
 
   test('lê milhar e ignora o valor da parcela', () {

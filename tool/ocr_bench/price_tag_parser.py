@@ -54,6 +54,9 @@ UNIT_PRICE = re.compile(
     r"|\bpor\s+(kg|litro|quilo)\b",
     AI,
 )
+# "kg" logo depois do valor ("8,99 KG", "39,90 /kg") e a linha do preço por quilo.
+PER_KILO_AFTER = re.compile(r"^\s?/?\s?(kg|quilo)\b", AI)
+PER_KILO_MARKER = re.compile(r"/\s?kg\b|\bp/\s?kg\b|\bpor\s+(kg|quilo)\b", AI)
 REGULAR = re.compile(r"\b(de|normal|antes|era)\b[\s:]*(r\$)?\s*$", AI)
 PROMO = re.compile(r"\b(por|oferta|promo[cçÇ][aãÃ]o)\b[\s:]*(r\$)?\s*$", AI)
 INSTALLMENT = re.compile(r"\b\d{1,2}\s?x\s?(de\s+)?(r\$)?\s*$", AI)
@@ -107,6 +110,7 @@ class Reading:
     name: str | None = None
     candidates: list[int] = field(default_factory=list)
     offers: list[Offer] = field(default_factory=list)
+    per_kilo: bool = False
 
 
 @dataclass
@@ -140,6 +144,7 @@ class Cand:
     loyalty: bool = False
     min_quantity: int | None = None
     source: "Line | None" = None
+    per_kilo: bool = False
 
 
 def normalize(text: str) -> str:
@@ -185,6 +190,7 @@ def find_prices(text: str, height: float, index: int, source: Line | None = None
         c = _to_cand(prefix, int(m.group(1).replace(".", "")), int(m.group(2)), height, index)
         if c:
             c.source = source
+            c.per_kilo = bool(PER_KILO_AFTER.search(suffix))
             out.append(c)
             n = _neighbor_without_separator(text, m.end(), c, height, index)
             if n:
@@ -354,11 +360,19 @@ def parse(lines, barcodes=()):
                     c.min_quantity = c.min_quantity or lab["min_quantity"]
                 if lab["loyalty"]:
                     c.loyalty = True
-        (unit if UNIT_PRICE.search(texts[i]) else cands).extend(found)
+        is_unit = bool(UNIT_PRICE.search(texts[i]))
+        if is_unit and PER_KILO_MARKER.search(texts[i]):
+            # Na linha do preço por quilo, todo valor é por quilo.
+            for c in found:
+                c.per_kilo = True
+        (unit if is_unit else cands).extend(found)
 
     pool = cands or unit
     offers = [] if _unlabeled_multi_price(pool) else _offers(pool)
     main = offers[0] if offers else None
+    per_kilo = main is not None and any(
+        c.per_kilo and c.cents == main.price and condition_of(c) == main.condition for c in pool
+    )
     seen = []
     for c in pool:
         if c.cents not in seen:
@@ -370,6 +384,7 @@ def parse(lines, barcodes=()):
         name=_name(ordered),  # como no Dart, com as datas
         candidates=seen,
         offers=offers,
+        per_kilo=per_kilo,
     )
 
 

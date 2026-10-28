@@ -64,6 +64,15 @@ final class PriceTagParser {
     caseSensitive: false,
   );
 
+  /// "kg" logo depois do valor: "8,99 KG", "39,90 /kg".
+  static final _perKiloAfter = RegExp(r'^\s?/?\s?(kg|quilo)\b', caseSensitive: false);
+
+  /// A linha inteira fala do preço por quilo: "PREÇO POR KG", "R$ 5,58/kg".
+  static final _perKiloMarker = RegExp(
+    r'/\s?kg\b|\bp/\s?kg\b|\bpor\s+(kg|quilo)\b',
+    caseSensitive: false,
+  );
+
   static final _regularMarker = RegExp(
     r'\b(de|normal|antes|era)\b[\s:]*(r\$)?\s*$',
     caseSensitive: false,
@@ -137,14 +146,22 @@ final class PriceTagParser {
     final candidates = <_Candidate>[];
     final unitPriceCandidates = <_Candidate>[];
     for (final i in priceLines) {
-      final target = _unitPriceMarker.hasMatch(texts[i]) ? unitPriceCandidates : candidates;
-      target.addAll(_findPrices(texts[i], ordered[i].height, labels[i] ?? _Labels.none, ordered[i]));
+      final isUnitPrice = _unitPriceMarker.hasMatch(texts[i]);
+      final found = _findPrices(texts[i], ordered[i].height, labels[i] ?? _Labels.none, ordered[i]);
+      // Na linha do preço por quilo, todo valor é por quilo.
+      final perKiloLine = isUnitPrice && _perKiloMarker.hasMatch(texts[i]);
+      (isUnitPrice ? unitPriceCandidates : candidates).addAll([
+        for (final candidate in found) perKiloLine ? candidate.asPerKilo() : candidate,
+      ]);
     }
 
     // Produtos a granel só têm preço por quilo: nesse caso ele é o preço.
     final pool = candidates.isNotEmpty ? candidates : unitPriceCandidates;
     final offers = _isUnlabeledMultiPrice(pool) ? const <PriceOffer>[] : _offers(pool);
     final main = offers.firstOrNull;
+    final perKilo =
+        main != null &&
+        pool.any((c) => c.perKilo && c.money == main.price && c.condition == main.condition);
 
     return PriceTagReading(
       price: main?.price,
@@ -153,6 +170,7 @@ final class PriceTagParser {
       productNameHint: _productNameHint(ordered),
       candidates: {for (final candidate in pool) candidate.money}.toList(growable: false),
       offers: offers,
+      perKilo: perKilo,
     );
   }
 
@@ -349,7 +367,7 @@ final class PriceTagParser {
       final candidate = _toCandidate(prefix, match, height, labels, line);
       if (candidate == null) continue;
       foundDecimal = true;
-      yield candidate;
+      yield _perKiloAfter.hasMatch(text.substring(match.end)) ? candidate.asPerKilo() : candidate;
 
       final neighbor = _neighborWithoutSeparator(text, match.end, candidate, height, labels, line);
       if (neighbor != null) yield neighbor;
@@ -493,7 +511,7 @@ final class PriceTagParser {
 enum _Role { neutral, promotional, regular }
 
 final class _Candidate {
-  const _Candidate(this.money, this.height, this.role, this.condition, this.line);
+  const _Candidate(this.money, this.height, this.role, this.condition, this.line, {this.perKilo = false});
 
   final Money money;
   final double height;
@@ -502,6 +520,11 @@ final class _Candidate {
 
   /// Linha de onde o valor saiu, para saber se dois preços estão lado a lado.
   final OcrLine? line;
+
+  /// O valor é por quilo ("8,99 KG").
+  final bool perKilo;
+
+  _Candidate asPerKilo() => _Candidate(money, height, role, condition, line, perKilo: true);
 }
 
 /// O que os rótulos em linhas próprias dizem sobre um preço.

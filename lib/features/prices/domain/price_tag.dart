@@ -60,6 +60,7 @@ final class PriceTagReading {
     this.productNameHint,
     this.candidates = const [],
     this.offers = const [],
+    this.perKilo = false,
   });
 
   static const empty = PriceTagReading();
@@ -80,6 +81,10 @@ final class PriceTagReading {
 
   /// Um preço por condição (varejo, cartão, atacado), o principal primeiro.
   final List<PriceOffer> offers;
+
+  /// O preço principal é por quilo ("R$ 8,99 KG", "R$ 39,90 /KG"): o
+  /// produto é vendido a granel, e quanto custa depende do peso (ADR 0018).
+  final bool perKilo;
 
   bool get isEmpty => price == null && barcode == null;
 }
