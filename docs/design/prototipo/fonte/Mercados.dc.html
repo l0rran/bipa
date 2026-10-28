@@ -35,6 +35,7 @@ a{color:#1C1B22}a:hover{color:#B00E28}
 .pin svg{transform:rotate(45deg);width:18px;height:18px}
 .pin.is-here{background:var(--place);color:var(--on-place)}
 .pin.is-best::after{content:"";position:absolute;inset:-5px;border-radius:inherit;box-shadow:0 0 0 3px var(--positive-text)}
+.cmp-note{font:500 12px/16px var(--font-body);color:var(--ink-muted)}
 .me{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:var(--place);box-shadow:0 0 0 5px rgba(52,80,122,.25),0 0 0 2px var(--surface) inset}
 
 </style>
@@ -57,9 +58,9 @@ a{color:#1C1B22}a:hover{color:#B00E28}
     <section class="section">
       <div class="bipa-section-head"><h2>Sua lista em cada mercado</h2></div>
       <div class="bipa-compare">
-        <div class="bipa-compare__row is-best"><div class="bipa-compare__top"><span>Atacarejo Vila Nova</span><strong>R$ 84,30</strong></div><div class="bipa-compare__bar"><i style="--p: 86"></i></div></div>
-        <div class="bipa-compare__row"><div class="bipa-compare__top"><span>Mercado do Bairro</span><strong>R$ 91,70</strong></div><div class="bipa-compare__bar"><i style="--p: 94"></i></div></div>
-        <div class="bipa-compare__row"><div class="bipa-compare__top"><span>Supermercado Central</span><strong>R$ 97,80</strong></div><div class="bipa-compare__bar"><i style="--p: 100"></i></div></div>
+        <div class="bipa-compare__row is-best"><div class="bipa-compare__top"><span>Atacarejo Vila Nova</span><strong>R$ 84,30</strong></div><div class="bipa-compare__bar"><i style="--p: 86"></i></div><span class="cmp-note">preços de até 3 dias</span></div>
+        <div class="bipa-compare__row"><div class="bipa-compare__top"><span>Mercado do Bairro</span><strong>R$ 91,70</strong></div><div class="bipa-compare__bar"><i style="--p: 94"></i></div><span class="cmp-note">preços de até 5 dias</span></div>
+        <div class="bipa-compare__row"><div class="bipa-compare__top"><span>Supermercado Central</span><strong>R$ 97,80</strong></div><div class="bipa-compare__bar"><i style="--p: 100"></i></div><span class="cmp-note">preços de até 41 dias · sem preço de 1 item</span></div>
       </div>
     </section>
 
