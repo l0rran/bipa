@@ -1,6 +1,7 @@
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/shrink_to_fit.dart';
 import 'package:flutter/material.dart';
 
 /// Uma linha da comparação: o mercado, o total e o tamanho da barra.
@@ -76,28 +77,34 @@ class _CompareRow extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Expanded(
-                child: Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(text: row.name),
-                      if (best != null)
-                        TextSpan(
-                          text: ' · $best',
-                          style: TextStyle(color: colors.positiveText, fontWeight: FontWeight.w700),
-                        ),
-                    ],
+          LayoutBuilder(
+            builder: (context, constraints) => Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Expanded(
+                  child: Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(text: row.name),
+                        if (best != null)
+                          TextSpan(
+                            text: ' · $best',
+                            style: TextStyle(color: colors.positiveText, fontWeight: FontWeight.w700),
+                          ),
+                      ],
+                    ),
+                    style: BipaText.body.copyWith(fontSize: 15, fontWeight: FontWeight.w600, color: colors.ink),
                   ),
-                  style: BipaText.body.copyWith(fontSize: 15, fontWeight: FontWeight.w600, color: colors.ink),
                 ),
-              ),
-              const SizedBox(width: BipaSpacing.s2),
-              Text(row.value, style: BipaText.number.copyWith(color: colors.ink)),
-            ],
+                const SizedBox(width: BipaSpacing.s2),
+                // O total não quebra a linha: com letra grande, encolhe (H3).
+                ShrinkToFit(
+                  maxWidth: constraints.maxWidth * 0.55,
+                  child: Text(row.value, style: BipaText.number.copyWith(color: colors.ink)),
+                ),
+              ],
+            ),
           ),
           if (fraction != null) ...[
             const SizedBox(height: BipaSpacing.s2),
