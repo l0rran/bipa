@@ -1,15 +1,16 @@
 /// Unidade em que o tamanho da embalagem de um produto é expresso.
 enum MeasureUnit {
-  unit('un', 'Unidade'),
-  gram('g', 'Gramas'),
-  kilogram('kg', 'Quilos'),
-  milliliter('ml', 'Mililitros'),
-  liter('L', 'Litros');
+  unit('un'),
+  gram('g'),
+  kilogram('kg'),
+  milliliter('ml'),
+  liter('L');
 
-  const MeasureUnit(this.symbol, this.label);
+  const MeasureUnit(this.symbol);
 
+  /// O símbolo, igual em qualquer idioma: "kg", "L". O nome por extenso
+  /// fica no ARB (`MeasureUnitLabel`).
   final String symbol;
-  final String label;
 
   /// Unidade usada para comparar preços entre embalagens de tamanhos
   /// diferentes (R$/kg, R$/L ou R$/un).

@@ -560,5 +560,38 @@
   "marketRemoveLocation": "Remover",
   "marketPickTitle": "Em qual mercado você está?",
   "marketPickNew": "Cadastrar novo mercado",
-  "retry": "Tentar de novo"
+  "retry": "Tentar de novo",
+  "productsScan": "Buscar pelo código de barras",
+  "productsNew": "Novo produto",
+  "productsSearch": "Buscar por nome, marca ou código",
+  "productsEmpty": "Nenhum produto ainda.\nBipe um código de barras para começar.",
+  "productsNoMatch": "Nenhum produto encontrado.",
+  "scannerTitle": "Ler código de barras",
+  "scannerHint": "Aponte a câmera para o código de barras do produto",
+  "productSaveFailed": "Não foi possível salvar o produto.",
+  "productEditTitle": "Editar produto",
+  "productNameMissing": "Informe o nome do produto",
+  "barcodeLabel": "Código de barras",
+  "barcodeScan": "Ler com a câmera",
+  "barcodeInvalid": "Código de barras inválido",
+  "productPackageSize": "Tamanho da embalagem",
+  "productPackageSizeHint": "Ex.: 395, 1,5, 12",
+  "formInvalidValue": "Valor inválido",
+  "measureUnit": "Unidade",
+  "measureGram": "Gramas",
+  "measureKilogram": "Quilos",
+  "measureMilliliter": "Mililitros",
+  "measureLiter": "Litros",
+  "measureUnitOption": "{name} ({symbol})",
+  "@measureUnitOption": {
+    "description": "Opção do seletor de unidade: \"Quilos (kg)\".",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "symbol": {
+        "type": "String"
+      }
+    }
+  }
 }

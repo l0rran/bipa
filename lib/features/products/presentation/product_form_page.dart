@@ -1,5 +1,6 @@
 import 'package:bipa/core/di/core_providers.dart';
 import 'package:bipa/core/errors/domain_exception.dart';
+import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/messages.dart';
 import 'package:bipa/features/products/domain/gtin.dart';
@@ -7,6 +8,7 @@ import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/product_repository.dart';
+import 'package:bipa/features/products/presentation/measure_unit_label.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -149,7 +151,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
     } on DomainException catch (error) {
       if (mounted) context.showMessage(error.message);
     } on Exception {
-      if (mounted) context.showMessage('Não foi possível salvar o produto.');
+      if (mounted) context.showMessage(AppLocalizations.of(context).productSaveFailed);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -165,8 +167,9 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditing ? 'Editar produto' : 'Novo produto')),
+      appBar: AppBar(title: Text(_isEditing ? l10n.productEditTitle : l10n.productsNew)),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : Form(
@@ -178,31 +181,30 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                     controller: _name,
                     autofocus: !_isEditing && _name.text.isEmpty,
                     textCapitalization: TextCapitalization.sentences,
-                    decoration: const InputDecoration(labelText: 'Nome *'),
-                    validator: (value) =>
-                        (value == null || value.trim().isEmpty) ? 'Informe o nome do produto' : null,
+                    decoration: InputDecoration(labelText: l10n.formNameRequired),
+                    validator: (value) => (value == null || value.trim().isEmpty) ? l10n.productNameMissing : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _brand,
                     textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(labelText: 'Marca'),
+                    decoration: InputDecoration(labelText: l10n.packageBrand),
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _barcode,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      labelText: 'Código de barras',
+                      labelText: l10n.barcodeLabel,
                       suffixIcon: IconButton(
-                        tooltip: 'Ler com a câmera',
+                        tooltip: l10n.barcodeScan,
                         icon: const Icon(Icons.qr_code_scanner),
                         onPressed: _scanBarcode,
                       ),
                     ),
                     validator: (value) {
                       final code = value?.trim() ?? '';
-                      return code.isEmpty || Gtin.isValid(code) ? null : 'Código de barras inválido';
+                      return code.isEmpty || Gtin.isValid(code) ? null : l10n.barcodeInvalid;
                     },
                   ),
                   const SizedBox(height: 16),
@@ -213,15 +215,15 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                         child: TextFormField(
                           controller: _packageSize,
                           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          decoration: const InputDecoration(
-                            labelText: 'Tamanho da embalagem',
-                            helperText: 'Ex.: 395, 1,5, 12',
+                          decoration: InputDecoration(
+                            labelText: l10n.productPackageSize,
+                            helperText: l10n.productPackageSizeHint,
                           ),
                           validator: (value) {
                             final text = value?.trim() ?? '';
                             if (text.isEmpty) return null;
                             final size = _parseSize(text);
-                            return size == null || size <= 0 ? 'Valor inválido' : null;
+                            return size == null || size <= 0 ? l10n.formInvalidValue : null;
                           },
                         ),
                       ),
@@ -229,11 +231,11 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                       Expanded(
                         child: DropdownMenu<MeasureUnit>(
                           initialSelection: _unit,
-                          label: const Text('Unidade'),
+                          label: Text(l10n.packageUnit),
                           expandedInsets: EdgeInsets.zero,
                           dropdownMenuEntries: [
                             for (final unit in MeasureUnit.values)
-                              DropdownMenuEntry(value: unit, label: '${unit.label} (${unit.symbol})'),
+                              DropdownMenuEntry(value: unit, label: l10n.measureUnitOption(unit.localizedLabel(l10n), unit.symbol)),
                           ],
                           onSelected: (unit) {
                             if (unit != null) setState(() => _unit = unit);
@@ -246,7 +248,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                   FilledButton.icon(
                     onPressed: _saving ? null : _save,
                     icon: const Icon(Icons.check),
-                    label: const Text('Salvar'),
+                    label: Text(l10n.save),
                   ),
                 ],
               ),

@@ -1,3 +1,4 @@
+import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
 import 'package:bipa/core/widgets/empty_state.dart';
@@ -23,18 +24,19 @@ class ProductsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final products = ref.watch(productsProvider);
     final query = ref.watch(productSearchQueryProvider);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Produtos'),
+        title: Text(l10n.navProducts),
         actions: [
           IconButton(
-            tooltip: 'Buscar pelo código de barras',
+            tooltip: l10n.productsScan,
             icon: const Icon(Icons.qr_code_scanner),
             onPressed: () => _scan(context, ref),
           ),
           IconButton(
-            tooltip: 'Novo produto',
+            tooltip: l10n.productsNew,
             icon: const Icon(Icons.add),
             onPressed: () => context.push(Routes.newProduct),
           ),
@@ -44,7 +46,7 @@ class ProductsPage extends ConsumerWidget {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: SearchBar(
-              hintText: 'Buscar por nome, marca ou código',
+              hintText: l10n.productsSearch,
               leading: const Icon(Icons.search),
               elevation: const WidgetStatePropertyAll(0),
               onChanged: ref.read(productSearchQueryProvider.notifier).change,
@@ -59,14 +61,11 @@ class ProductsPage extends ConsumerWidget {
             return query.isEmpty
                 ? EmptyState(
                     icon: Icons.inventory_2_outlined,
-                    message: 'Nenhum produto ainda.\nBipe um código de barras para começar.',
-                    actionLabel: 'Ler código de barras',
+                    message: l10n.productsEmpty,
+                    actionLabel: l10n.scannerTitle,
                     onAction: () => _scan(context, ref),
                   )
-                : const EmptyState(
-                    icon: Icons.search_off,
-                    message: 'Nenhum produto encontrado.',
-                  );
+                : EmptyState(icon: Icons.search_off, message: l10n.productsNoMatch);
           }
           return ListView.separated(
             // Espaço para as barras flutuantes (navegação e compra).

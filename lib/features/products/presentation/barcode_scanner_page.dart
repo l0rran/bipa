@@ -1,3 +1,5 @@
+import 'package:bipa/core/design_system/bipa_theme.dart';
+import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/features/products/domain/gtin.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -49,13 +51,15 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final colors = context.colors;
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: colors.camera,
       appBar: AppBar(
-        title: const Text('Ler código de barras'),
+        title: Text(l10n.scannerTitle),
         actions: [
           IconButton(
-            tooltip: 'Lanterna',
+            tooltip: l10n.cartTorch,
             icon: const Icon(Icons.flashlight_on_outlined),
             onPressed: () => _controller.toggleTorch(),
           ),
@@ -66,14 +70,14 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
         children: [
           MobileScanner(controller: _controller, onDetect: _onDetect),
           const _ScanFrame(),
-          const Positioned(
+          Positioned(
             left: 24,
             right: 24,
             bottom: 48,
             child: Text(
-              'Aponte a câmera para o código de barras do produto',
+              l10n.scannerHint,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white, fontSize: 16),
+              style: TextStyle(color: colors.onCamera, fontSize: 16),
             ),
           ),
         ],
@@ -93,7 +97,7 @@ class _ScanFrame extends StatelessWidget {
         width: 280,
         height: 160,
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.white, width: 3),
+          border: Border.all(color: context.colors.onCamera, width: 3),
           borderRadius: BorderRadius.circular(16),
         ),
       ),
