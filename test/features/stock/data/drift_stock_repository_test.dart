@@ -37,6 +37,27 @@ void main() {
     expect(await movementCount(), 1);
   });
 
+  test('adjust cria o leite novo na geladeira', () async {
+    await DriftProductRepository(
+      db,
+    ).save(Product(id: 'leite', name: 'Leite integral 1 L', unit: MeasureUnit.liter, createdAt: now, updatedAt: now));
+
+    await repository.adjust(productId: 'leite', delta: 1, reason: StockMovementReason.purchase);
+
+    expect((await repository.findByProduct('leite'))?.location, StockLocation.fridge);
+  });
+
+  test('item que já existe mantém o local escolhido', () async {
+    await DriftProductRepository(
+      db,
+    ).save(Product(id: 'leite', name: 'Leite integral 1 L', unit: MeasureUnit.liter, createdAt: now, updatedAt: now));
+    await repository.setLocation('leite', StockLocation.pantry);
+
+    await repository.adjust(productId: 'leite', delta: 1, reason: StockMovementReason.purchase);
+
+    expect((await repository.findByProduct('leite'))?.location, StockLocation.pantry);
+  });
+
   test('adjust soma e subtrai sem deixar o estoque negativo', () async {
     await repository.adjust(productId: 'arroz', delta: 2, reason: StockMovementReason.purchase);
     await repository.adjust(productId: 'arroz', delta: -5, reason: StockMovementReason.consumption);
