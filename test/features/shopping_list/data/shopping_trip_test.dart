@@ -281,4 +281,23 @@ void main() {
 
     expect(await aisles.find('vila'), AisleOrder.empty);
   });
+
+  test('o último mercado é o da compra mais recente que teve mercado', () async {
+    final markets = DriftMarketRepository(db);
+    for (final id in ['vila', 'centro']) {
+      await markets.save(Market(id: id, name: id, createdAt: now, updatedAt: now));
+    }
+    expect(await trips.watchLastMarketId().first, isNull);
+
+    final vila = await trips.start(marketId: 'vila');
+    await trips.finish(vila.id);
+    now = now.add(const Duration(days: 1));
+    final centro = await trips.start(marketId: 'centro');
+    await trips.finish(centro.id);
+    now = now.add(const Duration(days: 1));
+    // Uma compra sem mercado detectado não muda o último mercado.
+    await trips.start();
+
+    expect(await trips.watchLastMarketId().first, 'centro');
+  });
 }

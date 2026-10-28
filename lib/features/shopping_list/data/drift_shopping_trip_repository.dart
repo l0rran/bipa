@@ -47,6 +47,15 @@ final class DriftShoppingTripRepository implements ShoppingTripRepository {
     await _write(tripId, const ShoppingTripsCompanion(finishedAt: Value(null)));
   });
 
+  @override
+  Stream<String?> watchLastMarketId() {
+    final query = _db.select(_db.shoppingTrips)
+      ..where((t) => t.marketId.isNotNull())
+      ..orderBy([(t) => OrderingTerm.desc(t.startedAt), (t) => OrderingTerm.desc(t.id)])
+      ..limit(1);
+    return query.watchSingleOrNull().map((row) => row?.marketId);
+  }
+
   Future<void> _write(String tripId, ShoppingTripsCompanion changes) async {
     await (_db.update(_db.shoppingTrips)..where((t) => t.id.equals(tripId))).write(changes);
   }

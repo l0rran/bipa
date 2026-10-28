@@ -44,6 +44,10 @@ abstract interface class ShoppingTripRepository {
 
   /// Desfaz o "Terminei". Não reabre se outra compra já começou.
   Future<void> reopen(String tripId);
+
+  /// O mercado da compra mais recente que teve mercado, ou `null`: é o
+  /// mercado que a lista mostra antes de "Ir às compras".
+  Stream<String?> watchLastMarketId();
 }
 
 /// O que a barra da compra mostra: quantos itens da lista já foram e quanto
