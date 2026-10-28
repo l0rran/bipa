@@ -55,11 +55,12 @@ Os achados da [análise de UX](ux/analise-ux-2026-10-28.md) ([publicada](https:/
 
 Primeira abertura e em casa:
 
-- [ ] AB5: primeira carga que configura: folha "Arrumar o que entrou" com local e "ter sempre", ou o local sugerido pela categoria
+- [x] AB5 (parte): o item novo nasce no local sugerido pela categoria do produto
+- [ ] AB5 (resto): folha "Arrumar o que entrou" com local e "ter sempre" (quadro no protótipo antes)
 
 Câmera e modo carrinho:
 
-- [ ] D3 (resto): o preço por kg do granel como estimativa na bandeja; hoje a linha entra sem preço
+- [x] D3 (resto): o preço por kg do granel como estimativa na bandeja
 
 Preços, mercados e produto:
 
@@ -68,10 +69,23 @@ Preços, mercados e produto:
 Consistência e acessibilidade:
 
 - [ ] H1: a aba Produtos com os componentes de Mercados, e os formulários de produto e de mercado no design system
-- [ ] H2 (resto): exceções do domínio traduzidas pelo ARB e falha tratada no stepper do produto (os textos de falha já seguem "Não deu para … Tente de novo.")
-- [ ] H3 (resto): teste com fonte em 200% em cada tela (o stepper e o número da seção já crescem; os selos não têm altura fixa)
-- [ ] A barra de navegação encolhe ao rolar, como no design system
-- [ ] Desenhar no protótipo o que o app já faz sem quadro: o "Desfazer" no aviso da câmera em "Comprei" e "Usei", o mercado e a idade no preço em destaque velho do produto, o chip "Ter sempre" no editor da linha do Início e a folha "Editar embalagem"
+- [x] H2 (resto): exceções do domínio traduzidas pelo ARB e falha tratada no stepper do produto
+- [x] H3 (resto): teste com fonte em 200% nas telas principais e alturas mínimas no lugar de fixas
+- [ ] H3 (formulários): o teste com fonte em 200% ainda não cobre os formulários de produto, mercado e embalagem, a folha do preço, a câmera e a tela do carrinho
+- [x] A barra de navegação encolhe ao rolar, como no design system
+- [ ] Barra de navegação igual ao design system: 68 px de altura (o código usa 72), desfoque 18 (o código usa 14) e o anel que respira no botão de bipar
+- [ ] Desenhar no protótipo o que o app já faz sem quadro: o "Desfazer" no aviso da câmera em "Comprei" e "Usei", o mercado e a idade no preço em destaque velho do produto, o chip "Ter sempre" no editor da linha do Início, a folha "Editar embalagem" e a linha do granel na bandeja com o preço por kg estimado
+
+### Ajustes de UX (análise do lote 8, 28/10/2026)
+
+Os achados da [análise do lote 8](ux/analise-ux-2026-10-28-lote8.md), feita depois da AB5, D3, H2, H3 e da barra que encolhe.
+
+- [ ] D8 (alto): o valor digitado numa linha de granel ou pesagem não pode virar preço do produto no histórico (ADR 0018). Fazer primeiro: protege dado
+- [ ] AB9: corrigir o local sugerido (leite de caixinha, enlatados e "Ovomaltine" não vão para a Geladeira; congelados vão para o Freezer) e dizer no aviso da câmera onde o item ficou
+- [ ] AB10: a folha do item mostra o local sugerido enquanto o item não existe, e "Tirar de casa" lembra o local escolhido
+- [ ] H11: o stepper da linha do Início e da folha do item avisa quando falha, como o da tela do produto
+- [ ] D9: a linha do granel na bandeja com sinal próprio para o preço por kg (quadro no protótipo antes; substitui o quadro da linha do granel pedido acima)
+- [ ] H8, H9, H10: rodada de letra grande: rótulos da navegação que cortam, nome do produto que perde para o preço e um teste que meça leitura, não só estouro (junto com o "H3 (formulários)")
 
 ## Fase 2: base comunitária
 

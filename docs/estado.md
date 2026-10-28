@@ -5,32 +5,18 @@ Retrato de 28/10/2026, para quem continua o trabalho (pessoa ou agente). Leia an
 ## Onde estamos
 
 - **Branch:** tudo está em `main`, publicado em `l0rran/bipa`. Não há branch aberta.
+- **Compilação:** o código compila e os testes passam (abaixo).
 - **Banco:** esquema 13 (`trip_prices`, ADR 0020). O teste de migração está em `test/core/database/migration_test.dart`.
 - **Feito até aqui:** o [CHANGELOG](../CHANGELOG.md), seção "Não lançado". O que falta está no [roadmap](roadmap.md).
 - **Protótipo:** tudo o que estava "aguardando revisão" foi aprovado pelo mantenedor em 28/10. A cópia em [`design/prototipo/`](design/prototipo/README.md) está igual à publicada nessa data.
 
-## Primeiro passo: compilar e testar
+## Compilado e testado
 
-O código das últimas sessões foi escrito por agentes na nuvem, **sem Flutter**: nada foi compilado nem rodado. Revisões independentes conferiram à mão o que veio até o commit `670553d`. Os commits de `670553d..af4f739` não passaram por revisão nenhuma: G3, F4, F3, H5, H2, H4, H3, G1 e as correções da troca de pesagem. Antes de qualquer implementação nova:
+Em 28/10, no Windows (Flutter 3.47.8, Dart 3.13.7): `flutter analyze` sem problemas, `flutter test` com 433 testes passando e o banco do OCR passando. A compilação acusou só dois problemas, corrigidos (`fa01eb4`). No Windows, o banco do OCR roda com `py -3 tool/ocr_bench/testes.py`, porque não há `python3`.
 
-```bash
-flutter pub get                  # image_picker e mobile_scanner saíram do pubspec
-dart run build_runner build -d   # o Drift mudou (esquema 13, CartRepository.remove, ScaleItemRepository)
-flutter gen-l10n                 # muitas chaves novas, com ICU select (perUnitSpoken) e plural com num
-dart format .
-flutter analyze
-flutter test
-python3 tool/ocr_bench/testes.py
-```
+O lote 8 (AB5 em parte, D3, H2, H3 e a barra que encolhe ao rolar) foi feito por agentes em paralelo, cada um num worktree, e juntado em `main` com merges. Depois, uma [revisão de UX do lote](ux/analise-ux-2026-10-28-lote8.md) achou o que está no roadmap como "análise do lote 8".
 
-O que mais pode falhar, pela ordem de risco:
-
-- **Textos (gen-l10n):** `perUnitSpoken` usa `select` com o nome do enum (`kilogram`, `liter`...), e `stockAtHomeSpoken` e `stockTargetSpoken` usam `plural` com placeholder `num`.
-- **Padrões novos do Dart 3.8:** `if (... case ... when ...)` dentro de map literal (`cart_mode_page.dart`), records em `switch`, elementos com `?`.
-- **Testes de widget que dependem de altura:** `components_test.dart` espera 52 de altura no `ShoppingListRow` com quantidade tocável.
-- **Formatação:** o `dart format` vai quebrar algumas linhas; é esperado.
-
-Depois disso, um teste no aparelho dos fluxos novos: comprar com "3× Leite" bipando um de cada vez, cancelar pela folha "Fim da compra", trocar o produto de uma pesagem, corrigir um preço pela tela do produto e "Editar embalagem".
+Falta o teste no aparelho, de antes e de agora: comprar com "3× Leite" bipando um de cada vez, cancelar pela folha "Fim da compra", trocar o produto de uma pesagem, corrigir um preço pela tela do produto, "Editar embalagem", o granel na bandeja com o preço por kg, a barra encolhendo ao rolar (movimento e desfoque) e as telas com a letra do Android no máximo.
 
 ## Pontos abertos conhecidos
 
@@ -47,8 +33,8 @@ Achados "prováveis" das revisões que ficaram como estão, por serem raros ou p
 
 Pela ordem que vínhamos seguindo. Os detalhes de cada código estão na [análise de UX](ux/analise-ux-2026-10-28.md) e no [roadmap](roadmap.md).
 
-1. **Compilar e testar** (acima) e corrigir o que aparecer.
-2. **Ajustes de UX que faltam:** AB5 (primeira carga que configura), o resto do D3 (preço por kg como estimativa na bandeja), H2 (exceções do domínio pelo ARB, falha no stepper do produto), H3 (teste com fonte em 200%), a barra de navegação que encolhe ao rolar, e os quadros que faltam no protótipo.
+1. **D8** (alto, protege dado): o valor digitado do granel ou da pesagem não vira preço do produto. Depois, AB9, AB10 e H11, que são pequenos.
+2. **Protótipo antes do código:** a folha "Arrumar o que entrou" (AB5), a linha do granel na bandeja (D9), os quadros que faltam e a barra igual ao design system. Depois, a rodada de letra grande (H8, H9, H10 e os formulários).
 3. **Maiores, com ADR ou protótipo antes:** G2 (mover e apagar embalagem, com ADR) e H1 (aba Produtos com os componentes de Mercados).
 4. **Fase 0:** o ADR do modelo de dados (antes do backup) e o ADR do catálogo pronto de produtos brasileiros (fonte e licença).
 5. **Relatório de falhas e ícone do app:** esperam decisão do mantenedor (abaixo).
