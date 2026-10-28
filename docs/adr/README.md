@@ -18,6 +18,7 @@ Cada arquivo registra uma decisão importante: o contexto, o que foi decidido e 
 | [0012](0012-quadros-da-camera-no-modo-carrinho.md) | Quadros da câmera no modo carrinho com o plugin `camera` e o ML Kit | Aceito |
 | [0013](0013-produto-e-embalagens.md) | Produto separado das embalagens (marca e tamanho) | Aceito |
 | [0014](0014-ordem-das-secoes-por-mercado.md) | Ordem das seções aprendida em cada mercado | Aceito |
+| [0015](0015-notificacao-ao-vivo-da-compra.md) | Notificação ao vivo da compra com código nativo | Aceito |
 
 ## Modelo
 
