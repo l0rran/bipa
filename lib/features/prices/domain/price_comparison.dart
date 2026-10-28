@@ -34,14 +34,6 @@ bool _isPreferred(PriceObservation candidate, PriceObservation current) {
   return candidate.price < current.price;
 }
 
-/// Preço de referência de cada produto do histórico: o menor entre os preços
-/// mais recentes de cada mercado, com o preço sem condição na frente.
-/// É o que a lista de compras usa para estimar o total.
-Map<String, Money> referencePrices(Iterable<PriceHistoryEntry> history) => {
-  for (final MapEntry(key: productId, value: entries) in _byProduct(history).entries)
-    productId: latestPricePerMarket(entries).first.observation.price,
-};
-
 /// O preço de um item da lista: o do mercado da compra, quando o produto já
 /// foi visto lá ([exact]), ou o de referência dos outros mercados, que é só
 /// uma estimativa.
@@ -53,6 +45,8 @@ Map<String, ListPrice> listPrices(Iterable<PriceHistoryEntry> history, {String? 
   for (final MapEntry(key: productId, value: entries) in _byProduct(history).entries)
     productId: switch (marketId == null ? null : latestPriceAt(entries, marketId)) {
       final here? => (price: here, exact: true),
+      // O de referência: o menor entre os preços mais recentes de cada
+      // mercado, com o preço sem condição na frente.
       null => (price: latestPricePerMarket(entries).first.observation.price, exact: false),
     },
 };

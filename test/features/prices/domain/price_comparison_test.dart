@@ -85,8 +85,8 @@ void main() {
       entry('Assaí', 520, at),
     ];
 
-    expect(referencePrices(history), {'leite': const Money.cents(520)});
-    expect(referencePrices(const []), isEmpty);
+    expect(listPrices(history), {'leite': (price: const Money.cents(520), exact: false)});
+    expect(listPrices(const []), isEmpty);
   });
 
   test('preço mais recente num mercado, ou nada se ele nunca foi visto lá', () {
