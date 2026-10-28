@@ -177,6 +177,26 @@ void main() {
     expect(checked, {'Arroz': true, 'Café': false});
   });
 
+  test('o marcado antes da compra e bipado nela vai para casa e sai da lista', () async {
+    await list.addProduct(productId: 'arroz', name: 'Arroz');
+    await list.checkProduct('arroz');
+    now = now.add(const Duration(days: 2));
+    final trip = await trips.start();
+    await cart.addProduct(trip.id, 'arroz');
+
+    final summary = ShoppingTripSummary.of(
+      await list.watchAll().first,
+      await cart.watchTrip(trip.id).first,
+      since: trip.startedAt,
+    );
+    expect((summary.done, summary.total), (1, 1));
+
+    final finished = (await finish(trip.id))!;
+
+    expect(finished.stocked, {'arroz': 1});
+    expect(await list.watchAll().first, isEmpty);
+  });
+
   test('o marcado antes da compra não vai para casa nem sai da lista no "Terminei"', () async {
     await list.addProduct(productId: 'arroz', name: 'Arroz');
     await list.checkProduct('arroz');
@@ -193,6 +213,9 @@ void main() {
     );
 
     expect((await review(trip.id))!.packages, 1);
+    // A barra também não conta o arroz: nem feito, nem faltando.
+    final summary = ShoppingTripSummary.of(await list.watchAll().first, const [], since: trip.startedAt);
+    expect((summary.done, summary.total), (1, 1));
 
     final finished = (await finish(trip.id))!;
 

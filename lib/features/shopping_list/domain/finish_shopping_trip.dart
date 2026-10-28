@@ -77,11 +77,18 @@ final class FinishShoppingTrip {
 
     final cart = await _cart.watchTrip(tripId).first;
     final entries = await _list.watchAll().first;
-    // Só o que foi marcado durante esta compra: o marcado antes não foi
-    // comprado agora e fica na lista como está.
+    // Só o que foi marcado durante esta compra, ou que está no carrinho
+    // para levar: o marcado antes, e que não foi bipado, não foi comprado
+    // agora e fica na lista como está.
+    final taken = {
+      for (final entry in cart)
+        if (entry.item.take) entry.item.productId,
+    };
     final bought = [
       for (final entry in entries)
-        if (entry.item.isCheckedSince(active.startedAt)) entry.item,
+        if (entry.item.isCheckedSince(active.startedAt) ||
+            entry.item.isChecked && taken.contains(entry.item.productId))
+          entry.item,
     ];
 
     // Cada embalagem do carrinho entra no estoque do seu produto; embalagens

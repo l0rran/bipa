@@ -254,7 +254,7 @@ final shoppingTripSummaryProvider = Provider.autoDispose<ShoppingTripSummary?>((
   // Sem a lista carregada, a barra mostraria "0 de 0 itens".
   final entries = ref.watch(shoppingListProvider).value;
   if (trip == null || entries == null) return null;
-  return ShoppingTripSummary.of(entries, ref.watch(activeCartProvider).value ?? const []);
+  return ShoppingTripSummary.of(entries, ref.watch(activeCartProvider).value ?? const [], since: trip.startedAt);
 });
 
 /// Nome do mercado da compra em andamento, quando ele foi detectado.

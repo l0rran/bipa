@@ -72,12 +72,27 @@ final class ShoppingTripSummary {
 
   /// [spent] é a soma do que vai ser levado no carrinho. Sem nenhum preço
   /// ainda, é `null`.
-  factory ShoppingTripSummary.of(Iterable<ShoppingListEntry> entries, Iterable<CartEntry> cart) {
+  ///
+  /// Com [since] (o começo da compra), o item marcado antes dela e que não
+  /// está no carrinho fica de fora da conta, como no "Terminei": não foi
+  /// comprado agora, e também não falta.
+  factory ShoppingTripSummary.of(
+    Iterable<ShoppingListEntry> entries,
+    Iterable<CartEntry> cart, {
+    DateTime? since,
+  }) {
+    final taken = {
+      for (final entry in cart)
+        if (entry.item.take) entry.item.productId,
+    };
     var done = 0;
     var total = 0;
     for (final entry in entries) {
+      final item = entry.item;
+      final before = since != null && item.isChecked && !item.isCheckedSince(since);
+      if (before && !taken.contains(item.productId)) continue;
       total++;
-      if (entry.item.isChecked) done++;
+      if (item.isChecked) done++;
     }
     Money? spent;
     var estimated = false;
