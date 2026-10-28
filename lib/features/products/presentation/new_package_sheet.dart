@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
@@ -102,6 +104,11 @@ class _NewPackageSheetState extends ConsumerState<NewPackageSheet> {
       }
       _error = null;
     });
+  }
+
+  void _askForProduct() {
+    setState(() => _error = AppLocalizations.of(context).packageProductMissing);
+    unawaited(_chooseProduct());
   }
 
   Future<void> _save() async {
@@ -269,7 +276,13 @@ class _NewPackageSheetState extends ConsumerState<NewPackageSheet> {
             ],
             const SizedBox(height: BipaSpacing.s4),
             FilledButton(
-              onPressed: _saving || name == null ? null : _save,
+              // Sem produto, "Salvar" diz o que falta e abre a escolha, em vez
+              // de ficar apagado sem explicação.
+              onPressed: _saving
+                  ? null
+                  : name == null
+                  ? _askForProduct
+                  : _save,
               child: Text(l10n.save),
             ),
           ],
