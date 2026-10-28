@@ -60,6 +60,7 @@ class _PlaceTile<T> extends StatelessWidget {
       selected: selected,
       label: '${option.label}, ${option.count}',
       excludeSemantics: true,
+      onTap: onTap,
       child: GestureDetector(
         onTap: onTap,
         child: SizedBox(

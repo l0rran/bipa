@@ -125,6 +125,7 @@ class _RepeatButtonState extends State<_RepeatButton> {
       enabled: enabled,
       label: widget.label,
       excludeSemantics: true,
+      onTap: widget.onStep,
       child: GestureDetector(
         onTap: widget.onStep,
         onLongPressStart: (_) => _start(),

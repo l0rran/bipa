@@ -108,6 +108,7 @@ class _ListButton extends StatelessWidget {
       toggled: onList,
       label: label,
       excludeSemantics: true,
+      onTap: onPressed,
       child: Material(
         color: onList ? colors.ink : colors.surface,
         shape: const CircleBorder(),

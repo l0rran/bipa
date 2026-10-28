@@ -112,6 +112,8 @@ class _Destination extends StatelessWidget {
       selected: selected,
       label: destination.label,
       excludeSemantics: true,
+      // excludeSemantics descarta a ação do InkResponse: ela vai aqui.
+      onTap: onTap,
       child: InkResponse(
         onTap: onTap,
         radius: 36,
@@ -163,6 +165,7 @@ class _ScanButton extends StatelessWidget {
       button: true,
       label: label,
       excludeSemantics: true,
+      onTap: onPressed,
       child: Material(
         color: colors.brand,
         shape: const CircleBorder(),
