@@ -34,4 +34,10 @@ Cada tela tem uma imagem (390 px de largura, em 2x) e o HTML de origem em [`font
 
 ## Como exportar de novo
 
-As páginas do claude.ai são privadas. Quem tiver acesso (a mesma conta, pelo app do Claude) lê os arquivos `project/*.dc.html` do protótipo e `project/components/*` do design system e os copia para cá. As imagens são capturas em 390 px de largura com escala 2, feitas com Playwright e as fontes de `assets/fonts` instaladas.
+As páginas do claude.ai são privadas. Quem tiver acesso (a mesma conta, pelo app do Claude) lê os arquivos `project/*.dc.html` e `project/canvas.json` do protótipo e `project/components/*` do design system e os copia para cá.
+
+As imagens são capturas em 390 px de largura com escala 2, feitas com Playwright e as fontes de `assets/fonts` instaladas: `node tool/prototipo/renderizar.js` refaz todas, e `node tool/prototipo/renderizar.js Lista.dc.html` só as indicadas. O tamanho de cada tela vem de [`fonte/canvas.json`](fonte/canvas.json).
+
+## Como mudar uma tela sem acesso ao claude.ai
+
+Edite o HTML em `fonte/`, gere a imagem com o script acima e atualize a linha da tela nesta página. Uma tela nova entra em `fonte/canvas.json` (posição e tamanho no canvas) e na tabela. Diga na coluna "No app" que a mudança aguarda revisão até o mantenedor aprovar, e avise que o protótipo publicado precisa receber a mesma mudança, que ele continua sendo a fonte da verdade.

@@ -1,0 +1,201 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-10-27T21:40:00Z"
+  },
+  "title": "Bipa App Telas",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 1470,
+      "title": "Casa (página inteira)"
+    },
+    "MenuBipar.dc.html": {
+      "x": 470,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Casa: menu do bipar (toque longo)"
+    },
+    "Captura.dc.html": {
+      "x": 940,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Bipar: câmera"
+    },
+    "Confirmacao.dc.html": {
+      "x": 1410,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Bipar: conferir e salvar"
+    },
+    "ModoCarrinho.dc.html": {
+      "x": 1880,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Bipar: modo carrinho"
+    },
+    "Produto.dc.html": {
+      "x": 0,
+      "y": 1890,
+      "w": 390,
+      "h": 1120,
+      "title": "Produto (página inteira)"
+    },
+    "Mercados.dc.html": {
+      "x": 470,
+      "y": 1890,
+      "w": 390,
+      "h": 1100,
+      "title": "Mercados (página inteira)"
+    },
+    "Lista.dc.html": {
+      "x": 940,
+      "y": 1890,
+      "w": 390,
+      "h": 1250,
+      "title": "Lista (página inteira)"
+    },
+    "Notificacao.dc.html": {
+      "x": 1410,
+      "y": 1890,
+      "w": 390,
+      "h": 420,
+      "title": "Notificação ao vivo (Android 16)"
+    },
+    "CasaCompra.dc.html": {
+      "x": 2350,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Casa durante a compra"
+    },
+    "ModoCarrinhoLido.dc.html": {
+      "x": 2820,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Modo carrinho: preço lido ao vivo"
+    },
+    "ModoCarrinhoEsperando.dc.html": {
+      "x": 3290,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Modo carrinho: preço esperando o produto"
+    },
+    "EmbalagemNova.dc.html": {
+      "x": 1880,
+      "y": 1890,
+      "w": 390,
+      "h": 844,
+      "title": "Bipar: embalagem nova (produto sugerido)"
+    },
+    "ProdutoEmbalagens.dc.html": {
+      "x": 2350,
+      "y": 1890,
+      "w": 390,
+      "h": 1400,
+      "title": "Produto com embalagens"
+    },
+    "ProdutoJuntar.dc.html": {
+      "x": 2820,
+      "y": 1890,
+      "w": 390,
+      "h": 844,
+      "title": "Produto: juntar com… (escolher)"
+    },
+    "ProdutoJuntarConfirmar.dc.html": {
+      "x": 3290,
+      "y": 1890,
+      "w": 390,
+      "h": 844,
+      "title": "Produto: juntar com… (confirmar)"
+    },
+    "Mercado.dc.html": {
+      "x": 3760,
+      "y": 1890,
+      "w": 390,
+      "h": 844,
+      "title": "Mercado (tela do mercado)"
+    },
+    "FimDaCompra.dc.html": {
+      "x": 3760,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Fim da compra (antes de terminar)"
+    },
+    "ModoCarrinhoGranel.dc.html": {
+      "x": 4230,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Modo carrinho: granel sem código"
+    },
+    "PrecoFolha.dc.html": {
+      "x": 4230,
+      "y": 1890,
+      "w": 390,
+      "h": 844,
+      "title": "Produto: folha do preço (corrigir)"
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "MenuBipar.dc.html",
+    "Captura.dc.html",
+    "Confirmacao.dc.html",
+    "ModoCarrinho.dc.html",
+    "CasaCompra.dc.html",
+    "ModoCarrinhoLido.dc.html",
+    "ModoCarrinhoEsperando.dc.html",
+    "ModoCarrinhoGranel.dc.html",
+    "FimDaCompra.dc.html",
+    "Produto.dc.html",
+    "Mercados.dc.html",
+    "Mercado.dc.html",
+    "PrecoFolha.dc.html",
+    "Lista.dc.html",
+    "Notificacao.dc.html",
+    "EmbalagemNova.dc.html",
+    "ProdutoEmbalagens.dc.html",
+    "ProdutoJuntar.dc.html",
+    "ProdutoJuntarConfirmar.dc.html"
+  ],
+  "notes": {
+    "titulo": {
+      "x": 0,
+      "y": -300,
+      "text": "Bipa · bipar e cuidar da casa (v5, amarelo da etiqueta)",
+      "kind": "title1",
+      "maxW": 3680
+    },
+    "titulo2": {
+      "x": 0,
+      "y": 1590,
+      "text": "Bipa · produto, mercados e lista (v5)",
+      "kind": "title1",
+      "maxW": 3680
+    }
+  },
+  "designSystems": [
+    {
+      "title": "Bipa",
+      "namespace": "bipa",
+      "artifact": "https://claude.ai/artifact/UgbPTJ2wLHMP5FmPcC7E8G",
+      "version": "1793136751-83d7",
+      "copiedAt": "2026-10-28T04:35:00Z"
+    }
+  ]
+}
