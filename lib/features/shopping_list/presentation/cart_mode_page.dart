@@ -183,7 +183,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
   }
 
   /// O disparo abre a foto da etiqueta; o preço salvo lá entra no carrinho.
-  Future<void> _photographTag() => _withScannerPaused(() => context.push<void>(Routes.capturePrice));
+  Future<void> _photographTag() => _withScannerPaused(() => context.push<void>(Routes.capturePriceFromCart));
 
   Future<void> _finish(ShoppingTrip trip) async {
     setState(() => _finishing = true);

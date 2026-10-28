@@ -41,7 +41,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: Routes.cartMode, builder: (_, _) => const CartModePage()),
       GoRoute(
         path: Routes.capturePrice,
-        builder: (_, state) => CapturePricePage(productId: state.uri.queryParameters['produto']),
+        builder: (_, state) => CapturePricePage(
+          productId: state.uri.queryParameters['produto'],
+          fromCart: state.uri.queryParameters['carrinho'] == '1',
+        ),
       ),
       // "/produto/novo" precisa vir antes de "/produto/:id".
       GoRoute(

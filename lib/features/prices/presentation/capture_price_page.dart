@@ -32,10 +32,14 @@ import 'package:image_picker/image_picker.dart';
 /// 2. A foto da etiqueta preenche preço, código de barras e nome.
 /// 3. O usuário confere e salva; "Salvar e bipar outro" agiliza a sequência.
 class CapturePricePage extends ConsumerStatefulWidget {
-  const CapturePricePage({this.productId, super.key});
+  const CapturePricePage({this.productId, this.fromCart = false, super.key});
 
   /// Quando informado, registra o preço deste produto (vindo da tela dele).
   final String? productId;
+
+  /// Aberta pelo disparo do modo carrinho: o produto vai para o carrinho
+  /// com o preço lido e é marcado na lista.
+  final bool fromCart;
 
   @override
   ConsumerState<CapturePricePage> createState() => _CapturePricePageState();
@@ -224,13 +228,15 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
           newProductName: _name.text,
         ),
       );
-      // Durante a compra, o produto vai para o carrinho com o preço lido e é
-      // marcado na lista. O preço já foi salvo: uma falha aqui não pode
-      // parecer falha ao salvar.
+      // Vindo do modo carrinho, o produto vai para o carrinho com o preço
+      // lido (sem somar unidade, se ele já foi bipado) e é marcado na lista.
+      // O preço já foi salvo: uma falha aqui não pode parecer falha ao salvar.
       try {
-        if (await trips.watchActive().first case final trip?) {
-          await cart.addProduct(trip.id, observation.productId, price: observation.price);
-          await list.checkProduct(observation.productId);
+        if (widget.fromCart) {
+          if (await trips.watchActive().first case final trip?) {
+            await cart.setPriceForProduct(trip.id, observation.productId, observation.price);
+            await list.checkProduct(observation.productId);
+          }
         }
       } on Exception catch (error, stack) {
         FlutterError.reportError(FlutterErrorDetails(exception: error, stack: stack, library: 'shopping_list'));

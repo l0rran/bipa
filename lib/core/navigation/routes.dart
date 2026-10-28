@@ -15,6 +15,9 @@ abstract final class Routes {
 
   static String capturePriceFor(String productId) => '$capturePrice?produto=$productId';
 
+  /// A foto da etiqueta aberta pelo modo carrinho.
+  static const capturePriceFromCart = '$capturePrice?carrinho=1';
+
   static String productDetail(String id) => '/produto/$id';
 
   static String editProduct(String id) => '/produto/$id/editar';
