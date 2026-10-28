@@ -26,6 +26,7 @@ import 'package:bipa/features/shopping_list/presentation/trip_summary_label.dart
 import 'package:bipa/features/stock/domain/stock_item.dart';
 import 'package:bipa/features/stock/presentation/stock_providers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 

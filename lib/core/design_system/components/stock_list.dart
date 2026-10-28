@@ -2,6 +2,7 @@ import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 
 /// Cartão que agrupa as linhas do estoque, com fios entre elas.
 class StockList extends StatelessWidget {
