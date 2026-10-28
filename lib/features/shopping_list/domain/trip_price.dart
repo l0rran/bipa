@@ -133,6 +133,19 @@ Map<String, Money> perKiloEstimates(Iterable<CartEntry> cart, Iterable<TripPrice
   };
 }
 
+/// Os itens do carrinho ([CartItem.id]) com o preço firmado pelos preços
+/// guardados com a compra, para a leitura ao vivo não os sobrescrever (ADR
+/// 0012): os que têm um preço lido ou digitado, que vale também depois de
+/// reabrir o carrinho, e a linha do granel com o preço por quilo lido, cujo
+/// valor só a etiqueta da balança ou o preço digitado dizem (ADR 0018).
+Set<String> settledByTripPrices(Iterable<CartEntry> cart, Iterable<TripPrice> prices) {
+  final keys = {for (final price in prices) CartItem.keyOf(price.productId, price.packageId)};
+  return {
+    for (final CartEntry(:item) in cart)
+      if (keys.contains(item.key)) item.id,
+  };
+}
+
 /// Os preços de cada compra.
 abstract interface class TripPriceRepository {
   /// Os preços da compra, do lido primeiro ao último.

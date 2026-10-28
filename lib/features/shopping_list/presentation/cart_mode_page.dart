@@ -23,6 +23,7 @@ import 'package:bipa/features/shopping_list/domain/match_list_to_cart.dart';
 import 'package:bipa/features/shopping_list/domain/record_trip_price.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
+import 'package:bipa/features/shopping_list/domain/trip_price.dart';
 import 'package:bipa/features/shopping_list/presentation/change_trip_market.dart';
 import 'package:bipa/features/shopping_list/presentation/finish_shopping.dart';
 import 'package:bipa/features/shopping_list/presentation/live_camera.dart';
@@ -315,12 +316,14 @@ class _CartModePageState extends ConsumerState<CartModePage> {
       if (!mounted) return;
       final cart = ref.read(activeCartProvider).value ?? const <CartEntry>[];
       // Firmado nesta tela ou com preço guardado na compra (ADR 0020), que
-      // vale também depois de reabrir o carrinho.
-      final withPrice = {for (final price in await tripPrices.ofTrip(trip.id)) price.itemKey};
+      // vale também depois de reabrir o carrinho. O granel que espera a
+      // pesagem também: a etiqueta do lado não é o valor dele (D3).
+      final saved = settledByTripPrices(cart, await tripPrices.ofTrip(trip.id));
       if (!mounted) return;
       final settled = {
+        ...saved,
         for (final entry in cart)
-          if (_settledItems.contains(entry.item.key) || withPrice.contains(entry.item.key)) entry.item.id,
+          if (_settledItems.contains(entry.item.key)) entry.item.id,
       };
       final now = DateTime.now();
       switch (_router.route(read, cart: cart, now: now, tagPackageId: tagPackage?.id, settled: settled)) {

@@ -1,9 +1,11 @@
 import 'package:bipa/core/money/money.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
+import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/live_scan.dart';
 import 'package:bipa/features/shopping_list/domain/live_tag_router.dart';
+import 'package:bipa/features/shopping_list/domain/trip_price.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 final _now = DateTime(2026, 10, 28, 9, 30);
@@ -117,5 +119,37 @@ void main() {
     expect(_router.fits(pending, barcode: _coffeeCode, now: _now, productName: 'Detergente Ypê'), isFalse);
     // Sem seção conhecida de um dos lados, não há como dizer que não bate.
     expect(_router.fits(pending, barcode: _coffeeCode, now: _now, productName: 'Coisa'), isTrue);
+  });
+
+  test('o granel que espera a pesagem não recebe a etiqueta sem código lida logo depois (D3)', () {
+    final tomato = CartEntry(
+      item: CartItem(
+        id: 'item-tomato',
+        tripId: 't',
+        productId: 'tomato',
+        addedAt: _now.subtract(const Duration(seconds: 3)),
+      ),
+      product: Product(id: 'tomato', name: 'Tomate', unit: MeasureUnit.kilogram, createdAt: _now, updatedAt: _now),
+    );
+    final rice = _inCart('rice', secondsAgo: 30);
+    TripPrice price(String productId, {String? packageId, bool perKilo = false}) => TripPrice(
+      tripId: 't',
+      productId: productId,
+      packageId: packageId,
+      price: const Money.cents(899),
+      source: PriceSource.priceTag,
+      readAt: _now,
+      perKilo: perKilo,
+    );
+
+    final settled = settledByTripPrices(
+      [tomato, rice],
+      [price('tomato', perKilo: true), price('rice', packageId: 'rice-pkg')],
+    );
+
+    expect(settled, {'item-tomato', 'item-rice'});
+    expect(_router.route(_read, cart: [tomato, rice], now: _now, settled: settled), isA<WaitForProduct>());
+    // Sem o preço por quilo, a mesma linha recém-chegada receberia o preço.
+    expect(_router.route(_read, cart: [tomato, rice], now: _now), PriceCartItem(tomato));
   });
 }
