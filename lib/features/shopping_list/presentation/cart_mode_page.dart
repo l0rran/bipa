@@ -135,9 +135,10 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     }
   }
 
-  /// Tocou no aviso do granel: escolhe o produto (já buscado pelo nome lido)
-  /// e guarda o preço por kg no histórico do mercado. Quanto custa sai da
-  /// etiqueta da balança ou do preço digitado (ADR 0018).
+  /// Tocou no aviso do granel: escolhe o produto (já buscado pelo nome lido),
+  /// guarda o preço por kg no histórico do mercado e põe o produto na
+  /// bandeja, sem preço. Quanto custa sai da etiqueta da balança ou do preço
+  /// digitado (ADR 0018).
   Future<void> _chooseGranel(TagPriceRead read) async {
     final trip = ref.read(activeTripProvider).value;
     if (trip == null) return;
@@ -145,6 +146,8 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     final messenger = ScaffoldMessenger.of(context);
     final recordPrice = ref.read(recordTripPriceProvider);
     final createProduct = ref.read(createProductByWeightProvider);
+    final cart = ref.read(cartRepositoryProvider);
+    final matchList = ref.read(matchListToCartProvider);
     _clearNotice();
     final choice = await _withAnalysisPaused(
       () => pickProduct(
@@ -162,6 +165,14 @@ class _CartModePageState extends ConsumerState<CartModePage> {
       // Sem mercado, o preço espera com a compra (ADR 0020). A mesma etiqueta,
       // tocada de novo, não repete o preço no histórico.
       await _recordTag(recordPrice, trip, product.id, null, read);
+      // O granel vai para a bandeja sem preço, que só a pesagem diz: a
+      // etiqueta da balança, se vier, firma o valor (ADR 0018). E marca a
+      // lista (D3).
+      final inCart = (await cart.watchTrip(trip.id).first).any(
+        (entry) => entry.item.productId == product.id && entry.item.packageId == null,
+      );
+      if (!inCart) await cart.addProduct(trip.id, product.id);
+      await matchList(trip.id, product.id, CartListChange.added);
       if (!mounted) return;
       _lockFrame();
       _showNotice((
