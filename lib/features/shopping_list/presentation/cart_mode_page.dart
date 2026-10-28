@@ -10,7 +10,6 @@ import 'package:bipa/core/widgets/quantity_dialog.dart';
 import 'package:bipa/features/markets/presentation/market_picker_sheet.dart';
 import 'package:bipa/features/prices/domain/price_comparison.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
-import 'package:bipa/features/prices/domain/register_price_observation.dart';
 import 'package:bipa/features/prices/presentation/prices_providers.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
@@ -21,7 +20,9 @@ import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/live_scan.dart';
 import 'package:bipa/features/shopping_list/domain/live_tag_router.dart';
+import 'package:bipa/features/shopping_list/domain/record_trip_price.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
+import 'package:bipa/features/shopping_list/presentation/change_trip_market.dart';
 import 'package:bipa/features/shopping_list/presentation/finish_shopping.dart';
 import 'package:bipa/features/shopping_list/presentation/live_camera.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
@@ -57,22 +58,10 @@ class _CartModePageState extends ConsumerState<CartModePage> {
 
   /// Itens com o preço firmado nesta compra (lido ao vivo, digitado ou
   /// fotografado), pela [CartItem.key]: uma etiqueta sem código lida depois
-  /// não os sobrescreve.
+  /// não os sobrescreve. Os preços lidos e digitados também ficam guardados
+  /// com a compra (ADR 0020), e valem como firmados depois de reabrir o
+  /// carrinho.
   final _settledItems = <String>{};
-
-  /// Preços de etiqueta já guardados no histórico, para não repetir a
-  /// observação a cada vez que a mesma etiqueta volta à moldura.
-  final _registeredTags = <String>{};
-
-  /// O último preço guardado no histórico para cada item nesta compra (pela
-  /// [CartItem.key]): digitar o preço do item o corrige (ADR 0017), para uma
-  /// leitura errada não ficar valendo.
-  final _recordedPrices = <String, String>{};
-
-  /// Preços lidos antes de a compra ter mercado: esperam aqui e vão para o
-  /// histórico assim que o mercado for escolhido (no chip, na lista, ao
-  /// digitar um preço ou no "Terminei"). Sem isso, se perderiam.
-  final _unsavedTagPrices = <({String productId, String? packageId, TagPriceRead read})>[];
 
   _LiveNotice? _notice;
 
@@ -153,9 +142,8 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     if (read == null || trip == null) return;
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    final register = ref.read(registerPriceObservationProvider);
+    final recordPrice = ref.read(recordTripPriceProvider);
     final createProduct = ref.read(createProductByWeightProvider);
-    final trips = ref.read(shoppingTripRepositoryProvider);
     _noticeTimer?.cancel();
     setState(() {
       _notice = null;
@@ -169,34 +157,14 @@ class _CartModePageState extends ConsumerState<CartModePage> {
       ),
     );
     if (choice == null || !mounted) return;
-    var marketId = trip.marketId;
-    if (marketId == null) {
-      marketId = (await _withScannerPaused(() => pickMarket(context)))?.id;
-      if (marketId == null) {
-        messenger.showSnackBar(SnackBar(content: Text(l10n.cartNeedMarket)));
-        return;
-      }
-    }
     try {
-      if (trip.marketId == null) await trips.setMarket(trip.id, marketId);
       final product = switch (choice) {
         ExistingProduct(product: final chosen) => chosen,
         NewProduct(:final name) => await createProduct(name),
       };
-      // A mesma etiqueta, tocada de novo depois de voltar à moldura, não
-      // repete o preço no histórico.
-      final key = _tagKey(product.id, null, read);
-      if (_registeredTags.add(key)) {
-        await register(
-          RegisterPriceInput(
-            marketId: marketId,
-            productId: product.id,
-            price: read.price,
-            source: PriceSource.priceTag,
-            otherOffers: read.otherOffers,
-          ),
-        );
-      }
+      // Sem mercado, o preço espera com a compra (ADR 0020). A mesma etiqueta,
+      // tocada de novo, não repete o preço no histórico.
+      await _recordTag(recordPrice, trip, product.id, null, read);
       if (!mounted) return;
       _lockFrame();
       _showNotice((
@@ -256,7 +224,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     final cart = ref.read(cartRepositoryProvider);
     final list = ref.read(shoppingListRepositoryProvider);
     final prices = ref.read(priceRepositoryProvider);
-    final register = ref.read(registerPriceObservationProvider);
+    final recordPrice = ref.read(recordTripPriceProvider);
 
     final pending = _pending;
     final barcode = package.barcode;
@@ -290,7 +258,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     final key = CartItem.keyOf(product.id, package.id);
     if (fromTag != null) {
       _settledItems.add(key);
-      await _rememberTagPrice(register, trip, product.id, package.id, fromTag);
+      await _recordTag(recordPrice, trip, product.id, package.id, fromTag);
     }
     if (!mounted) return;
     _lockFrame();
@@ -332,23 +300,28 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     }
     final products = ref.read(productRepositoryProvider);
     final cartRepository = ref.read(cartRepositoryProvider);
-    final register = ref.read(registerPriceObservationProvider);
+    final recordPrice = ref.read(recordTripPriceProvider);
+    final tripPrices = ref.read(tripPriceRepositoryProvider);
     final l10n = AppLocalizations.of(context);
     try {
       final barcode = read.barcode;
       final tagPackage = barcode == null ? null : await products.findPackageByBarcode(barcode);
       if (!mounted) return;
       final cart = ref.read(activeCartProvider).value ?? const <CartEntry>[];
+      // Firmado nesta tela ou com preço guardado na compra (ADR 0020), que
+      // vale também depois de reabrir o carrinho.
+      final withPrice = {for (final price in await tripPrices.ofTrip(trip.id)) price.itemKey};
+      if (!mounted) return;
       final settled = {
         for (final entry in cart)
-          if (_settledItems.contains(entry.item.key)) entry.item.id,
+          if (_settledItems.contains(entry.item.key) || withPrice.contains(entry.item.key)) entry.item.id,
       };
       final now = DateTime.now();
       switch (_router.route(read, cart: cart, now: now, tagPackageId: tagPackage?.id, settled: settled)) {
         case PriceCartItem(:final entry):
           await cartRepository.setPrice(entry.item.id, read.price);
           _settledItems.add(entry.item.key);
-          await _rememberTagPrice(register, trip, entry.product.id, entry.item.packageId, read);
+          await _recordTag(recordPrice, trip, entry.product.id, entry.item.packageId, read);
           unawaited(HapticFeedback.lightImpact());
           if (!mounted) return;
           _lockFrame();
@@ -367,68 +340,24 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     }
   }
 
-  /// Guarda o preço da etiqueta no histórico do mercado da compra, com os
-  /// outros preços dela (ADR 0011). Sem mercado escolhido, fica só no
-  /// carrinho.
-  Future<void> _rememberTagPrice(
-    RegisterPriceObservation register,
+  /// Guarda o preço da etiqueta com a compra (ADR 0020), com os outros
+  /// preços dela (ADR 0011): no histórico do mercado, ou à espera dele. A
+  /// mesma etiqueta lida de novo não repete o preço.
+  static Future<void> _recordTag(
+    RecordTripPrice recordPrice,
     ShoppingTrip trip,
     String productId,
     String? packageId,
     TagPriceRead read,
   ) async {
-    final marketId = trip.marketId;
-    final key = _tagKey(productId, packageId, read);
-    if (_registeredTags.contains(key)) return;
-    if (marketId == null) {
-      _unsavedTagPrices
-        ..removeWhere((u) => _tagKey(u.productId, u.packageId, u.read) == key)
-        ..add((productId: productId, packageId: packageId, read: read));
-      return;
-    }
-    final recorded = await register(
-      RegisterPriceInput(
-        marketId: marketId,
-        productId: productId,
-        packageId: packageId,
-        price: read.price,
-        source: PriceSource.priceTag,
-        otherOffers: read.otherOffers,
-      ),
+    await recordPrice(
+      tripId: trip.id,
+      productId: productId,
+      packageId: packageId,
+      price: read.price,
+      source: PriceSource.priceTag,
+      otherOffers: read.otherOffers,
     );
-    _registeredTags.add(key);
-    _recordedPrices[CartItem.keyOf(productId, packageId)] = recorded.id;
-  }
-
-  static String _tagKey(String productId, String? packageId, TagPriceRead read) =>
-      '${CartItem.keyOf(productId, packageId)}:${read.price.cents}';
-
-  /// Grava no histórico os preços que esperavam o mercado.
-  Future<void> _saveUnsavedTagPrices(String marketId) async {
-    if (_unsavedTagPrices.isEmpty) return;
-    final register = ref.read(registerPriceObservationProvider);
-    final unsaved = [..._unsavedTagPrices];
-    _unsavedTagPrices.clear();
-    for (final (:productId, :packageId, :read) in unsaved) {
-      final key = _tagKey(productId, packageId, read);
-      if (_registeredTags.contains(key)) continue;
-      try {
-        final recorded = await register(
-          RegisterPriceInput(
-            marketId: marketId,
-            productId: productId,
-            packageId: packageId,
-            price: read.price,
-            source: PriceSource.priceTag,
-            otherOffers: read.otherOffers,
-          ),
-        );
-        _registeredTags.add(key);
-        _recordedPrices[CartItem.keyOf(productId, packageId)] = recorded.id;
-      } on Exception catch (error, stack) {
-        _report(error, stack);
-      }
-    }
   }
 
   void _lockFrame() => _cameraKey.currentState?.lock();
@@ -483,8 +412,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     // Lidos antes dos awaits: o carrinho pode fechar no meio do caminho.
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    final trips = ref.read(shoppingTripRepositoryProvider);
-    final register = ref.read(registerPriceObservationProvider);
+    final recordPrice = ref.read(recordTripPriceProvider);
     final cart = ref.read(cartRepositoryProvider);
 
     final price = await _withAnalysisPaused(
@@ -492,29 +420,17 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     );
     if (price == null || !mounted) return;
 
-    var marketId = trip.marketId;
-    if (marketId == null) {
-      marketId = (await _withScannerPaused(() => pickMarket(context)))?.id;
-      if (marketId == null) {
-        messenger.showSnackBar(SnackBar(content: Text(l10n.cartNeedMarket)));
-        return;
-      }
-    }
     try {
-      if (trip.marketId == null) await trips.setMarket(trip.id, marketId);
-      // Corrige o que foi guardado antes para o item (a etiqueta lida ou o
-      // preço digitado da outra vez), em vez de somar mais um preço.
-      final recorded = await register(
-        RegisterPriceInput(
-          marketId: marketId,
-          productId: entry.product.id,
-          packageId: entry.item.packageId,
-          price: price,
-          source: PriceSource.manual,
-          supersedes: _recordedPrices[entry.item.key],
-        ),
+      // Corrige o que foi guardado antes para o item no mesmo mercado (a
+      // etiqueta lida ou o preço digitado da outra vez), em vez de somar mais
+      // um preço. Sem mercado, espera com a compra (ADR 0020).
+      await recordPrice(
+        tripId: trip.id,
+        productId: entry.product.id,
+        packageId: entry.item.packageId,
+        price: price,
+        source: PriceSource.manual,
       );
-      _recordedPrices[entry.item.key] = recorded.id;
       await cart.setPrice(entry.item.id, price);
       _settledItems.add(entry.item.key);
     } on Exception {
@@ -536,10 +452,12 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     }
   }
 
+  /// O chip do mercado: os preços que esperavam vão para o escolhido, e os
+  /// já gravados em outro vão junto se a pessoa quiser (ADR 0020).
   Future<void> _chooseMarket(ShoppingTrip trip) async {
     final market = await _withScannerPaused(() => pickMarket(context, selectedId: trip.marketId));
-    if (market != null) await ref.read(shoppingTripRepositoryProvider).setMarket(trip.id, market.id);
-    // Os preços que esperavam vão pelo ouvinte do mercado da compra (build).
+    if (market == null || !mounted) return;
+    await _withAnalysisPaused(() => changeTripMarket(context, ref, trip, market));
   }
 
   /// O disparo abre a foto da etiqueta; o preço salvo lá entra no carrinho
@@ -550,18 +468,9 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     if (priced != null) _settledItems.addAll(priced);
   }
 
+  /// "Terminei": a escolha do mercado para os preços que esperavam vem no
+  /// [finishShopping], comum ao carrinho, à Lista e à notificação.
   Future<void> _finish(ShoppingTrip trip) async {
-    // Preços lidos sem mercado: é a última chance de guardá-los.
-    if (trip.marketId == null && _unsavedTagPrices.isNotEmpty) {
-      final trips = ref.read(shoppingTripRepositoryProvider);
-      final market = await _withScannerPaused(() => pickMarket(context));
-      if (!mounted) return;
-      if (market != null) {
-        await trips.setMarket(trip.id, market.id);
-        await _saveUnsavedTagPrices(market.id);
-        if (!mounted) return;
-      }
-    }
     setState(() => _finishing = true);
     try {
       await _withAnalysisPaused(() => finishShopping(context, ref, trip.id));
@@ -590,12 +499,6 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     final summary = ref.watch(shoppingTripSummaryProvider);
     final marketName = ref.watch(activeTripMarketNameProvider);
     final notice = _notice;
-
-    // A compra ganhou mercado (aqui, na Lista ou pela localização): os
-    // preços que esperavam vão para o histórico.
-    ref.listen(activeTripProvider.select((trip) => trip.value?.marketId), (previous, marketId) {
-      if (previous == null && marketId != null) unawaited(_saveUnsavedTagPrices(marketId));
-    });
 
     // A compra terminou (aqui ou na Lista): o carrinho fecha.
     ref.listen(activeTripProvider, (previous, next) {

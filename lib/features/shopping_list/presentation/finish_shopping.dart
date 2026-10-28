@@ -1,4 +1,5 @@
 import 'package:bipa/core/l10n/app_localizations.dart';
+import 'package:bipa/features/markets/presentation/market_picker_sheet.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:bipa/features/shopping_list/presentation/trip_review_sheet.dart';
 import 'package:flutter/material.dart';
@@ -12,9 +13,21 @@ Future<void> finishShopping(BuildContext context, WidgetRef ref, String tripId) 
   // Lidos antes do await: a tela pode fechar quando a compra terminar.
   final review = ref.read(reviewShoppingTripProvider);
   final finish = ref.read(finishShoppingTripProvider);
+  final trips = ref.read(shoppingTripRepositoryProvider);
+  final setMarket = ref.read(setTripMarketProvider);
   final messenger = ScaffoldMessenger.of(context);
   final l10n = AppLocalizations.of(context);
   try {
+    // Preços lidos sem mercado: é a última chance de guardá-los (ADR 0020),
+    // venha o "Terminei" do carrinho, da Lista ou da notificação. Fechar a
+    // escolha termina assim mesmo, sem eles.
+    final trip = await trips.findActive();
+    if (trip != null && trip.id == tripId && trip.marketId == null && await setMarket.pendingPrices(tripId) > 0) {
+      if (!context.mounted) return;
+      final market = await pickMarket(context, title: l10n.tripPendingMarketTitle);
+      if (market != null) await setMarket(tripId, market.id);
+      if (!context.mounted) return;
+    }
     final summary = await review(tripId);
     if (summary == null || !context.mounted) return;
     if (!await showTripReview(context, summary)) return;

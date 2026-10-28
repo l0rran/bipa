@@ -9,19 +9,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 /// Abre a seleção de mercado e devolve o escolhido (ou `null`).
-Future<Market?> pickMarket(BuildContext context, {String? selectedId}) {
+/// [title] troca o título padrão quando a escolha tem um motivo a dizer.
+Future<Market?> pickMarket(BuildContext context, {String? selectedId, String? title}) {
   return showModalBottomSheet<Market>(
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
-    builder: (_) => MarketPickerSheet(selectedId: selectedId),
+    builder: (_) => MarketPickerSheet(selectedId: selectedId, title: title),
   );
 }
 
 class MarketPickerSheet extends ConsumerWidget {
-  const MarketPickerSheet({this.selectedId, super.key});
+  const MarketPickerSheet({this.selectedId, this.title, super.key});
 
   final String? selectedId;
+  final String? title;
 
   Future<void> _createMarket(BuildContext context) async {
     final created = await context.push<Market>(Routes.newMarketHere);
@@ -42,7 +44,10 @@ class MarketPickerSheet extends ConsumerWidget {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: Text(AppLocalizations.of(context).marketPickTitle, style: Theme.of(context).textTheme.titleMedium),
+              child: Text(
+                title ?? AppLocalizations.of(context).marketPickTitle,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             ),
             for (final item in ranked)
               MarketTile(

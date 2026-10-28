@@ -1181,5 +1181,33 @@
         "type": "String"
       }
     }
+  },
+  "tripMovePricesTitle": "{count, plural, =1{Levar o preço lido para {market}?} other{Levar os {count} preços lidos para {market}?}}",
+  "@tripMovePricesTitle": {
+    "description": "Pergunta ao trocar o mercado da compra quando já há preços gravados no anterior (ADR 0020).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "market": {
+        "type": "String"
+      }
+    }
+  },
+  "tripMovePricesBody": "Leve se a compra começou no mercado errado. Se você passou por duas lojas, os preços ficam em {previous}.",
+  "@tripMovePricesBody": {
+    "description": "Explica a pergunta de levar os preços: {previous} é o mercado anterior.",
+    "placeholders": {
+      "previous": {
+        "type": "String"
+      }
+    }
+  },
+  "tripMovePricesMove": "Levar os preços",
+  "tripMovePricesKeep": "Deixar onde estão",
+  "tripMarketFailed": "Não deu para trocar o mercado. Tente de novo.",
+  "tripPendingMarketTitle": "Em qual mercado foi a compra?",
+  "@tripPendingMarketTitle": {
+    "description": "Título da escolha de mercado no \"Terminei\" quando há preços lidos à espera de um mercado (ADR 0020)."
   }
 }

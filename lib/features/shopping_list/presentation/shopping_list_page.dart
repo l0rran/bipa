@@ -19,6 +19,7 @@ import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_sections.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
 import 'package:bipa/features/shopping_list/presentation/aisle_label.dart';
+import 'package:bipa/features/shopping_list/presentation/change_trip_market.dart';
 import 'package:bipa/features/shopping_list/presentation/finish_shopping.dart';
 import 'package:bipa/features/shopping_list/presentation/list_preview.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
@@ -126,15 +127,15 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
       );
   }
 
-  /// Durante a compra, troca o mercado dela; fora, escolhe o mercado em que
-  /// a lista se arruma e com que o "Ir às compras" começa.
+  /// Durante a compra, troca o mercado dela, com os preços (ADR 0020); fora,
+  /// escolhe o mercado em que a lista se arruma e com que o "Ir às compras"
+  /// começa.
   Future<void> _chooseMarket(ShoppingTrip? trip) async {
-    final trips = ref.read(shoppingTripRepositoryProvider);
     final chosen = ref.read(listChosenMarketProvider.notifier);
     final market = await pickMarket(context, selectedId: ref.read(listMarketIdProvider));
-    if (market == null) return;
+    if (market == null || !mounted) return;
     if (trip != null) {
-      await trips.setMarket(trip.id, market.id);
+      await changeTripMarket(context, ref, trip, market);
     } else {
       chosen.choose(market.id);
     }
