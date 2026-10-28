@@ -28,6 +28,8 @@ a{color:#1C1B22}a:hover{color:#B00E28}
 .count{font:600 13px/18px var(--font-body);color:var(--ink-muted)}
 .enter{animation:bipa-fade-up var(--duration-slow) var(--easing-standard) both}
 
+.shelf-actions{display:inline-flex;align-items:center;gap:4px}
+.bipa-shelf__more{display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:50%;background:none;color:var(--ink-muted)}
 </style>
 </helmet>
 <div class="screen bipa-root">
@@ -161,11 +163,11 @@ a{color:#1C1B22}a:hover{color:#B00E28}
         </button>
         <div class="bipa-shelf__editor"><div>
           <div class="bipa-stepper">
-            <button type="button" data-step="-1" aria-label="Usei um"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12h12"/></svg></button>
+            <button type="button" data-step="-1" aria-label="Uma embalagem a menos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12h12"/></svg></button>
             <span class="bipa-stepper__count"><span class="bipa-roll bipa-stepper__qty"><span>1</span></span><span class="bipa-stepper__unit">pct</span></span>
-            <button type="button" data-step="1" aria-label="Comprei um"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+            <button type="button" data-step="1" aria-label="Uma embalagem a mais"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
           </div>
-          <button class="bipa-shelf__list" type="button" aria-pressed="false"><span class="is-off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r="1"/><circle cx="4.8" cy="12" r="1"/><circle cx="4.8" cy="17.5" r="1"/></svg> Pôr na lista</span><span class="is-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg> Na lista</span></button>
+          <span class="shelf-actions"><button class="bipa-shelf__list" type="button" aria-pressed="false"><span class="is-off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r="1"/><circle cx="4.8" cy="12" r="1"/><circle cx="4.8" cy="17.5" r="1"/></svg> Pôr na lista</span><span class="is-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg> Na lista</span></button><button class="bipa-shelf__more" type="button" aria-label="Mais do item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 12h.01M12 12h.01M18 12h.01"/></svg></button></span>
         </div></div>
       </div>
       <div class="bipa-shelf__item" data-value="3" data-min="1" data-unit="pct" data-place="pantry">
@@ -177,11 +179,11 @@ a{color:#1C1B22}a:hover{color:#B00E28}
         </button>
         <div class="bipa-shelf__editor"><div>
           <div class="bipa-stepper">
-            <button type="button" data-step="-1" aria-label="Usei um"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12h12"/></svg></button>
+            <button type="button" data-step="-1" aria-label="Uma embalagem a menos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12h12"/></svg></button>
             <span class="bipa-stepper__count"><span class="bipa-roll bipa-stepper__qty"><span>3</span></span><span class="bipa-stepper__unit">pct</span></span>
-            <button type="button" data-step="1" aria-label="Comprei um"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+            <button type="button" data-step="1" aria-label="Uma embalagem a mais"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
           </div>
-          <button class="bipa-shelf__list" type="button" aria-pressed="false"><span class="is-off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r="1"/><circle cx="4.8" cy="12" r="1"/><circle cx="4.8" cy="17.5" r="1"/></svg> Pôr na lista</span><span class="is-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg> Na lista</span></button>
+          <span class="shelf-actions"><button class="bipa-shelf__list" type="button" aria-pressed="false"><span class="is-off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r="1"/><circle cx="4.8" cy="12" r="1"/><circle cx="4.8" cy="17.5" r="1"/></svg> Pôr na lista</span><span class="is-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg> Na lista</span></button><button class="bipa-shelf__more" type="button" aria-label="Mais do item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 12h.01M12 12h.01M18 12h.01"/></svg></button></span>
         </div></div>
       </div>
       <div class="bipa-shelf__item" data-value="2" data-min="1" data-unit="cx" data-place="laundry">
@@ -193,11 +195,11 @@ a{color:#1C1B22}a:hover{color:#B00E28}
         </button>
         <div class="bipa-shelf__editor"><div>
           <div class="bipa-stepper">
-            <button type="button" data-step="-1" aria-label="Usei um"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12h12"/></svg></button>
+            <button type="button" data-step="-1" aria-label="Uma embalagem a menos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12h12"/></svg></button>
             <span class="bipa-stepper__count"><span class="bipa-roll bipa-stepper__qty"><span>2</span></span><span class="bipa-stepper__unit">cx</span></span>
-            <button type="button" data-step="1" aria-label="Comprei um"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+            <button type="button" data-step="1" aria-label="Uma embalagem a mais"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
           </div>
-          <button class="bipa-shelf__list" type="button" aria-pressed="false"><span class="is-off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r="1"/><circle cx="4.8" cy="12" r="1"/><circle cx="4.8" cy="17.5" r="1"/></svg> Pôr na lista</span><span class="is-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg> Na lista</span></button>
+          <span class="shelf-actions"><button class="bipa-shelf__list" type="button" aria-pressed="false"><span class="is-off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r="1"/><circle cx="4.8" cy="12" r="1"/><circle cx="4.8" cy="17.5" r="1"/></svg> Pôr na lista</span><span class="is-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg> Na lista</span></button><button class="bipa-shelf__more" type="button" aria-label="Mais do item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 12h.01M12 12h.01M18 12h.01"/></svg></button></span>
         </div></div>
       </div>
       <div class="bipa-shelf__item" data-value="5" data-min="2" data-unit="un" data-place="pantry">
@@ -209,11 +211,11 @@ a{color:#1C1B22}a:hover{color:#B00E28}
         </button>
         <div class="bipa-shelf__editor"><div>
           <div class="bipa-stepper">
-            <button type="button" data-step="-1" aria-label="Usei um"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12h12"/></svg></button>
+            <button type="button" data-step="-1" aria-label="Uma embalagem a menos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12h12"/></svg></button>
             <span class="bipa-stepper__count"><span class="bipa-roll bipa-stepper__qty"><span>5</span></span><span class="bipa-stepper__unit">un</span></span>
-            <button type="button" data-step="1" aria-label="Comprei um"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+            <button type="button" data-step="1" aria-label="Uma embalagem a mais"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
           </div>
-          <button class="bipa-shelf__list" type="button" aria-pressed="false"><span class="is-off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r="1"/><circle cx="4.8" cy="12" r="1"/><circle cx="4.8" cy="17.5" r="1"/></svg> Pôr na lista</span><span class="is-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg> Na lista</span></button>
+          <span class="shelf-actions"><button class="bipa-shelf__list" type="button" aria-pressed="false"><span class="is-off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r="1"/><circle cx="4.8" cy="12" r="1"/><circle cx="4.8" cy="17.5" r="1"/></svg> Pôr na lista</span><span class="is-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg> Na lista</span></button><button class="bipa-shelf__more" type="button" aria-label="Mais do item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 12h.01M12 12h.01M18 12h.01"/></svg></button></span>
         </div></div>
       </div>
       </div>

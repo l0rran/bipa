@@ -8,7 +8,7 @@ Cada tela tem uma imagem (390 px de largura, em 2x) e o HTML de origem em [`font
 
 | Tela | Imagem | No app |
 | --- | --- | --- |
-| **Início**: busca com bipar, a lista (miniaturas, total estimado e "Ir às compras"), locais como categorias, carrossel de insights, prateleira de "Acabando" e lista "Em casa" com o medidor de nível. | [Main.png](telas/Main.png) | Feita, sem os insights |
+| **Início**: busca com bipar, a lista (miniaturas, total estimado e "Ir às compras"), locais como categorias, carrossel de insights, prateleira de "Acabando" e lista "Em casa" com o medidor de nível. Tocar na linha abre o editor: o stepper, "Na lista" e "⋯" (mais do item: local, "Tirar de casa" e produto). | [Main.png](telas/Main.png) | Feita, sem os insights. O "⋯" aguarda revisão; o chip "Ter sempre" do app ainda não está no quadro |
 | **Menu do bipar**: o toque longo no botão de bipar abre Modo carrinho, Guardar em casa, Dar baixa em casa e Ler cupom fiscal. | [MenuBipar.png](telas/MenuBipar.png) | Feita, sem "Ler cupom fiscal". "Guardar em casa" aguarda revisão |
 | **Captura**: a câmera abre direto, com o mercado no topo, a moldura de leitura, o seletor Etiqueta · Código · Cupom, o disparo, "digitar o preço" e o modo carrinho. | [Captura.png](telas/Captura.png) | Feita: a câmera lê ao vivo, como o carrinho, e ainda não tem o modo Cupom; o disparo fotografa a etiqueta no formulário antigo |
 | **Confirmação**: folha para conferir e salvar, com o produto, o mercado (tocar troca), o preço em destaque, o lápis para corrigir, "Mais barato aqui" e "Também comprei", que soma ao estoque. | [Confirmacao.png](telas/Confirmacao.png) | Feita. A linha do mercado aguarda revisão |

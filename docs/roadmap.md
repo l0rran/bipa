@@ -58,7 +58,6 @@ Primeira abertura e em casa:
 - [ ] AB1: ao fechar o editor do item, se o stepper cruzou o "ter sempre", um aviso oferece "Pôr na lista" ou "Tirar da lista"
 - [ ] AB3: a linha deslizada em "Usei um" fica no lugar, com o anel já coral, enquanto o aviso está na tela, e só depois vai para "Acabando"
 - [ ] AB5: primeira carga que configura: folha "Arrumar o que entrou" com local e "ter sempre", ou o local sugerido pela categoria
-- [ ] AB6: botão "Mais do item" no editor da linha, para o local, "Tirar de casa" e "Ver produto" sem passar pelo chip do "ter sempre"
 
 Lista e compra:
 
@@ -87,7 +86,7 @@ Consistência e acessibilidade:
 - [ ] H5: as linhas de "Nos mercados" e da comparação abrem o mercado, e os alfinetes do mapa levam à linha
 - [ ] A barra de navegação encolhe ao rolar, como no design system
 - [ ] Movimento reduzido respeitado em todas as animações (barras da comparação e stepper)
-- [ ] Revisar no protótipo: "Modo carrinho: granel sem código", "Menu do bipar" com "Guardar em casa", "Mercados" com a idade dos preços e a pergunta "Levar os preços?", o mercado na "Confirmação", o aviso tocável em "Modo carrinho: preço esperando", o "1 de 2" no "Modo carrinho", e o "2× Leite" e o "Cancelar compra" no "Fim da compra"
+- [ ] Revisar no protótipo: "Modo carrinho: granel sem código", "Menu do bipar" com "Guardar em casa", "Mercados" com a idade dos preços e a pergunta "Levar os preços?", o mercado na "Confirmação", o aviso tocável em "Modo carrinho: preço esperando", o "1 de 2" no "Modo carrinho", e o "2× Leite" e o "Cancelar compra" no "Fim da compra", e o "⋯" no editor da linha do "Início"
 
 ## Fase 2: base comunitária
 
