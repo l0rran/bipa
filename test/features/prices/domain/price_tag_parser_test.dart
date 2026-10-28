@@ -394,6 +394,54 @@ void main() {
     });
   });
 
+  // Saída do ML Kit no emulador para recortes de vídeo de etiquetas do Assaí:
+  // os números grandes são lidos, os rótulos pequenos não.
+  group('etiquetas sem rótulos lidos', () {
+    test('preços diferentes do mesmo tamanho ficam para a pessoa escolher', () {
+      final reading = parser.parse(const [
+        OcrLine(text: '13,89 1535', left: 269, top: 129, width: 70, height: 47),
+        OcrLine(text: 'Sarol', left: 138, top: 371, width: 184, height: 157),
+      ]);
+
+      expect(reading.offers, isEmpty);
+      expect(reading.price, isNull);
+      expect(reading.candidates, const [Money.cents(1389), Money.cents(1535)]);
+    });
+
+    test('o mesmo preço lado a lado é atacado e cartão, não varejo', () {
+      final reading = parser.parse(const [
+        OcrLine(text: 'Carioca', left: 46, top: 3, width: 63, height: 20),
+        OcrLine(text: '7,85', left: 101, top: 170, width: 29, height: 18),
+        OcrLine(text: '7,85', left: 153, top: 158, width: 22, height: 16),
+      ]);
+
+      expect(reading.offers, isEmpty);
+      expect(reading.price, isNull);
+      expect(reading.candidates, const [Money.cents(785)]);
+    });
+
+    test('o mesmo preço em duas etiquetas do quadro continua sendo o preço', () {
+      final reading = parser.parse(const [
+        OcrLine(text: 'LATA PALU YOLL EXTNA FNA I', left: 16, top: 33, width: 190, height: 19),
+        OcrLine(text: 'Precs Por Unidade', left: 25, top: 59, width: 98, height: 12),
+        OcrLine(text: '5.99', left: 77, top: 81, width: 53, height: 16),
+        OcrLine(text: 'Prece Pur Untsde', left: 323, top: 49, width: 104, height: 15),
+        OcrLine(text: '5,99', left: 365, top: 70, width: 59, height: 19),
+      ]);
+
+      expect(reading.offers, const [
+        PriceOffer(price: Money.cents(599), condition: AnyCustomer()),
+      ]);
+    });
+
+    test('número longe do valor do preço não é um preço sem vírgula', () {
+      final reading = parser.parse(tag([('R\$ 4,99 7891', 60)]));
+
+      expect(reading.candidates, const [Money.cents(499)]);
+      expect(reading.price, const Money.cents(499));
+    });
+  });
+
   test('etiqueta sem preço nem código é vazia', () {
     final reading = parser.parse(tag([('PAO FRANCES', 20)]));
 

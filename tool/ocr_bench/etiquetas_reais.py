@@ -2,6 +2,8 @@
 
 Cada linha: (texto, left, top, width, height), nas coordenadas do recorte ampliado.
 Espera: ofertas [(condição, mínimo, centavos)], com a principal primeiro.
+Os casos "mlkit_*" são a saída real do ML Kit (emulador) para recortes de vídeo:
+os rótulos pequenos não são lidos, e o nome sai errado ou não sai.
 """
 
 FIXTURES = {
@@ -90,5 +92,42 @@ FIXTURES = {
         ],
         offers=[("any", None, 5990)],
         name="Fralda Huggies Max Prot",
+    ),
+    "mlkit_veja_dois_precos_sem_rotulo": dict(
+        lines=[
+            ("13,89 1535", 269, 129, 70, 47),
+            ("Sarol", 138, 371, 184, 157),
+        ],
+        offers=[],
+        candidates=[1389, 1535],
+    ),
+    "mlkit_feijao_gemeos_sem_rotulo": dict(
+        lines=[
+            ("Carioca", 46, 3, 63, 20),
+            ("7,85", 101, 170, 29, 18),
+            ("7,85", 153, 158, 22, 16),
+        ],
+        offers=[],
+        candidates=[785],
+    ),
+    "mlkit_minuano_gemeos_sem_rotulo": dict(
+        lines=[
+            ("1.79", 180, 78, 33, 13),
+            ("06", 185, 104, 13, 9),
+            ("1,79", 254, 79, 39, 14),
+            ("A UNIDADE", 243, 108, 53, 9),
+        ],
+        offers=[],
+        candidates=[179],
+    ),
+    "mlkit_batata_duas_etiquetas": dict(
+        lines=[
+            ("LATA PALU YOLL EXTNA FNA I", 16, 33, 190, 19),
+            ("Precs Por Unidade", 25, 59, 98, 12),
+            ("5.99", 77, 81, 53, 16),
+            ("Prece Pur Untsde", 323, 49, 104, 15),
+            ("5,99", 365, 70, 59, 19),
+        ],
+        offers=[("any", None, 599)],
     ),
 }

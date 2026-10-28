@@ -165,7 +165,9 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
     });
 
     if (!_productLocked && barcode != null) unawaited(_lookupBarcode(barcode));
-    if (reading.isEmpty) {
+    if (reading.price == null && reading.candidates.isNotEmpty) {
+      context.showMessage(AppLocalizations.of(context).captureChoosePrice);
+    } else if (reading.isEmpty) {
       context.showMessage('Nenhum preço encontrado. Aproxime a câmera da etiqueta e tente de novo.');
     }
   }

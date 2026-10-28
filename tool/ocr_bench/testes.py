@@ -59,9 +59,16 @@ confere("bloco de informações", (ofertas(r), r.candidates), ([("any", None, 17
 r = parse(tag([("CAFE PILAO 500G", 20), ("DE R$ 9,99", 30), ("NO APP", 20), ("R$ 7,99", 80)]))
 confere("de solto", (ofertas(r), r.regular_price), ([("loyalty", None, 799)], 999))
 
+r = parse(tag([("R$ 4,99 7891", 60)]))
+confere("número longe não é preço sem vírgula", (r.price, r.candidates), (499, [499]))
+
 for nome, f in FIXTURES.items():
     r = parse([OcrLine(t, top, h, left, w) for (t, left, top, w, h) in f["lines"]])
-    confere(nome, (ofertas(r), r.name), (f["offers"], f["name"]))
+    confere(nome, ofertas(r), f["offers"])
+    if "name" in f:
+        confere(f"{nome} (nome)", r.name, f["name"])
+    if "candidates" in f:
+        confere(f"{nome} (candidatos)", (r.price, r.candidates), (None, f["candidates"]))
 
 print("\n".join(falhas) if falhas else "todos os casos passaram")
 raise SystemExit(1 if falhas else 0)

@@ -100,5 +100,9 @@
   "captureOtherOffers": "Também na etiqueta",
   "@captureOtherOffers": {
     "description": "Outros preços da etiqueta, com condição, que também serão salvos."
+  },
+  "captureChoosePrice": "A etiqueta tem mais de um preço. Toque no que você paga.",
+  "@captureChoosePrice": {
+    "description": "A foto trouxe vários preços sem dizer qual é o de varejo, e o campo ficou em branco."
   }
 }

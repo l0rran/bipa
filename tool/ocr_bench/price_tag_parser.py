@@ -71,11 +71,16 @@ LETTER = re.compile("[A-Za-zÀ-ÿ]")
 DIGIT_RUN = re.compile(r"(?<!\d)\d[\d ]{6,18}\d(?!\d)", A)
 INT_END = re.compile(r"(?<![\d,.])\d{1,4}$", A)
 CENTS_FRAGMENT = re.compile(r"^[,.]?\s?(\d{2})$", A)
+MISSING_SEPARATOR = re.compile(r"^\s+(\d{1,2})(\d{2})(?![\d.,])", A)
 SPACED_DIGITS = re.compile(r"(R\$\s?)(\d(?:\s\d){1,3})(?=\s?[,.]\s?\d{2}(?!\d))", A)
 
 # Preços impressos bem menores que o maior (bloco de informações, preço por litro)
 # continuam como candidatos, mas não viram ofertas.
 OFFER_MIN_HEIGHT = 0.35
+# Preços com pelo menos esta fração da altura do maior disputam o posto de principal.
+SAME_SIZE = 0.8
+# Distância máxima, em alturas, entre dois preços iguais lado a lado na mesma etiqueta.
+TWIN_MAX_GAP = 6
 
 
 @dataclass(frozen=True)
@@ -134,6 +139,7 @@ class Cand:
     wholesale: bool = False
     loyalty: bool = False
     min_quantity: int | None = None
+    source: "Line | None" = None
 
 
 def normalize(text: str) -> str:
@@ -168,7 +174,7 @@ def merge_cents(lines: list[Line]) -> list[Line]:
     return out
 
 
-def find_prices(text: str, height: float, index: int) -> list[Cand]:
+def find_prices(text: str, height: float, index: int, source: Line | None = None) -> list[Cand]:
     out = []
     for m in DECIMAL.finditer(text):
         prefix, suffix = text[: m.start()], text[m.end():]
@@ -178,7 +184,12 @@ def find_prices(text: str, height: float, index: int) -> list[Cand]:
             continue
         c = _to_cand(prefix, int(m.group(1).replace(".", "")), int(m.group(2)), height, index)
         if c:
+            c.source = source
             out.append(c)
+            n = _neighbor_without_separator(text, m.end(), c, height, index)
+            if n:
+                n.source = source
+                out.append(n)
     if out:
         return out
     for m in SPLIT_CENTS.finditer(text):
@@ -186,6 +197,17 @@ def find_prices(text: str, height: float, index: int) -> list[Cand]:
         if c:
             out.append(c)
     return out
+
+
+def _neighbor_without_separator(text, end, previous, height, index):
+    """Preço vizinho lido sem a vírgula: "13,89 1535" é 13,89 e 15,35."""
+    m = MISSING_SEPARATOR.match(text[end:])
+    if not m or QTY_SUFFIX.search(text[end + m.end():]):
+        return None
+    c = _to_cand(text[: end + m.start()], int(m.group(1)), int(m.group(2)), height, index)
+    if c and 0.5 <= c.cents / previous.cents <= 2:
+        return c
+    return None
 
 
 def _to_cand(prefix, whole, cents, height, index):
@@ -321,7 +343,7 @@ def parse(lines, barcodes=()):
 
     cands, unit = [], []
     for i in price_lines:
-        found = find_prices(texts[i], ordered[i].height, i)
+        found = find_prices(texts[i], ordered[i].height, i, ordered[i])
         lab = labels_by_line.get(i)
         if lab:
             for c in found:
@@ -335,7 +357,7 @@ def parse(lines, barcodes=()):
         (unit if UNIT_PRICE.search(texts[i]) else cands).extend(found)
 
     pool = cands or unit
-    offers = _offers(pool)
+    offers = [] if _unlabeled_multi_price(pool) else _offers(pool)
     main = offers[0] if offers else None
     seen = []
     for c in pool:
@@ -349,6 +371,26 @@ def parse(lines, barcodes=()):
         candidates=seen,
         offers=offers,
     )
+
+
+def _unlabeled_multi_price(pool):
+    """Mais de um preço do mesmo tamanho e nenhum rótulo lido: nenhum é escolhido."""
+    if not pool:
+        return False
+    tallest = max(c.height for c in pool)
+    same = [c for c in pool if c.height >= SAME_SIZE * tallest]
+    if any(c.role != "neutral" or condition_of(c) != ANY for c in same):
+        return False
+    if len({c.cents for c in same}) > 1:
+        return True
+    return any(_side_by_side(a.source, b.source) for i, a in enumerate(same) for b in same[i + 1:])
+
+
+def _side_by_side(a, b):
+    if a is None or b is None or a is b or not a.has_geometry or not b.has_geometry:
+        return False
+    gap = max(a.left, b.left) - min(a.right, b.right)
+    return _v_gap(a, b) == 0 and gap <= TWIN_MAX_GAP * max(a.height, b.height)
 
 
 def _offers(pool):

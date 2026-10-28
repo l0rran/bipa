@@ -24,6 +24,7 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 
 ### Corrigido
 - Leitura da etiqueta: centavos sobrescritos lidos à parte, milhar ("1.299,90"), preço seguido de KG ou UN, parcelas confundidas com o preço, dígitos espaçados pelo OCR e rótulos como "LEVE 3 PAGUE 2" tomados pelo nome do produto.
+- Etiqueta com mais de um preço e nenhum rótulo lido (foto de longe ou borrada) não grava mais o preço do cartão ou do atacado como varejo: o campo fica em branco e os valores lidos ficam para tocar. Um preço lido sem a vírgula ao lado de outro ("13,89 1535") também entra entre os valores.
 
 ## [0.1.0] - 2026-10-27
 

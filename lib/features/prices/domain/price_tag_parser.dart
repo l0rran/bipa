@@ -21,7 +21,10 @@ import 'package:bipa/features/products/domain/gtin.dart';
 /// * rótulos de condição ("ATACADO", "A PARTIR DE 10 UNIDADES", "PASSAÍ
 ///   CRED", "PREÇO CLUBE") valem para o preço da mesma linha ou da mesma
 ///   coluna, logo acima ou abaixo (ADR 0011);
-/// * em cada condição, vence o valor escrito com a maior fonte.
+/// * em cada condição, vence o valor escrito com a maior fonte;
+/// * sem nenhum rótulo lido, uma etiqueta com mais de um preço do mesmo
+///   tamanho não diz qual é o de varejo: nenhum é escolhido, e os valores
+///   ficam como candidatos para a pessoa tocar no certo.
 ///
 /// O resultado é sempre uma sugestão: a interface pede confirmação.
 final class PriceTagParser {
@@ -47,7 +50,10 @@ final class PriceTagParser {
   /// "R$ 1 0,99": o OCR separou os dígitos de um número de letras espaçadas.
   static final _spacedDigits = RegExp(r'(R\$\s?)(\d(?:\s\d){1,3})(?=\s?[,.]\s?\d{2}(?!\d))');
 
-  static final _integerEnd = RegExp(r'(?<![\d,.])\d{1,4}$');
+  /// Número de 3 ou 4 dígitos logo depois de um preço: "13,89 1535".
+  static final _missingSeparator = RegExp(r'^\s+(\d{1,2})(\d{2})(?![\d.,])');
+
+  static final _integerEnd =RegExp(r'(?<![\d,.])\d{1,4}$');
   static final _centsFragment = RegExp(r'^[,.]?\s?(\d{2})$');
 
   static final _unitPriceMarker = RegExp(
@@ -101,6 +107,14 @@ final class PriceTagParser {
   /// por litro) continuam como candidatos, mas não viram ofertas.
   static const _offerMinHeightRatio = 0.35;
 
+  /// Preços com pelo menos esta fração da altura do maior disputam o posto
+  /// de principal: a fonte não basta para escolher entre eles.
+  static const _sameSizeRatio = 0.8;
+
+  /// Distância máxima, em alturas de linha, entre dois preços iguais lado a
+  /// lado na mesma etiqueta (as colunas de atacado e cartão do Assaí).
+  static const _twinMaxGapRatio = 6;
+
   PriceTagReading parse(List<OcrLine> lines, {Iterable<String> barcodes = const []}) {
     final ordered = _mergeCentsFragments([
       for (final line in lines)
@@ -124,12 +138,12 @@ final class PriceTagParser {
     final unitPriceCandidates = <_Candidate>[];
     for (final i in priceLines) {
       final target = _unitPriceMarker.hasMatch(texts[i]) ? unitPriceCandidates : candidates;
-      target.addAll(_findPrices(texts[i], ordered[i].height, labels[i] ?? _Labels.none));
+      target.addAll(_findPrices(texts[i], ordered[i].height, labels[i] ?? _Labels.none, ordered[i]));
     }
 
     // Produtos a granel só têm preço por quilo: nesse caso ele é o preço.
     final pool = candidates.isNotEmpty ? candidates : unitPriceCandidates;
-    final offers = _offers(pool);
+    final offers = _isUnlabeledMultiPrice(pool) ? const <PriceOffer>[] : _offers(pool);
     final main = offers.firstOrNull;
 
     return PriceTagReading(
@@ -140,6 +154,38 @@ final class PriceTagParser {
       candidates: {for (final candidate in pool) candidate.money}.toList(growable: false),
       offers: offers,
     );
+  }
+
+  /// Etiqueta com mais de um preço e nenhum rótulo lido ("ATACADO", "CRED",
+  /// "DE/POR"...). Escolher um seria gravar o preço do cartão ou do atacado
+  /// como se fosse o de varejo, que é o erro mais caro para o histórico.
+  ///
+  /// Conta como mais de um preço: valores diferentes do mesmo tamanho, ou o
+  /// mesmo valor repetido lado a lado (as colunas de atacado e cartão do
+  /// Assaí, quando o varejo não foi lido). O mesmo valor longe, em outra
+  /// etiqueta do quadro, não conta.
+  bool _isUnlabeledMultiPrice(List<_Candidate> pool) {
+    if (pool.isEmpty) return false;
+    final tallest = pool.map((c) => c.height).reduce(math.max);
+    final sameSize = pool.where((c) => c.height >= _sameSizeRatio * tallest).toList();
+    if (sameSize.any((c) => c.role != _Role.neutral || c.condition is! AnyCustomer)) return false;
+    if ({for (final c in sameSize) c.money}.length > 1) return true;
+
+    for (var i = 0; i < sameSize.length; i++) {
+      for (var j = i + 1; j < sameSize.length; j++) {
+        if (_sideBySide(sameSize[i].line, sameSize[j].line)) return true;
+      }
+    }
+    return false;
+  }
+
+  static bool _sideBySide(OcrLine? a, OcrLine? b) {
+    if (a == null || b == null || identical(a, b)) return false;
+    final (aLeft, aRight, bLeft, bRight) = (a.left, a.right, b.left, b.right);
+    if (aLeft == null || aRight == null || bLeft == null || bRight == null) return false;
+
+    final horizontalGap = math.max(aLeft, bLeft) - math.min(aRight, bRight);
+    return _verticalGap(a, b) == 0 && horizontalGap <= _twinMaxGapRatio * math.max(a.height, b.height);
   }
 
   /// Uma oferta por condição, com a sem condição primeiro.
@@ -289,27 +335,53 @@ final class PriceTagParser {
   static double _verticalGap(OcrLine a, OcrLine b) =>
       math.max(0.0, math.max(a.top, b.top) - math.min(a.bottom, b.bottom));
 
-  Iterable<_Candidate> _findPrices(String text, double height, [_Labels labels = _Labels.none]) sync* {
+  Iterable<_Candidate> _findPrices(
+    String text,
+    double height, [
+    _Labels labels = _Labels.none,
+    OcrLine? line,
+  ]) sync* {
     var foundDecimal = false;
     for (final match in _decimalPrice.allMatches(text)) {
       final prefix = text.substring(0, match.start);
       final isQuantity = _quantitySuffix.hasMatch(text.substring(match.end)) && !_currencyBefore.hasMatch(prefix);
       if (isQuantity || _installment.hasMatch(prefix)) continue;
-      final candidate = _toCandidate(prefix, match, height, labels);
-      if (candidate != null) {
-        foundDecimal = true;
-        yield candidate;
-      }
+      final candidate = _toCandidate(prefix, match, height, labels, line);
+      if (candidate == null) continue;
+      foundDecimal = true;
+      yield candidate;
+
+      final neighbor = _neighborWithoutSeparator(text, match.end, candidate, height, labels, line);
+      if (neighbor != null) yield neighbor;
     }
     if (foundDecimal) return;
 
     for (final match in _splitCentsPrice.allMatches(text)) {
-      final candidate = _toCandidate(text.substring(0, match.start), match, height, labels);
+      final candidate = _toCandidate(text.substring(0, match.start), match, height, labels, line);
       if (candidate != null) yield candidate;
     }
   }
 
-  _Candidate? _toCandidate(String prefix, RegExpMatch match, double height, _Labels labels) {
+  /// Preço vizinho lido sem a vírgula: em "13,89 1535", o OCR juntou dois
+  /// preços da mesma altura e perdeu a vírgula do segundo (15,35). Só vale
+  /// para um valor próximo do primeiro, para não pegar códigos e quantidades.
+  _Candidate? _neighborWithoutSeparator(
+    String text,
+    int end,
+    _Candidate previous,
+    double height,
+    _Labels labels,
+    OcrLine? line,
+  ) {
+    final match = _missingSeparator.firstMatch(text.substring(end));
+    if (match == null || _quantitySuffix.hasMatch(text.substring(end + match.end))) return null;
+
+    final candidate = _toCandidate(text.substring(0, end + match.start), match, height, labels, line);
+    final ratio = (candidate?.money.cents ?? 0) / previous.money.cents;
+    return ratio >= 0.5 && ratio <= 2 ? candidate : null;
+  }
+
+  _Candidate? _toCandidate(String prefix, RegExpMatch match, double height, _Labels labels, OcrLine? line) {
     final cents = int.parse(match.group(1)!.replaceAll('.', '')) * 100 + int.parse(match.group(2)!);
     if (cents <= 0) return null;
 
@@ -331,7 +403,7 @@ final class PriceTagParser {
     } else {
       condition = const AnyCustomer();
     }
-    return _Candidate(Money.cents(cents), height, role, condition);
+    return _Candidate(Money.cents(cents), height, role, condition, line);
   }
 
   String? _chooseBarcode(Iterable<String> barcodes, List<OcrLine> lines) {
@@ -421,12 +493,15 @@ final class PriceTagParser {
 enum _Role { neutral, promotional, regular }
 
 final class _Candidate {
-  const _Candidate(this.money, this.height, this.role, this.condition);
+  const _Candidate(this.money, this.height, this.role, this.condition, this.line);
 
   final Money money;
   final double height;
   final _Role role;
   final PriceCondition condition;
+
+  /// Linha de onde o valor saiu, para saber se dois preços estão lado a lado.
+  final OcrLine? line;
 }
 
 /// O que os rótulos em linhas próprias dizem sobre um preço.

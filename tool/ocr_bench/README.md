@@ -42,4 +42,6 @@ As falhas que sobram são do Tesseract: dígitos grandes lidos como lixo, texto 
 
 ## Fotos reais
 
-As fotos não ficam no repositório. Para acrescentar uma etiqueta real, transcreva o que um bom OCR leria em `etiquetas_reais.py` (texto e caixa de cada linha) e copie o caso para os testes em Dart. Com uma foto nítida, dá para rodar o Tesseract nela também, mas recortes de vídeo com etiquetas de 150 px não são lidos por nenhum OCR.
+As fotos não ficam no repositório. Os casos `mlkit_*` de `etiquetas_reais.py` são a saída do próprio ML Kit, rodado no emulador sobre recortes de vídeo: mostram o que chega ao parser quando os rótulos pequenos não são lidos.
+
+Para acrescentar uma etiqueta real, transcreva o que um bom OCR leria em `etiquetas_reais.py` (texto e caixa de cada linha) e copie o caso para os testes em Dart. Com uma foto nítida, dá para rodar o Tesseract nela também, mas recortes de vídeo com etiquetas de 150 px não são lidos por nenhum OCR.
