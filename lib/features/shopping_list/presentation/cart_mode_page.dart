@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
-import 'package:bipa/core/design_system/bipa_typography.dart';
 import 'package:bipa/core/design_system/components/scan_tray.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/money/money.dart';
