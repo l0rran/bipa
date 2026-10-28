@@ -127,7 +127,12 @@ class _MarketsPageState extends ConsumerState<MarketsPage> {
                     semanticsLabel: l10n.marketsMapLabel(onMap.length),
                     pins: [
                       for (final (:item, :point) in onMap)
-                        _pin(point.offsetFrom(here), here: finder.isInside(item), best: item.market.id == cheapestId),
+                        _pin(
+                          point.offsetFrom(here),
+                          here: finder.isInside(item),
+                          best: item.market.id == cheapestId,
+                          onTap: () => context.push(Routes.market(item.market.id)),
+                        ),
                     ],
                   ),
                 ],
@@ -197,8 +202,12 @@ class _MarketsPageState extends ConsumerState<MarketsPage> {
     return note.isEmpty ? null : note;
   }
 
-  static MarketMapPin _pin(({double east, double north}) offset, {required bool here, required bool best}) =>
-      MarketMapPin(east: offset.east, north: offset.north, here: here, best: best);
+  static MarketMapPin _pin(
+    ({double east, double north}) offset, {
+    required bool here,
+    required bool best,
+    VoidCallback? onTap,
+  }) => MarketMapPin(east: offset.east, north: offset.north, here: here, best: best, onTap: onTap);
 
   PriceRowData _row(
     AppLocalizations l10n,

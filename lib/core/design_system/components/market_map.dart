@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 /// Um mercado no mapa: onde ele fica em relação a quem olha, em metros.
 @immutable
 class MarketMapPin {
-  const MarketMapPin({required this.east, required this.north, this.here = false, this.best = false});
+  const MarketMapPin({required this.east, required this.north, this.here = false, this.best = false, this.onTap});
 
   final double east;
   final double north;
@@ -17,6 +17,10 @@ class MarketMapPin {
 
   /// O mais barato para a lista: ganha o anel verde.
   final bool best;
+
+  /// Abre o mercado. Para o leitor de tela, o mapa é uma imagem só: o mesmo
+  /// caminho está nas linhas da lista abaixo dele.
+  final VoidCallback? onTap;
 }
 
 /// O mapa esquemático da tela de Mercados (protótipo "Mercados"): quem olha
@@ -87,8 +91,11 @@ class MarketMap extends StatelessWidget {
 
   /// A ponta do alfinete (o canto girado 45°, a meia diagonal do centro)
   /// fica no lugar do mercado.
-  static Widget _positioned(Offset at, Widget pin) =>
-      Positioned(left: at.dx - _pinSize / 2, top: at.dy - _pinSize / 2 - _pinSize * math.sqrt1_2, child: pin);
+  static Widget _positioned(Offset at, _Pin pin) => Positioned(
+    left: at.dx - _pinSize / 2,
+    top: at.dy - _pinSize / 2 - _pinSize * math.sqrt1_2,
+    child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: pin.pin.onTap, child: pin),
+  );
 }
 
 class _Me extends StatelessWidget {
