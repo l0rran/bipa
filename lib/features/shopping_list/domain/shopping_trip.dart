@@ -35,6 +35,9 @@ abstract interface class ShoppingTripRepository {
   /// A compra em andamento, ou `null`.
   Stream<ShoppingTrip?> watchActive();
 
+  /// O mesmo que [watchActive], numa leitura só (dentro de uma transação).
+  Future<ShoppingTrip?> findActive();
+
   /// Começa uma compra. Se já há uma em andamento, devolve ela.
   Future<ShoppingTrip> start({String? marketId});
 

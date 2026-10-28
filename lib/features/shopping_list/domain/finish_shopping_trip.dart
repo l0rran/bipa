@@ -1,4 +1,5 @@
 import 'package:bipa/core/catalog/product_kind.dart';
+import 'package:bipa/core/transactions/unit_of_work.dart';
 import 'package:bipa/features/shopping_list/domain/aisle_order.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
@@ -49,25 +50,29 @@ final class FinishShoppingTrip {
     required CartRepository cart,
     required StockRepository stock,
     required AisleOrderRepository aisles,
+    required UnitOfWork work,
   }) : _trips = trips,
        _list = list,
        _cart = cart,
        _stock = stock,
-       _aisles = aisles;
+       _aisles = aisles,
+       _work = work;
 
   final ShoppingTripRepository _trips;
   final ShoppingListRepository _list;
   final CartRepository _cart;
   final StockRepository _stock;
   final AisleOrderRepository _aisles;
+  final UnitOfWork _work;
 
   /// Devolve `null` se a compra já não está em andamento (por exemplo, num
   /// segundo toque em "Terminei"), sem mexer no estoque de novo.
+  ///
+  /// Tudo o que grava acontece numa transação só: se algo falhar no meio, a
+  /// compra continua aberta e o estoque como estava.
   Future<FinishedShoppingTrip?> call(String tripId) async {
     final active = await _trips.watchActive().first;
     if (active == null || active.id != tripId) return null;
-    // Fecha a compra primeiro: um segundo "Terminei" já não passa da guarda.
-    await _trips.finish(tripId);
 
     final cart = await _cart.watchTrip(tripId).first;
     final entries = await _list.watchAll().first;
@@ -92,30 +97,37 @@ final class FinishShoppingTrip {
       if (productId != null && !inCart.contains(productId)) byPackage[(productId, null)] = 1;
     }
 
-    final stocked = <String, int>{};
-    final changes = <StockChange>[];
-    for (final MapEntry(key: (productId, packageId), value: quantity) in byPackage.entries) {
-      changes.add(
-        await _stock.adjust(
-          productId: productId,
-          packageId: packageId,
-          delta: quantity.toDouble(),
-          reason: StockMovementReason.purchase,
-        ),
+    return _work.run(() async {
+      // Conferido de novo dentro da transação: um segundo "Terminei" que
+      // chegou junto não passa daqui.
+      if ((await _trips.findActive())?.id != tripId) return null;
+      await _trips.finish(tripId);
+
+      final stocked = <String, int>{};
+      final changes = <StockChange>[];
+      for (final MapEntry(key: (productId, packageId), value: quantity) in byPackage.entries) {
+        changes.add(
+          await _stock.adjust(
+            productId: productId,
+            packageId: packageId,
+            delta: quantity.toDouble(),
+            reason: StockMovementReason.purchase,
+          ),
+        );
+        stocked.update(productId, (q) => q + quantity, ifAbsent: () => quantity);
+      }
+      final marketId = active.marketId;
+      final aisleOrderBefore = marketId == null ? null : await _learnAisles(marketId, active, bought, cart);
+      await _list.removeChecked();
+      return FinishedShoppingTrip(
+        tripId: tripId,
+        bought: bought,
+        stocked: stocked,
+        changes: changes,
+        marketId: marketId,
+        aisleOrderBefore: aisleOrderBefore,
       );
-      stocked.update(productId, (q) => q + quantity, ifAbsent: () => quantity);
-    }
-    final marketId = active.marketId;
-    final aisleOrderBefore = marketId == null ? null : await _learnAisles(marketId, active, bought, cart);
-    await _list.removeChecked();
-    return FinishedShoppingTrip(
-      tripId: tripId,
-      bought: bought,
-      stocked: stocked,
-      changes: changes,
-      marketId: marketId,
-      aisleOrderBefore: aisleOrderBefore,
-    );
+    });
   }
 
   /// Aprende a ordem das seções do mercado com o que foi marcado na lista e
@@ -147,7 +159,7 @@ final class FinishShoppingTrip {
 
   /// Desfaz o [call]: tira do estoque o que entrou, devolve os itens à lista
   /// e reabre a compra, se nenhuma outra tiver começado nesse meio-tempo.
-  Future<void> undo(FinishedShoppingTrip finished) async {
+  Future<void> undo(FinishedShoppingTrip finished) => _work.run(() async {
     for (final change in finished.changes) {
       await _stock.revert(change);
     }
@@ -158,5 +170,5 @@ final class FinishShoppingTrip {
       await _aisles.save(marketId, before);
     }
     await _trips.reopen(finished.tripId);
-  }
+  });
 }

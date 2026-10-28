@@ -1,5 +1,6 @@
 import 'package:bipa/core/catalog/product_kind.dart';
 import 'package:bipa/core/database/app_database.dart';
+import 'package:bipa/core/database/drift_unit_of_work.dart';
 import 'package:bipa/core/money/money.dart';
 import 'package:bipa/features/markets/data/drift_market_repository.dart';
 import 'package:bipa/features/markets/domain/market.dart';
@@ -43,7 +44,14 @@ void main() {
     stock = DriftStockRepository(db, ids: ids, clock: clock);
     cart = DriftCartRepository(db, ids: ids, clock: clock);
     aisles = DriftAisleOrderRepository(db);
-    finish = FinishShoppingTrip(trips: trips, list: list, cart: cart, stock: stock, aisles: aisles);
+    finish = FinishShoppingTrip(
+      trips: trips,
+      list: list,
+      cart: cart,
+      stock: stock,
+      aisles: aisles,
+      work: DriftUnitOfWork(db),
+    );
 
     final products = DriftProductRepository(db);
     for (final (id, name) in [('cafe', 'Café'), ('arroz', 'Arroz')]) {

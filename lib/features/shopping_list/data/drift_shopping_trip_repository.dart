@@ -22,6 +22,9 @@ final class DriftShoppingTripRepository implements ShoppingTripRepository {
   Stream<ShoppingTrip?> watchActive() => _active().watchSingleOrNull().map((row) => row?.toEntity());
 
   @override
+  Future<ShoppingTrip?> findActive() async => (await _active().getSingleOrNull())?.toEntity();
+
+  @override
   Future<ShoppingTrip> start({String? marketId}) => _db.transaction(() async {
     final current = await _active().getSingleOrNull();
     if (current != null) return current.toEntity();

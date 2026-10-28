@@ -171,6 +171,7 @@ final finishShoppingTripProvider = Provider<FinishShoppingTrip>(
     cart: ref.watch(cartRepositoryProvider),
     stock: ref.watch(stockRepositoryProvider),
     aisles: ref.watch(aisleOrderRepositoryProvider),
+    work: ref.watch(unitOfWorkProvider),
   ),
 );
 
