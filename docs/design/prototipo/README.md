@@ -13,6 +13,8 @@ Cada tela tem uma imagem (390 px de largura, em 2x) e o HTML de origem em [`font
 | **Captura**: a câmera abre direto, com o mercado no topo, a moldura de leitura, o seletor Etiqueta · Código · Cupom, o disparo, "digitar o preço" e o modo carrinho. | [Captura.png](telas/Captura.png) | Visual antigo |
 | **Confirmação**: folha para conferir e salvar, com o produto, o preço em destaque, o lápis para corrigir, "Mais barato aqui" e "Também comprei", que soma ao estoque. | [Confirmacao.png](telas/Confirmacao.png) | Visual antigo |
 | **Modo carrinho**: leitura contínua, com a bandeja do que você vai levar, o total e "Terminei". | [ModoCarrinho.png](telas/ModoCarrinho.png) | Feita; a etiqueta é lida pelo disparo (foto), não ao vivo |
+| **Modo carrinho, preço lido ao vivo**: a etiqueta dentro da moldura é lida sem fotografar. A moldura trava, o chip mostra o preço e o item que o recebeu, e o preço do item na bandeja muda. O chip some sozinho. | [ModoCarrinhoLido.png](telas/ModoCarrinhoLido.png) | Aguardando aprovação (ADR 0012) |
+| **Modo carrinho, preço esperando o produto**: o preço lido antes de bipar espera o próximo produto por alguns segundos. | [ModoCarrinhoEsperando.png](telas/ModoCarrinhoEsperando.png) | Aguardando aprovação (ADR 0012) |
 | **Início durante a compra**: a barra da compra fica fixa acima da navegação, com o progresso da lista e o total bipado. | [CasaCompra.png](telas/CasaCompra.png) | Feita |
 | **Produto**: imagem, nome, código, preço, preço em cada mercado com a idade do preço, histórico de 6 meses, "Em casa" com o "ter sempre" e "Pôr na lista". | [Produto.png](telas/Produto.png) | Visual antigo |
 | **Mercados**: mapa, a sua lista em cada mercado e os mercados perto de você. | [Mercados.png](telas/Mercados.png) | Visual antigo |
