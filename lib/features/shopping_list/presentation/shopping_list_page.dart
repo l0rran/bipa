@@ -120,6 +120,19 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
     if (mounted) setState(() => _finishing = false);
   }
 
+  /// Marcar na lista durante a compra também decide se o item do carrinho
+  /// vai ser levado: os dois lugares contam a mesma história.
+  Future<void> _setChecked(ShoppingListEntry entry, {required bool checked}) async {
+    final list = ref.read(shoppingListRepositoryProvider);
+    final cart = ref.read(cartRepositoryProvider);
+    final trip = ref.read(activeTripProvider).value;
+    await list.setChecked(entry.item.id, checked: checked);
+    final productId = entry.item.productId;
+    if (trip != null && productId != null) {
+      await cart.setTakeForProduct(trip.id, productId, take: checked);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -293,9 +306,7 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                                   final id? when prices[id] != null => l10n.listEstimate(prices[id]!.formatDecimal()),
                                   _ => null,
                                 },
-                                onChanged: (checked) => ref
-                                    .read(shoppingListRepositoryProvider)
-                                    .setChecked(entry.item.id, checked: checked),
+                                onChanged: (checked) => _setChecked(entry, checked: checked),
                               ),
                             ),
                         ],
