@@ -16,8 +16,12 @@ class QuantityStepper extends StatelessWidget {
     required this.onIncrement,
     this.onDecrement,
     this.highlighted = false,
+    this.valueSpoken,
     super.key,
   });
+
+  /// O número com a unidade, para o leitor de tela ("2 embalagens em
+  /// casa"); sem ele, lê o número e a unidade soltos.
 
   /// O número já formatado.
   final String value;
@@ -31,6 +35,8 @@ class QuantityStepper extends StatelessWidget {
 
   /// Destaca o fundo quando o item está abaixo do "ter sempre".
   final bool highlighted;
+
+  final String? valueSpoken;
 
   @override
   Widget build(BuildContext context) {
@@ -51,29 +57,33 @@ class QuantityStepper extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           _RepeatButton(icon: Icons.remove_rounded, label: decrementLabel, onStep: onDecrement),
-          SizedBox(
-            width: 48,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AnimatedSwitcher(
-                  duration: duration,
-                  switchInCurve: BipaMotion.spring,
-                  transitionBuilder: (child, animation) => FadeTransition(
-                    opacity: animation,
-                    child: SlideTransition(
-                      position: Tween(begin: const Offset(0, 0.4), end: Offset.zero).animate(animation),
-                      child: child,
+          Semantics(
+            label: valueSpoken,
+            excludeSemantics: valueSpoken != null,
+            child: SizedBox(
+              width: 48,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AnimatedSwitcher(
+                    duration: duration,
+                    switchInCurve: BipaMotion.spring,
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween(begin: const Offset(0, 0.4), end: Offset.zero).animate(animation),
+                        child: child,
+                      ),
+                    ),
+                    child: Text(
+                      value,
+                      key: ValueKey(value),
+                      style: BipaText.number.copyWith(fontSize: 20, color: highlighted ? colors.alertText : colors.ink),
                     ),
                   ),
-                  child: Text(
-                    value,
-                    key: ValueKey(value),
-                    style: BipaText.number.copyWith(fontSize: 20, color: highlighted ? colors.alertText : colors.ink),
-                  ),
-                ),
-                Text(unit.toUpperCase(), style: BipaText.caption.copyWith(fontSize: 10, color: colors.inkMuted)),
-              ],
+                  Text(unit.toUpperCase(), style: BipaText.caption.copyWith(fontSize: 10, color: colors.inkMuted)),
+                ],
+              ),
             ),
           ),
           _RepeatButton(icon: Icons.add_rounded, label: incrementLabel, onStep: onIncrement),

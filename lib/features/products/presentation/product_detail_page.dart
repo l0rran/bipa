@@ -25,6 +25,7 @@ import 'package:bipa/features/prices/presentation/price_sheet.dart';
 import 'package:bipa/features/prices/presentation/prices_providers.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
+import 'package:bipa/features/products/presentation/measure_unit_label.dart';
 import 'package:bipa/features/products/presentation/product_photos.dart';
 import 'package:bipa/features/products/presentation/product_picker_sheet.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
@@ -255,10 +256,13 @@ class _ProductView extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: BipaSpacing.s3),
-              Text(
-                product.name,
-                textAlign: TextAlign.center,
-                style: BipaText.headline.copyWith(fontSize: 24, color: colors.ink),
+              Semantics(
+                header: true,
+                child: Text(
+                  product.name,
+                  textAlign: TextAlign.center,
+                  style: BipaText.headline.copyWith(fontSize: 24, color: colors.ink),
+                ),
               ),
               if (best != null) ...[
                 const SizedBox(height: BipaSpacing.s3),
@@ -388,11 +392,14 @@ class _BestPrice extends StatelessWidget {
         ? l10n.productBestPriceOld(best.entry.marketName, l10n.priceAge(days))
         : best.package?.label;
     if (unitPrice == null) return PriceTagHero(price: best.price, unitLine: label);
+    final per = unitPrice.unit.spokenPer(l10n);
     return PriceTagHero(
       price: unitPrice.price,
       unitLine: label == null
           ? l10n.productUnitPriceOnly(unitPrice.unit.symbol)
           : l10n.productBestUnitPrice(unitPrice.unit.symbol, label),
+      // "o quilo" no lugar de "/kg", para o leitor de tela (H4).
+      unitLineSpoken: label == null ? per : l10n.productBestUnitPriceSpoken(per, label),
     );
   }
 }

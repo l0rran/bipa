@@ -7,19 +7,23 @@ import 'package:flutter/material.dart';
 /// A etiqueta amarela de preço em destaque (PriceTag, variante "hero" do
 /// design system): o valor grande e, embaixo, o preço por kg.
 class PriceTagHero extends StatelessWidget {
-  const PriceTagHero({required this.price, this.unitLine, super.key});
+  const PriceTagHero({required this.price, this.unitLine, this.unitLineSpoken, super.key});
 
   final Money price;
 
   /// "R$ 5,58/kg"; sem ele, a etiqueta só mostra o valor.
   final String? unitLine;
 
+  /// A [unitLine] para o leitor de tela, quando ela tem sinais que ele lê
+  /// ao pé da letra ("o quilo" no lugar de "/kg").
+  final String? unitLineSpoken;
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final unitLine = this.unitLine;
     return Semantics(
-      label: [price.format(), ?unitLine].join(', '),
+      label: [price.format(), ?(unitLineSpoken ?? unitLine)].join(', '),
       excludeSemantics: true,
       child: Container(
         padding: const EdgeInsets.fromLTRB(BipaSpacing.s4, BipaSpacing.s3, BipaSpacing.s6, BipaSpacing.s3),

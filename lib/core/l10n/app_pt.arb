@@ -1308,5 +1308,42 @@
   "priceOpenProduct": "Ver produto",
   "@priceOpenProduct": {
     "description": "Na folha de um preço, na tela do mercado: abre o produto."
+  },
+  "perUnitSpoken": "{unit, select, kilogram{o quilo} liter{o litro} gram{o grama} milliliter{o mililitro} other{a unidade}}",
+  "@perUnitSpoken": {
+    "description": "Para o leitor de tela, no lugar de \"/kg\": \"R$ 5,58 o quilo\". O valor é o nome da unidade no código.",
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "productBestUnitPriceSpoken": "{per} · {package}",
+  "@productBestUnitPriceSpoken": {
+    "description": "Versão falada de productBestUnitPrice: \"o quilo · Tio João 5 kg\".",
+    "placeholders": {
+      "per": {
+        "type": "String"
+      },
+      "package": {
+        "type": "String"
+      }
+    }
+  },
+  "productTargetSpokenNone": "Ter sempre: não definido",
+  "@productTargetSpokenNone": {
+    "description": "Leitor de tela do chip \"Ter sempre —\" quando não há valor."
+  },
+  "stockAtHomeSpoken": "{count, plural, =1{1 embalagem em casa} other{{label} embalagens em casa}}",
+  "@stockAtHomeSpoken": {
+    "description": "Leitor de tela do número do stepper: \"2 embalagens em casa\". O label é o número já formatado (\"1,5\").",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      },
+      "label": {
+        "type": "String"
+      }
+    }
   }
 }

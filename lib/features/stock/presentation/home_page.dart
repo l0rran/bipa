@@ -471,6 +471,7 @@ class _HomeStockRow extends StatelessWidget {
         stepper: QuantityStepper(
           value: item.quantityLabel,
           unit: l10n.unitPackages,
+          valueSpoken: l10n.stockAtHomeSpoken(item.quantity, item.quantityLabel),
           decrementLabel: l10n.stockOneLess,
           incrementLabel: l10n.stockOneMore,
           highlighted: item.isLow,
@@ -494,6 +495,8 @@ class _HomeStockRow extends StatelessWidget {
                 final target? => l10n.productTargetCount(Formatters.quantity(target)),
                 null => l10n.productTargetCount(l10n.stockTargetNone),
               },
+              // "Ter sempre —" seria lido "travessão" (H4).
+              semanticsLabel: item.targetQuantity == null ? l10n.productTargetSpokenNone : null,
               onTap: () => showStockItemSheet(context, product),
             ),
             // O resto do item (local, "Tirar de casa", produto) sem passar

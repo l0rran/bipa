@@ -10,4 +10,7 @@ extension MeasureUnitLabel on MeasureUnit {
     MeasureUnit.milliliter => l10n.measureMilliliter,
     MeasureUnit.liter => l10n.measureLiter,
   };
+
+  /// "o quilo", para o leitor de tela no lugar de "/kg".
+  String spokenPer(AppLocalizations l10n) => l10n.perUnitSpoken(name);
 }
