@@ -6,7 +6,7 @@ https://claude.ai/artifact/UgbPTJ2wLHMP5FmPcC7E8G
 As telas de referência estão no protótipo **Bipa App Telas**:
 https://claude.ai/artifact/Pefns8PVVY8nFXTq8Z6Gd3
 
-Os dois links são privados: compartilhe pelo menu Share de cada página para outras pessoas abrirem.
+Os dois links são privados: compartilhe pelo menu Share de cada página para outras pessoas abrirem. Para quem não tem acesso, incluindo agentes rodando fora do claude.ai, há uma cópia exportada no repositório: [design-system/](design-system/README.md), com os guias e as imagens dos componentes, e [prototipo/](prototipo/README.md), com a imagem e o HTML de cada tela.
 
 Este arquivo resume o que o código precisa saber. Se ele e o design system divergirem, o design system vale, e este arquivo e `lib/core/design_system/` devem ser corrigidos.
 

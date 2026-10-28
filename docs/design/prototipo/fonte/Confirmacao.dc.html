@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Bipar: conferir e salvar</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="styles/tokens.css">
+<link rel="stylesheet" href="ds/bipa/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600..800&amp;family=Figtree:wght@400..700&amp;family=JetBrains+Mono:wght@500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1C1B22}a:hover{color:#B00E28}
+.screen{position:relative;width:390px;height:844px;box-sizing:border-box;overflow:hidden;background:var(--camera)}
+.title{margin:0;font:800 28px/34px var(--font-display);letter-spacing:-0.01em;color:var(--ink)}
+.eyebrow{font:600 14px/20px var(--font-body);color:var(--ink-muted)}
+.section-title{margin:0;font:700 20px/26px var(--font-display);color:var(--ink)}
+.round-btn{display:grid;place-items:center;width:48px;height:48px;border:0;border-radius:50%;background:var(--surface);color:var(--ink)}
+.nav-wrap{position:absolute;left:12px;right:12px;bottom:16px;z-index:3}
+
+.cam{position:absolute;inset:0;background:var(--camera);overflow:hidden}
+.shelf{position:absolute;left:-10px;right:-10px;top:150px;display:grid;grid-template-rows:150px 10px 150px;gap:16px;opacity:.55}
+.shelf div{display:flex;gap:10px}
+.shelf i{display:block;flex:none;border-radius:14px;background:#2B2B33}
+.shelf hr{margin:0;border:0;background:#35353F}
+.topbar{position:absolute;left:16px;right:16px;top:20px;display:flex;align-items:center;justify-content:space-between;gap:8px;z-index:3}
+.glass-btn{display:grid;place-items:center;width:48px;height:48px;border:0;border-radius:50%;background:rgba(14,14,18,.55);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--on-camera);text-decoration:none}
+.tag{position:absolute;display:grid;gap:4px;padding:12px 16px 12px 30px;border-radius:8px 14px 14px 8px;background:var(--price);color:var(--on-price);box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.tag::before{content:"";position:absolute;left:11px;top:50%;width:9px;height:9px;margin-top:-4.5px;border-radius:50%;background:#2B2B33}
+.tag b{font:800 11px/14px var(--font-body);letter-spacing:.04em}
+.tag strong{font:800 38px/40px var(--font-display);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.tag strong small{font-size:19px;margin-right:2px}
+.tag span{font:600 11px/14px var(--font-body)}
+.frame-wrap{position:absolute;left:0;right:0;top:0;bottom:0}
+.seg-wrap{position:absolute;left:0;right:0;bottom:150px;display:flex;justify-content:center;z-index:3}
+.bottombar{position:absolute;left:24px;right:24px;bottom:44px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;z-index:3}
+.shutter{justify-self:center;display:grid;place-items:center;width:76px;height:76px;border-radius:50%;background:var(--brand);color:var(--on-brand);box-shadow:0 0 0 6px rgba(246,196,69,.28);text-decoration:none}
+.shutter svg{width:34px;height:34px}
+
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:2}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:4;display:grid;gap:18px;padding:12px 16px 28px;border-radius:28px 28px 0 0;background:var(--surface);box-shadow:var(--shadow-float);animation:bipa-in-up var(--duration-slow) var(--easing-spring) both}
+.handle{justify-self:center;width:40px;height:5px;border-radius:3px;background:var(--line)}
+.prod{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px}
+.prod .bipa-thumb{width:56px;height:56px;border-radius:16px}
+.prod .bipa-thumb svg{width:30px;height:30px}
+.prod-name{display:grid;gap:2px;font:700 17px/22px var(--font-body)}
+.prod-name span{font:500 13px/18px var(--font-mono);color:var(--ink-muted);letter-spacing:.02em}
+.icon-btn{display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:50%;background:var(--surface-sunken);color:var(--ink)}
+.icon-btn svg{width:20px;height:20px}
+.price-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.facts-row{display:flex;flex-wrap:wrap;gap:8px}
+.stock-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 16px;border-radius:var(--radius-md);background:var(--surface-sunken);font:600 15px/20px var(--font-body)}
+.stock-row small{display:block;font:500 13px/18px var(--font-body);color:var(--ink-muted)}
+.sheet .bipa-btn{width:100%;height:56px;font-size:16px}
+
+</style>
+</helmet>
+<div class="screen bipa-root" style="background: var(--camera);">
+  <div class="cam" aria-hidden="true"><div class="shelf"><div><i style="width: 110px"></i><i style="width: 90px"></i><i style="width: 140px"></i><i style="width: 80px"></i></div><hr><div><i style="width: 140px"></i><i style="width: 100px"></i><i style="width: 120px"></i></div></div></div>
+  <div class="topbar">
+    <a class="glass-btn" href="Main.dc.html" aria-label="Fechar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></a>
+    <a class="bipa-chip bipa-chip--glass" href="Mercados.dc.html" style="text-decoration: none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5L5.5 4h13L20 9.5M4 9.5h16M4 9.5v10h16v-10M9.5 19.5v-5h5v5"/></svg>Atacarejo Vila Nova <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></a>
+    <button class="glass-btn" type="button" aria-label="Lanterna"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3h8l-1.5 6h-5zM9.5 9l1 12h3l1-12"/></svg></button>
+  </div>
+  <div class="dim"></div>
+  <section class="sheet" aria-label="Conferir preço">
+    <span class="handle" aria-hidden="true"></span>
+    <div class="prod">
+      <span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3h8l1 4v13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V7z"/><path d="M7 7h10"/></svg></span>
+      <div class="prod-name">Leite condensado Moça 395&nbsp;g<span>7891000100103</span></div>
+      <button class="icon-btn" type="button" aria-label="Trocar o produto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4L3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"/></svg></button>
+    </div>
+    <div class="price-row">
+      <div class="bipa-tag bipa-tag--hero">
+        <span class="bipa-tag__value"><small>R$</small>7,99</span>
+        <span class="bipa-tag__unit">R$ 20,23/kg</span>
+      </div>
+      <button class="icon-btn" type="button" aria-label="Corrigir o preço"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></button>
+    </div>
+    <div class="facts-row">
+      <span class="bipa-badge bipa-badge--save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l6 6 4-4 8 8M15 17h6v-6"/></svg> Mais barato aqui · −R$ 1,20</span>
+    </div>
+    <div class="stock-row">
+      <span>Também comprei<small>Em casa: 2 → 3</small></span>
+      <button type="button" class="bipa-toggle" role="switch" aria-checked="true" aria-label="Somar ao estoque"></button>
+    </div>
+    <a class="bipa-btn bipa-btn--primary" href="Captura.dc.html" style="text-decoration: none;"><span>Salvar</span></a>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!-- @dsCard group="Ações" height=260 subtitle="Toque em Salvar preço: a forma muda ao pressionar, as barras do símbolo carregam e o check confirma. Abaixo, o seletor segmentado" -->
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600..800&family=Figtree:wght@400..700&display=swap">
+<style>
+  body { margin: 0; background: var(--ground); }
+  .stack { display: flex; flex-wrap: wrap; gap: var(--space-3); padding: var(--space-6) var(--space-4); align-items: center; }
+</style>
+</head>
+<body>
+  <div class="bipa-root stack">
+    <button class="bipa-btn bipa-btn--primary" type="button" id="save">
+      <span class="bipa-btn__label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16M3 12h18"/></svg>
+        Salvar preço
+      </span>
+      <span class="bipa-btn__spinner" aria-hidden="true"><span class="bipa-loader"><i></i><i></i><i></i><i></i></span></span>
+      <span class="bipa-btn__done" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        Salvo
+      </span>
+    </button>
+    <button class="bipa-btn bipa-btn--secondary" type="button"><span>Salvar e bipar outro</span></button>
+    <button class="bipa-btn bipa-btn--tonal" type="button"><span>Ver produto</span></button>
+    <button class="bipa-btn bipa-btn--primary" type="button" disabled><span>Salvar preço</span></button>
+  </div>
+  <div class="bipa-root stack">
+    <div class="bipa-segmented" id="seg" role="group" aria-label="O que você quer bipar">
+      <span class="bipa-segmented__indicator" aria-hidden="true"></span>
+      <button type="button" data-value="tag" aria-pressed="true">Etiqueta</button>
+      <button type="button" data-value="code" aria-pressed="false">Código</button>
+      <button type="button" data-value="receipt" aria-pressed="false">Cupom fiscal</button>
+    </div>
+  </div>
+  <script>
+    window.Bipa.Button.enhance(document.getElementById('save'));
+    window.Bipa.Segmented.enhance(document.getElementById('seg'));
+  </script>
+</body>
+</html>

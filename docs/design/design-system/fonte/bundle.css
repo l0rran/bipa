@@ -1,0 +1,930 @@
+/* Bipa: estilos dos componentes. Todas as cores, raios, sombras e tempos vêm de tokens.css. */
+
+.bipa-root {
+  font-family: var(--font-body);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+.bipa-root button { font: inherit; }
+.bipa-root :focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+/* ---------- Button ---------- */
+.bipa-btn {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  height: 56px;
+  padding: 0 var(--space-6);
+  border: 0;
+  border-radius: var(--radius-pill);
+  font: 700 15px/1 var(--font-body);
+  cursor: pointer;
+  transition:
+    transform var(--duration-fast) var(--easing-spring),
+    box-shadow var(--duration-base) var(--easing-standard),
+    background-color var(--duration-base) var(--easing-standard),
+    color var(--duration-base) var(--easing-standard);
+}
+.bipa-btn > * {
+  grid-area: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  transition:
+    opacity var(--duration-base) var(--easing-standard),
+    transform var(--duration-base) var(--easing-spring);
+}
+.bipa-btn svg { width: 20px; height: 20px; flex: none; }
+.bipa-btn:active { transform: scale(0.96); }
+.bipa-btn--primary {
+  background: var(--brand);
+  color: var(--on-brand);
+  box-shadow: var(--shadow-raised);
+}
+.bipa-btn--primary:active { box-shadow: none; }
+.bipa-btn--secondary {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 var(--stroke-control) var(--line);
+}
+.bipa-btn--tonal { background: var(--brand-soft); color: var(--brand-text); }
+.bipa-btn[disabled] { background: var(--surface-sunken); color: var(--ink-muted); box-shadow: none; cursor: default; transform: none; }
+
+.bipa-btn__spinner, .bipa-btn__done { opacity: 0; transform: scale(0.6); }
+.bipa-btn__spinner span {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 3px solid currentColor; border-right-color: transparent;
+  animation: bipa-spin 700ms linear infinite;
+}
+.bipa-btn__done path { stroke-dasharray: 24; stroke-dashoffset: 24; }
+.bipa-btn.is-loading .bipa-btn__label,
+.bipa-btn.is-done .bipa-btn__label { opacity: 0; transform: translateY(-10px); }
+.bipa-btn.is-loading .bipa-btn__spinner { opacity: 1; transform: scale(1); }
+.bipa-btn.is-done { background: var(--positive-text); color: var(--on-brand); }
+.bipa-btn.is-done .bipa-btn__done { opacity: 1; transform: scale(1); }
+.bipa-btn.is-done .bipa-btn__done path { animation: bipa-draw var(--duration-base) var(--easing-standard) 60ms forwards; }
+
+/* ---------- PriceTag ---------- */
+.bipa-tag {
+  position: relative;
+  display: inline-grid;
+  gap: 2px;
+  padding: var(--space-2) var(--space-4) var(--space-2) 32px;
+  border-radius: var(--radius-sm) var(--radius-md) var(--radius-md) var(--radius-sm);
+  background: var(--price);
+  color: var(--on-price);
+  box-shadow: var(--shadow-raised);
+  font-variant-numeric: tabular-nums;
+}
+.bipa-tag::before {
+  content: "";
+  position: absolute; left: 12px; top: 50%;
+  width: 9px; height: 9px; margin-top: -4.5px;
+  border-radius: 50%; background: var(--ground);
+}
+.bipa-tag.is-entering { animation: bipa-pop var(--duration-slow) var(--easing-spring) both; }
+.bipa-tag__was { position: relative; justify-self: start; font: 600 12px/16px var(--font-body); }
+.bipa-tag__was::after {
+  content: ""; position: absolute; left: -2px; right: -2px; top: 50%; height: 1.5px;
+  background: currentColor; transform-origin: left; transform: scaleX(0);
+}
+.bipa-tag.is-entering .bipa-tag__was::after,
+.bipa-tag.is-settled .bipa-tag__was::after { animation: bipa-strike var(--duration-base) var(--easing-standard) 250ms forwards; }
+.bipa-tag__value { font: 800 24px/28px var(--font-display); letter-spacing: -0.01em; }
+.bipa-tag--hero .bipa-tag__value { font-size: 44px; line-height: 48px; letter-spacing: -0.02em; }
+.bipa-tag__value small { font-size: 0.55em; margin-right: 3px; }
+
+.bipa-badge {
+  display: inline-flex; align-items: center; gap: var(--space-1);
+  height: 26px; padding: 0 10px; border-radius: var(--radius-pill);
+  font: 700 12px/16px var(--font-body);
+}
+.bipa-badge svg { width: 14px; height: 14px; flex: none; }
+.bipa-badge--save { background: var(--positive-soft); color: var(--positive-text); }
+.bipa-badge--warn { background: var(--alert-soft); color: var(--alert-text); }
+.bipa-badge.is-entering { animation: bipa-slide-in var(--duration-slow) var(--easing-spring) 300ms both; }
+
+/* ---------- Números que rolam ---------- */
+.bipa-roll {
+  position: relative;
+  display: inline-grid;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+.bipa-roll > span { grid-area: 1 / 1; }
+.bipa-roll .in-up { animation: bipa-in-up var(--duration-base) var(--easing-spring) both; }
+.bipa-roll .out-up { animation: bipa-out-up var(--duration-base) var(--easing-exit) both; }
+.bipa-roll .in-down { animation: bipa-in-down var(--duration-base) var(--easing-spring) both; }
+.bipa-roll .out-down { animation: bipa-out-down var(--duration-base) var(--easing-exit) both; }
+
+/* ---------- StockStepper: o controle −/+ (usado na lista e na tela do produto) ---------- */
+.bipa-stepper {
+  display: inline-flex; align-items: center; gap: 2px;
+  height: 52px; padding: 0 6px; border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+  transition: background-color var(--duration-base) var(--easing-standard);
+}
+.bipa-stepper button[data-step] {
+  display: grid; place-items: center;
+  width: 40px; height: 40px; border: 0; border-radius: 50%;
+  background: var(--surface); color: var(--ink);
+  box-shadow: 0 1px 2px rgba(28, 27, 34, 0.08);
+  cursor: pointer;
+  transition: transform var(--duration-fast) var(--easing-spring), opacity var(--duration-base), background-color var(--duration-base);
+}
+.bipa-stepper button[data-step] svg { width: 18px; height: 18px; }
+.bipa-stepper button[data-step]:active { transform: scale(0.86); }
+.bipa-stepper button[data-step]:disabled { background: transparent; box-shadow: none; color: var(--ink-muted); opacity: 0.45; cursor: default; transform: none; }
+.bipa-stepper__count { display: grid; justify-items: center; min-width: 44px; }
+.bipa-stepper__qty { height: 24px; font: 800 20px/24px var(--font-display); }
+.bipa-stepper__unit { font: 700 10px/12px var(--font-body); letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-muted); }
+.is-low .bipa-stepper, .bipa-stepper.is-low { background: var(--alert-soft); }
+.is-low .bipa-stepper__qty, .bipa-stepper.is-low .bipa-stepper__qty { color: var(--alert-text); }
+.bipa-stepper.is-bip { animation: bipa-bip var(--duration-base) var(--easing-spring); }
+
+/* ---------- MarketChip ---------- */
+.bipa-chip {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  height: 40px; padding: 0 var(--space-3) 0 var(--space-2);
+  border: 0; border-radius: var(--radius-pill);
+  background: var(--surface-sunken); color: var(--ink);
+  font: 700 14px/18px var(--font-body);
+  cursor: pointer;
+  transition: transform var(--duration-fast) var(--easing-spring), background-color var(--duration-base);
+}
+.bipa-chip:active { transform: scale(0.96); }
+.bipa-chip svg { width: 18px; height: 18px; flex: none; }
+.bipa-chip__meta { font-weight: 600; font-size: 12px; color: var(--ink-muted); }
+.bipa-chip--here { background: var(--place); color: var(--on-place); }
+.bipa-chip--here .bipa-chip__meta { color: var(--on-place); opacity: 0.85; }
+.bipa-ping { position: relative; width: 10px; height: 10px; flex: none; margin: 0 4px; }
+.bipa-ping::before, .bipa-ping::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%; background: currentColor;
+}
+.bipa-ping::after { animation: bipa-ping 1.6s var(--easing-standard) infinite; }
+.bipa-enter { animation: bipa-fade-up var(--duration-slow) var(--easing-standard) both; }
+
+/* ---------- ScanNavBar ---------- */
+.bipa-nav {
+  position: relative;
+  display: grid; grid-template-columns: 1fr 1fr 84px 1fr 1fr; align-items: center;
+  height: 68px; padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  box-shadow: var(--shadow-float);
+}
+.bipa-nav__indicator {
+  position: absolute; left: 0; top: 10px;
+  width: 52px; height: 30px; border-radius: var(--radius-pill);
+  background: var(--brand-soft);
+  transition: transform var(--duration-slow) var(--easing-spring), width var(--duration-slow) var(--easing-spring);
+}
+.bipa-nav__dest {
+  position: relative; z-index: 1;
+  display: grid; justify-items: center; gap: 2px;
+  border: 0; background: none; color: var(--ink-muted);
+  font: 600 12px/16px var(--font-body); cursor: pointer;
+  transition: color var(--duration-base) var(--easing-standard);
+}
+.bipa-nav__icon { display: grid; place-items: center; width: 52px; height: 30px; transition: transform var(--duration-fast) var(--easing-spring); }
+.bipa-nav__icon svg { width: 22px; height: 22px; }
+.bipa-nav__dest:active .bipa-nav__icon { transform: scale(0.88); }
+.bipa-nav__dest[aria-current="page"] { color: var(--ink); font-weight: 700; }
+.bipa-nav__dest[aria-current="page"] .bipa-nav__icon { color: var(--ink); }
+.bipa-scan {
+  position: relative; justify-self: center; margin-top: -40px;
+  display: grid; place-items: center;
+  width: 64px; height: 64px; border: 0; border-radius: 50%;
+  background: var(--brand); color: var(--on-brand);
+  box-shadow: var(--shadow-raised);
+  cursor: pointer;
+  transition: transform var(--duration-fast) var(--easing-spring);
+}
+.bipa-scan::before {
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: var(--brand); opacity: 0.35; z-index: -1;
+  animation: bipa-breathe 2.4s var(--easing-standard) infinite;
+}
+.bipa-scan:active { transform: scale(0.9); }
+.bipa-scan svg { width: 30px; height: 30px; }
+
+/* ---------- BipFeedback ---------- */
+.bipa-bip {
+  display: grid; justify-items: center; gap: var(--space-4);
+}
+.bipa-bip__mark { position: relative; width: 88px; height: 88px; display: grid; place-items: center; }
+.bipa-bip__ring {
+  position: absolute; inset: 0; border-radius: 50%; background: var(--positive-soft);
+  transform: scale(0);
+}
+.bipa-bip__ripple {
+  position: absolute; inset: 0; border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--positive-text); opacity: 0;
+}
+.bipa-bip__mark svg { position: relative; width: 44px; height: 44px; color: var(--positive-text); }
+.bipa-bip__mark path { stroke-dasharray: 30; stroke-dashoffset: 30; }
+.bipa-bip.is-playing .bipa-bip__ring { animation: bipa-pop-ring var(--duration-slow) var(--easing-spring) forwards; }
+.bipa-bip.is-playing .bipa-bip__ripple { animation: bipa-ripple var(--duration-celebrate) var(--easing-standard) 200ms forwards; }
+.bipa-bip.is-playing .bipa-bip__mark path { animation: bipa-draw var(--duration-slow) var(--easing-standard) 180ms forwards; }
+.bipa-toast {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg);
+  background: var(--ink); color: var(--ground);
+  box-shadow: var(--shadow-float);
+  font: 600 14px/20px var(--font-body);
+  opacity: 0; transform: translateY(16px);
+}
+.bipa-toast strong { font: 800 15px/20px var(--font-display); }
+.bipa-bip.is-playing .bipa-toast { animation: bipa-toast-in var(--duration-slow) var(--easing-spring) 380ms forwards; }
+
+/* ---------- Skeleton ---------- */
+.bipa-skeleton {
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--surface-sunken) 0%, var(--surface) 50%, var(--surface-sunken) 100%);
+  background-size: 200% 100%;
+  animation: bipa-shimmer 1.4s linear infinite;
+}
+
+/* ---------- Keyframes ---------- */
+@keyframes bipa-spin { to { rotate: 360deg; } }
+@keyframes bipa-draw { to { stroke-dashoffset: 0; } }
+@keyframes bipa-pop { from { opacity: 0; transform: scale(0.85) translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes bipa-strike { to { transform: scaleX(1); } }
+@keyframes bipa-slide-in { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+@keyframes bipa-in-up { from { transform: translateY(100%); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes bipa-out-up { to { transform: translateY(-100%); opacity: 0; } }
+@keyframes bipa-in-down { from { transform: translateY(-100%); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes bipa-out-down { to { transform: translateY(100%); opacity: 0; } }
+@keyframes bipa-bip { 50% { transform: scale(1.06); } }
+@keyframes bipa-ping { from { transform: scale(1); opacity: 0.6; } to { transform: scale(2.8); opacity: 0; } }
+@keyframes bipa-fade-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes bipa-breathe { 0%, 100% { transform: scale(1); opacity: 0.35; } 50% { transform: scale(1.22); opacity: 0; } }
+@keyframes bipa-pop-ring { to { transform: scale(1); } }
+@keyframes bipa-ripple { from { transform: scale(1); opacity: 0.8; } to { transform: scale(1.6); opacity: 0; } }
+@keyframes bipa-toast-in { to { opacity: 1; transform: none; } }
+@keyframes bipa-shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .bipa-root *, .bipa-root *::before, .bipa-root *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+/* =====================================================================
+   Componentes da v3: câmera, modo carrinho, menu do bipar, vidro,
+   insights e lista de compras.
+   ===================================================================== */
+
+/* ---------- ScanNavBar: vidro, encolher ao rolar e menu do bipar ---------- */
+.bipa-nav--glass {
+  background: var(--surface-glass);
+  -webkit-backdrop-filter: blur(18px) saturate(1.5);
+  backdrop-filter: blur(18px) saturate(1.5);
+  transition: height var(--duration-slow) var(--easing-spring), transform var(--duration-slow) var(--easing-spring);
+}
+.bipa-nav__dest { transition: color var(--duration-base) var(--easing-standard), gap var(--duration-slow) var(--easing-spring); }
+.bipa-nav__label { display: block; overflow: hidden; max-height: 16px; transition: max-height var(--duration-slow) var(--easing-spring), opacity var(--duration-base); }
+.bipa-nav.is-compact { height: 52px; }
+.bipa-nav.is-compact .bipa-nav__label { max-height: 0; opacity: 0; }
+.bipa-nav.is-compact .bipa-nav__indicator { top: 11px; }
+.bipa-nav.is-compact .bipa-scan { width: 56px; height: 56px; margin-top: -28px; }
+
+.bipa-scan { transition: transform var(--duration-fast) var(--easing-spring), border-radius var(--duration-slow) var(--easing-spring), width var(--duration-slow) var(--easing-spring), height var(--duration-slow) var(--easing-spring), margin var(--duration-slow) var(--easing-spring); z-index: 3; }
+.bipa-scan__icon { display: grid; place-items: center; transition: transform var(--duration-slow) var(--easing-spring); }
+.bipa-scan.is-pressing { border-radius: 30%; transform: scale(0.94); }
+.bipa-scan.is-open { border-radius: 30%; }
+.bipa-scan.is-open::before { animation: none; opacity: 0; }
+.bipa-scan.is-open .bipa-scan__icon { transform: rotate(135deg); }
+.bipa-scan__glyph, .bipa-scan__close { grid-area: 1 / 1; transition: opacity var(--duration-base) var(--easing-standard); }
+.bipa-scan__close { opacity: 0; }
+.bipa-scan.is-open .bipa-scan__glyph { opacity: 0; }
+.bipa-scan.is-open .bipa-scan__close { opacity: 1; }
+
+.bipa-menu-scrim {
+  position: absolute; inset: 0; z-index: 2;
+  background: var(--scrim);
+  opacity: 0; pointer-events: none;
+  transition: opacity var(--duration-base) var(--easing-standard);
+}
+.bipa-menu-scrim.is-open { opacity: 1; pointer-events: auto; }
+.bipa-scan-menu {
+  position: absolute; left: 50%; bottom: 100%; z-index: 3;
+  display: grid; justify-items: center; gap: var(--space-2);
+  margin-bottom: 44px; transform: translateX(-50%);
+  pointer-events: none;
+}
+.bipa-scan-menu__item {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  height: 52px; padding: 0 var(--space-6) 0 var(--space-4);
+  border: 0; border-radius: var(--radius-pill);
+  background: var(--surface); color: var(--ink);
+  box-shadow: var(--shadow-float);
+  font: 700 15px/1 var(--font-body); white-space: nowrap; cursor: pointer;
+  opacity: 0; transform: translateY(16px) scale(0.9);
+  transition: opacity var(--duration-base) var(--easing-standard), transform var(--duration-slow) var(--easing-spring);
+}
+.bipa-scan-menu__item svg { width: 20px; height: 20px; color: var(--ink); }
+.bipa-scan-menu__item small { font: 600 12px/1 var(--font-body); color: var(--ink-muted); margin-left: 4px; }
+.bipa-scan-menu.is-open { pointer-events: auto; }
+.bipa-scan-menu.is-open .bipa-scan-menu__item { opacity: 1; transform: none; }
+.bipa-scan-menu.is-open .bipa-scan-menu__item:nth-last-child(1) { transition-delay: 0ms; }
+.bipa-scan-menu.is-open .bipa-scan-menu__item:nth-last-child(2) { transition-delay: 50ms; }
+.bipa-scan-menu.is-open .bipa-scan-menu__item:nth-last-child(3) { transition-delay: 100ms; }
+.bipa-scan-menu__item:active { transform: scale(0.96); }
+
+/* ---------- ScanFrame: visor da câmera com trava no código ---------- */
+.bipa-viewfinder {
+  position: relative; overflow: hidden;
+  background: var(--camera); color: var(--on-camera);
+  border-radius: var(--radius-lg);
+}
+.bipa-frame { position: absolute; left: 50%; top: 50%; width: 260px; height: 150px; transform: translate(-50%, -50%); transition: width var(--duration-slow) var(--easing-spring), height var(--duration-slow) var(--easing-spring); }
+.bipa-frame__corner {
+  position: absolute; width: 32px; height: 32px;
+  border: 4px solid var(--on-camera);
+  transition: border-color var(--duration-base) var(--easing-standard), transform var(--duration-slow) var(--easing-spring);
+}
+.bipa-frame__corner--tl { left: 0; top: 0; border-right: 0; border-bottom: 0; border-top-left-radius: 14px; }
+.bipa-frame__corner--tr { right: 0; top: 0; border-left: 0; border-bottom: 0; border-top-right-radius: 14px; }
+.bipa-frame__corner--bl { left: 0; bottom: 0; border-right: 0; border-top: 0; border-bottom-left-radius: 14px; }
+.bipa-frame__corner--br { right: 0; bottom: 0; border-left: 0; border-top: 0; border-bottom-right-radius: 14px; }
+.bipa-frame.is-searching .bipa-frame__corner { animation: bipa-corner-breathe 1.8s var(--easing-standard) infinite; }
+.bipa-frame__laser {
+  position: absolute; left: 10px; right: 10px; top: 50%; height: 3px; border-radius: var(--radius-pill);
+  background: var(--brand); box-shadow: 0 0 12px 2px var(--brand);
+  animation: bipa-sweep 2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+.bipa-frame.is-locked { width: 220px; height: 96px; }
+.bipa-frame.is-locked .bipa-frame__corner { border-color: var(--positive-soft); animation: none; }
+.bipa-frame.is-locked .bipa-frame__laser { opacity: 0; animation: none; }
+.bipa-viewfinder__flash { position: absolute; inset: 0; background: var(--on-camera); opacity: 0; pointer-events: none; }
+.bipa-viewfinder.is-captured .bipa-viewfinder__flash { animation: bipa-flash 260ms var(--easing-exit); }
+.bipa-viewfinder__hint {
+  position: absolute; left: 50%; bottom: var(--space-4); transform: translateX(-50%);
+  padding: 8px 14px; border-radius: var(--radius-pill);
+  background: rgba(14, 14, 18, 0.6); color: var(--on-camera);
+  font: 600 13px/18px var(--font-body); white-space: nowrap;
+  transition: opacity var(--duration-base);
+}
+
+/* ---------- ScanTray: bandeja do modo carrinho ---------- */
+.bipa-tray {
+  display: grid; gap: var(--space-3);
+  padding: var(--space-3) var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--surface);
+  box-shadow: var(--shadow-float);
+}
+.bipa-tray__handle { justify-self: center; width: 36px; height: 4px; border-radius: var(--radius-pill); background: var(--line); }
+.bipa-tray__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); padding: 0 var(--space-1); }
+.bipa-tray__title { font: 800 18px/24px var(--font-display); }
+.bipa-tray__count { font: 600 13px/18px var(--font-body); color: var(--ink-muted); display: inline-flex; gap: 4px; }
+.bipa-tray__total { display: grid; justify-items: end; }
+.bipa-tray__total-label { font: 600 11px/14px var(--font-body); letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-muted); }
+.bipa-tray__total-value { font: 800 22px/26px var(--font-display); font-variant-numeric: tabular-nums; }
+.bipa-tray__list { display: grid; gap: var(--space-2); max-height: 196px; overflow: hidden; }
+.bipa-tray__item {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: 8px 8px 8px 12px; border-radius: var(--radius-md);
+  background: var(--ground);
+  transition: opacity var(--duration-base);
+}
+.bipa-tray__item.is-new { animation: bipa-tray-in var(--duration-slow) var(--easing-spring) both; }
+.bipa-tray__item-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 14px/20px var(--font-body); }
+.bipa-tray__item-price { padding: 4px 10px; border-radius: var(--radius-sm); background: var(--price); color: var(--on-price); font: 800 14px/18px var(--font-display); font-variant-numeric: tabular-nums; }
+.bipa-tray__item.is-skipped .bipa-tray__item-name, .bipa-tray__item.is-skipped .bipa-tray__item-price { opacity: 0.45; }
+.bipa-toggle {
+  position: relative; width: 44px; height: 28px; flex: none; border: 0; border-radius: var(--radius-pill);
+  background: var(--line); cursor: pointer;
+  transition: background-color var(--duration-base) var(--easing-standard);
+}
+.bipa-toggle::after {
+  content: ""; position: absolute; left: 3px; top: 3px; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--surface); box-shadow: 0 1px 3px rgba(28, 27, 34, 0.25);
+  transition: transform var(--duration-base) var(--easing-spring);
+}
+.bipa-toggle[aria-checked="true"] { background: var(--brand); }
+.bipa-toggle[aria-checked="true"]::after { transform: translateX(16px); }
+
+/* ---------- InsightCard ---------- */
+.bipa-insight {
+  position: relative; display: grid; gap: var(--space-2);
+  padding: var(--space-4); border-radius: var(--radius-lg);
+  background: var(--surface);
+  overflow: hidden;
+  transition: opacity var(--duration-base) var(--easing-exit), transform var(--duration-slow) var(--easing-exit), max-height var(--duration-slow) var(--easing-exit), padding var(--duration-slow) var(--easing-exit), margin var(--duration-slow) var(--easing-exit);
+  max-height: 520px;
+}
+.bipa-insight__eyebrow { display: inline-flex; align-items: center; gap: 6px; min-height: 24px; font: 700 12px/16px var(--font-body); letter-spacing: 0.02em; color: var(--ink-muted); }
+.bipa-insight__eyebrow svg { width: 16px; height: 16px; }
+.bipa-insight--restock .bipa-insight__eyebrow { color: var(--alert-text); }
+.bipa-insight--saving .bipa-insight__eyebrow { color: var(--ink-muted); }
+.bipa-insight__headline { font: 800 20px/26px var(--font-display); }
+.bipa-insight__number { font: 800 34px/38px var(--font-display); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--ink); }
+.bipa-insight__why { font: 400 14px/20px var(--font-body); color: var(--ink-muted); }
+/* Fonte do cálculo: uma linha discreta, depois dos números. */
+.bipa-insight__source { font: 500 12px/16px var(--font-body); color: var(--ink-muted); }
+
+/* Régua do ciclo de compra: um segmento por dia, preenchido até hoje. */
+.bipa-days { display: grid; gap: 6px; margin-top: var(--space-1); }
+.bipa-days__track { display: grid; grid-template-columns: repeat(var(--days, 12), 1fr); gap: 3px; align-items: center; }
+.bipa-days__track i { height: 8px; border-radius: 4px; background: var(--surface-sunken); }
+.bipa-days__track i.is-past {
+  background: var(--alert); transform-origin: left center;
+  animation: bipa-grow-x var(--duration-slow) var(--easing-spring) both;
+  animation-delay: calc(var(--i, 0) * 35ms);
+}
+.bipa-days__track i.is-today {
+  height: 14px; background: var(--alert);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--alert);
+  animation: bipa-grow-x var(--duration-slow) var(--easing-spring) both, bipa-today 1.6s var(--easing-standard) 900ms 2;
+  animation-delay: calc(var(--i, 0) * 35ms), 900ms;
+}
+.bipa-days__track.is-long { gap: 0; }
+.bipa-days__track.is-long i { border-radius: 0; }
+.bipa-days__track.is-long i:first-child { border-radius: 4px 0 0 4px; }
+.bipa-days__track.is-long i:last-child { border-radius: 0 4px 4px 0; }
+.bipa-days__ends { display: flex; justify-content: space-between; gap: var(--space-2); font: 600 12px/16px var(--font-body); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.bipa-days__ends b { color: var(--ink); font-weight: 700; }
+.bipa-insight--saving .bipa-days__track i.is-past, .bipa-insight--saving .bipa-days__track i.is-today { background: var(--positive-text); }
+
+/* Fatos: número grande com unidade, rótulo embaixo, separados por fios. */
+.bipa-facts { display: grid; grid-template-columns: repeat(var(--facts, 3), minmax(0, 1fr)); padding-top: var(--space-3); border-top: 1px solid var(--line); }
+.bipa-fact { display: grid; gap: 2px; align-content: start; min-width: 0; padding: 0 var(--space-3); }
+.bipa-fact:first-child { padding-left: 0; }
+.bipa-fact + .bipa-fact { border-left: 1px solid var(--line); }
+.bipa-fact__value { font: 800 22px/26px var(--font-display); letter-spacing: -0.01em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bipa-fact__value small { margin-left: 3px; font: 700 13px/1 var(--font-body); letter-spacing: 0; color: var(--ink-muted); }
+.bipa-fact__value small.is-prefix { margin: 0 3px 0 0; }
+.bipa-fact__label { font: 500 12px/16px var(--font-body); color: var(--ink-muted); }
+.bipa-fact.is-low .bipa-fact__value, .bipa-fact.is-low .bipa-fact__value small { color: var(--alert-text); }
+.bipa-fact.is-good .bipa-fact__value, .bipa-fact.is-good .bipa-fact__value small { color: var(--positive-text); }
+@keyframes bipa-grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes bipa-today { 50% { box-shadow: 0 0 0 2px var(--surface), 0 0 0 6px var(--alert-soft); } }
+.bipa-insight__actions { display: flex; gap: var(--space-2); margin-top: var(--space-1); }
+.bipa-insight__dismiss {
+  position: absolute; right: 8px; top: 8px; width: 36px; height: 36px; border: 0; border-radius: 50%;
+  background: transparent; color: var(--ink-muted); cursor: pointer; display: grid; place-items: center;
+}
+.bipa-insight__dismiss svg { width: 18px; height: 18px; }
+.bipa-insight.is-dismissed { opacity: 0; transform: translateX(24px); max-height: 0; padding-top: 0; padding-bottom: 0; margin: 0; }
+.bipa-insight .bipa-btn { height: 44px; padding: 0 var(--space-4); font-size: 14px; }
+.bipa-spark { display: flex; align-items: flex-end; gap: 4px; height: 36px; }
+.bipa-spark span { flex: 1; max-width: 14px; border-radius: 4px 4px 2px 2px; background: var(--surface-sunken); transform-origin: bottom; animation: bipa-grow-y var(--duration-slow) var(--easing-spring) both; }
+.bipa-spark span:last-child { background: var(--ink); }
+
+/* ---------- Lista de compras: adicionar rápido e itens ---------- */
+.bipa-quick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); }
+.bipa-quick__tile {
+  position: relative; display: grid; justify-items: center; align-content: center; gap: 6px;
+  aspect-ratio: 1; max-width: 100%; padding: var(--space-2);
+  border: 0; border-radius: var(--radius-md);
+  background: var(--surface); color: var(--ink);
+  font: 600 12px/14px var(--font-body); text-align: center; cursor: pointer;
+  transition: transform var(--duration-fast) var(--easing-spring), background-color var(--duration-base);
+}
+.bipa-quick__tile svg { width: 28px; height: 28px; color: var(--ink-muted); transition: color var(--duration-base); }
+.bipa-quick__tile:active { transform: scale(0.92); }
+.bipa-quick__tile[aria-pressed="true"] { background: var(--brand-soft); color: var(--brand-text); }
+.bipa-quick__tile[aria-pressed="true"] svg { color: var(--brand-text); }
+.bipa-quick__tile[aria-pressed="true"]::after {
+  content: ""; position: absolute; right: 6px; top: 6px; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--brand) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4L18 8'/%3E%3C/svg%3E") center / 12px no-repeat;
+  animation: bipa-pop var(--duration-base) var(--easing-spring) both;
+}
+.bipa-list { display: grid; border-radius: var(--radius-lg); background: var(--surface); overflow: hidden; }
+.bipa-list__aisle { display: flex; justify-content: space-between; padding: 12px 16px 4px; font: 700 12px/16px var(--font-body); letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-muted); }
+.bipa-list__item {
+  display: flex; align-items: center; gap: var(--space-3); min-height: 52px; padding: 0 var(--space-4);
+  border: 0; background: none; color: var(--ink); text-align: left; cursor: pointer; width: 100%;
+  font: 600 15px/20px var(--font-body);
+  transition: opacity var(--duration-base), transform var(--duration-slow) var(--easing-spring);
+}
+.bipa-check {
+  position: relative; width: 24px; height: 24px; flex: none; border-radius: 8px;
+  box-shadow: inset 0 0 0 2px var(--line);
+  transition: background-color var(--duration-base), box-shadow var(--duration-base);
+}
+.bipa-check svg { position: absolute; inset: 3px; width: 18px; height: 18px; color: var(--on-brand); }
+.bipa-check path { stroke-dasharray: 22; stroke-dashoffset: 22; transition: stroke-dashoffset var(--duration-base) var(--easing-standard); }
+.bipa-list__name { flex: 1; position: relative; }
+.bipa-list__name::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1.5px; background: currentColor; transform: scaleX(0); transform-origin: left; transition: transform var(--duration-base) var(--easing-standard); }
+.bipa-list__price { font: 700 13px/18px var(--font-body); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.bipa-list__item.is-done { opacity: 0.5; }
+.bipa-list__item.is-done .bipa-check { background: var(--brand); box-shadow: none; }
+.bipa-list__item.is-done .bipa-check path { stroke-dashoffset: 0; }
+.bipa-list__item.is-done .bipa-list__name::after { transform: scaleX(1); }
+.bipa-progress { display: grid; gap: 6px; }
+.bipa-progress__bar { height: 8px; border-radius: var(--radius-pill); background: var(--surface-sunken); overflow: hidden; }
+.bipa-progress__fill { height: 100%; border-radius: inherit; background: var(--brand); transform-origin: left; transition: transform var(--duration-slow) var(--easing-spring); }
+.bipa-progress__label { display: flex; justify-content: space-between; font: 600 13px/18px var(--font-body); color: var(--ink-muted); }
+.bipa-progress__label strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+@keyframes bipa-corner-breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+@keyframes bipa-sweep { 0%, 100% { transform: translateY(-48px); } 50% { transform: translateY(48px); } }
+@keyframes bipa-flash { from { opacity: 0.55; } to { opacity: 0; } }
+@keyframes bipa-tray-in { from { opacity: 0; transform: translateY(-14px) scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes bipa-grow-y { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+/* ---------- StockStepper v4: lista calma; o controle aparece ao tocar ---------- */
+/* Em repouso, cada linha é só informação: nome inteiro, onde fica e quanto tem.
+   O âmbar é a única cor de alerta; botões só aparecem no item aberto. */
+.bipa-shelf { display: grid; padding: 4px 0; border-radius: var(--radius-lg); background: var(--surface); overflow: hidden; }
+.bipa-shelf__item { position: relative; overflow: hidden; }
+.bipa-shelf__item:not(.is-filtered) ~ .bipa-shelf__item:not(.is-filtered)::before {
+  content: ""; position: absolute; z-index: 2; top: 0; left: 68px; right: var(--space-4);
+  height: 1px; background: var(--line);
+}
+.bipa-shelf__row {
+  position: relative; z-index: 1; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-3);
+  width: 100%; min-height: 64px; padding: 10px var(--space-4) 10px var(--space-3); border: 0;
+  background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; touch-action: pan-y;
+  transition: transform var(--duration-slow) var(--easing-spring), background-color var(--duration-fast) var(--easing-standard);
+}
+.bipa-shelf__row:active { background: var(--ground); }
+.bipa-shelf__row:focus-visible { outline: none; box-shadow: inset var(--shadow-focus); }
+.bipa-shelf__text { display: grid; gap: 2px; min-width: 0; }
+.bipa-shelf__name {
+  font: 600 16px/22px var(--font-body);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.bipa-shelf__meta { display: inline-flex; align-items: center; gap: 4px; font: 500 13px/18px var(--font-body); color: var(--ink-muted); }
+.bipa-shelf__meta svg { width: 14px; height: 14px; flex: none; }
+.bipa-shelf__onlist { display: inline-flex; align-items: center; gap: 4px; }
+.bipa-shelf__onlist[hidden] { display: none; }
+.bipa-shelf__qty { font: 500 13px/20px var(--font-body); color: var(--ink-muted); white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; }
+.bipa-shelf__qty b { margin-right: 0; font: 800 18px/20px var(--font-display); color: var(--ink); }
+.bipa-shelf__item.is-low .bipa-shelf__qty b { color: var(--alert-text); }
+.bipa-shelf__out { font: 700 14px/20px var(--font-body); color: var(--alert-text); }
+.bipa-shelf__editor { position: relative; z-index: 1; display: grid; grid-template-rows: 0fr; background: var(--surface); transition: grid-template-rows var(--duration-slow) var(--easing-spring); }
+.bipa-shelf__editor > div {
+  overflow: hidden; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  padding: 0 var(--space-4); transition: padding var(--duration-slow) var(--easing-spring);
+}
+.bipa-shelf__item.is-open .bipa-shelf__editor { grid-template-rows: 1fr; }
+.bipa-shelf__item.is-open .bipa-shelf__editor > div { padding-bottom: var(--space-3); }
+.bipa-shelf__list {
+  display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 var(--space-4); border: 0; border-radius: var(--radius-pill);
+  background: var(--surface-sunken); color: var(--ink); font: 700 14px/1 var(--font-body); cursor: pointer;
+  transition: background-color var(--duration-base), color var(--duration-base), transform var(--duration-fast) var(--easing-spring);
+}
+.bipa-shelf__list svg { width: 16px; height: 16px; }
+.bipa-shelf__list:active { transform: scale(0.95); }
+.bipa-shelf__list[aria-pressed="true"] { background: var(--positive-soft); color: var(--positive-text); }
+.bipa-shelf__list .is-off { display: inline-flex; align-items: center; gap: 6px; }
+.bipa-shelf__list .is-on, .bipa-shelf__list[aria-pressed="true"] .is-off { display: none; }
+.bipa-shelf__list[aria-pressed="true"] .is-on { display: inline-flex; align-items: center; gap: 6px; }
+
+/* Miniatura: foto do produto ou ícone da categoria; o selo marca "na lista". */
+.bipa-thumb {
+  position: relative; display: grid; place-items: center; flex: none;
+  width: 44px; height: 44px; border-radius: 14px; background: var(--surface-sunken); color: var(--ink);
+}
+.bipa-thumb svg { width: 24px; height: 24px; }
+.bipa-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+.bipa-thumb__badge {
+  position: absolute; right: -4px; bottom: -4px; display: grid; place-items: center;
+  width: 20px; height: 20px; border-radius: 50%; background: var(--positive-text); color: var(--surface);
+  box-shadow: 0 0 0 2px var(--surface);
+  animation: bipa-pop var(--duration-base) var(--easing-spring) both;
+}
+.bipa-thumb__badge svg { width: 12px; height: 12px; }
+.bipa-thumb__badge[hidden] { display: none; }
+
+/* Medidor de nível: anel que enche até o "ter sempre", com o número dentro. */
+.bipa-gauge { position: relative; display: grid; place-items: center; width: 40px; height: 40px; flex: none; }
+.bipa-gauge svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+.bipa-gauge circle { fill: none; stroke-width: 3.5; }
+.bipa-gauge__track { stroke: var(--surface-sunken); }
+.bipa-gauge__fill {
+  stroke: var(--line); stroke-linecap: round; stroke-dasharray: var(--p, 100) 100;
+  transition: stroke-dasharray var(--duration-slow) var(--easing-spring), stroke var(--duration-base) var(--easing-standard);
+}
+.bipa-gauge__value { position: relative; font: 800 16px/1 var(--font-display); font-variant-numeric: tabular-nums; color: var(--ink); }
+.is-low > .bipa-shelf__row .bipa-gauge__fill, .bipa-gauge.is-low .bipa-gauge__fill { stroke: var(--alert); }
+.is-low > .bipa-shelf__row .bipa-gauge__value, .bipa-gauge.is-low .bipa-gauge__value { color: var(--alert-text); }
+.is-out > .bipa-shelf__row .bipa-gauge__fill, .bipa-gauge.is-out .bipa-gauge__fill { opacity: 0; }
+.is-out > .bipa-shelf__row .bipa-gauge__track, .bipa-gauge.is-out .bipa-gauge__track { stroke: var(--alert); stroke-dasharray: 4.6 4; opacity: 0.7; }
+.bipa-shelf__item.is-out .bipa-thumb > svg { opacity: 0.45; }
+
+/* Filtros: chips de uma escolha só, roláveis. O escolhido fica em ink. */
+.bipa-filter { display: flex; gap: var(--space-2); overflow-x: auto; scrollbar-width: none; padding: 2px; margin: -2px; }
+.bipa-filter::-webkit-scrollbar { display: none; }
+.bipa-filter button {
+  flex: none; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border: 0; border-radius: var(--radius-pill);
+  background: var(--surface); color: var(--ink); font: 600 14px/1 var(--font-body); cursor: pointer;
+  transition: background-color var(--duration-base) var(--easing-standard), color var(--duration-base) var(--easing-standard), transform var(--duration-fast) var(--easing-spring);
+}
+.bipa-filter button svg { width: 16px; height: 16px; }
+.bipa-filter button small { font: 700 12px/1 var(--font-body); color: var(--ink-muted); transition: color var(--duration-base); }
+.bipa-filter button:active { transform: scale(0.95); }
+.bipa-filter button[aria-pressed="true"] { background: var(--ink); color: var(--ground); }
+.bipa-filter button[aria-pressed="true"] small { color: inherit; opacity: 0.7; }
+.bipa-shelf__item.is-filtered { display: none; }
+
+/* Locais como categorias: arte grande com o nome embaixo (como as categorias do iFood).
+   Slate é a cor de "lugar"; o escolhido fica cheio. */
+.bipa-filter--tiles { gap: var(--space-3); }
+.bipa-filter--tiles button {
+  height: auto; padding: 0; display: grid; justify-items: center; gap: 6px; width: 72px;
+  background: none; color: var(--ink-muted); font: 600 12px/16px var(--font-body); text-align: center;
+}
+.bipa-filter--tiles button[aria-pressed="true"] { background: none; color: var(--ink); }
+.bipa-filter--tiles .bipa-filter__art {
+  position: relative; display: grid; place-items: center; width: 64px; height: 64px; border-radius: var(--radius-lg);
+  background: var(--place-soft); color: var(--place);
+  transition: background-color var(--duration-base) var(--easing-standard), color var(--duration-base) var(--easing-standard), transform var(--duration-slow) var(--easing-spring);
+}
+.bipa-filter--tiles .bipa-filter__art svg { width: 30px; height: 30px; }
+.bipa-filter--tiles button[aria-pressed="true"] .bipa-filter__art { background: var(--place); color: var(--on-place); transform: scale(1.04); }
+.bipa-filter--tiles .bipa-filter__art small {
+  position: absolute; top: -4px; right: -4px; min-width: 22px; height: 22px; padding: 0 6px; box-sizing: border-box;
+  display: grid; place-items: center; border-radius: var(--radius-pill); background: var(--surface); color: var(--ink);
+  font: 700 11px/1 var(--font-body); box-shadow: 0 0 0 2px var(--ground);
+}
+.bipa-filter--tiles button[aria-pressed="true"] small { opacity: 1; color: var(--ink); }
+
+/* ProductCard: prateleira horizontal de produtos com medidor e "+" para pôr na lista. */
+.bipa-cards {
+  display: flex; gap: var(--space-3); overflow-x: auto; scrollbar-width: none; scroll-snap-type: x mandatory;
+  margin: 0 calc(-1 * var(--space-4)); padding: 2px var(--space-4) 6px; scroll-padding-inline: var(--space-4);
+}
+.bipa-cards::-webkit-scrollbar { display: none; }
+.bipa-pcard { flex: none; width: 116px; display: grid; gap: var(--space-2); align-content: start; scroll-snap-align: start; }
+.bipa-pcard.is-filtered { display: none; }
+.bipa-pcard__art {
+  position: relative; display: grid; place-items: center; aspect-ratio: 1; border-radius: var(--radius-lg);
+  background: var(--surface); color: var(--ink);
+}
+.bipa-pcard__art > svg { width: 46px; height: 46px; }
+.bipa-pcard__art img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+.bipa-pcard__art .bipa-gauge { position: absolute; top: 6px; left: 6px; width: 36px; height: 36px; border-radius: 50%; background: var(--surface); }
+.bipa-pcard__art .bipa-gauge__value { font-size: 14px; }
+.bipa-pcard.is-out .bipa-pcard__art > svg { opacity: 0.45; }
+.bipa-pcard__add {
+  position: absolute; right: 6px; bottom: 6px; display: grid; place-items: center; width: 36px; height: 36px; padding: 0;
+  border: 0; border-radius: 50%; background: var(--surface); color: var(--brand); box-shadow: var(--shadow-raised); cursor: pointer;
+  transition: background-color var(--duration-base) var(--easing-standard), color var(--duration-base), transform var(--duration-fast) var(--easing-spring);
+}
+.bipa-pcard__add svg { width: 20px; height: 20px; }
+.bipa-pcard__add:active { transform: scale(0.88); }
+.bipa-pcard__add .is-off { display: grid; }
+.bipa-pcard__add .is-on, .bipa-pcard__add[aria-pressed="true"] .is-off { display: none; }
+.bipa-pcard__add[aria-pressed="true"] { background: var(--positive-text); color: var(--surface); }
+.bipa-pcard__add[aria-pressed="true"] .is-on { display: grid; animation: bipa-pop var(--duration-base) var(--easing-spring) both; }
+.bipa-pcard__name { font: 600 14px/18px var(--font-body); color: var(--ink); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Selo de contagem ao lado do título da seção. */
+.bipa-count {
+  display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 8px; box-sizing: border-box;
+  border-radius: var(--radius-pill); background: var(--surface-sunken); color: var(--ink); font: 700 13px/1 var(--font-body);
+  font-variant-numeric: tabular-nums;
+}
+.bipa-count--alert { background: var(--alert-soft); color: var(--alert-text); }
+
+/* Título do insight como tipografia: uma linha pequena, o valor grande e uma pílula. */
+.bipa-insight__top .bipa-insight__headline { display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; row-gap: 4px; }
+.bipa-insight__headline small { display: block; flex-basis: 100%; font: 600 15px/20px var(--font-body); color: var(--ink-muted); }
+.bipa-insight__headline strong { font: 800 32px/38px var(--font-display); letter-spacing: -0.02em; color: var(--ink); }
+.bipa-insight__pill {
+  display: inline-flex; align-items: center; height: 28px; padding: 0 12px; vertical-align: 6px;
+  border-radius: var(--radius-pill); background: var(--alert-soft); color: var(--alert-text); font: 700 13px/1 var(--font-body);
+}
+
+/* SearchBar: busca em destaque, com o bipar dentro. */
+.bipa-search {
+  display: flex; align-items: center; gap: var(--space-2); height: 52px; padding: 0 6px 0 var(--space-4);
+  border-radius: var(--radius-pill); background: var(--surface); color: var(--ink-muted);
+  transition: box-shadow var(--duration-base) var(--easing-standard);
+}
+.bipa-search > svg { width: 20px; height: 20px; flex: none; }
+.bipa-search input { flex: 1; min-width: 0; height: 100%; border: 0; background: none; font: 500 16px/22px var(--font-body); color: var(--ink); outline: none; }
+.bipa-search input::placeholder { color: var(--ink-muted); }
+.bipa-search:focus-within { box-shadow: var(--shadow-focus); }
+.bipa-search__scan {
+  flex: none; display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 50%;
+  background: var(--brand-soft); color: var(--brand-text); cursor: pointer; transition: transform var(--duration-fast) var(--easing-spring);
+}
+.bipa-search__scan svg { width: 20px; height: 20px; }
+.bipa-search__scan:active { transform: scale(0.88); }
+
+.bipa-delta {
+  display: inline-flex; align-items: center; gap: 2px; height: 24px; padding: 0 8px; border-radius: var(--radius-pill);
+  background: var(--positive-soft); color: var(--positive-text); font: 700 12px/1 var(--font-body); font-variant-numeric: tabular-nums;
+}
+
+/* Cabeçalho de seção: título, selo de contagem e "Ver tudo". */
+.bipa-section-head { display: flex; align-items: center; gap: var(--space-2); padding: 0 4px; }
+.bipa-section-head h2 { margin: 0; font: 700 20px/26px var(--font-display); color: var(--ink); }
+.bipa-more { margin-left: auto; padding: 6px 0; border: 0; background: none; color: var(--brand-text); font: 700 14px/20px var(--font-body); cursor: pointer; text-decoration: none; }
+
+/* Carrossel de insights: um cartão por vez, com pontos. */
+.bipa-carousel { display: grid; gap: var(--space-3); }
+.bipa-carousel__track {
+  display: grid; grid-auto-flow: column; grid-auto-columns: 100%; gap: var(--space-3);
+  overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+}
+.bipa-carousel__track::-webkit-scrollbar { display: none; }
+.bipa-carousel__track > * { scroll-snap-align: center; }
+.bipa-dots { display: flex; justify-content: center; gap: 6px; }
+.bipa-dots i {
+  display: block; width: 6px; height: 6px; border-radius: var(--radius-pill); background: var(--line);
+  transition: width var(--duration-slow) var(--easing-spring), background-color var(--duration-base);
+}
+.bipa-dots i[aria-current="true"] { width: 20px; background: var(--ink); }
+
+/* Arte do insight: o produto ao lado do título, como num banner. */
+.bipa-insight__top { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: var(--space-3); }
+.bipa-insight__art {
+  display: grid; place-items: center; width: 64px; height: 64px; border-radius: var(--radius-lg);
+  background: var(--alert-soft); color: var(--alert-text);
+}
+.bipa-insight__art svg { width: 34px; height: 34px; }
+
+/* ListPreview: a lista na Casa. Mostra o que tem nela (miniaturas), quantos itens, o total estimado e uma ação. */
+.bipa-listprev {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px 12px;
+  padding: var(--space-4); border-radius: var(--radius-lg); background: var(--surface); color: var(--ink); text-decoration: none;
+}
+.bipa-listprev__num { display: grid; gap: 2px; }
+.bipa-listprev__num strong { font: 800 26px/30px var(--font-display); letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.bipa-listprev__num strong small { margin-left: 4px; font: 700 15px/1 var(--font-display); color: var(--ink-muted); }
+.bipa-listprev__num span { font: 600 14px/20px var(--font-body); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.bipa-listprev__thumbs { display: flex; padding-left: 10px; }
+.bipa-listprev__thumbs i {
+  display: grid; place-items: center; width: 40px; height: 40px; margin-left: -10px; border-radius: 50%;
+  background: var(--surface-sunken); color: var(--ink); box-shadow: 0 0 0 3px var(--surface);
+  font: 700 13px/1 var(--font-body); font-style: normal;
+  animation: bipa-pop var(--duration-slow) var(--easing-spring) both; animation-delay: calc(var(--i, 0) * 50ms);
+}
+.bipa-listprev__thumbs i svg { width: 20px; height: 20px; }
+.bipa-listprev__thumbs img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.bipa-listprev__go {
+  grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 8px; height: 48px;
+  border-radius: var(--radius-pill); background: var(--brand); color: var(--on-brand); font: 700 15px/1 var(--font-body);
+  transition: transform var(--duration-fast) var(--easing-spring);
+}
+.bipa-listprev__go svg { width: 18px; height: 18px; }
+.bipa-listprev:active .bipa-listprev__go { transform: scale(0.97); }
+
+/* ShoppingBar: durante a compra, fica fixa acima da navegação em todas as abas, como a sacola do iFood. */
+.bipa-cartbar {
+  display: flex; align-items: center; gap: var(--space-3); height: 60px; padding: 0 8px 0 10px;
+  border-radius: var(--radius-pill); background: var(--brand); color: var(--on-brand); box-shadow: var(--shadow-float);
+  text-decoration: none; overflow: hidden; position: relative;
+  animation: bipa-in-up var(--duration-slow) var(--easing-spring) both;
+}
+.bipa-cartbar__icon { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: rgba(28, 27, 31, 0.10); }
+.bipa-cartbar__icon svg { width: 20px; height: 20px; }
+.bipa-cartbar__text { display: grid; gap: 2px; min-width: 0; }
+.bipa-cartbar__text strong { font: 800 16px/20px var(--font-display); font-variant-numeric: tabular-nums; }
+.bipa-cartbar__text span { font: 600 13px/16px var(--font-body); opacity: 0.75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.bipa-cartbar__go {
+  margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 4px; height: 44px; padding: 0 14px 0 16px;
+  border-radius: var(--radius-pill); background: var(--ink); color: var(--surface); font: 700 14px/1 var(--font-body);
+}
+.bipa-cartbar__go svg { width: 18px; height: 18px; }
+/* Progresso da compra: um fio na base da barra, de 0 a 100% dos itens da lista. */
+.bipa-cartbar__progress { position: absolute; left: 24px; right: 24px; bottom: 6px; height: 3px; border-radius: 2px; background: rgba(28, 27, 31, 0.14); }
+.bipa-cartbar__progress i { display: block; height: 100%; width: calc(var(--p, 0) * 1%); border-radius: inherit; background: var(--ink); transition: width var(--duration-slow) var(--easing-spring); }
+
+/* Insight: a fonte do cálculo fica atrás do ⓘ. */
+.bipa-insight__info {
+  display: inline-grid; place-items: center; width: 24px; height: 24px; margin-left: 2px; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; color: inherit; cursor: pointer; opacity: 0.8;
+}
+.bipa-insight__info svg { width: 16px; height: 16px; }
+.bipa-insight__source { display: none; }
+.bipa-insight.is-explained .bipa-insight__source { display: block; animation: bipa-fade-up var(--duration-base) var(--easing-standard) both; }
+
+/* Gesto de deslizar: a linha revela a ação por trás. */
+.bipa-swipe { position: relative; border-radius: var(--radius-lg); overflow: hidden; }
+.bipa-swipe__under {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 var(--space-6); font: 700 14px/1 var(--font-body);
+}
+.bipa-swipe__under span { display: inline-flex; align-items: center; gap: 8px; }
+.bipa-swipe__under svg { width: 18px; height: 18px; }
+.bipa-swipe__left { color: var(--positive-text); }
+.bipa-swipe__right { color: var(--alert-text); }
+.bipa-swipe.is-left .bipa-swipe__under { background: var(--positive-soft); }
+.bipa-swipe.is-right .bipa-swipe__under { background: var(--alert-soft); }
+.bipa-shelf__item > .bipa-swipe__under { z-index: 0; }
+.bipa-shelf__item.is-left > .bipa-swipe__under { background: var(--positive-soft); }
+.bipa-shelf__item.is-right > .bipa-swipe__under { background: var(--alert-soft); }
+
+/* ---------- Revisão v3: botão, etiqueta e feedback ---------- */
+
+/* Botão: forma muda ao pressionar (pílula → arredondado), como no M3 Expressive. */
+.bipa-btn { border-radius: 28px; transition: transform var(--duration-fast) var(--easing-spring), border-radius var(--duration-base) var(--easing-spring), box-shadow var(--duration-base) var(--easing-standard), background-color var(--duration-base) var(--easing-standard), color var(--duration-base) var(--easing-standard); }
+.bipa-btn:active { border-radius: 14px; }
+
+/* Carregamento com a cara do Bipa: as quatro barras do símbolo pulsando. */
+.bipa-loader { display: inline-flex; align-items: center; gap: 3px; height: 20px; }
+.bipa-loader i { display: block; width: 4px; height: 100%; border-radius: 2px; background: currentColor; transform-origin: center; animation: bipa-bars 900ms var(--easing-standard) infinite; }
+.bipa-loader i:nth-child(2) { width: 6px; animation-delay: 90ms; }
+.bipa-loader i:nth-child(3) { width: 3px; animation-delay: 180ms; }
+.bipa-loader i:nth-child(4) { width: 5px; animation-delay: 270ms; }
+@keyframes bipa-bars { 0%, 100% { transform: scaleY(0.35); opacity: 0.6; } 40% { transform: scaleY(1); opacity: 1; } }
+
+/* Seletor segmentado conectado, com indicador que desliza. */
+.bipa-segmented { position: relative; display: inline-flex; padding: 4px; border-radius: var(--radius-pill); background: var(--surface-sunken); }
+.bipa-segmented__indicator { position: absolute; top: 4px; bottom: 4px; left: 0; border-radius: var(--radius-pill); background: var(--surface); box-shadow: 0 1px 3px rgba(28, 27, 34, 0.12); transition: transform var(--duration-slow) var(--easing-spring), width var(--duration-slow) var(--easing-spring); }
+.bipa-segmented button { position: relative; z-index: 1; height: 40px; padding: 0 16px; border: 0; border-radius: var(--radius-pill); background: none; color: var(--ink-muted); font: 700 14px/1 var(--font-body); cursor: pointer; transition: color var(--duration-base); }
+.bipa-segmented button[aria-pressed="true"] { color: var(--ink); }
+.bipa-segmented--camera { background: rgba(14, 14, 18, 0.6); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.bipa-segmented--camera .bipa-segmented__indicator { background: var(--on-camera); }
+.bipa-segmented--camera button { color: rgba(243, 242, 246, 0.7); }
+.bipa-segmented--camera button[aria-pressed="true"] { color: var(--camera); }
+
+/* Etiqueta: preço por unidade dentro dela e preços condicionados. */
+.bipa-tag__unit { font: 600 11px/14px var(--font-body); opacity: 0.8; }
+.bipa-tag__flag {
+  justify-self: start; display: inline-flex; align-items: center; height: 18px; padding: 0 6px;
+  border-radius: 4px; background: var(--on-price); color: var(--price);
+  font: 800 10px/1 var(--font-body); letter-spacing: 0.06em; text-transform: uppercase;
+}
+.bipa-tag__alt { font: 600 12px/16px var(--font-body); }
+.bipa-tag__alt b { font-weight: 800; }
+.bipa-tag__deal { font: 800 13px/16px var(--font-display); }
+
+/* "Bipou!" com desfazer e o tempo para desfazer visível. */
+.bipa-toast { position: relative; overflow: hidden; }
+.bipa-toast__undo {
+  margin-left: auto; height: 32px; padding: 0 10px; border: 0; border-radius: var(--radius-pill);
+  background: none; color: var(--price); font: 800 13px/1 var(--font-body); cursor: pointer;
+}
+.bipa-toast__timer { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--price); transform-origin: left; transform: scaleX(1); }
+.bipa-bip.is-playing .bipa-toast__timer { animation: bipa-timer 4s linear 900ms forwards; }
+@keyframes bipa-timer { to { transform: scaleX(0); } }
+
+
+/* =====================================================================
+   Cores da Casa: um acento só. Vermelho para as duas ações de marca
+   (bloco da lista e bipar), âmbar só para "abaixo do ter sempre",
+   e o resto em neutros. Verde e slate ficam para economia e mercados.
+   ===================================================================== */
+.bipa-filter--tiles .bipa-filter__art { background: var(--surface); color: var(--ink); }
+.bipa-filter--tiles button[aria-pressed="true"] .bipa-filter__art { background: var(--ink); color: var(--ground); }
+.bipa-filter--tiles .bipa-filter__art small { background: var(--surface-sunken); box-shadow: 0 0 0 2px var(--ground); }
+.bipa-thumb__badge { background: var(--ink); color: var(--surface); }
+.bipa-pcard__add { color: var(--ink); }
+.bipa-pcard__add[aria-pressed="true"] { background: var(--ink); color: var(--ground); }
+.bipa-more { color: var(--ink); }
+.bipa-search__scan { background: var(--surface-sunken); color: var(--ink); }
+/* Hora de repor em neutros: o âmbar fica só no que está abaixo do "ter sempre". */
+.bipa-insight--restock .bipa-insight__eyebrow { color: var(--ink-muted); }
+.bipa-insight--restock .bipa-insight__art { background: var(--surface-sunken); color: var(--ink); }
+.bipa-insight--restock .bipa-days__track i.is-past, .bipa-insight--restock .bipa-days__track i.is-today { background: var(--ink); }
+.bipa-insight--restock .bipa-days__track i.is-today { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--ink); animation-name: bipa-grow-x, bipa-today-ink; }
+@keyframes bipa-today-ink { 50% { box-shadow: 0 0 0 2px var(--surface), 0 0 0 6px var(--line); } }
+.bipa-btn--neutral { background: var(--ink); color: var(--ground); }
+a.bipa-btn { box-sizing: border-box; text-decoration: none; }
+
+
+/* =====================================================================
+   v5: um acento por tela também nas telas de compra.
+   ===================================================================== */
+/* Controles comuns ficam em ink; o amarelo fica para bipar, comprar e o preço. */
+.bipa-toggle[aria-checked="true"] { background: var(--ink); }
+.bipa-list__item.is-done .bipa-check { background: var(--ink); }
+.bipa-list__item.is-done .bipa-check svg { color: var(--surface); }
+/* O laser do visor é coral, como no símbolo. */
+.bipa-frame__laser { background: var(--alert); box-shadow: 0 0 12px 2px var(--alert); }
+
+/* Chip de vidro, para usar sobre a câmera. */
+.bipa-chip--glass { background: rgba(14, 14, 18, 0.55); color: var(--on-camera); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.bipa-chip--glass .bipa-chip__meta { color: var(--on-camera); opacity: 0.75; }
+
+/* Preço por mercado: miniatura do mercado, nome, idade do preço e o valor. O menor ganha o selo de economia. */
+.bipa-mprices { display: grid; padding: 4px 0; border-radius: var(--radius-lg); background: var(--surface); }
+.bipa-mprice { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); min-height: 64px; padding: 10px var(--space-4) 10px var(--space-3); }
+.bipa-mprice + .bipa-mprice::before { content: ""; position: absolute; top: 0; left: 68px; right: var(--space-4); height: 1px; background: var(--line); }
+.bipa-mprice__name { display: grid; gap: 2px; min-width: 0; font: 600 16px/22px var(--font-body); }
+.bipa-mprice__age { display: inline-flex; align-items: center; gap: 4px; font: 500 13px/18px var(--font-body); color: var(--ink-muted); }
+.bipa-mprice__age svg { width: 14px; height: 14px; }
+.bipa-mprice__age.is-old { color: var(--alert-text); }
+.bipa-mprice__value { display: grid; justify-items: end; gap: 2px; font: 800 18px/22px var(--font-display); font-variant-numeric: tabular-nums; }
+.bipa-mprice__value small { font: 700 12px/16px var(--font-body); }
+.bipa-mprice.is-best .bipa-mprice__value small { color: var(--positive-text); }
+
+/* Comparação da lista inteira: uma barra por mercado, proporcional ao total. */
+.bipa-compare { display: grid; gap: var(--space-3); padding: var(--space-4); border-radius: var(--radius-lg); background: var(--surface); }
+.bipa-compare__row { display: grid; gap: 6px; }
+.bipa-compare__top { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); font: 600 15px/20px var(--font-body); }
+.bipa-compare__top strong { font: 800 16px/20px var(--font-display); font-variant-numeric: tabular-nums; }
+.bipa-compare__bar { height: 10px; border-radius: var(--radius-pill); background: var(--surface-sunken); overflow: hidden; }
+.bipa-compare__bar i { display: block; height: 100%; width: calc(var(--p, 0) * 1%); border-radius: inherit; background: var(--line); transform-origin: left; animation: bipa-grow-x var(--duration-slow) var(--easing-spring) both; }
+.bipa-compare__row.is-best .bipa-compare__bar i { background: var(--ink); }
+.bipa-compare__row.is-best .bipa-compare__top span::after { content: " · mais barato"; color: var(--positive-text); font-weight: 700; }
+
+/* Histórico de preço: linha simples com o ponto de hoje na cor da etiqueta. */
+.bipa-history { display: grid; gap: var(--space-2); padding: var(--space-4); border-radius: var(--radius-lg); background: var(--surface); }
+.bipa-history svg { width: 100%; height: 96px; overflow: visible; }
+.bipa-history__line { fill: none; stroke: var(--ink); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 600; stroke-dashoffset: 600; animation: bipa-draw 900ms var(--easing-standard) 150ms forwards; }
+.bipa-history__area { fill: var(--surface-sunken); }
+.bipa-history__dot { fill: var(--price); stroke: var(--ink); stroke-width: 2.5; }
+.bipa-history__axis { display: flex; justify-content: space-between; font: 600 12px/16px var(--font-body); color: var(--ink-muted); font-variant-numeric: tabular-nums; }

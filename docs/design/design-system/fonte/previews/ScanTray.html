@@ -1,0 +1,63 @@
+<!-- @dsCard group="Câmera" height=420 subtitle="Modo carrinho: cada bip entra na bandeja e o total soma o que você vai levar" -->
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@700..800&family=Figtree:wght@400..700&display=swap">
+<style>
+  body { margin: 0; background: var(--camera); }
+  .stage { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-4) 0; max-width: 420px; }
+  .sim { justify-self: center; display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 18px; border: 0; border-radius: var(--radius-pill); background: var(--brand); color: var(--on-brand); font: 700 14px/1 var(--font-body); cursor: pointer; }
+  .sim svg { width: 18px; height: 18px; }
+</style>
+</head>
+<body>
+  <div class="bipa-root stage">
+    <button class="sim" type="button" id="sim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16M3 12h18"/></svg>Simular um bip</button>
+    <section class="bipa-tray" id="tray" aria-label="Carrinho">
+      <span class="bipa-tray__handle" aria-hidden="true"></span>
+      <div class="bipa-tray__head">
+        <div>
+          <div class="bipa-tray__title">Carrinho</div>
+          <div class="bipa-tray__count"><span class="bipa-roll bipa-tray__count-value"><span>3</span></span> itens bipados</div>
+        </div>
+        <div class="bipa-tray__total">
+          <span class="bipa-tray__total-label">Vou levar</span>
+          <span class="bipa-tray__total-value">0,00</span>
+        </div>
+      </div>
+      <div class="bipa-tray__list">
+        <div class="bipa-tray__item" data-cents="799">
+          <span class="bipa-tray__item-name">Leite condensado Moça 395 g</span>
+          <span class="bipa-tray__item-price">R$ 7,99</span>
+          <button type="button" class="bipa-toggle" role="switch" aria-checked="true" aria-label="Levar Leite condensado Moça 395 g"></button>
+        </div>
+        <div class="bipa-tray__item" data-cents="1899">
+          <span class="bipa-tray__item-name">Café Pilão 500 g</span>
+          <span class="bipa-tray__item-price">R$ 18,99</span>
+          <button type="button" class="bipa-toggle" role="switch" aria-checked="true" aria-label="Levar Café Pilão 500 g"></button>
+        </div>
+        <div class="bipa-tray__item is-skipped" data-cents="2490">
+          <span class="bipa-tray__item-name">Sabão em pó Omo 1,6 kg</span>
+          <span class="bipa-tray__item-price">R$ 24,90</span>
+          <button type="button" class="bipa-toggle" role="switch" aria-checked="false" aria-label="Levar Sabão em pó Omo 1,6 kg"></button>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+    var tray = window.Bipa.ScanTray.enhance(document.getElementById('tray'));
+    var queue = [
+      { name: 'Arroz Tio João 5 kg', cents: 2790 },
+      { name: 'Feijão carioca 1 kg', cents: 849 },
+      { name: 'Banana prata (kg)', cents: 549 },
+      { name: 'Água mineral 1,5 L', cents: 279 }
+    ];
+    var i = 0;
+    document.getElementById('sim').addEventListener('click', function () {
+      tray.add(queue[i % queue.length]);
+      i += 1;
+    });
+  </script>
+</body>
+</html>

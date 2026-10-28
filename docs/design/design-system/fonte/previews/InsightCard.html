@@ -1,0 +1,80 @@
+<!-- @dsCard group="Casa" height=640 subtitle="Carrossel de Hora de repor (deslize ou toque nos pontos) e economia; o ⓘ mostra de onde vem a conta" -->
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600..800&family=Figtree:wght@400..700&display=swap">
+<style>
+  body { margin: 0; background: var(--ground); }
+  .stage { display: grid; gap: var(--space-6); padding: var(--space-6) var(--space-4); max-width: 380px; }
+  .section { display: grid; gap: var(--space-3); }
+  .section-head { display: flex; align-items: center; gap: 8px; padding: 0 4px; }
+  .section-head h2 { margin: 0; font: 700 20px/26px var(--font-display); color: var(--ink); }
+  .count { font: 600 13px/18px var(--font-body); color: var(--ink-muted); }
+  .log { min-height: 20px; padding: 0 4px; font: 600 13px/20px var(--font-body); color: var(--ink-muted); }
+</style>
+</head>
+<body>
+  <div class="bipa-root stage" style="gap: var(--space-3);">
+    <div class="bipa-carousel" role="region" aria-label="Hora de repor">
+      <div class="bipa-carousel__track">
+      <article class="bipa-insight bipa-insight--restock">
+        <span class="bipa-insight__eyebrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg>Hora de repor<button class="bipa-insight__info" type="button" aria-label="Como calculamos" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button></span>
+        <div class="bipa-insight__top">
+          <span class="bipa-insight__headline"><small>Café acaba na</small><strong>quinta-feira</strong></span>
+          <span class="bipa-insight__art" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9h11v5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16M8 3v3M11 3v3"/></svg></span>
+        </div>
+        <div class="bipa-days" role="img" aria-label="Dia 10 de 12 do ciclo de compra de café">
+          <div class="bipa-days__track" style="--days: 12"><i class="is-past" style="--i: 0"></i><i class="is-past" style="--i: 1"></i><i class="is-past" style="--i: 2"></i><i class="is-past" style="--i: 3"></i><i class="is-past" style="--i: 4"></i><i class="is-past" style="--i: 5"></i><i class="is-past" style="--i: 6"></i><i class="is-past" style="--i: 7"></i><i class="is-past" style="--i: 8"></i><i class="is-today" style="--i: 9"></i><i></i><i></i></div>
+        </div>
+        <div class="bipa-facts">
+          <div class="bipa-fact"><span class="bipa-fact__value"><span data-count="10">10</span><small>dias</small></span><span class="bipa-fact__label">desde a compra</span></div>
+          <div class="bipa-fact"><span class="bipa-fact__value"><span data-count="12">12</span><small>dias</small></span><span class="bipa-fact__label">de intervalo</span></div>
+          <div class="bipa-fact"><span class="bipa-fact__value"><span data-count="1">1</span><small>pct</small></span><span class="bipa-fact__label">em casa</span></div>
+        </div>
+        <span class="bipa-insight__source">Média das suas últimas 4 compras de café. A última foi no sábado, 17/10.</span>
+        <div class="bipa-insight__actions"><button class="bipa-btn bipa-btn--neutral" type="button"><span>Pôr na lista</span></button></div>
+        <button class="bipa-insight__dismiss" type="button" aria-label="Dispensar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </article>
+      <article class="bipa-insight bipa-insight--restock">
+        <span class="bipa-insight__eyebrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg>Hora de repor<button class="bipa-insight__info" type="button" aria-label="Como calculamos" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button></span>
+        <div class="bipa-insight__top">
+          <span class="bipa-insight__headline"><small>Sabão em pó acaba no</small><strong>domingo</strong></span>
+          <span class="bipa-insight__art" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="7" width="12" height="13" rx="2"/><path d="M9 7V4h6v3M9 12h6"/></svg></span>
+        </div>
+        <div class="bipa-days" role="img" aria-label="Dia 15 de 20 do ciclo de compra de sabão em pó">
+          <div class="bipa-days__track" style="--days: 20"><i class="is-past" style="--i: 0"></i><i class="is-past" style="--i: 1"></i><i class="is-past" style="--i: 2"></i><i class="is-past" style="--i: 3"></i><i class="is-past" style="--i: 4"></i><i class="is-past" style="--i: 5"></i><i class="is-past" style="--i: 6"></i><i class="is-past" style="--i: 7"></i><i class="is-past" style="--i: 8"></i><i class="is-past" style="--i: 9"></i><i class="is-past" style="--i: 10"></i><i class="is-past" style="--i: 11"></i><i class="is-past" style="--i: 12"></i><i class="is-past" style="--i: 13"></i><i class="is-today" style="--i: 14"></i><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+        <div class="bipa-facts">
+          <div class="bipa-fact"><span class="bipa-fact__value"><span data-count="15">15</span><small>dias</small></span><span class="bipa-fact__label">desde a compra</span></div>
+          <div class="bipa-fact"><span class="bipa-fact__value"><span data-count="20">20</span><small>dias</small></span><span class="bipa-fact__label">de intervalo</span></div>
+          <div class="bipa-fact"><span class="bipa-fact__value"><span data-count="2">2</span><small>cx</small></span><span class="bipa-fact__label">em casa</span></div>
+        </div>
+        <span class="bipa-insight__source">Média das suas últimas 3 compras de sabão em pó.</span>
+        <div class="bipa-insight__actions"><button class="bipa-btn bipa-btn--neutral" type="button"><span>Pôr na lista</span></button></div>
+        <button class="bipa-insight__dismiss" type="button" aria-label="Dispensar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </article>
+      </div>
+      <div class="bipa-dots" aria-hidden="true"><i aria-current="true"></i><i aria-current="false"></i></div>
+    </div>
+    <article class="bipa-insight bipa-insight--saving">
+        <span class="bipa-insight__eyebrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>Economia de outubro<button class="bipa-insight__info" type="button" aria-label="Como calculamos" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button></span>
+        <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 16px;">
+          <span class="bipa-insight__number">R$ <span data-cents="3840">38,40</span></span>
+          <div class="bipa-spark" aria-label="Economia nos últimos 6 meses" style="width: 112px;"><span style="height: 30%; animation-delay: 0ms"></span><span style="height: 45%; animation-delay: 50ms"></span><span style="height: 38%; animation-delay: 100ms"></span><span style="height: 60%; animation-delay: 150ms"></span><span style="height: 52%; animation-delay: 200ms"></span><span style="height: 100%; animation-delay: 250ms"></span></div>
+        </div>
+        <div class="bipa-facts">
+          <div class="bipa-fact"><span class="bipa-fact__value"><span data-count="14">14</span><small>itens</small></span><span class="bipa-fact__label">mais baratos</span></div>
+          <div class="bipa-fact"><span class="bipa-fact__value"><span data-count="3">3</span><small>mercados</small></span><span class="bipa-fact__label">comparados</span></div>
+          <div class="bipa-fact is-good"><span class="bipa-fact__value"><small class="is-prefix">+R$</small>12,10</span><span class="bipa-fact__label">que setembro</span></div>
+        </div>
+        <span class="bipa-insight__source">Comparado ao maior preço que você registrou de cada item.</span>
+        <button class="bipa-insight__dismiss" type="button" aria-label="Dispensar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </article>
+  </div>
+  <script>
+    document.querySelectorAll('.bipa-insight').forEach(function (card) { window.Bipa.InsightCard.enhance(card); });
+    document.querySelectorAll('.bipa-carousel').forEach(function (el) { window.Bipa.Carousel.enhance(el); });
+  </script>
+</body>
+</html>

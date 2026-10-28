@@ -1,0 +1,45 @@
+<!-- @dsCard group="Câmera" height=330 subtitle="Procurando, trava no código, clarão e confirmação (em loop)" -->
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400..700&display=swap">
+<style>
+  body { margin: 0; background: var(--ground); }
+  .stage { padding: var(--space-4); }
+  .bipa-viewfinder { height: 280px; max-width: 420px; }
+  .shelf { position: absolute; inset: 0; display: grid; grid-template-rows: 1fr 8px 1fr; gap: 10px; padding: 28px 0; opacity: 0.35; }
+  .shelf div { display: flex; gap: 10px; }
+  .shelf i { display: block; border-radius: 10px; background: var(--on-camera); opacity: 0.25; }
+  .shelf hr { margin: 0; border: 0; background: var(--on-camera); opacity: 0.3; }
+  .code { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; gap: 2px; height: 56px; padding: 8px 12px; border-radius: 6px; background: var(--surface); }
+  .code i { display: block; background: var(--ink); }
+</style>
+</head>
+<body>
+  <div class="bipa-root stage">
+    <div class="bipa-viewfinder" id="vf" aria-label="Visor da câmera">
+      <div class="shelf" aria-hidden="true">
+        <div><i style="width: 90px"></i><i style="width: 70px"></i><i style="width: 120px"></i><i style="width: 80px"></i></div>
+        <hr>
+        <div><i style="width: 120px"></i><i style="width: 80px"></i><i style="width: 100px"></i></div>
+      </div>
+      <div class="code" aria-hidden="true">
+        <i style="width: 3px"></i><i style="width: 1px"></i><i style="width: 2px"></i><i style="width: 4px"></i><i style="width: 1px"></i><i style="width: 2px"></i><i style="width: 3px"></i><i style="width: 1px"></i><i style="width: 2px"></i><i style="width: 1px"></i><i style="width: 3px"></i><i style="width: 2px"></i><i style="width: 1px"></i><i style="width: 4px"></i><i style="width: 2px"></i><i style="width: 1px"></i><i style="width: 3px"></i>
+      </div>
+      <div class="bipa-frame">
+        <span class="bipa-frame__corner bipa-frame__corner--tl"></span>
+        <span class="bipa-frame__corner bipa-frame__corner--tr"></span>
+        <span class="bipa-frame__corner bipa-frame__corner--bl"></span>
+        <span class="bipa-frame__corner bipa-frame__corner--br"></span>
+        <span class="bipa-frame__laser"></span>
+      </div>
+      <div class="bipa-viewfinder__flash"></div>
+      <span class="bipa-viewfinder__hint" role="status">Centralize o código ou a etiqueta</span>
+    </div>
+  </div>
+  <script>
+    window.Bipa.ScanFrame.enhance(document.getElementById('vf'), { loop: true, code: '7891000100103' });
+  </script>
+</body>
+</html>

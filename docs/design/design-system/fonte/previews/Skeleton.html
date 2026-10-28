@@ -1,0 +1,23 @@
+<!-- @dsCard group="Feedback" height=200 subtitle="Carregamento de lista com brilho" -->
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<style>
+  body { margin: 0; background: var(--ground); }
+  .list { display: grid; gap: 1px; margin: var(--space-4); border-radius: var(--radius-lg); overflow: hidden; background: var(--line); max-width: 420px; }
+  .row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); background: var(--surface); }
+  .lines { flex: 1; display: grid; gap: 6px; }
+</style>
+</head>
+<body>
+  <div class="bipa-root list" aria-busy="true" aria-label="Carregando estoque">
+    <div class="row"><div class="lines"><div class="bipa-skeleton" style="height: 14px; width: 70%"></div><div class="bipa-skeleton" style="height: 10px; width: 35%"></div></div><div class="bipa-skeleton" style="width: 112px; height: 44px; border-radius: var(--radius-pill)"></div></div>
+    <div class="row"><div class="lines"><div class="bipa-skeleton" style="height: 14px; width: 55%"></div><div class="bipa-skeleton" style="height: 10px; width: 30%"></div></div><div class="bipa-skeleton" style="width: 112px; height: 44px; border-radius: var(--radius-pill)"></div></div>
+    <div class="row"><div class="lines"><div class="bipa-skeleton" style="height: 14px; width: 62%"></div><div class="bipa-skeleton" style="height: 10px; width: 40%"></div></div><div class="bipa-skeleton" style="width: 112px; height: 44px; border-radius: var(--radius-pill)"></div></div>
+  </div>
+  <script>
+    window.Bipa.Skeleton.enhance(document.querySelector('.list'));
+  </script>
+</body>
+</html>

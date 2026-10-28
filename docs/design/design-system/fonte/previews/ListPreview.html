@@ -1,0 +1,28 @@
+<!-- @dsCard group="Casa" height=300 subtitle="A lista na Casa: o que tem nela, quantos itens, o total estimado e Ir às compras; abaixo, o cabeçalho de seção" -->
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600..800&family=Figtree:wght@400..700&display=swap">
+<style>
+  body { margin: 0; background: var(--ground); }
+  .stage { display: grid; gap: var(--space-6); padding: var(--space-6) var(--space-4); max-width: 420px; }
+  .section { display: grid; gap: var(--space-3); }
+  .section-head { display: flex; align-items: center; gap: 8px; padding: 0 4px; }
+  .section-head h2 { margin: 0; font: 700 20px/26px var(--font-display); color: var(--ink); }
+  .count { font: 600 13px/18px var(--font-body); color: var(--ink-muted); }
+  .log { min-height: 20px; padding: 0 4px; font: 600 13px/20px var(--font-body); color: var(--ink-muted); }
+</style>
+</head>
+<body>
+  <div class="bipa-root stage" style="gap: var(--space-4);">
+    <a class="bipa-listprev" href="Lista.dc.html" aria-label="Lista de compras: 7 itens, cerca de R$ 84,30">
+        <div class="bipa-listprev__num"><strong>7<small>itens</small></strong><span>≈ R$ 84,30</span></div>
+        <div class="bipa-listprev__thumbs" aria-hidden="true"><i style="--i: 0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3h8l1 4v13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V7z"/><path d="M7 7h10"/></svg></i><i style="--i: 1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8h12l-1 12H7z"/><path d="M8 8V5h8v3"/></svg></i><i style="--i: 2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="12" r="5"/><circle cx="9" cy="12" r="1.5"/><path d="M9 7h9v10H9"/></svg></i><i style="--i: 3">+4</i></div>
+        <span class="bipa-listprev__go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h2l2.4 11h11L21 7H6.2"/><circle cx="9" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/></svg>Ir às compras</span>
+      </a>
+    <div class="bipa-section-head"><h2>Acabando</h2><span class="bipa-count bipa-count--alert">4</span><a class="bipa-more" href="#">Ver tudo</a></div>
+  </div>
+  <script>document.querySelector('.bipa-listprev').addEventListener('click', function (e) { e.preventDefault(); });</script>
+</body>
+</html>

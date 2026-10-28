@@ -23,7 +23,7 @@ App Android em Flutter para controlar o estoque da casa e o histórico de preço
 
 ## Design
 
-- O design system **Bipa** e o protótipo **Bipa App Telas** (links em [docs/design/identidade-visual.md](docs/design/identidade-visual.md)) são a referência visual. Se divergirem do código, o design system vale.
+- O design system **Bipa** e o protótipo **Bipa App Telas** (links em [docs/design/identidade-visual.md](docs/design/identidade-visual.md)) são a referência visual. Se divergirem do código, o design system vale. Sem acesso aos links, use as cópias exportadas em `docs/design/design-system/` e `docs/design/prototipo/` (imagens e HTML de cada tela e componente).
 - **Referência primeiro, do nosso jeito depois:** antes de desenhar ou mudar um componente, pesquise como outros apps resolvem o mesmo problema e registre o que levamos e o que fazemos diferente ([docs/design/processo.md](docs/design/processo.md)).
 - **Calma por padrão:** um destaque por tela, um sinal por informação, controles que aparecem ao tocar e números importantes à vista.
 - **Um acento por tela:** uma cor de destaque e o resto neutro. A marca é o amarelo da etiqueta (`brand`), sempre com texto escuro por cima; o coral (`alert`) só marca o que está abaixo do "ter sempre".

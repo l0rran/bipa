@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Menu do bipar</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="styles/tokens.css">
+<link rel="stylesheet" href="ds/bipa/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600..800&amp;family=Figtree:wght@400..700&amp;family=JetBrains+Mono:wght@500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1C1B22}a:hover{color:#B00E28}
+.screen{position:relative;width:390px;height:844px;box-sizing:border-box;overflow:hidden;background:var(--ground)}
+.title{margin:0;font:800 28px/34px var(--font-display);letter-spacing:-0.01em;color:var(--ink)}
+.eyebrow{font:600 14px/20px var(--font-body);color:var(--ink-muted)}
+.section-title{margin:0;font:700 20px/26px var(--font-display);color:var(--ink)}
+.round-btn{display:grid;place-items:center;width:48px;height:48px;border:0;border-radius:50%;background:var(--surface);color:var(--ink)}
+.nav-wrap{position:absolute;left:12px;right:12px;bottom:16px;z-index:3}
+
+.content{display:flex;flex-direction:column;gap:24px;padding:24px 16px 130px}
+.head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.section{display:flex;flex-direction:column;gap:8px}
+.section-head{display:flex;align-items:center;gap:8px;padding:0 4px}
+.count{font:600 13px/18px var(--font-body);color:var(--ink-muted)}
+.enter{animation:bipa-fade-up var(--duration-slow) var(--easing-standard) both}
+
+</style>
+</helmet>
+<div class="screen bipa-root">
+  <div class="content">
+    <header class="head enter" style="flex-direction: column; align-items: stretch; gap: 16px;">
+      <h1 class="title">Sua casa</h1>
+      <label class="bipa-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><input type="search" placeholder="Buscar na sua casa" aria-label="Buscar na sua casa"><button class="bipa-search__scan" type="button" aria-label="Bipar um produto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16M3 12h18"/></svg></button></label>
+    </header>
+
+    <div class="enter" style="animation-delay: 40ms;"><a class="bipa-listprev" href="Lista.dc.html" aria-label="Lista de compras: 7 itens, cerca de R$ 84,30">
+        <div class="bipa-listprev__num"><strong>7<small>itens</small></strong><span>≈ R$ 84,30</span></div>
+        <div class="bipa-listprev__thumbs" aria-hidden="true"><i style="--i: 0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3h8l1 4v13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V7z"/><path d="M7 7h10"/></svg></i><i style="--i: 1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8h12l-1 12H7z"/><path d="M8 8V5h8v3"/></svg></i><i style="--i: 2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="12" r="5"/><circle cx="9" cy="12" r="1.5"/><path d="M9 7h9v10H9"/></svg></i><i style="--i: 3">+4</i></div>
+        <span class="bipa-listprev__go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h2l2.4 11h11L21 7H6.2"/><circle cx="9" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/></svg>Ir às compras</span>
+      </a></div>
+
+    <div class="enter" style="animation-delay: 80ms;"><div class="bipa-filter bipa-filter--tiles" role="group" aria-label="Filtrar por local" data-target=".screen"><button type="button" data-value="all" aria-pressed="true"><span class="bipa-filter__art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg><small>24</small></span>Tudo</button><button type="button" data-value="pantry" aria-pressed="false"><span class="bipa-filter__art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V8l8-4 8 4v12M4 13h16M4 17h16"/></svg><small>12</small></span>Despensa</button><button type="button" data-value="fridge" aria-pressed="false"><span class="bipa-filter__art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M5 10h14M8 6.5v1M8 13v2"/></svg><small>6</small></span>Geladeira</button><button type="button" data-value="bath" aria-pressed="false"><span class="bipa-filter__art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16v2a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM6 12V6a2 2 0 0 1 4 0M7 19l-1 2M17 19l1 2"/></svg><small>3</small></span>Banheiro</button><button type="button" data-value="laundry" aria-pressed="false"><span class="bipa-filter__art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2.5"/><circle cx="12" cy="13" r="4"/><path d="M8 6.5h.01"/></svg><small>3</small></span>Limpeza</button></div></div>
+
+    <div class="enter" style="animation-delay: 120ms;"><div class="bipa-carousel" role="region" aria-label="Hora de repor">
+      <div class="bipa-carousel__track">
+      <article class="bipa-insight bipa-insight--restock">
+        <span class="bipa-insight__eyebrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg>Hora de repor<button class="bipa-insight__info" type="button" aria-label="Como calculamos" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button></span>
+        <div class="bipa-insight__top">
+          <span class="bipa-insight__headline"><small>Café acaba na</small><strong>quinta-feira</strong></span>
+          <span class="bipa-insight__art" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9h11v5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16M8 3v3M11 3v3"/></svg></span>
+        </div>
+        <div class="bipa-days" role="img" aria-label="Dia 10 de 12 do ciclo de compra de café">
+          <div class="bipa-days__track" style="--days: 12"><i class="is-past" style="--i: 0"></i><i class="is-past" style="--i: 1"></i><i class="is-past" style="--i: 2"></i><i class="is-past" style="--i: 3"></i><i class="is-past" style="--i: 4"></i><i class="is-past" style="--i: 5"></i><i class="is-past" style="--i: 6"></i><i class="is-past" style="--i: 7"></i><i class="is-past" style="--i: 8"></i><i class="is-today" style="--i: 9"></i><i></i><i></i></div>
+        </div>
+        <div class="bipa-facts">
+          <div class="bipa-fact"><span class="bipa-fact__value"><span data-count="10">10</span><small>dias</small></span><span class="bipa-fact__label">desde a compra</span></div>
+          <div class="bipa-fact"><span class="bipa-fact__value"><span data-count="12">12</span><small>dias</small></span><span class="bipa-fact__label">de intervalo</span></div>
+          <div class="bipa-fact"><span class="bipa-fact__value"><span data-count="1">1</span><small>pct</small></span><span class="bipa-fact__label">em casa</span></div>
+        </div>
+        <span class="bipa-insight__source">Média das suas últimas 4 compras de café. A última foi no sábado, 17/10.</span>
+        <div class="bipa-insight__actions"><button class="bipa-btn bipa-btn--neutral" type="button"><span>Pôr na lista</span></button></div>
+        <button class="bipa-insight__dismiss" type="button" aria-label="Dispensar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </article>
+      <article class="bipa-insight bipa-insight--saving">
+        <span class="bipa-insight__eyebrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>Economia de outubro<button class="bipa-insight__info" type="button" aria-label="Como calculamos" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button></span>
+        <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 16px;">
+          <span class="bipa-insight__number">R$ <span data-cents="3840">38,40</span></span>
+          <div class="bipa-spark" aria-label="Economia nos últimos 6 meses" style="width: 112px;"><span style="height: 30%; animation-delay: 0ms"></span><span style="height: 45%; animation-delay: 50ms"></span><span style="height: 38%; animation-delay: 100ms"></span><span style="height: 60%; animation-delay: 150ms"></span><span style="height: 52%; animation-delay: 200ms"></span><span style="height: 100%; animation-delay: 250ms"></span></div>
+        </div>
+        <div class="bipa-facts">
+          <div class="bipa-fact"><span class="bipa-fact__value"><span data-count="14">14</span><small>itens</small></span><span class="bipa-fact__label">mais baratos</span></div>
+          <div class="bipa-fact"><span class="bipa-fact__value"><span data-count="3">3</span><small>mercados</small></span><span class="bipa-fact__label">comparados</span></div>
+          <div class="bipa-fact is-good"><span class="bipa-fact__value"><small class="is-prefix">+R$</small>12,10</span><span class="bipa-fact__label">que setembro</span></div>
+        </div>
+        <span class="bipa-insight__source">Comparado ao maior preço que você registrou de cada item.</span>
+        <button class="bipa-insight__dismiss" type="button" aria-label="Dispensar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </article>
+      <article class="bipa-insight bipa-insight--restock">
+        <span class="bipa-insight__eyebrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg>Hora de repor<button class="bipa-insight__info" type="button" aria-label="Como calculamos" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button></span>
+        <div class="bipa-insight__top">
+          <span class="bipa-insight__headline"><small>Sabão em pó acaba no</small><strong>domingo</strong></span>
+          <span class="bipa-insight__art" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="7" width="12" height="13" rx="2"/><path d="M9 7V4h6v3M9 12h6"/></svg></span>
+        </div>
+        <div class="bipa-days" role="img" aria-label="Dia 15 de 20 do ciclo de compra de sabão em pó">
+          <div class="bipa-days__track" style="--days: 20"><i class="is-past" style="--i: 0"></i><i class="is-past" style="--i: 1"></i><i class="is-past" style="--i: 2"></i><i class="is-past" style="--i: 3"></i><i class="is-past" style="--i: 4"></i><i class="is-past" style="--i: 5"></i><i class="is-past" style="--i: 6"></i><i class="is-past" style="--i: 7"></i><i class="is-past" style="--i: 8"></i><i class="is-past" style="--i: 9"></i><i class="is-past" style="--i: 10"></i><i class="is-past" style="--i: 11"></i><i class="is-past" style="--i: 12"></i><i class="is-past" style="--i: 13"></i><i class="is-today" style="--i: 14"></i><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+        <div class="bipa-facts">
+          <div class="bipa-fact"><span class="bipa-fact__value"><span data-count="15">15</span><small>dias</small></span><span class="bipa-fact__label">desde a compra</span></div>
+          <div class="bipa-fact"><span class="bipa-fact__value"><span data-count="20">20</span><small>dias</small></span><span class="bipa-fact__label">de intervalo</span></div>
+          <div class="bipa-fact"><span class="bipa-fact__value"><span data-count="2">2</span><small>cx</small></span><span class="bipa-fact__label">em casa</span></div>
+        </div>
+        <span class="bipa-insight__source">Média das suas últimas 3 compras de sabão em pó.</span>
+        <div class="bipa-insight__actions"><button class="bipa-btn bipa-btn--neutral" type="button"><span>Pôr na lista</span></button></div>
+        <button class="bipa-insight__dismiss" type="button" aria-label="Dispensar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </article>
+      <article class="bipa-insight bipa-insight--restock">
+        <span class="bipa-insight__eyebrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg>Hora de repor<button class="bipa-insight__info" type="button" aria-label="Como calculamos" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button></span>
+        <div class="bipa-insight__top">
+          <span class="bipa-insight__headline"><small>Feijão acaba em</small><strong>7 de nov.</strong></span>
+          <span class="bipa-insight__art" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11h17a8.5 8.5 0 0 1-17 0z"/><path d="M8.5 8.5c.6-1.2 2-1.2 2.6 0M13 7.5c.6-1.2 2-1.2 2.6 0"/></svg></span>
+        </div>
+        <div class="bipa-days" role="img" aria-label="Dia 10 de 21 do ciclo de compra de feijão">
+          <div class="bipa-days__track" style="--days: 21"><i class="is-past" style="--i: 0"></i><i class="is-past" style="--i: 1"></i><i class="is-past" style="--i: 2"></i><i class="is-past" style="--i: 3"></i><i class="is-past" style="--i: 4"></i><i class="is-past" style="--i: 5"></i><i class="is-past" style="--i: 6"></i><i class="is-past" style="--i: 7"></i><i class="is-past" style="--i: 8"></i><i class="is-today" style="--i: 9"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+        <div class="bipa-facts">
+          <div class="bipa-fact"><span class="bipa-fact__value"><span data-count="10">10</span><small>dias</small></span><span class="bipa-fact__label">desde a compra</span></div>
+          <div class="bipa-fact"><span class="bipa-fact__value"><span data-count="21">21</span><small>dias</small></span><span class="bipa-fact__label">de intervalo</span></div>
+          <div class="bipa-fact"><span class="bipa-fact__value"><span data-count="3">3</span><small>pct</small></span><span class="bipa-fact__label">em casa</span></div>
+        </div>
+        <span class="bipa-insight__source">Média das suas últimas 5 compras de feijão.</span>
+        <div class="bipa-insight__actions"><button class="bipa-btn bipa-btn--neutral" type="button"><span>Pôr na lista</span></button></div>
+        <button class="bipa-insight__dismiss" type="button" aria-label="Dispensar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </article>
+      </div>
+      <div class="bipa-dots" aria-hidden="true"><i aria-current="true"></i><i aria-current="false"></i><i aria-current="false"></i><i aria-current="false"></i></div>
+    </div></div>
+
+    <section class="section enter" style="animation-delay: 160ms;">
+      <div class="bipa-section-head"><h2>Acabando</h2><span class="bipa-count bipa-count--alert">4</span><a class="bipa-more" href="Lista.dc.html">Ver tudo</a></div>
+      <div class="bipa-cards">
+      <article class="bipa-pcard is-out" data-place="pantry">
+        <div class="bipa-pcard__art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8h12l-1 12H7z"/><path d="M8 8V5h8v3"/></svg><span class="bipa-gauge is-low is-out" style="--p: 0" role="img" aria-label="Acabou"><svg viewBox="0 0 40 40" aria-hidden="true"><circle class="bipa-gauge__track" cx="20" cy="20" r="17" pathLength="100"/><circle class="bipa-gauge__fill" cx="20" cy="20" r="17" pathLength="100"/></svg><span class="bipa-gauge__value">0</span></span>
+          <button class="bipa-pcard__add" type="button" aria-pressed="true" aria-label="Tirar da lista"><span class="is-off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="is-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></button>
+        </div>
+        <span class="bipa-pcard__name">Arroz Tio João 5 kg</span>
+      </article>
+      <article class="bipa-pcard" data-place="fridge">
+        <div class="bipa-pcard__art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3h8l1 4v13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V7z"/><path d="M7 7h10"/></svg><span class="bipa-gauge is-low" style="--p: 50" role="img" aria-label="2 de 4 un"><svg viewBox="0 0 40 40" aria-hidden="true"><circle class="bipa-gauge__track" cx="20" cy="20" r="17" pathLength="100"/><circle class="bipa-gauge__fill" cx="20" cy="20" r="17" pathLength="100"/></svg><span class="bipa-gauge__value">2</span></span>
+          <button class="bipa-pcard__add" type="button" aria-pressed="false" aria-label="Pôr na lista"><span class="is-off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="is-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></button>
+        </div>
+        <span class="bipa-pcard__name">Leite integral 1 L</span>
+      </article>
+      <article class="bipa-pcard" data-place="bath">
+        <div class="bipa-pcard__art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="12" r="5"/><circle cx="9" cy="12" r="1.5"/><path d="M9 7h9v10H9"/></svg><span class="bipa-gauge is-low" style="--p: 25" role="img" aria-label="1 de 4 rolos"><svg viewBox="0 0 40 40" aria-hidden="true"><circle class="bipa-gauge__track" cx="20" cy="20" r="17" pathLength="100"/><circle class="bipa-gauge__fill" cx="20" cy="20" r="17" pathLength="100"/></svg><span class="bipa-gauge__value">1</span></span>
+          <button class="bipa-pcard__add" type="button" aria-pressed="false" aria-label="Pôr na lista"><span class="is-off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="is-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></button>
+        </div>
+        <span class="bipa-pcard__name">Papel higiênico Neve</span>
+      </article>
+      <article class="bipa-pcard" data-place="fridge">
+        <div class="bipa-pcard__art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c3.5 0 6 5 6 9a6 6 0 0 1-12 0c0-4 2.5-9 6-9z"/></svg><span class="bipa-gauge is-low" style="--p: 33" role="img" aria-label="4 de 12 un"><svg viewBox="0 0 40 40" aria-hidden="true"><circle class="bipa-gauge__track" cx="20" cy="20" r="17" pathLength="100"/><circle class="bipa-gauge__fill" cx="20" cy="20" r="17" pathLength="100"/></svg><span class="bipa-gauge__value">4</span></span>
+          <button class="bipa-pcard__add" type="button" aria-pressed="false" aria-label="Pôr na lista"><span class="is-off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="is-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></button>
+        </div>
+        <span class="bipa-pcard__name">Ovos brancos 12 un</span>
+      </article>
+      </div>
+    </section>
+
+    <section class="section enter" style="animation-delay: 200ms;">
+      <div class="bipa-section-head"><h2>Em casa</h2><span class="bipa-count">24</span><a class="bipa-more" href="#">Ver tudo</a></div>
+      <div class="bipa-shelf">
+      <div class="bipa-shelf__item" data-value="1" data-min="1" data-unit="pct" data-place="pantry">
+        <div class="bipa-swipe__under" aria-hidden="true"><span class="bipa-swipe__right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r="1"/><circle cx="4.8" cy="12" r="1"/><circle cx="4.8" cy="17.5" r="1"/></svg> Pôr na lista</span><span class="bipa-swipe__left">Usei um <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12h12"/></svg></span></div>
+        <button class="bipa-shelf__row" type="button" aria-expanded="false">
+          <span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9h11v5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16M8 3v3M11 3v3"/></svg><span class="bipa-thumb__badge" aria-label="Na lista" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></span>
+          <span class="bipa-shelf__name">Café Pilão tradicional 500 g</span>
+          <span class="bipa-gauge" style="--p: 100" role="img" aria-label="1 pct"><svg viewBox="0 0 40 40" aria-hidden="true"><circle class="bipa-gauge__track" cx="20" cy="20" r="17" pathLength="100"/><circle class="bipa-gauge__fill" cx="20" cy="20" r="17" pathLength="100"/></svg><span class="bipa-gauge__value">1</span></span>
+        </button>
+        <div class="bipa-shelf__editor"><div>
+          <div class="bipa-stepper">
+            <button type="button" data-step="-1" aria-label="Usei um"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12h12"/></svg></button>
+            <span class="bipa-stepper__count"><span class="bipa-roll bipa-stepper__qty"><span>1</span></span><span class="bipa-stepper__unit">pct</span></span>
+            <button type="button" data-step="1" aria-label="Comprei um"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+          </div>
+          <button class="bipa-shelf__list" type="button" aria-pressed="false"><span class="is-off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r="1"/><circle cx="4.8" cy="12" r="1"/><circle cx="4.8" cy="17.5" r="1"/></svg> Pôr na lista</span><span class="is-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg> Na lista</span></button>
+        </div></div>
+      </div>
+      <div class="bipa-shelf__item" data-value="3" data-min="1" data-unit="pct" data-place="pantry">
+        <div class="bipa-swipe__under" aria-hidden="true"><span class="bipa-swipe__right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r="1"/><circle cx="4.8" cy="12" r="1"/><circle cx="4.8" cy="17.5" r="1"/></svg> Pôr na lista</span><span class="bipa-swipe__left">Usei um <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12h12"/></svg></span></div>
+        <button class="bipa-shelf__row" type="button" aria-expanded="false">
+          <span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11h17a8.5 8.5 0 0 1-17 0z"/><path d="M8.5 8.5c.6-1.2 2-1.2 2.6 0M13 7.5c.6-1.2 2-1.2 2.6 0"/></svg><span class="bipa-thumb__badge" aria-label="Na lista" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></span>
+          <span class="bipa-shelf__name">Feijão carioca Kicaldo 1 kg</span>
+          <span class="bipa-gauge" style="--p: 100" role="img" aria-label="3 pct"><svg viewBox="0 0 40 40" aria-hidden="true"><circle class="bipa-gauge__track" cx="20" cy="20" r="17" pathLength="100"/><circle class="bipa-gauge__fill" cx="20" cy="20" r="17" pathLength="100"/></svg><span class="bipa-gauge__value">3</span></span>
+        </button>
+        <div class="bipa-shelf__editor"><div>
+          <div class="bipa-stepper">
+            <button type="button" data-step="-1" aria-label="Usei um"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12h12"/></svg></button>
+            <span class="bipa-stepper__count"><span class="bipa-roll bipa-stepper__qty"><span>3</span></span><span class="bipa-stepper__unit">pct</span></span>
+            <button type="button" data-step="1" aria-label="Comprei um"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+          </div>
+          <button class="bipa-shelf__list" type="button" aria-pressed="false"><span class="is-off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r="1"/><circle cx="4.8" cy="12" r="1"/><circle cx="4.8" cy="17.5" r="1"/></svg> Pôr na lista</span><span class="is-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg> Na lista</span></button>
+        </div></div>
+      </div>
+      <div class="bipa-shelf__item" data-value="2" data-min="1" data-unit="cx" data-place="laundry">
+        <div class="bipa-swipe__under" aria-hidden="true"><span class="bipa-swipe__right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r="1"/><circle cx="4.8" cy="12" r="1"/><circle cx="4.8" cy="17.5" r="1"/></svg> Pôr na lista</span><span class="bipa-swipe__left">Usei um <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12h12"/></svg></span></div>
+        <button class="bipa-shelf__row" type="button" aria-expanded="false">
+          <span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="7" width="12" height="13" rx="2"/><path d="M9 7V4h6v3M9 12h6"/></svg><span class="bipa-thumb__badge" aria-label="Na lista" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></span>
+          <span class="bipa-shelf__name">Sabão em pó Omo 1,6 kg</span>
+          <span class="bipa-gauge" style="--p: 100" role="img" aria-label="2 cx"><svg viewBox="0 0 40 40" aria-hidden="true"><circle class="bipa-gauge__track" cx="20" cy="20" r="17" pathLength="100"/><circle class="bipa-gauge__fill" cx="20" cy="20" r="17" pathLength="100"/></svg><span class="bipa-gauge__value">2</span></span>
+        </button>
+        <div class="bipa-shelf__editor"><div>
+          <div class="bipa-stepper">
+            <button type="button" data-step="-1" aria-label="Usei um"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12h12"/></svg></button>
+            <span class="bipa-stepper__count"><span class="bipa-roll bipa-stepper__qty"><span>2</span></span><span class="bipa-stepper__unit">cx</span></span>
+            <button type="button" data-step="1" aria-label="Comprei um"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+          </div>
+          <button class="bipa-shelf__list" type="button" aria-pressed="false"><span class="is-off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r="1"/><circle cx="4.8" cy="12" r="1"/><circle cx="4.8" cy="17.5" r="1"/></svg> Pôr na lista</span><span class="is-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg> Na lista</span></button>
+        </div></div>
+      </div>
+      <div class="bipa-shelf__item" data-value="5" data-min="2" data-unit="un" data-place="pantry">
+        <div class="bipa-swipe__under" aria-hidden="true"><span class="bipa-swipe__right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r="1"/><circle cx="4.8" cy="12" r="1"/><circle cx="4.8" cy="17.5" r="1"/></svg> Pôr na lista</span><span class="bipa-swipe__left">Usei um <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12h12"/></svg></span></div>
+        <button class="bipa-shelf__row" type="button" aria-expanded="false">
+          <span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3h8l1 4v13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V7z"/><path d="M7 7h10"/></svg><span class="bipa-thumb__badge" aria-label="Na lista" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></span>
+          <span class="bipa-shelf__name">Leite condensado Moça 395 g</span>
+          <span class="bipa-gauge" style="--p: 100" role="img" aria-label="5 un"><svg viewBox="0 0 40 40" aria-hidden="true"><circle class="bipa-gauge__track" cx="20" cy="20" r="17" pathLength="100"/><circle class="bipa-gauge__fill" cx="20" cy="20" r="17" pathLength="100"/></svg><span class="bipa-gauge__value">5</span></span>
+        </button>
+        <div class="bipa-shelf__editor"><div>
+          <div class="bipa-stepper">
+            <button type="button" data-step="-1" aria-label="Usei um"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12h12"/></svg></button>
+            <span class="bipa-stepper__count"><span class="bipa-roll bipa-stepper__qty"><span>5</span></span><span class="bipa-stepper__unit">un</span></span>
+            <button type="button" data-step="1" aria-label="Comprei um"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+          </div>
+          <button class="bipa-shelf__list" type="button" aria-pressed="false"><span class="is-off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r="1"/><circle cx="4.8" cy="12" r="1"/><circle cx="4.8" cy="17.5" r="1"/></svg> Pôr na lista</span><span class="is-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg> Na lista</span></button>
+        </div></div>
+      </div>
+      </div>
+    </section>
+  </div>
+  
+  <div class="bipa-menu-scrim is-open" style="z-index: 2;"></div>
+  <div class="nav-wrap">
+    <nav class="bipa-nav bipa-nav--glass" aria-label="Navegação principal">
+      <span class="bipa-nav__indicator" aria-hidden="true" style="width: 52px; transform: translateX(15px);"></span>
+      <a class="bipa-nav__dest" href="Main.dc.html" aria-current="page" style="text-decoration: none;"><span class="bipa-nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-6.5 8 6.5v8.5H4z"/><path d="M10 19.5v-5h4v5"/></svg></span><span class="bipa-nav__label">Casa</span></a>
+      <a class="bipa-nav__dest" href="Produto.dc.html" style="text-decoration: none;"><span class="bipa-nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.6 3.5H20v7.4L11 20 3.9 12.9z"/><circle cx="16" cy="7.8" r="1.4"/></svg></span><span class="bipa-nav__label">Produtos</span></a>
+      <a class="bipa-scan is-open" href="Main.dc.html" aria-label="Fechar menu">
+        <span class="bipa-scan__icon">
+          <span class="bipa-scan__glyph" style="display: grid;"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16M3 12h18"/></svg></span>
+          <span class="bipa-scan__close" style="display: grid;"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
+        </span>
+      </a>
+      <a class="bipa-nav__dest" href="Mercados.dc.html" style="text-decoration: none;"><span class="bipa-nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg></span><span class="bipa-nav__label">Mercados</span></a>
+      <a class="bipa-nav__dest" href="Lista.dc.html" style="text-decoration: none;"><span class="bipa-nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r="1"/><circle cx="4.8" cy="12" r="1"/><circle cx="4.8" cy="17.5" r="1"/></svg></span><span class="bipa-nav__label">Lista</span></a>
+      <div class="bipa-scan-menu is-open" role="menu">
+        <a class="bipa-scan-menu__item" href="ModoCarrinho.dc.html" role="menuitem" style="text-decoration: none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h2l2.4 11h11L21 7H6.2"/><circle cx="9" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/></svg>Modo carrinho<small>vários seguidos</small></a>
+        <a class="bipa-scan-menu__item" href="Main.dc.html" role="menuitem" style="text-decoration: none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-6.5 8 6.5v8.5H4z"/><path d="M9 14h6"/></svg>Dar baixa em casa</a>
+        <a class="bipa-scan-menu__item" href="Main.dc.html" role="menuitem" style="text-decoration: none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>Ler cupom fiscal</a>
+      </div>
+    </nav>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
