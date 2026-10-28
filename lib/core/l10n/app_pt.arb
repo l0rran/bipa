@@ -303,5 +303,7 @@
     "description": "Ao lado do preço lido ao vivo, quando ele espera o próximo produto bipado."
   },
   "cartLiveWaiting": "bipe o produto",
-  "cartCameraDenied": "Sem acesso à câmera.\nLibere nas configurações do Android."
+  "cartCameraDenied": "Sem acesso à câmera.\nLibere nas configurações do Android.",
+  "cartCameraFailed": "Não deu para abrir a câmera.",
+  "cartCameraRetry": "Tentar de novo"
 }

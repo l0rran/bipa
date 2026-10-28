@@ -82,6 +82,10 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
   var _finishing = false;
   var _cameraDenied = false;
 
+  /// A câmera não abriu por outro motivo (ocupada por outro app, por
+  /// exemplo): a tela diz isso e oferece tentar de novo, em vez de ficar preta.
+  var _cameraFailed = false;
+
   /// A abertura da câmera pode pedir permissão, e o diálogo do Android deixa
   /// o app inativo por um instante: isso não é ir para o fundo.
   var _startingCamera = false;
@@ -137,22 +141,29 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
     if (mounted) setState(() {});
   }
 
-  /// Abre a câmera; sem permissão, a tela explica no lugar da dica.
+  /// Abre a câmera; sem permissão ou com falha, a tela explica no lugar da
+  /// prévia.
   Future<void> _startCamera() async {
     _startingCamera = true;
+    var denied = false;
+    var failed = false;
     try {
       await _live.start();
-      if (mounted && _cameraDenied) setState(() => _cameraDenied = false);
     } on CameraException catch (error, stack) {
-      if (error.code.startsWith('CameraAccessDenied')) {
-        if (mounted) setState(() => _cameraDenied = true);
-      } else {
-        _report(error, stack);
-      }
+      denied = error.code.startsWith('CameraAccessDenied');
+      failed = !denied;
+      if (failed) _report(error, stack);
     } on Exception catch (error, stack) {
+      failed = true;
       _report(error, stack);
     } finally {
       _startingCamera = false;
+    }
+    if (mounted && (denied != _cameraDenied || failed != _cameraFailed)) {
+      setState(() {
+        _cameraDenied = denied;
+        _cameraFailed = failed;
+      });
     }
   }
 
@@ -512,47 +523,66 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
                     ),
                   ),
           ),
-          Align(
-            alignment: const Alignment(0, -0.45),
-            // O tamanho fixo é o da moldura aberta: o recorte não muda quando
-            // ela trava. O aviso fica logo abaixo, sem empurrar a moldura.
-            child: SizedBox(
-              key: _viewfinderKey,
-              width: 260,
-              height: 150,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Center(child: ScanViewfinder(locked: _locked)),
-                  Positioned(
-                    top: 150 + BipaSpacing.s4,
-                    left: -BipaSpacing.s8 * 2,
-                    right: -BipaSpacing.s8 * 2,
-                    child: Center(
-                      child: switch ((notice, _cameraDenied)) {
-                        ((:final price, :final detail, :final waiting)?, _) => LiveReadChip(
-                          icon: waiting ? Icons.qr_code_scanner_rounded : Icons.sell_outlined,
-                          price: price.format(),
-                          detail: detail,
-                        ),
-                        (null, true) => Text(
-                          l10n.cartCameraDenied,
-                          textAlign: TextAlign.center,
-                          style: BipaText.label.copyWith(color: colors.onCamera),
-                        ),
-                        (null, false) when cart.isEmpty => Text(
-                          l10n.cartHint,
-                          textAlign: TextAlign.center,
-                          style: BipaText.label.copyWith(color: colors.onCamera),
-                        ),
-                        _ => const SizedBox.shrink(),
-                      },
+          if (_cameraFailed)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s6),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l10n.cartCameraFailed,
+                      textAlign: TextAlign.center,
+                      style: BipaText.label.copyWith(color: colors.onCamera),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: BipaSpacing.s4),
+                    FilledButton.tonal(onPressed: _startCamera, child: Text(l10n.cartCameraRetry)),
+                  ],
+                ),
+              ),
+            )
+          else
+            Align(
+              alignment: const Alignment(0, -0.45),
+              // O tamanho fixo é o da moldura aberta: o recorte não muda quando
+              // ela trava. O aviso fica logo abaixo, sem empurrar a moldura.
+              child: SizedBox(
+                key: _viewfinderKey,
+                width: 260,
+                height: 150,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Center(child: ScanViewfinder(locked: _locked)),
+                    Positioned(
+                      top: 150 + BipaSpacing.s4,
+                      left: -BipaSpacing.s8 * 2,
+                      right: -BipaSpacing.s8 * 2,
+                      child: Center(
+                        child: switch ((notice, _cameraDenied)) {
+                          ((:final price, :final detail, :final waiting)?, _) => LiveReadChip(
+                            icon: waiting ? Icons.qr_code_scanner_rounded : Icons.sell_outlined,
+                            price: price.format(),
+                            detail: detail,
+                          ),
+                          (null, true) => Text(
+                            l10n.cartCameraDenied,
+                            textAlign: TextAlign.center,
+                            style: BipaText.label.copyWith(color: colors.onCamera),
+                          ),
+                          (null, false) when cart.isEmpty => Text(
+                            l10n.cartHint,
+                            textAlign: TextAlign.center,
+                            style: BipaText.label.copyWith(color: colors.onCamera),
+                          ),
+                          _ => const SizedBox.shrink(),
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(BipaSpacing.s4, BipaSpacing.s4, BipaSpacing.s4, 0),
