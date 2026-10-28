@@ -27,10 +27,12 @@
 - [ ] Modos do bipar: "Preço" no mercado, "Comprei" e "Usei" em casa (bipar a embalagem vazia dá baixa e põe na lista)
 - [ ] Desfazer em toda ação que muda o estoque; cada item bipado é salvo na hora
 - [x] Lista de compras: itens de produto ou escritos à mão, os itens de sempre (os com "ter sempre"), seções do mercado, preço esperado e total estimado; "Pôr na lista" no Início
-- [ ] Modo compra: "Ir às compras" na prévia, barra da compra acima da navegação e notificação ao vivo
+- [x] Modo compra: "Ir às compras" na prévia, barra da compra acima da navegação, item marcado ao registrar o preço e "Terminei", que leva o comprado ao estoque
+- [ ] Notificação ao vivo da compra (Android 16, Live Updates; precisa de código nativo)
+- [ ] Modo carrinho: bipar vários itens em sequência, com a bandeja do que você vai levar
 - [ ] Ordem dos corredores aprendida por mercado, a partir da ordem em que a pessoa bipa e marca
 - [ ] Itens de sempre pelo ritmo de consumo (hoje são os produtos com "ter sempre")
-- [ ] Fechar o ciclo: o que é bipado em "Comprei" sai da lista e entra no estoque
+- [ ] Fechar o ciclo: o que é bipado em "Comprei" sai da lista e entra no estoque (o "Terminei" do modo compra já faz isso com o que foi marcado)
 - [ ] Sugestão de onde comprar a lista mais barata, comparando a lista inteira e mostrando a idade de cada preço
 - [ ] Lista a partir de foto de lista de papel e por voz ("acabou o café"); widget de adicionar rápido
 - [ ] Previsão de consumo a partir do histórico do estoque

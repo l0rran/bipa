@@ -14,10 +14,12 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - Textos do Início em ARB (`flutter gen-l10n`).
 - Preços com condição (ADR 0011): a etiqueta de atacarejo vira até três preços (varejo, cartão da loja e atacado a partir de N unidades), todos salvos e mostrados no histórico. O esquema vai à versão 3.
 - Lista de compras: a aba Lista com progresso, adicionar com sugestões, itens de sempre, seções do mercado, preço esperado e desfazer; a prévia da lista no Início; e "Pôr na lista" no cartão de Acabando e no gesto para a direita da linha. O esquema vai à versão 4.
+- Modo compra: "Ir às compras" começa a compra e detecta o mercado; a barra da compra mostra o progresso e o total acima da navegação; registrar o preço de um item da lista o marca; "Terminei" leva o comprado ao estoque, com Desfazer. O esquema vai à versão 5.
 - Cópias exportadas do design system e do protótipo em `docs/design/`.
 - Banco de testes do OCR em `tool/ocr_bench`, com etiquetas sintéticas e transcrições de etiquetas reais.
 
 ### Alterado
+- A aba principal passa a se chamar Início.
 - Paleta: o amarelo da etiqueta é a cor da marca, com o coral como única cor de alerta.
 - "Mínimo" virou "ter sempre": o item está acabando quando fica abaixo desse número.
 - O preço clube deixa de ser tratado como promoção: vira o preço com cartão da loja.
