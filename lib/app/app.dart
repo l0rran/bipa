@@ -1,6 +1,7 @@
 import 'package:bipa/app/router.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
+import 'package:bipa/features/shopping_list/presentation/live_shopping_notification.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,6 +22,8 @@ class BipaApp extends ConsumerWidget {
       supportedLocales: const [Locale('pt', 'BR')],
       localizationsDelegates: const [AppLocalizations.delegate, ...GlobalMaterialLocalizations.delegates],
       routerConfig: ref.watch(routerProvider),
+      // A notificação ao vivo da compra acompanha o app inteiro, acima das rotas.
+      builder: (context, child) => LiveShoppingNotification(child: child ?? const SizedBox.shrink()),
     );
   }
 }

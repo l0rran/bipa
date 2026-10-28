@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:bipa/app/router.dart';
 import 'package:bipa/core/design_system/bipa_palette.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
@@ -15,8 +16,9 @@ import 'package:go_router/go_router.dart';
 /// Mantém a notificação ao vivo da compra (protótipo "Notificação ao vivo",
 /// ADR 0015) igual ao que está na tela, e atende os botões dela.
 ///
-/// Fica na estrutura das abas, que continua montada por baixo do modo
-/// carrinho.
+/// Fica no `builder` do MaterialApp, acima do Navigator: assim continua
+/// ativa com o modo carrinho por cima das abas (o Riverpod pausa quem fica
+/// fora de cena).
 class LiveShoppingNotification extends ConsumerStatefulWidget {
   const LiveShoppingNotification({required this.child, super.key});
 
@@ -104,20 +106,29 @@ class _LiveShoppingNotificationState extends ConsumerState<LiveShoppingNotificat
   }
 
   Future<void> _onAction(LiveAction action) async {
-    final router = GoRouter.of(context);
+    // Acima do Navigator não há GoRouter no contexto: vem do provider.
+    final router = ref.read(routerProvider);
     switch (action) {
       case LiveAction.scan:
         // Já no carrinho, não abre outro por cima.
-        if (router.routerDelegate.currentConfiguration.uri.path != Routes.cartMode) {
-          unawaited(router.push(Routes.cartMode));
-        }
+        if (_topPath(router) != Routes.cartMode) unawaited(router.push<void>(Routes.cartMode));
       case LiveAction.list:
         router.go(Routes.shoppingList);
       case LiveAction.finish:
-        final trip = ref.read(activeTripProvider).value;
+        // Aberto pela notificação, o app pode ainda estar lendo a compra.
+        final trip = await ref.read(activeTripProvider.future);
+        if (!mounted) return;
         router.go(Routes.shoppingList);
         if (trip != null) await finishShopping(context, ref, trip.id);
     }
+  }
+
+  /// A rota de cima. Uma rota aberta com `push` não muda o `uri` da
+  /// configuração: ela aparece como a última correspondência.
+  static String _topPath(GoRouter router) {
+    final configuration = router.routerDelegate.currentConfiguration;
+    final last = configuration.matches.lastOrNull;
+    return last is ImperativeRouteMatch ? last.matches.uri.path : configuration.uri.path;
   }
 
   @override

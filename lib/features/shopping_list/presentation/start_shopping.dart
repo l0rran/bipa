@@ -18,10 +18,12 @@ Future<void> startShopping(BuildContext context, WidgetRef ref) async {
   final location = ref.read(locationServiceProvider);
   final markets = ref.read(marketRepositoryProvider);
   final finder = ref.read(nearestMarketFinderProvider);
+  final chosenMarket = ref.read(listChosenMarketProvider.notifier);
   final chosen = ref.read(listChosenMarketProvider);
   final notifications = ref.read(liveNotificationsProvider);
 
   final trip = await trips.start(marketId: chosen);
+  chosenMarket.clear();
   if (context.mounted) context.go(Routes.shoppingList);
   try {
     if (trip.marketId != null) return;

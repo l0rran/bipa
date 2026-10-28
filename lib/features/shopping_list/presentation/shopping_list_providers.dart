@@ -107,7 +107,8 @@ final aisleOrderRepositoryProvider = Provider<AisleOrderRepository>(
 );
 
 /// O mercado escolhido no chip da lista, fora de uma compra; `null`
-/// enquanto a pessoa não escolhe.
+/// enquanto a pessoa não escolhe. Vale para a próxima compra só: o "Ir às
+/// compras" usa e limpa.
 final listChosenMarketProvider = NotifierProvider<ListChosenMarket, String?>(ListChosenMarket.new);
 
 class ListChosenMarket extends Notifier<String?> {
@@ -115,6 +116,8 @@ class ListChosenMarket extends Notifier<String?> {
   String? build() => null;
 
   void choose(String marketId) => state = marketId;
+
+  void clear() => state = null;
 }
 
 /// O mercado da compra mais recente que teve mercado.

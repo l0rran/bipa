@@ -106,9 +106,15 @@ class _ProductView extends ConsumerWidget {
     );
     if (confirmed != true || !context.mounted) return;
     // Abre o produto que fica antes de juntar: esta tela sai sem depender do
-    // contexto depois do await.
-    unawaited(context.pushReplacement(Routes.productDetail(into.id)));
-    await repository.merge(fromId: product.id, intoId: into.id);
+    // contexto depois do await. O aviso de falha usa o ScaffoldMessenger do
+    // app, que continua lá.
+    final messenger = ScaffoldMessenger.of(context);
+    unawaited(GoRouter.of(context).pushReplacement<void>(Routes.productDetail(into.id)));
+    try {
+      await repository.merge(fromId: product.id, intoId: into.id);
+    } on Exception {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.productMergeFailed)));
+    }
   }
 
   Future<void> _toggleList(WidgetRef ref, {required bool onList}) {
@@ -290,7 +296,10 @@ class _ProductView extends ConsumerWidget {
     );
   }
 
-  static int _ageInDays(DateTime now, PackagePrice price) => now.difference(price.entry.observation.observedAt).inDays;
+  /// Em dias do calendário: um preço de ontem à noite visto hoje cedo é de
+  /// "ontem", não de "hoje".
+  static int _ageInDays(DateTime now, PackagePrice price) =>
+      DateUtils.dateOnly(now).difference(DateUtils.dateOnly(price.entry.observation.observedAt)).inDays;
 
   /// "menor por kg", só para a primeira de várias, quando ela tem tamanho.
   static String? _cheapestPerUnit(AppLocalizations l10n, PackagePrice? price, {required bool isFirst}) {

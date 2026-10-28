@@ -17,19 +17,8 @@ final class LocationUnavailable extends LocationResult {
   final LocationFailure failure;
 }
 
-enum LocationFailure {
-  serviceDisabled('A localização do aparelho está desligada.'),
-  permissionDenied('Permissão de localização negada.'),
-  permissionDeniedForever(
-    'Permissão de localização bloqueada. Libere nas configurações do aparelho.',
-  ),
-  timeout('Não foi possível obter a localização a tempo.'),
-  unknown('Não foi possível obter a localização.');
-
-  const LocationFailure(this.message);
-
-  final String message;
-}
+/// O texto de cada falha fica no ARB (`LocationFailureLabel`).
+enum LocationFailure { serviceDisabled, permissionDenied, permissionDeniedForever, timeout, unknown }
 
 /// Obtém a posição atual do aparelho. O GPS funciona sem internet.
 abstract interface class LocationService {

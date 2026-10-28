@@ -669,5 +669,11 @@
         "type": "int"
       }
     }
-  }
+  },
+  "productMergeFailed": "Não foi possível juntar os produtos.",
+  "locationServiceDisabled": "A localização do aparelho está desligada.",
+  "locationPermissionDenied": "Permissão de localização negada.",
+  "locationPermissionBlocked": "Permissão de localização bloqueada. Libere nas configurações do aparelho.",
+  "locationTimeout": "Não foi possível obter a localização a tempo.",
+  "locationUnknown": "Não foi possível obter a localização."
 }

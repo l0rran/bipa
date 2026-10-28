@@ -1,6 +1,7 @@
 import 'package:bipa/core/di/core_providers.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/location/geo_point.dart';
+import 'package:bipa/core/location/location_failure_label.dart';
 import 'package:bipa/core/location/location_service.dart';
 import 'package:bipa/core/widgets/messages.dart';
 import 'package:bipa/features/markets/domain/market.dart';
@@ -74,7 +75,7 @@ class _MarketFormPageState extends ConsumerState<MarketFormPage> {
       if (result is LocationFound) _location = result.point;
     });
     if (result case LocationUnavailable(:final failure)) {
-      context.showMessage(failure.message);
+      context.showMessage(failure.localizedLabel(AppLocalizations.of(context)));
     }
   }
 

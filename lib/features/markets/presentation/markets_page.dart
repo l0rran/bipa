@@ -10,6 +10,7 @@ import 'package:bipa/core/design_system/components/section_header.dart';
 import 'package:bipa/core/di/core_providers.dart';
 import 'package:bipa/core/formatting/formatters.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
+import 'package:bipa/core/location/location_failure_label.dart';
 import 'package:bipa/core/location/location_service.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
@@ -35,9 +36,6 @@ class MarketsPage extends ConsumerStatefulWidget {
 
 class _MarketsPageState extends ConsumerState<MarketsPage> {
   String _query = '';
-
-  /// Preços com mais de um mês aparecem em coral, como na tela do produto.
-  static const _oldPriceDays = 30;
 
   List<RankedMarket> _visible(List<RankedMarket> ranked) {
     final query = foldText(_query.trim());
@@ -109,7 +107,7 @@ class _MarketsPageState extends ConsumerState<MarketsPage> {
                 if (location case AsyncData(value: LocationUnavailable(:final failure))) ...[
                   const SizedBox(height: BipaSpacing.s3),
                   _NoLocation(
-                    message: l10n.marketsNoLocation(failure.message),
+                    message: l10n.marketsNoLocation(failure.localizedLabel(l10n)),
                     retryLabel: l10n.retry,
                     onRetry: () => ref.invalidate(currentLocationProvider),
                   ),
@@ -196,7 +194,6 @@ class _MarketsPageState extends ConsumerState<MarketsPage> {
       title: market.name,
       meta: meta,
       metaIcon: isHere || distance != null ? Icons.place_outlined : null,
-      metaAlert: !isHere && days != null && days > _oldPriceDays,
       onTap: () => context.push(Routes.editMarket(market.id)),
     );
   }
@@ -237,13 +234,12 @@ class MarketTile extends ConsumerWidget {
     final market = ranked.market;
     final distance = ranked.distanceMeters;
     final isHere = ref.watch(nearestMarketFinderProvider).isInside(ranked);
-    final colors = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
 
     return ListTile(
       selected: selected,
       leading: CircleAvatar(
-        backgroundColor: isHere ? colors.primaryContainer : null,
+        backgroundColor: isHere ? context.colors.placeSoft : null,
         child: Icon(isHere ? Icons.where_to_vote : Icons.storefront_outlined),
       ),
       title: Text(market.name),
