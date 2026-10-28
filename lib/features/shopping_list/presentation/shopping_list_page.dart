@@ -15,6 +15,7 @@ import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/presentation/product_photos.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:bipa/features/shopping_list/domain/aisle_order.dart';
+import 'package:bipa/features/shopping_list/domain/list_entry_text.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_sections.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
@@ -70,18 +71,19 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
   }
 
   /// Escreveu o nome de um produto cadastrado: usa o produto (que não
-  /// duplica). Senão, entra como item escrito à mão.
+  /// duplica). Senão, entra como item escrito à mão. A quantidade pode vir
+  /// junto, antes ou depois do nome: "2 leite", "leite 2", "2x leite".
   Future<void> _submit() async {
-    final text = _input.text.trim();
-    if (text.isEmpty) return;
+    final ListEntryText(:name, :quantity) = ListEntryText.parse(_input.text);
+    if (name.isEmpty) return;
     final list = ref.read(shoppingListRepositoryProvider);
     final put = ref.read(putProductOnListProvider);
-    final matches = await ref.read(productRepositoryProvider).watchAll(query: text).first;
-    final exact = matches.where((p) => p.name.toLowerCase() == text.toLowerCase()).firstOrNull;
+    final matches = await ref.read(productRepositoryProvider).watchAll(query: name).first;
+    final exact = matches.where((p) => p.name.toLowerCase() == name.toLowerCase()).firstOrNull;
     if (exact != null) {
-      await put(exact);
+      await put(exact, quantity: quantity);
     } else {
-      await list.addCustom(text);
+      await list.addCustom(name, quantity: quantity);
     }
     if (mounted) _clearInput();
   }

@@ -43,4 +43,15 @@ void main() {
 
     expect((await list.watchAll().first).single.item.quantity, 1);
   });
+
+  test('a quantidade escrita vale mais que o "ter sempre" e muda a do item que falta', () async {
+    await stock.adjust(productId: 'leite', delta: 1, reason: StockMovementReason.purchase);
+    await stock.setTargetQuantity('leite', 4);
+
+    await put(leite, quantity: 2);
+    expect((await list.watchAll().first).single.item.quantity, 2);
+
+    await put(leite, quantity: 5);
+    expect((await list.watchAll().first).single.item.quantity, 5);
+  });
 }

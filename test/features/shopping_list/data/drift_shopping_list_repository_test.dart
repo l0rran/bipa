@@ -104,6 +104,15 @@ void main() {
     expect((await list.watchAll().first).map((e) => e.name), ['Pão']);
   });
 
+  test('o item escrito com quantidade fica com ela, e escrever sem número não a muda', () async {
+    await list.addCustom('Pilhas', quantity: 4);
+    await list.addCustom('pilhas');
+    expect((await list.watchAll().first).single.item.quantity, 4);
+
+    await list.addCustom('pilhas', quantity: 2);
+    expect((await list.watchAll().first).single.item.quantity, 2);
+  });
+
   test('desfazer não duplica um produto que já voltou à lista', () async {
     await list.addProduct(productId: 'cafe', name: 'Café');
     final removed = (await list.watchAll().first).single.item;

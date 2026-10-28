@@ -50,7 +50,7 @@ final class DriftShoppingListRepository implements ShoppingListRepository {
   }
 
   @override
-  Future<void> addCustom(String name) {
+  Future<void> addCustom(String name, {int? quantity}) {
     final trimmed = name.trim();
     if (trimmed.isEmpty) return Future.value();
     return _db.transaction(() async {
@@ -61,9 +61,15 @@ final class DriftShoppingListRepository implements ShoppingListRepository {
       final key = trimmed.toLowerCase();
       final existing = written.where((row) => row.name.toLowerCase() == key).firstOrNull;
       if (existing == null) {
-        await _insert(name: trimmed);
-      } else if (existing.checkedAt != null) {
-        await _write(existing.id, const ShoppingListItemsCompanion(checkedAt: Value(null)));
+        await _insert(name: trimmed, quantity: _atLeastOne(quantity ?? 1));
+      } else {
+        await _write(
+          existing.id,
+          ShoppingListItemsCompanion(
+            checkedAt: const Value(null),
+            quantity: quantity == null ? const Value.absent() : Value(_atLeastOne(quantity)),
+          ),
+        );
       }
     });
   }

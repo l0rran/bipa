@@ -10,8 +10,9 @@ abstract interface class ShoppingListRepository {
   /// marcado como comprado.
   Future<void> addProduct({required String productId, required String name, int quantity = 1});
 
-  /// Põe na lista um item escrito à mão.
-  Future<void> addCustom(String name);
+  /// Põe na lista um item escrito à mão. Se ele já está, não duplica: volta
+  /// a faltar e, com [quantity], fica com ela.
+  Future<void> addCustom(String name, {int? quantity});
 
   Future<void> setChecked(String itemId, {required bool checked});
 
