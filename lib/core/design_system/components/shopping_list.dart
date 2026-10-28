@@ -3,7 +3,7 @@ import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
 import 'package:flutter/material.dart';
 
-/// A lista na Casa (ListPreview do design system): quantos itens, o total
+/// A lista no Início (ListPreview do design system): quantos itens, o total
 /// estimado, as miniaturas do que tem nela e uma ação só.
 class ListPreviewCard extends StatelessWidget {
   const ListPreviewCard({

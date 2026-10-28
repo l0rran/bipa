@@ -32,9 +32,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// A Casa: o que tem em casa, com a prateleira do que está acabando no topo.
+/// O Início: o que tem em casa, com a prateleira do que está acabando no topo.
 ///
-/// Segue o protótipo "Casa" do design system: busca com bipar, locais como
+/// Segue o protótipo "Início" do design system: busca com bipar, locais como
 /// categorias, a prateleira de "Acabando" e a lista com medidor de nível.
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -375,7 +375,7 @@ class _HomeStockRow extends StatelessWidget {
   }
 }
 
-/// A lista na Casa: quantos itens faltam, o total estimado e as miniaturas.
+/// A lista no Início: quantos itens faltam, o total estimado e as miniaturas.
 /// Enquanto não há o modo compra, a ação abre a aba da lista.
 class _ListPreview extends StatelessWidget {
   const _ListPreview({required this.entries, required this.summary, required this.photos});

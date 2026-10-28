@@ -39,7 +39,7 @@ final shoppingListSummaryProvider = Provider.autoDispose<ShoppingListSummary>((r
   return ShoppingListSummary.of(entries, prices);
 });
 
-/// Produtos que ainda faltam comprar, para marcar "na lista" na Casa.
+/// Produtos que ainda faltam comprar, para marcar "na lista" no Início.
 final productsOnListProvider = Provider.autoDispose<Set<String>>((ref) {
   final entries = ref.watch(shoppingListProvider).value ?? const [];
   return {

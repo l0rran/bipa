@@ -1,6 +1,6 @@
 {
   "@@locale": "pt",
-  "navHome": "Casa",
+  "navHome": "Início",
   "navProducts": "Produtos",
   "navMarkets": "Mercados",
   "navScan": "Bipar",
@@ -176,7 +176,7 @@
   },
   "listOpen": "Abrir a lista",
   "@listOpen": {
-    "description": "Ação da prévia da lista na Casa. Vira \"Ir às compras\" quando houver o modo compra."
+    "description": "Ação da prévia da lista no Início. Vira \"Ir às compras\" quando houver o modo compra."
   },
   "listAddToList": "Pôr na lista",
   "listRemoveFromList": "Tirar da lista",
