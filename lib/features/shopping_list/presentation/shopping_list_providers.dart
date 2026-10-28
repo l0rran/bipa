@@ -2,7 +2,6 @@ import 'package:bipa/core/camera/live_frame_analyzer.dart';
 import 'package:bipa/core/catalog/product_kind.dart';
 import 'package:bipa/core/database/database_provider.dart';
 import 'package:bipa/core/di/core_providers.dart';
-import 'package:bipa/core/money/money.dart';
 import 'package:bipa/features/markets/presentation/markets_providers.dart';
 import 'package:bipa/features/prices/domain/list_cost.dart';
 import 'package:bipa/features/prices/domain/price_comparison.dart';
@@ -81,15 +80,13 @@ final shoppingListItemPricesProvider = Provider.autoDispose<Map<String, ListPric
   ),
 );
 
-/// Preço de referência dos produtos da lista, para estimar o total.
-final shoppingListPricesProvider = Provider.autoDispose<AsyncValue<Map<String, Money>>>(
-  (ref) => ref.watch(shoppingListHistoryProvider).whenData(referencePrices),
-);
-
+/// O resumo da lista. O total soma os mesmos preços que as linhas mostram.
 final shoppingListSummaryProvider = Provider.autoDispose<ShoppingListSummary>((ref) {
   final entries = ref.watch(shoppingListProvider).value ?? const [];
-  final prices = ref.watch(shoppingListPricesProvider).value ?? const {};
-  return ShoppingListSummary.of(entries, prices);
+  final prices = ref.watch(shoppingListItemPricesProvider);
+  return ShoppingListSummary.of(entries, {
+    for (final MapEntry(key: productId, value: (:price, exact: _)) in prices.entries) productId: price,
+  });
 });
 
 /// Produtos que ainda faltam comprar, para marcar "na lista" no Início.
