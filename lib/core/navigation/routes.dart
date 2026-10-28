@@ -28,5 +28,7 @@ abstract final class Routes {
 
   static String editProduct(String id) => '/produto/$id/editar';
 
+  static String market(String id) => '/mercado/$id';
+
   static String editMarket(String id) => '/mercado/$id/editar';
 }

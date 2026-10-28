@@ -2,6 +2,7 @@ import 'package:bipa/core/database/database_provider.dart';
 import 'package:bipa/core/di/core_providers.dart';
 import 'package:bipa/features/prices/data/drift_price_repository.dart';
 import 'package:bipa/features/prices/data/mlkit_price_tag_reader.dart';
+import 'package:bipa/features/prices/domain/market_price.dart';
 import 'package:bipa/features/prices/domain/price_observation.dart';
 import 'package:bipa/features/prices/domain/price_repository.dart';
 import 'package:bipa/features/prices/domain/price_tag.dart';
@@ -37,4 +38,9 @@ final priceHistoryProvider = StreamProvider.autoDispose.family<List<PriceHistory
 /// Quando foi o preço mais recente de cada mercado.
 final latestPricePerMarketProvider = StreamProvider.autoDispose<Map<String, DateTime>>(
   (ref) => ref.watch(priceRepositoryProvider).watchLatestPerMarket(),
+);
+
+/// O preço mais recente de cada produto e embalagem num mercado.
+final marketPricesProvider = StreamProvider.autoDispose.family<List<MarketPrice>, String>(
+  (ref, marketId) => ref.watch(priceRepositoryProvider).watchLatestInMarket(marketId),
 );

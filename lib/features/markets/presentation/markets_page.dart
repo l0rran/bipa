@@ -16,6 +16,7 @@ import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
 import 'package:bipa/core/widgets/empty_state.dart';
 import 'package:bipa/features/markets/domain/nearest_market_finder.dart';
+import 'package:bipa/features/markets/presentation/market_meta.dart';
 import 'package:bipa/features/markets/presentation/markets_providers.dart';
 import 'package:bipa/features/prices/domain/list_cost.dart';
 import 'package:bipa/features/prices/presentation/prices_providers.dart';
@@ -168,34 +169,20 @@ class _MarketsPageState extends ConsumerState<MarketsPage> {
   static MarketMapPin _pin(({double east, double north}) offset, {required bool here, required bool best}) =>
       MarketMapPin(east: offset.east, north: offset.north, here: here, best: best);
 
-  /// "você está aqui", ou "850 m · preços de 5 dias".
   PriceRowData _row(
     AppLocalizations l10n,
     RankedMarket item,
     bool isHere,
     Map<String, DateTime> latestPrices,
     DateTime now,
-  ) {
-    final market = item.market;
-    final distance = item.distanceMeters;
-    final latest = latestPrices[market.id];
-    final days = latest == null ? null : DateUtils.dateOnly(now).difference(DateUtils.dateOnly(latest)).inDays;
-    final meta = isHere
-        ? l10n.marketsHere
-        : [
-            if (distance != null) Formatters.distance(distance),
-            if (days != null) l10n.marketsPriceAge(days),
-            if (distance == null && days == null) market.address ?? l10n.marketsNoPoint,
-          ].join(' · ');
-    return PriceRowData(
-      icon: Icons.storefront_outlined,
-      place: true,
-      title: market.name,
-      meta: meta,
-      metaIcon: isHere || distance != null ? Icons.place_outlined : null,
-      onTap: () => context.push(Routes.editMarket(market.id)),
-    );
-  }
+  ) => PriceRowData(
+    icon: Icons.storefront_outlined,
+    place: true,
+    title: item.market.name,
+    meta: marketMeta(l10n, item, isHere: isHere, latestPrice: latestPrices[item.market.id], now: now),
+    metaIcon: marketMetaIcon(item, isHere: isHere),
+    onTap: () => context.push(Routes.market(item.market.id)),
+  );
 }
 
 /// A localização não veio: os mercados ficam em ordem alfabética.

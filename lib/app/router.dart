@@ -1,6 +1,7 @@
 import 'package:bipa/app/home_shell.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/features/markets/presentation/market_form_page.dart';
+import 'package:bipa/features/markets/presentation/market_page.dart';
 import 'package:bipa/features/markets/presentation/markets_page.dart';
 import 'package:bipa/features/prices/presentation/capture_price_page.dart';
 import 'package:bipa/features/products/presentation/barcode_scanner_page.dart';
@@ -72,6 +73,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/mercado/:id/editar',
         builder: (_, state) => MarketFormPage(marketId: state.pathParameters['id']),
+      ),
+      // Depois de "/mercado/novo", que senão viraria um mercado de id "novo".
+      GoRoute(
+        path: '/mercado/:id',
+        builder: (_, state) => MarketPage(marketId: state.pathParameters['id']!),
       ),
     ],
   );

@@ -155,6 +155,11 @@ final listMarketNameProvider = Provider.autoDispose<String?>((ref) {
   return markets.where((m) => m.id == marketId).firstOrNull?.name;
 });
 
+/// A ordem das seções aprendida num mercado (ADR 0014).
+final marketAisleOrderProvider = StreamProvider.autoDispose.family<AisleOrder, String>(
+  (ref, marketId) => ref.watch(aisleOrderRepositoryProvider).watch(marketId),
+);
+
 /// A ordem das seções no mercado da lista (ADR 0014); sem mercado, a
 /// genérica.
 final listAisleOrderProvider = StreamProvider.autoDispose<AisleOrder>((ref) {

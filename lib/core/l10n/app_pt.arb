@@ -777,5 +777,18 @@
         "type": "String"
       }
     }
-  }
+  },
+  "marketAisleOrder": "Ordem das seções",
+  "@marketAisleOrder": {
+    "description": "Seção da tela do mercado com a ordem das seções aprendida nas compras (ADR 0014)."
+  },
+  "marketRecentPrices": "Preços recentes",
+  "@marketRecentPrices": {
+    "description": "Seção da tela do mercado com o preço mais recente de cada produto ali."
+  },
+  "marketGoShoppingHere": "Ir às compras aqui",
+  "@marketGoShoppingHere": {
+    "description": "Botão da tela do mercado que começa a compra já nesse mercado."
+  },
+  "marketNotFound": "Mercado não encontrado."
 }

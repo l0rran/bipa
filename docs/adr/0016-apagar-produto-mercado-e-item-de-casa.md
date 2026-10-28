@@ -13,7 +13,7 @@ Apagar esbarra no ADR 0007: as observações de preço são imutáveis e, um dia
 
 - **Tirar de casa** (o item do estoque) apaga o item e os lotes. O produto, os preços e o histórico de movimentos continuam: é só "não tenho mais isso em casa". Fica no editor do item, com confirmação.
 - **Apagar produto** apaga o produto e, em cascata, as embalagens, os preços, o estoque, a lista e o carrinho dele. Fica no menu da tela do produto, com uma confirmação que diz o que vai junto e que não dá para desfazer.
-- **Apagar mercado** apaga o mercado e, em cascata, os preços e a ordem das seções dele. As compras feitas nele ficam sem mercado. Fica na barra do formulário do mercado, também com confirmação.
+- **Apagar mercado** apaga o mercado e, em cascata, os preços e a ordem das seções dele. As compras feitas nele ficam sem mercado. Fica no menu da tela do mercado, ao lado de "Editar", também com confirmação. (Até a tela do mercado existir, ficava na barra do formulário.)
 - Apagar é diferente de juntar. Juntar preserva o histórico e o passa para o outro produto. Apagar descarta.
 
 ## Consequências
