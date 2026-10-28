@@ -1,4 +1,3 @@
-import 'package:bipa/core/catalog/product_kind.dart';
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
@@ -18,6 +17,7 @@ import 'package:bipa/features/shopping_list/domain/aisle_order.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_sections.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
+import 'package:bipa/features/shopping_list/presentation/aisle_label.dart';
 import 'package:bipa/features/shopping_list/presentation/finish_shopping.dart';
 import 'package:bipa/features/shopping_list/presentation/list_preview.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
@@ -439,21 +439,4 @@ class _AddField extends StatelessWidget {
       ),
     );
   }
-}
-
-extension AisleLabel on Aisle {
-  String localizedLabel(AppLocalizations l10n) => switch (this) {
-    Aisle.produce => l10n.aisleProduce,
-    Aisle.bakery => l10n.aisleBakery,
-    Aisle.meat => l10n.aisleMeat,
-    Aisle.dairy => l10n.aisleDairy,
-    Aisle.grocery => l10n.aisleGrocery,
-    Aisle.sweets => l10n.aisleSweets,
-    Aisle.frozen => l10n.aisleFrozen,
-    Aisle.drinks => l10n.aisleDrinks,
-    Aisle.cleaning => l10n.aisleCleaning,
-    Aisle.hygiene => l10n.aisleHygiene,
-    Aisle.pet => l10n.aislePet,
-    Aisle.other => l10n.aisleOther,
-  };
 }

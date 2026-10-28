@@ -81,4 +81,21 @@ void main() {
     expect(summary.estimate, isNull);
     expect(ShoppingListSummary.of(const [], const {}).isEmpty, isTrue);
   });
+
+  test('o próximo da compra é a primeira seção com algo faltando, com até três nomes', () {
+    final sections = shoppingListSections([
+      entry('Tomate', checkedMinute: 5),
+      entry('Leite integral', minute: 1),
+      entry('Ovos', minute: 2),
+      entry('Queijo minas', minute: 3),
+      entry('Iogurte', minute: 4),
+      entry('Arroz 5 kg', minute: 5),
+    ]);
+
+    final next = nextAisle(sections);
+
+    expect(next?.aisle, Aisle.dairy);
+    expect(next?.items, ['Leite integral', 'Ovos', 'Queijo minas']);
+    expect(nextAisle(shoppingListSections([entry('Tomate', checkedMinute: 1)])), isNull);
+  });
 }

@@ -35,6 +35,20 @@ List<ShoppingListSection> shoppingListSections(
   ];
 }
 
+/// A próxima seção do percurso com algo faltando, e o que falta nela (no
+/// máximo [maxItems] nomes): é o "Próximo" da notificação da compra.
+/// `null` quando tudo da lista já foi pego.
+({Aisle aisle, List<String> items})? nextAisle(List<ShoppingListSection> sections, {int maxItems = 3}) {
+  for (final section in sections) {
+    final missing = [
+      for (final entry in section.entries)
+        if (!entry.item.isChecked) entry.name,
+    ];
+    if (missing.isNotEmpty) return (aisle: section.aisle, items: missing.take(maxItems).toList());
+  }
+  return null;
+}
+
 List<ShoppingListEntry> _shoppingOrder(List<ShoppingListEntry> entries) {
   // O id desempata horários iguais: o sort do Dart não é estável.
   int byId(ShoppingListEntry a, ShoppingListEntry b) => a.item.id.compareTo(b.item.id);
