@@ -90,6 +90,16 @@ O problema: **o arroz de outra marca, ou de outro tamanho, é o mesmo arroz em c
 | **Open Food Facts** e etiquetas de gôndola | O código identifica marca e tamanho; a etiqueta escreve "ARROZ BRANCO TIO JOAO 5KG" | Marca e tamanho **pertencem ao código**, não ao produto | O nome da etiqueta sugere o produto e preenche marca e tamanho, para conferir |
 | **Comparadores de preço** (preço por kg na gôndola) | O preço por unidade de medida compara tamanhos diferentes | **Preço por kg** para comparar as embalagens do mesmo produto | — |
 
+### Juntar produtos (outubro de 2026)
+
+Quem cadastrou o mesmo produto uma vez por marca precisa de um jeito de juntar os cadastros.
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **Google Contatos** ("Juntar e corrigir") | Sugere duplicados e junta com um toque; um contato juntado pode ser separado depois | Juntar é uma ação de **um toque depois de escolher** | Não sugerimos duplicados (ainda); e, como não dá para separar, há uma confirmação |
+| **Grocy** (juntar tarefas) | Item no menu "mais" da lista; a API diz qual fica e qual sai (`merge/{manter}/{remover}`) | **"Juntar com…" no menu** da tela do produto, com o produto atual saindo | — |
+| **Readysell** (juntar produtos no ERP) | Digita-se o código do produto que fica; o histórico dos dois é mantido; não há desfazer | **O histórico vai junto**: preços, estoque, lista e carrinho passam para o que fica | A confirmação diz em uma frase o que passa e que o outro deixa de existir |
+
 ## Fontes
 
 - [Menor Preço Brasil (Olhar Digital)](https://olhardigital.com.br/2025/08/03/dicas-e-tutoriais/quer-economizar-na-farmacia-e-supermercado-conheca-o-app-menor-preco-brasil/)
@@ -112,3 +122,6 @@ O problema: **o arroz de outra marca, ou de outro tamanho, é o mesmo arroz em c
 - [Shelf to Cart](https://shelf-to-cart-marketing.pages.dev/)
 - [Grocy 2.5.0: produtos pai e estoque somado](https://newreleases.io/project/github/grocy/grocy/release/v2.5.0)
 - [Digitalizar a geladeira com o Grocy (Galaxus)](https://www.galaxus.de/en/page/wie-ich-meinen-kuehlschrankinhalt-digitalisieren-will-und-daran-scheitere-39565)
+- [Juntar contatos duplicados (Ajuda do Google Contatos)](https://support.google.com/contacts/answer/7078226)
+- [Grocy 3.1.3: juntar tarefas (linuxserver/docker-grocy)](https://newreleases.io/project/github/linuxserver/docker-grocy/release/v3.1.3-ls128)
+- [Juntar produtos no Readysell](https://readysell.atlassian.net/wiki/spaces/RSELL7/pages/107945786/Merging+products+through+the+products+module)

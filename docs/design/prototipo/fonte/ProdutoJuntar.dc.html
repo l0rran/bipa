@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Juntar com</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="styles/tokens.css">
+<link rel="stylesheet" href="ds/bipa/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600..800&amp;family=Figtree:wght@400..700&amp;family=JetBrains+Mono:wght@500&amp;display=swap">
+<style>
+body{margin:0}
+.screen{position:relative;width:390px;height:844px;box-sizing:border-box;overflow:hidden;background:var(--ground)}
+.round-btn{display:grid;place-items:center;width:48px;height:48px;border:0;border-radius:50%;background:var(--surface);color:var(--ink)}
+.content{display:flex;flex-direction:column;gap:20px;padding:16px}
+.bar{display:flex;align-items:center;justify-content:space-between}
+.hero{display:grid;justify-items:center;gap:12px;text-align:center}
+.hero-art{display:grid;place-items:center;width:132px;height:132px;border-radius:var(--radius-lg);background:var(--surface);color:var(--ink)}
+.hero-art svg{width:68px;height:68px}
+.hero h1{margin:0;font:800 24px/30px var(--font-display);letter-spacing:-.01em;color:var(--ink)}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:2}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:4;display:grid;gap:12px;padding:12px 0 24px;border-radius:28px 28px 0 0;background:var(--surface);box-shadow:var(--shadow-float);animation:bipa-in-up var(--duration-slow) var(--easing-spring) both}
+.handle{justify-self:center;width:40px;height:5px;border-radius:3px;background:var(--line)}
+.sheet h2{margin:0;padding:0 16px;font:700 20px/26px var(--font-display);color:var(--ink)}
+.sheet .bipa-search{margin:0 16px;background:var(--surface-sunken)}
+.rows{display:grid}
+.row{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:16px;padding:10px 16px;font:600 16px/22px var(--font-body);color:var(--ink);text-decoration:none}
+.row .bipa-thumb{width:40px;height:40px;border-radius:var(--radius-md)}
+.row .bipa-thumb svg{width:22px;height:22px}
+.row small{display:block;font:500 13px/18px var(--font-body);color:var(--ink-muted)}
+.dialog{position:absolute;left:24px;right:24px;top:50%;transform:translateY(-50%);z-index:4;display:grid;gap:16px;padding:24px;border-radius:28px;background:var(--surface);box-shadow:var(--shadow-float)}
+.dialog h2{margin:0;font:700 22px/28px var(--font-display);color:var(--ink);text-wrap:balance}
+.dialog p{margin:0;font:500 15px/22px var(--font-body);color:var(--ink-muted)}
+.dialog p b{color:var(--ink);font-weight:700}
+.actions{display:flex;justify-content:flex-end;gap:8px}
+.text-btn{height:44px;padding:0 16px;border:0;border-radius:999px;background:none;font:700 15px/20px var(--font-body);color:var(--ink)}
+.actions .bipa-btn{height:44px;padding:0 20px}
+</style>
+</helmet>
+<div class="screen bipa-root">
+  <div class="content" aria-hidden="true">
+    <div class="bar">
+      <span class="round-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></span>
+      <span class="round-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18.5" cy="12" r="1.2"/></svg></span>
+    </div>
+    <div class="hero">
+      <span class="hero-art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11h17a8.5 8.5 0 0 1-17 0z"/><path d="M8 7.5c.6-1 1.6-1.5 2.6-1.2M13 6.5c.8-.8 2-1 3-.4M10.5 4c.6-.6 1.5-.8 2.3-.4"/></svg></span>
+      <h1>Arroz Tio João</h1>
+      <div class="bipa-tag bipa-tag--hero"><span class="bipa-tag__value">5,58</span><span class="bipa-tag__unit">o kg · Tio João 5 kg</span></div>
+    </div>
+  </div>
+  <div class="dim"></div>
+  <section class="sheet" aria-label="Juntar com…">
+    <span class="handle" aria-hidden="true"></span>
+    <h2>Juntar com…</h2>
+    <label class="bipa-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input value="arroz" placeholder="Buscar produto" aria-label="Buscar produto"></label>
+    <div class="rows">
+      <a class="row" href="ProdutoJuntarConfirmar.dc.html"><span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11h17a8.5 8.5 0 0 1-17 0z"/><path d="M8 7.5c.6-1 1.6-1.5 2.6-1.2M13 6.5c.8-.8 2-1 3-.4M10.5 4c.6-.6 1.5-.8 2.3-.4"/></svg></span><span>Arroz branco</span></a>
+      <a class="row" href="ProdutoJuntarConfirmar.dc.html"><span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11h17a8.5 8.5 0 0 1-17 0z"/><path d="M8 7.5c.6-1 1.6-1.5 2.6-1.2M13 6.5c.8-.8 2-1 3-.4M10.5 4c.6-.6 1.5-.8 2.3-.4"/></svg></span><span>Arroz integral</span></a>
+      <a class="row" href="ProdutoJuntarConfirmar.dc.html"><span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11h17a8.5 8.5 0 0 1-17 0z"/><path d="M8 7.5c.6-1 1.6-1.5 2.6-1.2M13 6.5c.8-.8 2-1 3-.4M10.5 4c.6-.6 1.5-.8 2.3-.4"/></svg></span><span>Arroz parboilizado</span></a>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
