@@ -5,6 +5,7 @@ import 'package:bipa/core/design_system/components/shopping_list.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/l10n/meta_join.dart';
 import 'package:bipa/core/navigation/routes.dart';
+import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:bipa/features/shopping_list/presentation/start_shopping.dart';
 import 'package:bipa/features/shopping_list/presentation/trip_summary_label.dart';
@@ -49,11 +50,15 @@ class HomeShell extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(BipaSpacing.s3, 0, BipaSpacing.s3, BipaSpacing.s2),
               child: ShoppingBar(
-                title: l10n.tripItems(summary.done, summary.total),
+                title: _title(l10n, summary),
                 subtitle: _subtitle(l10n, summary.spentLabel(l10n), marketName),
                 actionLabel: l10n.tripContinue,
-                progress: summary.progress,
-                semanticLabel: l10n.tripSemantics(summary.done, summary.total),
+                // Sem lista não há progresso: o fio sai.
+                progress: summary.hasList ? summary.progress : null,
+                // O leitor de tela ouve o mesmo que a tela mostra.
+                semanticLabel: l10n.tripSemantics(
+                  l10n.joinMeta([_title(l10n, summary), ?_subtitle(l10n, summary.spentLabel(l10n), marketName)]),
+                ),
                 // "Continuar" volta para o modo carrinho.
                 onTap: () => context.push(Routes.cartMode),
               ),
@@ -114,6 +119,10 @@ class HomeShell extends ConsumerWidget {
         break;
     }
   }
+
+  /// "3 de 7 itens"; numa compra sem lista, "8 no carrinho".
+  static String _title(AppLocalizations l10n, ShoppingTripSummary summary) =>
+      summary.hasList ? l10n.tripItems(summary.done, summary.total) : l10n.tripInCart(summary.packages);
 
   /// "R$ 32,10 · Atacarejo Vila Nova": o total do carrinho e o mercado.
   static String? _subtitle(AppLocalizations l10n, String? spent, String? marketName) {

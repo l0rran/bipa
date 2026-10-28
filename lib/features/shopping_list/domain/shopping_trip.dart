@@ -67,6 +67,7 @@ final class ShoppingTripSummary {
     this.spent,
     this.estimated = false,
     this.unpriced = 0,
+    this.packages = 0,
   });
 
   /// [spent] é a soma do que vai ser levado no carrinho. Sem nenhum preço
@@ -81,8 +82,10 @@ final class ShoppingTripSummary {
     Money? spent;
     var estimated = false;
     var unpriced = 0;
+    var packages = 0;
     for (final entry in cart) {
       if (!entry.item.take) continue;
+      packages += entry.item.quantity;
       final subtotal = entry.item.subtotal;
       if (subtotal == null) {
         unpriced++;
@@ -91,7 +94,14 @@ final class ShoppingTripSummary {
       spent = (spent ?? Money.zero) + subtotal;
       if (entry.item.priceEstimated) estimated = true;
     }
-    return ShoppingTripSummary(done: done, total: total, spent: spent, estimated: estimated, unpriced: unpriced);
+    return ShoppingTripSummary(
+      done: done,
+      total: total,
+      spent: spent,
+      estimated: estimated,
+      unpriced: unpriced,
+      packages: packages,
+    );
   }
 
   final int done;
@@ -104,6 +114,13 @@ final class ShoppingTripSummary {
   /// Itens que vão ser levados sem preço: ficam fora do total.
   final int unpriced;
 
+  /// Embalagens no carrinho para levar: o que a barra diz numa compra sem
+  /// lista, no lugar de "0 de 0".
+  final int packages;
+
+  /// A compra tem lista: o progresso é dela.
+  bool get hasList => total > 0;
+
   double get progress => total == 0 ? 0 : done / total;
 
   @override
@@ -113,8 +130,9 @@ final class ShoppingTripSummary {
       other.total == total &&
       other.spent == spent &&
       other.estimated == estimated &&
-      other.unpriced == unpriced;
+      other.unpriced == unpriced &&
+      other.packages == packages;
 
   @override
-  int get hashCode => Object.hash(done, total, spent, estimated, unpriced);
+  int get hashCode => Object.hash(done, total, spent, estimated, unpriced, packages);
 }

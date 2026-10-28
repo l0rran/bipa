@@ -269,7 +269,9 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                       if (trip != null && tripSummary != null) ...[
                         const SizedBox(height: BipaSpacing.s4),
                         ShoppingProgress(
-                          label: l10n.listProgress(tripSummary.done, tripSummary.total),
+                          label: tripSummary.hasList
+                              ? l10n.listProgress(tripSummary.done, tripSummary.total)
+                              : l10n.tripInCart(tripSummary.packages),
                           value: tripSummary.progress,
                           leading: tripSummary.spentLabel(l10n),
                         ),

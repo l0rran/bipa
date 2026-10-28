@@ -382,7 +382,10 @@ void main() {
     );
 
     // O leite vai sem preço: fica fora do total e é contado à parte.
-    expect(summary, const ShoppingTripSummary(done: 2, total: 3, spent: Money.cents(3598), unpriced: 1));
+    expect(
+      summary,
+      const ShoppingTripSummary(done: 2, total: 3, spent: Money.cents(3598), unpriced: 1, packages: 3),
+    );
     expect(ShoppingTripSummary.of(const [], const []).spent, isNull);
   });
 

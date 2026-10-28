@@ -220,14 +220,11 @@
     },
     "description": "Aviso depois do \"Terminei\", com o Desfazer; conta embalagens, não produtos."
   },
-  "tripSemantics": "Compra em andamento: {done} de {total}. Continuar no carrinho",
+  "tripSemantics": "Compra em andamento: {summary}. Continuar no carrinho",
   "@tripSemantics": {
     "placeholders": {
-      "done": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
+      "summary": {
+        "type": "String"
       }
     }
   },
@@ -1166,5 +1163,14 @@
   "@stockOneMore": {
     "description": "Rótulo acessível do + do stepper de estoque: corrige a quantidade, sem mexer na lista (ADR 0019)."
   },
-  "listUpdateFailed": "Não deu para mudar a lista. Tente de novo."
+  "listUpdateFailed": "Não deu para mudar a lista. Tente de novo.",
+  "tripInCart": "{count, plural, =0{Carrinho vazio} =1{1 no carrinho} other{{count} no carrinho}}",
+  "@tripInCart": {
+    "description": "Título da barra da compra quando ela não tem lista: as embalagens no carrinho.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

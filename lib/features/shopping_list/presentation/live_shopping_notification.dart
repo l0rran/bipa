@@ -78,7 +78,7 @@ class _LiveShoppingNotificationState extends ConsumerState<LiveShoppingNotificat
 
   static LiveNotificationContent _content(AppLocalizations l10n, LiveShopping shopping) {
     final summary = shopping.summary;
-    final hasList = summary.total > 0;
+    final hasList = summary.hasList;
     final items = hasList ? l10n.tripItems(summary.done, summary.total) : l10n.liveShopping;
     final spent = summary.spentLabel(l10n);
     return LiveNotificationContent(

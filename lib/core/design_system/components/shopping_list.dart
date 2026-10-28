@@ -462,9 +462,9 @@ class ShoppingBar extends StatelessWidget {
   const ShoppingBar({
     required this.title,
     required this.actionLabel,
-    required this.progress,
     required this.onTap,
     required this.semanticLabel,
+    this.progress,
     this.subtitle,
     super.key,
   });
@@ -476,8 +476,8 @@ class ShoppingBar extends StatelessWidget {
   final String? subtitle;
   final String actionLabel;
 
-  /// De 0 a 1.
-  final double progress;
+  /// De 0 a 1; `null` (compra sem lista) tira o fio de progresso.
+  final double? progress;
   final VoidCallback onTap;
   final String semanticLabel;
 
@@ -485,6 +485,7 @@ class ShoppingBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final subtitle = this.subtitle;
+    final progress = this.progress;
 
     return Semantics(
       button: true,
@@ -570,31 +571,32 @@ class ShoppingBar extends StatelessWidget {
                     ),
                   ),
                   // O fio de progresso na base da barra.
-                  Positioned(
-                    left: 24,
-                    right: 24,
-                    bottom: 6,
-                    height: 3,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(2),
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          ColoredBox(color: colors.onBrand.withValues(alpha: 0.14)),
-                          TweenAnimationBuilder<double>(
-                            tween: Tween(end: progress.clamp(0.0, 1.0)),
-                            duration: BipaMotion.slow,
-                            curve: BipaMotion.spring,
-                            builder: (context, fraction, _) => FractionallySizedBox(
-                              alignment: AlignmentDirectional.centerStart,
-                              widthFactor: fraction.clamp(0.0, 1.0),
-                              child: ColoredBox(color: colors.ink),
+                  if (progress != null)
+                    Positioned(
+                      left: 24,
+                      right: 24,
+                      bottom: 6,
+                      height: 3,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(2),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            ColoredBox(color: colors.onBrand.withValues(alpha: 0.14)),
+                            TweenAnimationBuilder<double>(
+                              tween: Tween(end: progress.clamp(0.0, 1.0)),
+                              duration: BipaMotion.slow,
+                              curve: BipaMotion.spring,
+                              builder: (context, fraction, _) => FractionallySizedBox(
+                                alignment: AlignmentDirectional.centerStart,
+                                widthFactor: fraction.clamp(0.0, 1.0),
+                                child: ColoredBox(color: colors.ink),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),
