@@ -15,7 +15,7 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - Preços com condição (ADR 0011): a etiqueta de atacarejo vira até três preços (varejo, cartão da loja e atacado a partir de N unidades), todos salvos e mostrados no histórico. O esquema vai à versão 3.
 - Lista de compras: a aba Lista com progresso, adicionar com sugestões, itens de sempre, seções do mercado, preço esperado e desfazer; a prévia da lista no Início; e "Pôr na lista" no cartão de Acabando e no gesto para a direita da linha. O esquema vai à versão 4.
 - Modo compra: "Ir às compras" começa a compra e detecta o mercado; a barra da compra mostra o progresso e o total acima da navegação; registrar o preço de um item da lista o marca; "Terminei" leva o comprado ao estoque, com Desfazer. O esquema vai à versão 5.
-- Modo carrinho: a câmera fica aberta e cada código lido entra no carrinho com o último preço do mercado; a bandeja mostra o "levar", o preço (que dá para digitar) e o total do que vai ser levado. O "Terminei" leva ao estoque a quantidade bipada. O esquema vai à versão 6.
+- Modo carrinho: a câmera fica aberta e cada código lido entra no carrinho com o último preço do mercado; a bandeja mostra o "levar", o preço (que dá para digitar) e o total do que vai ser levado. O "Terminei" leva ao estoque a quantidade bipada. O esquema vai à versão 6. O preço da etiqueta fotografada entra no carrinho, e marcar ou desmarcar na lista decide se o item vai ser levado.
 - Cópias exportadas do design system e do protótipo em `docs/design/`.
 - Banco de testes do OCR em `tool/ocr_bench`, com etiquetas sintéticas e transcrições de etiquetas reais.
 
