@@ -1,14 +1,15 @@
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/features/markets/presentation/market_picker_sheet.dart';
+import 'package:bipa/features/shopping_list/presentation/cancel_shopping.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:bipa/features/shopping_list/presentation/trip_review_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// "Terminei": mostra a folha "Fim da compra" e, confirmado, o comprado vai
-/// para o estoque e sai da lista, com Desfazer. Usado na Lista, no modo
-/// carrinho e na notificação, onde a folha também evita que um toque no
-/// bolso encerre a compra.
+/// para o estoque e sai da lista, com Desfazer; a folha também cancela a
+/// compra. Usado na Lista, no modo carrinho e na notificação, onde a folha
+/// também evita que um toque no bolso encerre a compra.
 Future<void> finishShopping(BuildContext context, WidgetRef ref, String tripId) async {
   // Lidos antes do await: a tela pode fechar quando a compra terminar.
   final review = ref.read(reviewShoppingTripProvider);
@@ -30,7 +31,15 @@ Future<void> finishShopping(BuildContext context, WidgetRef ref, String tripId) 
     }
     final summary = await review(tripId);
     if (summary == null || !context.mounted) return;
-    if (!await showTripReview(context, summary)) return;
+    switch (await showTripReview(context, summary)) {
+      case null:
+        return;
+      case TripEnd.cancel:
+        if (context.mounted) await cancelShopping(context, ref, tripId);
+        return;
+      case TripEnd.finish:
+        break;
+    }
     final finished = await finish(tripId);
     if (finished == null) return;
     messenger

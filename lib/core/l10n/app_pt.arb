@@ -1223,5 +1223,9 @@
         "type": "int"
       }
     }
+  },
+  "tripCancelFailed": "Não deu para cancelar a compra. Tente de novo.",
+  "@tripCancelFailed": {
+    "description": "Falha ao cancelar a compra."
   }
 }

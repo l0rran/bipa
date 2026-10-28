@@ -8,16 +8,17 @@ import 'package:bipa/core/l10n/meta_join.dart';
 import 'package:bipa/features/shopping_list/domain/trip_review.dart';
 import 'package:flutter/material.dart';
 
-/// Abre a folha "Fim da compra" e devolve `true` em "Terminar compra".
-Future<bool> showTripReview(BuildContext context, TripReview review) async {
-  final confirmed = await showModalBottomSheet<bool>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    builder: (_) => TripReviewSheet(review: review),
-  );
-  return confirmed ?? false;
-}
+/// Como a compra acaba, escolhido na folha "Fim da compra".
+enum TripEnd { finish, cancel }
+
+/// Abre a folha "Fim da compra". Devolve `null` em "Continuar comprando" ou
+/// ao fechar a folha.
+Future<TripEnd?> showTripReview(BuildContext context, TripReview review) => showModalBottomSheet<TripEnd>(
+  context: context,
+  isScrollControlled: true,
+  useSafeArea: true,
+  builder: (_) => TripReviewSheet(review: review),
+);
 
 /// A folha "Fim da compra" (protótipo "Fim da compra"): o total em
 /// destaque, quantas embalagens vão para casa, a economia contra outro
@@ -107,14 +108,21 @@ class TripReviewSheet extends StatelessWidget {
               foregroundColor: colors.surface,
               minimumSize: const Size.fromHeight(56),
             ),
-            onPressed: () => Navigator.of(context).pop(true),
+            onPressed: () => Navigator.of(context).pop(TripEnd.finish),
             child: Text(l10n.tripReviewConfirm),
           ),
           const SizedBox(height: BipaSpacing.s2),
           OutlinedButton(
             style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(56)),
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () => Navigator.of(context).pop(),
             child: Text(l10n.tripKeep),
+          ),
+          // Desistir é a saída de menos peso: só texto, e confirma depois.
+          const SizedBox(height: BipaSpacing.s1),
+          TextButton(
+            style: TextButton.styleFrom(minimumSize: const Size.fromHeight(48), foregroundColor: colors.inkMuted),
+            onPressed: () => Navigator.of(context).pop(TripEnd.cancel),
+            child: Text(l10n.tripCancel),
           ),
         ],
       ),

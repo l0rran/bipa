@@ -8,7 +8,6 @@ import 'package:bipa/core/design_system/components/shopping_list.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
-import 'package:bipa/core/widgets/confirm_destructive.dart';
 import 'package:bipa/core/widgets/quantity_dialog.dart';
 import 'package:bipa/features/markets/presentation/market_picker_sheet.dart';
 import 'package:bipa/features/products/domain/product.dart';
@@ -20,6 +19,7 @@ import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_sections.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
 import 'package:bipa/features/shopping_list/presentation/aisle_label.dart';
+import 'package:bipa/features/shopping_list/presentation/cancel_shopping.dart';
 import 'package:bipa/features/shopping_list/presentation/change_trip_market.dart';
 import 'package:bipa/features/shopping_list/presentation/finish_shopping.dart';
 import 'package:bipa/features/shopping_list/presentation/list_preview.dart';
@@ -171,21 +171,6 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
       );
   }
 
-  /// "Cancelar compra": confirma e desiste; o carrinho é descartado, e o
-  /// marcado na compra volta a faltar.
-  Future<void> _cancelTrip(ShoppingTrip trip) async {
-    final l10n = AppLocalizations.of(context);
-    final cancel = ref.read(cancelShoppingTripProvider);
-    final confirmed = await confirmDestructive(
-      context,
-      title: l10n.tripCancelTitle,
-      body: l10n.tripCancelBody,
-      confirmLabel: l10n.tripCancel,
-      cancelLabel: l10n.tripKeep,
-    );
-    if (confirmed) await cancel(trip.id);
-  }
-
   Future<void> _finish(ShoppingTrip trip) async {
     setState(() => _finishing = true);
     try {
@@ -286,13 +271,6 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            PopupMenuButton<void>(
-                              tooltip: l10n.listTripMore,
-                              itemBuilder: (_) => [
-                                PopupMenuItem(onTap: () => _cancelTrip(trip), child: Text(l10n.tripCancel)),
-                              ],
-                            ),
-                            const Spacer(),
                             OutlinedButton(
                               onPressed: _finishing ? null : () => _finish(trip),
                               child: Text(l10n.tripFinish),
@@ -306,6 +284,16 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                               ),
                               icon: const Icon(Icons.qr_code_scanner_rounded),
                               label: Text(l10n.cartTitle),
+                            ),
+                            // O menu fica no canto, como nos outros apps (CE7).
+                            PopupMenuButton<void>(
+                              tooltip: l10n.listTripMore,
+                              itemBuilder: (_) => [
+                                PopupMenuItem(
+                                  onTap: () => cancelShopping(context, ref, trip.id),
+                                  child: Text(l10n.tripCancel),
+                                ),
+                              ],
                             ),
                           ],
                         ),
