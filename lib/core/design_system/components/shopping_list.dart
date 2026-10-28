@@ -227,7 +227,8 @@ class QuickTile extends StatelessWidget {
   /// lista horizontal usa o mesmo valor para a altura.
   static double sideFor(BuildContext context, {double size = 76}) => math.max(
     size,
-    _padding * 2 + _iconSize + _gap + BipaText.caption.scaledLineHeight(context),
+    // 2 de folga para o arredondamento do texto.
+    _padding * 2 + _iconSize + _gap + BipaText.caption.scaledLineHeight(context) + 2,
   );
 
   @override

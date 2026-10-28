@@ -69,10 +69,18 @@ class _ScanMenu<T> extends StatelessWidget {
                         children: [
                           Icon(icon, size: 22, color: colors.ink),
                           const SizedBox(width: BipaSpacing.s3),
-                          Text(label, style: BipaText.bodyLarge.copyWith(fontWeight: FontWeight.w700, color: colors.ink)),
+                          // Flexíveis: com letra grande, quebram a linha em vez de passar da tela.
+                          Flexible(
+                            child: Text(
+                              label,
+                              style: BipaText.bodyLarge.copyWith(fontWeight: FontWeight.w700, color: colors.ink),
+                            ),
+                          ),
                           if (hint != null) ...[
                             const SizedBox(width: BipaSpacing.s3),
-                            Text(hint, style: BipaText.body.copyWith(fontSize: 13, color: colors.inkMuted)),
+                            Flexible(
+                              child: Text(hint, style: BipaText.body.copyWith(fontSize: 13, color: colors.inkMuted)),
+                            ),
                           ],
                         ],
                       ),

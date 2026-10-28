@@ -2,6 +2,7 @@ import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_palette.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/text_scale.dart';
 import 'package:flutter/material.dart';
 
 /// O gráfico do preço no tempo (PriceHistory do design system): a linha em
@@ -51,8 +52,10 @@ class PriceHistoryChart extends StatelessWidget {
               const SizedBox(height: BipaSpacing.s2),
               // Cada rótulo no seu lugar; nas pontas, encostado na borda.
               SizedBox(
-                height: 16,
+                // A altura de uma linha de legenda, que cresce com a letra.
+                height: BipaText.caption.scaledLineHeight(context),
                 child: Stack(
+                  clipBehavior: Clip.none,
                   children: [
                     for (final (:label, :at) in axisLabels)
                       Align(
