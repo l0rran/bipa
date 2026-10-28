@@ -17,14 +17,14 @@ void main() {
   test('junta a distância e a idade dos preços', () {
     expect(
       marketMeta(l10n, item(distance: 850), isHere: false, latestPrice: DateTime(2026, 10, 23, 20), now: now),
-      '850 m · preços de 5 dias',
+      '850 m · atualizado há 5 dias',
     );
   });
 
   test('conta a idade em dias do calendário', () {
     expect(
       marketMeta(l10n, item(), isHere: false, latestPrice: DateTime(2026, 10, 27, 22), now: now),
-      'preços de ontem',
+      'atualizado ontem',
     );
   });
 
