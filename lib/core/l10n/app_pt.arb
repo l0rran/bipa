@@ -1083,5 +1083,36 @@
         "type": "String"
       }
     }
+  },
+  "pricePerKilo": "{price}/kg",
+  "@pricePerKilo": {
+    "description": "Preço por quilo do granel: \"R$ 8,99/kg\".",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "cartGranelGuess": "{name}?",
+  "@cartGranelGuess": {
+    "description": "O nome lido na etiqueta de granel, como pergunta: tocar escolhe o produto.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cartGranelChoose": "escolher o produto",
+  "@cartGranelChoose": {
+    "description": "Aviso da etiqueta de granel sem nome lido: tocar escolhe o produto."
+  },
+  "cartGranelTitle": "Que produto custa {price}?",
+  "@cartGranelTitle": {
+    "description": "Título da escolha do produto da etiqueta de granel.",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
   }
 }

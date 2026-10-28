@@ -17,6 +17,7 @@ import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/scale_label.dart';
 import 'package:bipa/features/products/presentation/new_package_sheet.dart';
+import 'package:bipa/features/products/presentation/product_picker_sheet.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/live_scan.dart';
@@ -127,16 +128,57 @@ class _CameraPageState extends ConsumerState<CameraPage> {
   Future<T?> _withScannerPaused<T>(Future<T?> Function() action) =>
       _cameraKey.currentState?.withScannerPaused(action) ?? action();
 
-  void _showNotice(_Notice notice, {Duration duration = const Duration(milliseconds: 2500)}) {
+  void _showNotice(
+    _Notice notice, {
+    TagPriceRead? granel,
+    Duration duration = const Duration(milliseconds: 2500),
+  }) {
     if (!mounted) return;
-    setState(() => _notice = notice);
+    setState(() {
+      _notice = notice;
+      _granel = granel;
+    });
     _noticeTimer?.cancel();
     _noticeTimer = Timer(duration, () {
-      if (mounted) setState(() => _notice = null);
+      if (mounted) {
+        setState(() {
+          _notice = null;
+          _granel = null;
+        });
+      }
     });
   }
 
   bool _fresh(DateTime at) => DateTime.now().difference(at) <= _waitFor;
+
+  /// A etiqueta de granel sem código, enquanto o aviso dela está na tela: o
+  /// aviso vira botão para escolher o produto (ADR 0018).
+  TagPriceRead? _granel;
+
+  Future<void> _chooseGranel() async {
+    final read = _granel;
+    if (read == null) return;
+    final l10n = AppLocalizations.of(context);
+    final createProduct = ref.read(createProductByWeightProvider);
+    _noticeTimer?.cancel();
+    setState(() {
+      _notice = null;
+      _granel = null;
+    });
+    final choice = await _withAnalysisPaused(
+      () => pickProduct(
+        context,
+        initialQuery: read.nameHint ?? '',
+        title: l10n.cartGranelTitle(l10n.pricePerKilo(read.price.format())),
+      ),
+    );
+    if (choice == null || !mounted) return;
+    final product = switch (choice) {
+      ExistingProduct(:final product) => product,
+      NewProduct(:final name) => await createProduct(name),
+    };
+    await _confirm(product, null, read);
+  }
 
   Future<void> _onEvent(LiveScanEvent event) async {
     switch ((event, _mode)) {
@@ -214,6 +256,24 @@ class _CameraPageState extends ConsumerState<CameraPage> {
       if (scanned != null && mounted) await _confirm(scanned.product, scanned.package, read);
       return;
     }
+    // Granel sem código: não vem produto bipado. O aviso vira botão.
+    if (read.perKilo) {
+      unawaited(HapticFeedback.selectionClick());
+      _showNotice(
+        (
+          icon: Icons.sell_outlined,
+          value: l10n.pricePerKilo(read.price.format()),
+          detail: switch (read.nameHint) {
+            final name? => l10n.cartGranelGuess(name),
+            null => l10n.cartGranelChoose,
+          },
+          waiting: false,
+        ),
+        granel: read,
+        duration: _waitFor,
+      );
+      return;
+    }
     final pending = _pendingProduct;
     if (pending != null && _fresh(pending.at)) {
       _pendingProduct = null;
@@ -245,6 +305,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
           price: read.price,
           otherOffers: read.otherOffers,
           source: PriceSource.priceTag,
+          perKilo: read.perKilo,
         ),
         marketId: _market?.id,
         chooseMarket: () async {
@@ -257,7 +318,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
       final l10n = AppLocalizations.of(context);
       _showNotice((
         icon: Icons.check_rounded,
-        value: read.price.format(),
+        value: read.perKilo ? l10n.pricePerKilo(read.price.format()) : read.price.format(),
         detail: l10n.cameraPriceSaved(CartEntry.nameOf(product, package)),
         waiting: false,
       ));
@@ -349,6 +410,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
             price: value,
             detail: detail,
             countdown: waiting ? _waitFor : null,
+            onTap: _granel == null ? null : _chooseGranel,
           ),
           null => null,
         },

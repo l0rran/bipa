@@ -24,4 +24,4 @@ O formato varia de balança para balança. As configurações comuns no Brasil (
 
 - Hortifrúti pesado no mercado entra no carrinho com o valor certo, sem sujar o catálogo.
 - Numa loja que grava o peso no código, o valor sai errado. A pessoa corrige digitando o preço, como em qualquer item.
-- A etiqueta de gôndola com "/kg" e sem código (a banana na banca, pesada só no caixa) ainda não tem caminho: o preço lido espera um produto bipado que não vem. Resolver isso pede ler a unidade "/kg" na etiqueta (no `PriceTagParser` e no port do `tool/ocr_bench`) e escolher o produto pelo nome lido.
+- A etiqueta de gôndola por quilo e sem código (a banana na banca, pesada só no caixa) não espera um produto bipado, que não viria. O `PriceTagParser` (e o port do `tool/ocr_bench`) marca o preço por kg ("R$ 8,99 KG", "R$ 39,90 /KG"), e o aviso da leitura vira botão: tocar escolhe o produto, já buscado pelo nome lido, e o preço por kg vai para o histórico (protótipo "Modo carrinho: granel sem código"). Na câmera, ele abre a folha de conferir sem "Também comprei". O total da compra continua vindo da etiqueta da balança ou do preço digitado.

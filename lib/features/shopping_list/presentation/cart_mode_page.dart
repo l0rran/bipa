@@ -4,7 +4,6 @@ import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/components/scan_tray.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
-import 'package:bipa/core/money/money.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/price_dialog.dart';
 import 'package:bipa/core/widgets/quantity_dialog.dart';
@@ -47,7 +46,7 @@ class CartModePage extends ConsumerStatefulWidget {
 
 /// O aviso sobre a câmera: o preço lido e o item que o recebeu, ou o pedido
 /// de bipar o produto.
-typedef _LiveNotice = ({Money price, String detail, bool waiting});
+typedef _LiveNotice = ({String price, String detail, bool waiting});
 
 class _CartModePageState extends ConsumerState<CartModePage> {
   final _cameraKey = GlobalKey<LiveCameraState>();
@@ -76,6 +75,10 @@ class _CartModePageState extends ConsumerState<CartModePage> {
   final _unsavedTagPrices = <({String productId, String? packageId, TagPriceRead read})>[];
 
   _LiveNotice? _notice;
+
+  /// A etiqueta de granel sem código lida há pouco (ADR 0018), enquanto o
+  /// aviso dela está na tela.
+  TagPriceRead? _granel;
   String? _justReadKey;
   Timer? _noticeTimer;
 
@@ -141,6 +144,66 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     }
   }
 
+  /// Tocou no aviso do granel: escolhe o produto (já buscado pelo nome lido)
+  /// e guarda o preço por kg no histórico do mercado. Quanto custa sai da
+  /// etiqueta da balança ou do preço digitado (ADR 0018).
+  Future<void> _chooseGranel() async {
+    final read = _granel;
+    final trip = ref.read(activeTripProvider).value;
+    if (read == null || trip == null) return;
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final register = ref.read(registerPriceObservationProvider);
+    final createProduct = ref.read(createProductByWeightProvider);
+    final trips = ref.read(shoppingTripRepositoryProvider);
+    _noticeTimer?.cancel();
+    setState(() {
+      _notice = null;
+      _granel = null;
+    });
+    final choice = await _withAnalysisPaused(
+      () => pickProduct(
+        context,
+        initialQuery: read.nameHint ?? '',
+        title: l10n.cartGranelTitle(l10n.pricePerKilo(read.price.format())),
+      ),
+    );
+    if (choice == null || !mounted) return;
+    var marketId = trip.marketId;
+    if (marketId == null) {
+      marketId = (await _withScannerPaused(() => pickMarket(context)))?.id;
+      if (marketId == null) {
+        messenger.showSnackBar(SnackBar(content: Text(l10n.cartNeedMarket)));
+        return;
+      }
+    }
+    try {
+      if (trip.marketId == null) await trips.setMarket(trip.id, marketId);
+      final product = switch (choice) {
+        ExistingProduct(:final product) => product,
+        NewProduct(:final name) => await createProduct(name),
+      };
+      await register(
+        RegisterPriceInput(
+          marketId: marketId,
+          productId: product.id,
+          price: read.price,
+          source: PriceSource.priceTag,
+          otherOffers: read.otherOffers,
+        ),
+      );
+      if (!mounted) return;
+      _lockFrame();
+      _showNotice((
+        price: l10n.pricePerKilo(read.price.format()),
+        detail: l10n.cameraPriceSaved(product.name),
+        waiting: false,
+      ));
+    } on Exception {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.cartPriceFailed)));
+    }
+  }
+
   /// Uma etiqueta da balança (ADR 0018): o produto do código é perguntado
   /// uma vez por mercado e lembrado; o valor da pesagem vai para o carrinho.
   Future<void> _onScaleLabel(ScaleLabel label) async {
@@ -172,7 +235,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
       final key = CartItem.keyOf(product.id, null);
       // A pesagem é o preço firmado: uma etiqueta lida depois não o troca.
       _settledItems.add(key);
-      _showNotice((price: label.total, detail: product.name, waiting: false), key: key);
+      _showNotice((price: label.total.format(), detail: product.name, waiting: false), key: key);
     } on Exception catch (error, stack) {
       _report(error, stack);
     }
@@ -227,7 +290,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     if (!mounted) return;
     _lockFrame();
     if (fromTag != null) {
-      _showNotice((price: fromTag.price, detail: CartEntry.nameOf(product, package), waiting: false), key: key);
+      _showNotice((price: fromTag.price.format(), detail: CartEntry.nameOf(product, package), waiting: false), key: key);
     }
   }
 
@@ -239,6 +302,25 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     // A etiqueta da balança já entra pelo código dela, com o mesmo valor
     // (ADR 0018); lida também como etiqueta, somaria duas vezes.
     if (read.barcode case final code? when ScaleLabel.isScaleCode(code)) return;
+    // Granel sem código: não vem produto bipado para esperar. O aviso vira
+    // botão para escolher o produto (protótipo "granel sem código").
+    if (read.perKilo && read.barcode == null) {
+      final l10n = AppLocalizations.of(context);
+      unawaited(HapticFeedback.selectionClick());
+      _showNotice(
+        (
+          price: l10n.pricePerKilo(read.price.format()),
+          detail: switch (read.nameHint) {
+            final name? => l10n.cartGranelGuess(name),
+            null => l10n.cartGranelChoose,
+          },
+          waiting: false,
+        ),
+        granel: read,
+        duration: _router.waitFor,
+      );
+      return;
+    }
     final products = ref.read(productRepositoryProvider);
     final cartRepository = ref.read(cartRepositoryProvider);
     final register = ref.read(registerPriceObservationProvider);
@@ -261,11 +343,11 @@ class _CartModePageState extends ConsumerState<CartModePage> {
           unawaited(HapticFeedback.lightImpact());
           if (!mounted) return;
           _lockFrame();
-          _showNotice((price: read.price, detail: entry.name, waiting: false), key: entry.item.key);
+          _showNotice((price: read.price.format(), detail: entry.name, waiting: false), key: entry.item.key);
         case WaitForProduct(:final pending):
           _pending = pending;
           unawaited(HapticFeedback.selectionClick());
-          _showNotice((price: read.price, detail: l10n.cartLiveWaiting, waiting: true), duration: _router.waitFor);
+          _showNotice((price: read.price.format(), detail: l10n.cartLiveWaiting, waiting: true), duration: _router.waitFor);
       }
     } on Exception catch (error, stack) {
       _report(error, stack);
@@ -339,11 +421,17 @@ class _CartModePageState extends ConsumerState<CartModePage> {
   void _lockFrame() => _cameraKey.currentState?.lock();
 
   /// [key] é a [CartItem.key] do item que recebeu o preço, para o anel.
-  void _showNotice(_LiveNotice notice, {String? key, Duration duration = const Duration(milliseconds: 2500)}) {
+  void _showNotice(
+    _LiveNotice notice, {
+    String? key,
+    TagPriceRead? granel,
+    Duration duration = const Duration(milliseconds: 2500),
+  }) {
     if (!mounted) return;
     setState(() {
       _notice = notice;
       _justReadKey = key;
+      _granel = granel;
     });
     _noticeTimer?.cancel();
     _noticeTimer = Timer(duration, () {
@@ -351,6 +439,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
       setState(() {
         _notice = null;
         _justReadKey = null;
+        _granel = null;
       });
     });
   }
@@ -511,9 +600,11 @@ class _CartModePageState extends ConsumerState<CartModePage> {
             // O preço que espera mostra o tempo que falta.
             key: ValueKey((price, waiting)),
             icon: waiting ? Icons.qr_code_scanner_rounded : Icons.sell_outlined,
-            price: price.format(),
+            price: price,
             detail: detail,
             countdown: waiting ? _router.waitFor : null,
+            // O granel sem código não tem o que bipar: o aviso escolhe o produto.
+            onTap: _granel == null ? null : _chooseGranel,
           ),
           null => null,
         },

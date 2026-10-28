@@ -31,6 +31,9 @@ typedef PriceToConfirm = ({
   Money price,
   List<PriceOffer> otherOffers,
   PriceSource source,
+
+  /// O preço é por quilo: granel, sem "Também comprei" (ADR 0018).
+  bool perKilo,
 });
 
 /// Abre a folha "Conferir e salvar" (protótipo "Confirmação"). Devolve
@@ -222,7 +225,12 @@ class _ConfirmPriceSheetState extends ConsumerState<ConfirmPriceSheet> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // Flexível: com letra grande, a etiqueta encolhe antes de passar da tela.
-              Flexible(child: PriceTagHero(price: _price, unitLine: unitPrice?.format())),
+              Flexible(
+                child: PriceTagHero(
+                  price: _price,
+                  unitLine: widget.reading.perKilo ? l10n.productUnitPriceOnly('kg') : unitPrice?.format(),
+                ),
+              ),
               const SizedBox(width: BipaSpacing.s3),
               IconButton.filledTonal(
                 tooltip: l10n.confirmEditPrice,
@@ -238,39 +246,45 @@ class _ConfirmPriceSheetState extends ConsumerState<ConfirmPriceSheet> {
               child: SaveBadge(label: l10n.confirmCheaperHere(cheaperBy.format())),
             ),
           ],
-          const SizedBox(height: BipaSpacing.s4),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: colors.surfaceSunken,
-              borderRadius: BorderRadius.circular(BipaRadius.md),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(BipaSpacing.s4, BipaSpacing.s2, BipaSpacing.s2, BipaSpacing.s2),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(l10n.confirmAlsoBought, style: BipaText.bodyLarge.copyWith(color: colors.ink)),
-                        Text(
-                          _alsoBought
-                              ? l10n.confirmAtHomeAfter(Formatters.quantity(current), Formatters.quantity(current + 1))
-                              : l10n.confirmAtHome(Formatters.quantity(current)),
-                          style: BipaText.body.copyWith(fontSize: 13, color: colors.inkMuted),
-                        ),
-                      ],
+          // No granel, o que vai para casa depende do peso: sem "Também comprei".
+          if (!widget.reading.perKilo) ...[
+            const SizedBox(height: BipaSpacing.s4),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: colors.surfaceSunken,
+                borderRadius: BorderRadius.circular(BipaRadius.md),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(BipaSpacing.s4, BipaSpacing.s2, BipaSpacing.s2, BipaSpacing.s2),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(l10n.confirmAlsoBought, style: BipaText.bodyLarge.copyWith(color: colors.ink)),
+                          Text(
+                            _alsoBought
+                                ? l10n.confirmAtHomeAfter(
+                                    Formatters.quantity(current),
+                                    Formatters.quantity(current + 1),
+                                  )
+                                : l10n.confirmAtHome(Formatters.quantity(current)),
+                            style: BipaText.body.copyWith(fontSize: 13, color: colors.inkMuted),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  BipaToggle(
-                    value: _alsoBought,
-                    semanticLabel: l10n.confirmAlsoBought,
-                    onChanged: (value) => setState(() => _alsoBought = value),
-                  ),
-                ],
+                    BipaToggle(
+                      value: _alsoBought,
+                      semanticLabel: l10n.confirmAlsoBought,
+                      onChanged: (value) => setState(() => _alsoBought = value),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
+          ],
           if (error != null) ...[
             const SizedBox(height: BipaSpacing.s3),
             ErrorLine(error),
