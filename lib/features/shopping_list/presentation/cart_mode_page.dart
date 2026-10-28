@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:bipa/core/camera/viewfinder_region.dart';
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
@@ -25,10 +24,9 @@ import 'package:bipa/features/shopping_list/domain/live_scan.dart';
 import 'package:bipa/features/shopping_list/domain/live_tag_router.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
 import 'package:bipa/features/shopping_list/presentation/finish_shopping.dart';
-import 'package:bipa/features/shopping_list/presentation/live_scanner.dart';
+import 'package:bipa/features/shopping_list/presentation/live_camera.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:bipa/features/shopping_list/presentation/trip_summary_label.dart';
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -51,15 +49,8 @@ class CartModePage extends ConsumerStatefulWidget {
 /// de bipar o produto.
 typedef _LiveNotice = ({Money price, String detail, bool waiting});
 
-class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBindingObserver {
-  late final _live = LiveScanner(
-    onEvents: _onEvents,
-    viewfinder: _viewfinderOnScreen,
-    analyzer: ref.read(liveFrameAnalyzerFactoryProvider)(),
-    onError: _reportAny,
-  );
-  final _previewKey = GlobalKey();
-  final _viewfinderKey = GlobalKey();
+class _CartModePageState extends ConsumerState<CartModePage> {
+  final _cameraKey = GlobalKey<LiveCameraState>();
   static const _router = LiveTagRouter();
 
   /// O preço lido antes de bipar, esperando o próximo produto.
@@ -88,132 +79,25 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
   String? _justReadKey;
   Timer? _noticeTimer;
 
-  /// Os eventos da câmera são tratados um por vez, na ordem: um bipe termina
-  /// de gravar antes de a etiqueta seguinte decidir para onde vai.
-  Future<void> _eventQueue = Future.value();
-
-  /// A moldura "trava" por um instante a cada leitura.
-  var _locked = false;
-  Timer? _unlock;
   var _finishing = false;
 
   /// A bandeja aberta mostra mais itens (a alça alterna).
   var _trayExpanded = false;
-  var _cameraDenied = false;
-
-  /// A câmera não abriu por outro motivo (ocupada por outro app, por
-  /// exemplo): a tela diz isso e oferece tentar de novo, em vez de ficar preta.
-  var _cameraFailed = false;
-
-  /// A abertura da câmera pode pedir permissão, e o diálogo do Android deixa
-  /// o app inativo por um instante: isso não é ir para o fundo.
-  var _startingCamera = false;
-  var _wentToBackground = false;
-
-  /// Outra tela está usando a câmera: o leitor não volta sozinho ao app
-  /// voltar do fundo.
-  var _pausedForRoute = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _live.addListener(_onLiveChanged);
-    // A prévia e o recorte supõem o celular em pé.
-    unawaited(SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]));
-    unawaited(_startCamera());
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (_pausedForRoute || _startingCamera) return;
-    switch (state) {
-      case AppLifecycleState.resumed:
-        // Sem permissão, só tenta de novo depois de a pessoa sair do app (para
-        // as configurações, por exemplo); senão, o pedido se repetiria.
-        if (_cameraDenied && !_wentToBackground) return;
-        _wentToBackground = false;
-        unawaited(_startCamera());
-      case AppLifecycleState.paused || AppLifecycleState.hidden:
-        _wentToBackground = true;
-        unawaited(_camera(_live.stop));
-      case AppLifecycleState.inactive:
-        unawaited(_camera(_live.stop));
-      case AppLifecycleState.detached:
-        break;
-    }
-  }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _unlock?.cancel();
     _noticeTimer?.cancel();
-    _live
-      ..removeListener(_onLiveChanged)
-      ..dispose();
-    unawaited(SystemChrome.setPreferredOrientations(const []));
     super.dispose();
   }
 
-  void _onLiveChanged() {
-    if (mounted) setState(() {});
-  }
-
-  /// Abre a câmera; sem permissão ou com falha, a tela explica no lugar da
-  /// prévia.
-  Future<void> _startCamera() async {
-    _startingCamera = true;
-    var denied = false;
-    var failed = false;
-    try {
-      await _live.start();
-    } on CameraException catch (error, stack) {
-      denied = error.code.startsWith('CameraAccessDenied');
-      failed = !denied;
-      if (failed) _report(error, stack);
-    } on Exception catch (error, stack) {
-      failed = true;
-      _report(error, stack);
-    } finally {
-      _startingCamera = false;
-    }
-    if (mounted && (denied != _cameraDenied || failed != _cameraFailed)) {
-      setState(() {
-        _cameraDenied = denied;
-        _cameraFailed = failed;
-      });
-    }
-  }
-
-  /// A moldura na tela, relativa à prévia da câmera, para o recorte.
-  ViewfinderOnScreen? _viewfinderOnScreen() {
-    final preview = _previewKey.currentContext?.findRenderObject();
-    final frame = _viewfinderKey.currentContext?.findRenderObject();
-    if (preview is! RenderBox || frame is! RenderBox || !preview.hasSize || !frame.hasSize) return null;
-    if (!preview.attached || !frame.attached) return null;
-    final origin = frame.localToGlobal(Offset.zero) - preview.localToGlobal(Offset.zero);
-    return (
-      viewfinder: PixelRect(origin.dx, origin.dy, frame.size.width, frame.size.height),
-      screenWidth: preview.size.width,
-      screenHeight: preview.size.height,
-    );
-  }
-
-  void _onEvents(List<LiveScanEvent> events) {
-    for (final event in events) {
-      _eventQueue = _eventQueue
-          .then((_) async {
-            if (!mounted) return;
-            switch (event) {
-              case ProductScanned(:final barcode):
-                await _onCode(barcode);
-              case TagPriceRead():
-                await _onTagRead(event);
-            }
-          })
-          // Uma falha não pode travar a fila dos próximos eventos.
-          .then<void>((_) {}, onError: _reportAny);
+  /// Cada leitura da câmera, uma de cada vez: um bipe termina de gravar antes
+  /// de a etiqueta seguinte decidir para onde vai.
+  Future<void> _onEvent(LiveScanEvent event) async {
+    switch (event) {
+      case ProductScanned(:final barcode):
+        await _onCode(barcode);
+      case TagPriceRead():
+        await _onTagRead(event);
     }
   }
 
@@ -452,13 +336,7 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
     }
   }
 
-  void _lockFrame() {
-    setState(() => _locked = true);
-    _unlock?.cancel();
-    _unlock = Timer(const Duration(milliseconds: 600), () {
-      if (mounted) setState(() => _locked = false);
-    });
-  }
+  void _lockFrame() => _cameraKey.currentState?.lock();
 
   /// [key] é a [CartItem.key] do item que recebeu o preço, para o anel.
   void _showNotice(_LiveNotice notice, {String? key, Duration duration = const Duration(milliseconds: 2500)}) {
@@ -593,44 +471,14 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
   }
 
   /// Um diálogo por cima: a prévia continua, mas nada é lido por baixo dele.
-  Future<T> _withAnalysisPaused<T>(Future<T> Function() action) async {
-    _live.analysisPaused = true;
-    try {
-      return await action();
-    } finally {
-      _live.analysisPaused = false;
-    }
-  }
+  Future<T> _withAnalysisPaused<T>(Future<T> Function() action) =>
+      _cameraKey.currentState?.withAnalysisPaused(action) ?? action();
 
-  /// Outra tela (a câmera da etiqueta, o cadastro) precisa da câmera, e o
-  /// leitor não pode continuar lendo por baixo dela.
-  Future<T?> _withScannerPaused<T>(Future<T?> Function() action) async {
-    _pausedForRoute = true;
-    await _camera(_live.stop);
-    try {
-      return await action();
-    } finally {
-      _pausedForRoute = false;
-      if (mounted) await _startCamera();
-    }
-  }
+  /// Outra tela (a câmera da etiqueta, o cadastro) precisa da câmera.
+  Future<T?> _withScannerPaused<T>(Future<T?> Function() action) =>
+      _cameraKey.currentState?.withScannerPaused(action) ?? action();
 
-  /// A lanterna falha se a câmera não abriu (sem permissão, por exemplo).
-  Future<void> _toggleTorch() => _camera(_live.toggleTorch);
-
-  /// Comandos da câmera que podem falhar sem derrubar a tela: o erro vai para
-  /// o relatório e o leitor segue como está.
-  Future<void> _camera(Future<void> Function() command) async {
-    try {
-      await command();
-    } on Exception catch (error, stack) {
-      _report(error, stack);
-    }
-  }
-
-  void _report(Exception error, StackTrace stack) => _reportAny(error, stack);
-
-  void _reportAny(Object error, StackTrace stack) =>
+  void _report(Object error, StackTrace stack) =>
       FlutterError.reportError(FlutterErrorDetails(exception: error, stack: stack, library: 'shopping_list'));
 
   @override
@@ -642,8 +490,6 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
     final summary = ref.watch(shoppingTripSummaryProvider);
     final marketName = ref.watch(activeTripMarketNameProvider);
     final notice = _notice;
-    final controller = _live.controller;
-    final previewSize = controller?.value.previewSize;
 
     // A compra ganhou mercado (aqui, na Lista ou pela localização): os
     // preços que esperavam vão para o histórico.
@@ -660,192 +506,115 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
 
     return Scaffold(
       backgroundColor: colors.camera,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // A prévia preenche a tela (cover); o recorte de cada quadro conta
-          // com isso (viewfinderInImage).
-          SizedBox.expand(
-            key: _previewKey,
-            child: controller == null || previewSize == null || !controller.value.isInitialized
-                ? null
-                : ClipRect(
-                    child: FittedBox(
-                      fit: BoxFit.cover,
-                      child: SizedBox(
-                        width: previewSize.height,
-                        height: previewSize.width,
-                        child: CameraPreview(controller),
-                      ),
-                    ),
-                  ),
+      body: LiveCamera(
+        key: _cameraKey,
+        onEvent: _onEvent,
+        notice: switch (notice) {
+          (:final price, :final detail, :final waiting)? => LiveReadChip(
+            // O preço que espera mostra o tempo que falta.
+            key: ValueKey((price, waiting)),
+            icon: waiting ? Icons.qr_code_scanner_rounded : Icons.sell_outlined,
+            price: price.format(),
+            detail: detail,
+            countdown: waiting ? _router.waitFor : null,
           ),
-          if (_cameraFailed)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s6),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      l10n.cartCameraFailed,
-                      textAlign: TextAlign.center,
-                      style: BipaText.label.copyWith(color: colors.onCamera),
-                    ),
-                    const SizedBox(height: BipaSpacing.s4),
-                    FilledButton.tonal(onPressed: _startCamera, child: Text(l10n.cartCameraRetry)),
-                  ],
-                ),
-              ),
-            )
-          else
-            Align(
-              alignment: const Alignment(0, -0.45),
-              // O tamanho fixo é o da moldura aberta: o recorte não muda quando
-              // ela trava. O aviso fica logo abaixo, sem empurrar a moldura.
-              child: SizedBox(
-                key: _viewfinderKey,
-                width: 260,
-                height: 150,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Center(child: ScanViewfinder(locked: _locked)),
-                    Positioned(
-                      top: 150 + BipaSpacing.s4,
-                      left: -BipaSpacing.s8 * 2,
-                      right: -BipaSpacing.s8 * 2,
-                      child: Center(
-                        child: switch ((notice, _cameraDenied)) {
-                          ((:final price, :final detail, :final waiting)?, _) => LiveReadChip(
-                            // O preço que espera mostra o tempo que falta.
-                            key: ValueKey((price, waiting)),
-                            icon: waiting ? Icons.qr_code_scanner_rounded : Icons.sell_outlined,
-                            price: price.format(),
-                            detail: detail,
-                            countdown: waiting ? _router.waitFor : null,
-                          ),
-                          (null, true) => Text(
-                            l10n.cartCameraDenied,
-                            textAlign: TextAlign.center,
-                            style: BipaText.label.copyWith(color: colors.onCamera),
-                          ),
-                          (null, false) when cart.isEmpty => Text(
-                            l10n.cartHint,
-                            textAlign: TextAlign.center,
-                            style: BipaText.label.copyWith(color: colors.onCamera),
-                          ),
-                          _ => const SizedBox.shrink(),
-                        },
-                      ),
-                    ),
-                  ],
+          null => null,
+        },
+        hint: cart.isEmpty ? l10n.cartHint : null,
+        topBar: (camera) => Row(
+          children: [
+            CameraGlassButton(icon: Icons.close_rounded, label: l10n.cartClose, onPressed: () => context.pop()),
+            const SizedBox(width: BipaSpacing.s2),
+            Expanded(
+              child: Center(
+                child: CameraGlassChip(
+                  icon: Icons.storefront_outlined,
+                  label: marketName ?? l10n.cartChooseMarket,
+                  onTap: () {
+                    if (trip != null) unawaited(_chooseMarket(trip));
+                  },
                 ),
               ),
             ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(BipaSpacing.s4, BipaSpacing.s4, BipaSpacing.s4, 0),
-              child: Row(
-                children: [
-                  CameraGlassButton(icon: Icons.close_rounded, label: l10n.cartClose, onPressed: () => context.pop()),
-                  const SizedBox(width: BipaSpacing.s2),
-                  Expanded(
-                    child: Center(
-                      child: CameraGlassChip(
-                        icon: Icons.storefront_outlined,
-                        label: marketName ?? l10n.cartChooseMarket,
-                        onTap: () {
-                          if (trip != null) unawaited(_chooseMarket(trip));
-                        },
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: BipaSpacing.s2),
-                  CameraGlassButton(
-                    icon: _live.torchOn ? Icons.flashlight_off_outlined : Icons.flashlight_on_outlined,
-                    label: l10n.cartTorch,
-                    onPressed: _toggleTorch,
-                  ),
-                ],
-              ),
+            const SizedBox(width: BipaSpacing.s2),
+            CameraGlassButton(
+              icon: camera.torchOn ? Icons.flashlight_off_outlined : Icons.flashlight_on_outlined,
+              label: l10n.cartTorch,
+              onPressed: camera.toggleTorch,
             ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: ScanTray(
-              title: l10n.cartTitle,
-              countLabel: summary == null || summary.total == 0 ? null : l10n.cartFromList(summary.done, summary.total),
-              totalLabel: l10n.cartTotal,
-              // Com preço do histórico no meio, o total é uma estimativa ("≈").
-              totalValue: summary?.spentLabel(l10n),
-              totalNote: (summary?.unpriced ?? 0) > 0 ? l10n.marketsMissingPrices(summary!.unpriced) : null,
-              maxListHeight: _trayExpanded ? MediaQuery.sizeOf(context).height * 0.55 : 196,
-              handleLabel: _trayExpanded ? l10n.cartTrayLess : l10n.cartTrayMore,
-              onHandleTap: () => setState(() => _trayExpanded = !_trayExpanded),
-              items: [
-                for (final entry in cart)
-                  ScanTrayItem(
-                    key: ValueKey(entry.item.id),
-                    name: entry.item.quantity > 1
-                        ? l10n.cartQuantity(entry.item.quantity, entry.name)
-                        : entry.name,
-                    price: switch (entry.item.price) {
-                      final price? when entry.item.priceEstimated => l10n.priceEstimate(price.format()),
-                      final price? => price.format(),
-                      null => null,
-                    },
-                    priceEstimated: entry.item.priceEstimated,
-                    onNameTap: () => _setQuantity(entry),
-                    nameTapLabel: l10n.cartQuantityOf(entry.name),
-                    justRead: entry.item.key == _justReadKey,
-                    take: entry.item.take,
-                    takeLabel: l10n.cartTake(entry.name),
-                    onTakeChanged: (take) => _setTake(entry, take: take),
-                    priceTapLabel: l10n.cartTypePrice,
-                    onPriceTap: () {
-                      if (trip != null) unawaited(_typePrice(trip, entry));
-                    },
-                  ),
-              ],
-              footer: Row(
-                children: [
-                  Expanded(
-                    child: Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: IconButton.filledTonal(
-                        // Digita o preço do último bipado: o rótulo diz qual.
-                        tooltip: cart.isEmpty ? l10n.cartTypePrice : l10n.cartTypePriceOf(cart.first.name),
-                        onPressed: trip == null || cart.isEmpty ? null : () => _typePrice(trip, cart.first),
-                        style: IconButton.styleFrom(
-                          backgroundColor: colors.surfaceSunken,
-                          foregroundColor: colors.ink,
-                          fixedSize: const Size.square(48),
-                        ),
-                        icon: const Icon(Icons.keyboard_alt_outlined),
-                      ),
-                    ),
-                  ),
-                  ShutterButton(label: l10n.cartPhotoTag, onPressed: _photographTag),
-                  Expanded(
-                    child: Align(
-                      alignment: AlignmentDirectional.centerEnd,
-                      child: FilledButton(
-                        onPressed: trip == null || _finishing ? null : () => _finish(trip),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: colors.ink,
-                          foregroundColor: colors.surface,
-                          minimumSize: const Size(0, 48),
-                        ),
-                        child: Text(l10n.tripFinish),
-                      ),
-                    ),
-                  ),
-                ],
+          ],
+        ),
+        bottom: ScanTray(
+          title: l10n.cartTitle,
+          countLabel: summary == null || summary.total == 0 ? null : l10n.cartFromList(summary.done, summary.total),
+          totalLabel: l10n.cartTotal,
+          // Com preço do histórico no meio, o total é uma estimativa ("≈").
+          totalValue: summary?.spentLabel(l10n),
+          totalNote: (summary?.unpriced ?? 0) > 0 ? l10n.marketsMissingPrices(summary!.unpriced) : null,
+          maxListHeight: _trayExpanded ? MediaQuery.sizeOf(context).height * 0.55 : 196,
+          handleLabel: _trayExpanded ? l10n.cartTrayLess : l10n.cartTrayMore,
+          onHandleTap: () => setState(() => _trayExpanded = !_trayExpanded),
+          items: [
+            for (final entry in cart)
+              ScanTrayItem(
+                key: ValueKey(entry.item.id),
+                name: entry.item.quantity > 1
+                    ? l10n.cartQuantity(entry.item.quantity, entry.name)
+                    : entry.name,
+                price: switch (entry.item.price) {
+                  final price? when entry.item.priceEstimated => l10n.priceEstimate(price.format()),
+                  final price? => price.format(),
+                  null => null,
+                },
+                priceEstimated: entry.item.priceEstimated,
+                onNameTap: () => _setQuantity(entry),
+                nameTapLabel: l10n.cartQuantityOf(entry.name),
+                justRead: entry.item.key == _justReadKey,
+                take: entry.item.take,
+                takeLabel: l10n.cartTake(entry.name),
+                onTakeChanged: (take) => _setTake(entry, take: take),
+                priceTapLabel: l10n.cartTypePrice,
+                onPriceTap: () {
+                  if (trip != null) unawaited(_typePrice(trip, entry));
+                },
               ),
-            ),
+          ],
+          footer: Row(
+            children: [
+              Expanded(
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: IconButton.filledTonal(
+                    // Digita o preço do último bipado: o rótulo diz qual.
+                    tooltip: cart.isEmpty ? l10n.cartTypePrice : l10n.cartTypePriceOf(cart.first.name),
+                    onPressed: trip == null || cart.isEmpty ? null : () => _typePrice(trip, cart.first),
+                    style: IconButton.styleFrom(
+                      backgroundColor: colors.surfaceSunken,
+                      foregroundColor: colors.ink,
+                      fixedSize: const Size.square(48),
+                    ),
+                    icon: const Icon(Icons.keyboard_alt_outlined),
+                  ),
+                ),
+              ),
+              ShutterButton(label: l10n.cartPhotoTag, onPressed: _photographTag),
+              Expanded(
+                child: Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: FilledButton(
+                    onPressed: trip == null || _finishing ? null : () => _finish(trip),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: colors.ink,
+                      foregroundColor: colors.surface,
+                      minimumSize: const Size(0, 48),
+                    ),
+                    child: Text(l10n.tripFinish),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
