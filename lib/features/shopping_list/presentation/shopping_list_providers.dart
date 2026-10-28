@@ -20,6 +20,7 @@ import 'package:bipa/features/shopping_list/domain/aisle_order.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/finish_shopping_trip.dart';
 import 'package:bipa/features/shopping_list/domain/put_product_on_list.dart';
+import 'package:bipa/features/shopping_list/domain/record_at_home.dart';
 import 'package:bipa/features/shopping_list/domain/review_shopping_trip.dart';
 import 'package:bipa/features/shopping_list/domain/scale_items.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
@@ -193,6 +194,16 @@ final scaleItemsProvider = Provider<ScaleItems>(
 /// "Pôr na lista" com o que falta para o "ter sempre".
 final putProductOnListProvider = Provider<PutProductOnList>(
   (ref) => PutProductOnList(list: ref.watch(shoppingListRepositoryProvider), stock: ref.watch(stockRepositoryProvider)),
+);
+
+/// Os bipes em casa ("Comprei" e "Usei") que fecham o ciclo com a lista.
+final recordAtHomeProvider = Provider<RecordAtHome>(
+  (ref) => RecordAtHome(
+    stock: ref.watch(stockRepositoryProvider),
+    list: ref.watch(shoppingListRepositoryProvider),
+    putOnList: ref.watch(putProductOnListProvider),
+    work: ref.watch(unitOfWorkProvider),
+  ),
 );
 
 final reviewShoppingTripProvider = Provider<ReviewShoppingTrip>(
