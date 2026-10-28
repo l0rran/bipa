@@ -39,7 +39,7 @@
 - [x] Ordem dos corredores aprendida por mercado, a partir da ordem em que a pessoa bipa e marca (ADR 0014)
 - [x] Preços da compra guardados com ela: sobrevivem ao fechamento do carrinho, esperam o mercado e vão junto quando ele muda (ADR 0020)
 - [x] Uma câmera só: o disparo e o teclado usam a câmera ao vivo e a folha "Conferir e salvar", aposentando o formulário "Bipar preço" e o leitor antigo
-- [ ] Quantidade na compra: "1 de 3" na lista e na bandeja, e o que faltou continua na lista
+- [x] Quantidade na compra: "1 de 3" na lista e na bandeja, e o que faltou continua na lista
 - [ ] Itens de sempre pelo ritmo de consumo (hoje são os produtos com "ter sempre")
 - [x] Fechar o ciclo: o que é bipado em "Comprei" sai da lista e entra no estoque (o "Terminei" do modo compra já faz isso com o que foi marcado)
 - [x] Sugestão de onde comprar a lista mais barata, comparando a lista inteira e mostrando a idade de cada preço
@@ -62,10 +62,8 @@ Primeira abertura e em casa:
 
 Lista e compra:
 
-- [ ] CE3: quantidade na compra (o item "Quantidade na compra" acima)
 - [ ] CE4: o marcado à mão entra no total pelo preço esperado, com "≈", ou como "sem preço"; a prévia da lista diz "sem preço de N"
 - [ ] CE5: sem localização, a compra começa no mercado que o chip da Lista mostra
-- [ ] CE6: tocar no "3×" muda a quantidade, e o campo entende "2 leite", "leite 2" e "2x leite"
 - [ ] CE7: "Cancelar compra" também no carrinho, e o menu da Lista no canto direito
 
 Câmera e modo carrinho:
@@ -91,7 +89,7 @@ Consistência e acessibilidade:
 - [ ] H5: as linhas de "Nos mercados" e da comparação abrem o mercado, e os alfinetes do mapa levam à linha
 - [ ] A barra de navegação encolhe ao rolar, como no design system
 - [ ] Movimento reduzido respeitado em todas as animações (barras da comparação e stepper)
-- [ ] Revisar no protótipo: "Modo carrinho: granel sem código", "Menu do bipar" com "Guardar em casa", "Mercados" com a idade dos preços e a pergunta "Levar os preços?", o mercado na "Confirmação" e o aviso tocável em "Modo carrinho: preço esperando"
+- [ ] Revisar no protótipo: "Modo carrinho: granel sem código", "Menu do bipar" com "Guardar em casa", "Mercados" com a idade dos preços e a pergunta "Levar os preços?", o mercado na "Confirmação", o aviso tocável em "Modo carrinho: preço esperando", o "1 de 2" no "Modo carrinho" e o "2× Leite" no "Fim da compra"
 
 ## Fase 2: base comunitária
 

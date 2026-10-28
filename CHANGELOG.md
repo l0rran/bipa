@@ -52,6 +52,8 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - Uma câmera só: o disparo do carrinho fotografa pela câmera ao vivo, "Registrar preço" na tela do produto abre a câmera em "Etiqueta" com o produto já escolhido, e o leitor de código do cadastro também usa a câmera ao vivo. Saem o formulário "Bipar preço", o leitor antigo e os pacotes `image_picker` e `mobile_scanner`.
 - Os avisos de espera são botões: o preço que espera o produto abre a escolha pelo nome lido, e na câmera o produto que espera a etiqueta oferece "Digitar preço" e "Guardar em casa".
 - A folha "Conferir e salvar" mostra o mercado do preço, e tocar nele troca.
+- Quantidade na compra: o item da lista só fica marcado quando o carrinho alcança a quantidade dela. Antes, a lista e a bandeja mostram "1 de 3", e o "Terminei" deixa na lista o que faltou, citado na folha "Fim da compra" ("2× Leite").
+- Tocar na quantidade do item da lista a muda, e o campo de adicionar entende "2 leite", "leite 2" e "2x leite".
 
 ### Corrigido
 - Leitura da etiqueta: centavos sobrescritos lidos à parte, milhar ("1.299,90"), preço seguido de KG ou UN, parcelas confundidas com o preço, dígitos espaçados pelo OCR e rótulos como "LEVE 3 PAGUE 2" tomados pelo nome do produto.
