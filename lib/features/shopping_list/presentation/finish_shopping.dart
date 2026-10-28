@@ -31,7 +31,8 @@ Future<void> finishShopping(BuildContext context, WidgetRef ref, String tripId) 
     }
     final summary = await review(tripId);
     if (summary == null || !context.mounted) return;
-    switch (await showTripReview(context, summary)) {
+    final end = await showTripReview(context, summary);
+    switch (end) {
       case null:
         return;
       case TripEnd.cancel:

@@ -558,10 +558,11 @@ class _CameraPageState extends ConsumerState<CameraPage> {
     if (change.list is ListUnchanged) {
       // Só o estoque mudou, e o aviso já diz isso: o Desfazer fica nele, sem
       // repetir o fato num snackbar que esconderia o do bipe anterior (D7).
+      final homeChange = change;
       Future<void> undo() async {
         _clearNotice();
         try {
-          await record.undo(change);
+          await record.undo(homeChange);
         } on Exception {
           messenger.showSnackBar(SnackBar(content: Text(l10n.cameraAdjustFailed)));
         }
@@ -701,10 +702,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
                           ),
                         ),
                       ),
-                      ShutterButton(
-                        label: l10n.cartPhotoTag,
-                        onPressed: _shoot,
-                      ),
+                      ShutterButton(label: l10n.cartPhotoTag, onPressed: _shoot),
                       Expanded(
                         child: Align(
                           alignment: AlignmentDirectional.centerEnd,
