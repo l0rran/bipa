@@ -34,6 +34,19 @@ void main() {
       expect(scan.add(_frame(600, tag: _tag(2790))), [const TagPriceRead(price: Money.cents(2790))]);
     });
 
+    test('o preço por quilo da etiqueta vai junto: é granel', () {
+      const kilo = PriceTagReading(
+        price: Money.cents(899),
+        offers: [PriceOffer(price: Money.cents(899))],
+        candidates: [Money.cents(899)],
+        perKilo: true,
+      );
+
+      final events = _run(LiveScanInterpreter(), _frames(0, 600, tag: kilo));
+
+      expect(events, [const TagPriceRead(price: Money.cents(899), perKilo: true)]);
+    });
+
     test('um dígito errado num quadro não conta para o preço certo', () {
       final events = _run(LiveScanInterpreter(), [
         _frame(0, tag: _tag(2790)),

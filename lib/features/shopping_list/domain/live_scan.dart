@@ -47,7 +47,13 @@ final class ProductScanned extends LiveScanEvent {
 /// Uma etiqueta foi lida: o mesmo preço de varejo se repetiu em quadros
 /// seguidos. [barcode] é o código impresso na etiqueta, quando havia um.
 final class TagPriceRead extends LiveScanEvent {
-  const TagPriceRead({required this.price, this.barcode, this.nameHint, this.otherOffers = const []});
+  const TagPriceRead({
+    required this.price,
+    this.barcode,
+    this.nameHint,
+    this.otherOffers = const [],
+    this.perKilo = false,
+  });
 
   final Money price;
   final String? barcode;
@@ -59,16 +65,20 @@ final class TagPriceRead extends LiveScanEvent {
   /// Os outros preços da mesma etiqueta (cartão, atacado), para o histórico.
   final List<PriceOffer> otherOffers;
 
+  /// O preço é por quilo: granel (ADR 0018).
+  final bool perKilo;
+
   @override
   bool operator ==(Object other) =>
       other is TagPriceRead &&
       other.price == price &&
       other.barcode == barcode &&
       other.nameHint == nameHint &&
+      other.perKilo == perKilo &&
       _sameOffers(other.otherOffers, otherOffers);
 
   @override
-  int get hashCode => Object.hash(price, barcode, nameHint, Object.hashAll(otherOffers));
+  int get hashCode => Object.hash(price, barcode, nameHint, perKilo, Object.hashAll(otherOffers));
 
   @override
   String toString() => 'TagPriceRead($price, $barcode, $otherOffers)';
@@ -241,6 +251,8 @@ final class LiveScanInterpreter {
         for (final offer in frame.tag.offers)
           if (offer.condition is! AnyCustomer) offer,
       ],
+      // O "por quilo" é do preço principal, que é o de varejo.
+      perKilo: frame.tag.perKilo && frame.tag.offers.firstOrNull?.condition is AnyCustomer,
     );
   }
 
