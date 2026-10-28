@@ -570,9 +570,17 @@ class CameraGlassChip extends StatelessWidget {
 
 /// Aviso da leitura ao vivo sobre a câmera (protótipo "Modo carrinho: preço
 /// lido"): o preço da etiqueta em destaque e, ao lado, o item que o recebeu
-/// ou o que falta fazer. Não é tocável; o leitor de tela anuncia a mudança.
+/// ou o que falta fazer. O leitor de tela anuncia a mudança. Só é tocável com
+/// [onTap] (protótipo "Modo carrinho: granel sem código").
 class LiveReadChip extends StatelessWidget {
-  const LiveReadChip({required this.icon, required this.detail, this.price, this.countdown, super.key});
+  const LiveReadChip({
+    required this.icon,
+    required this.detail,
+    this.price,
+    this.countdown,
+    this.onTap,
+    super.key,
+  });
 
   final IconData icon;
 
@@ -586,11 +594,18 @@ class LiveReadChip extends StatelessWidget {
   /// O nome do item ou "bipe o produto".
   final String detail;
 
+  /// Com ele, o aviso vira botão (com a seta): o granel sem código, que não
+  /// tem o que bipar, escolhe o produto por aqui (ADR 0018).
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    return Semantics(
+    final onTap = this.onTap;
+    final chip = Semantics(
       liveRegion: true,
+      button: onTap != null,
+      onTap: onTap,
       label: [?price, detail].join(', '),
       excludeSemantics: true,
       child: ClipRRect(
@@ -625,12 +640,18 @@ class LiveReadChip extends StatelessWidget {
                     style: BipaText.caption.copyWith(color: colors.onCamera.withValues(alpha: 0.75)),
                   ),
                 ),
+                if (onTap != null) ...[
+                  const SizedBox(width: BipaSpacing.s1),
+                  Icon(Icons.chevron_right_rounded, size: 20, color: colors.onCamera),
+                ],
               ],
             ),
           ),
         ),
       ),
     );
+    // Tocável, a área de toque tem 48 de altura, como a dos outros botões.
+    return onTap == null ? chip : TapTarget(onTap: onTap, child: chip);
   }
 }
 

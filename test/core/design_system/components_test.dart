@@ -483,4 +483,16 @@ void main() {
     expect(find.byIcon(Icons.error_outline_rounded), findsOneWidget);
     expect(find.text('Escolha o mercado para registrar o preço.'), findsOneWidget);
   });
+
+  testWidgets('o aviso da câmera tocável mostra a seta e responde no toque', (tester) async {
+    var taps = 0;
+    await tester.pumpWidget(
+      _app(LiveReadChip(icon: Icons.sell_outlined, price: r'R$ 8,99/kg', detail: 'Tomate italiano?', onTap: () => taps++)),
+    );
+
+    expect(find.byIcon(Icons.chevron_right_rounded), findsOneWidget);
+    expect(tester.getSize(find.byType(LiveReadChip)).height, 48);
+    await tester.tap(find.text('Tomate italiano?'));
+    expect(taps, 1);
+  });
 }
