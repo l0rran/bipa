@@ -14,6 +14,10 @@ abstract interface class ShoppingListRepository {
 
   Future<void> setChecked(String itemId, {required bool checked});
 
+  /// Marca como comprado o produto, se ele está na lista e ainda falta. É o
+  /// que acontece quando a pessoa registra o preço dele durante a compra.
+  Future<void> checkProduct(String productId);
+
   Future<void> remove(String itemId);
 
   /// Tira o produto da lista, esteja ele comprado ou não.

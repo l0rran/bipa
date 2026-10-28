@@ -74,6 +74,13 @@ final class DriftShoppingListRepository implements ShoppingListRepository {
       _write(itemId, ShoppingListItemsCompanion(checkedAt: Value(checked ? _clock() : null)));
 
   @override
+  Future<void> checkProduct(String productId) async {
+    await (_db.update(_db.shoppingListItems)
+          ..where((t) => t.productId.equals(productId) & t.checkedAt.isNull()))
+        .write(ShoppingListItemsCompanion(checkedAt: Value(_clock())));
+  }
+
+  @override
   Future<void> remove(String itemId) async {
     await (_db.delete(_db.shoppingListItems)..where((t) => t.id.equals(itemId))).go();
   }

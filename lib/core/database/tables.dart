@@ -118,3 +118,15 @@ class ShoppingListItems extends Table {
   @override
   Set<Column<Object>> get primaryKey => {id};
 }
+
+/// Idas ao mercado (o modo compra). Privadas, como a lista.
+@DataClassName('ShoppingTripRow')
+class ShoppingTrips extends Table {
+  TextColumn get id => text()();
+  TextColumn get marketId => text().nullable().references(Markets, #id, onDelete: KeyAction.setNull)();
+  DateTimeColumn get startedAt => dateTime()();
+  DateTimeColumn get finishedAt => dateTime().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
