@@ -57,6 +57,8 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - Sem localização, a compra começa no mercado que o chip da Lista mostrava, o da última compra.
 - "Cancelar compra" também na folha "Fim da compra", que o "Terminei" do carrinho abre; na Lista, o menu passa para a direita.
 - O editor da linha do Início ganhou "⋯" (mais do item), que leva ao local, a "Tirar de casa" e ao produto sem passar pelo chip do "ter sempre".
+- Ao fechar a linha do Início, se o stepper levou o item abaixo do "ter sempre" (ou de volta a ele), um aviso oferece "Pôr na lista" (ou "Tirar da lista").
+- A linha que recebe "Usei um" fica no lugar enquanto o aviso aparece, e só depois vai para "Acabando".
 
 ### Corrigido
 - Leitura da etiqueta: centavos sobrescritos lidos à parte, milhar ("1.299,90"), preço seguido de KG ou UN, parcelas confundidas com o preço, dígitos espaçados pelo OCR e rótulos como "LEVE 3 PAGUE 2" tomados pelo nome do produto.

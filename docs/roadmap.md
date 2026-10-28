@@ -55,8 +55,6 @@ Os achados da [análise de UX](https://claude.ai/artifact/VeoUk6VjBSRWCox1prVyMr
 
 Primeira abertura e em casa:
 
-- [ ] AB1: ao fechar o editor do item, se o stepper cruzou o "ter sempre", um aviso oferece "Pôr na lista" ou "Tirar da lista"
-- [ ] AB3: a linha deslizada em "Usei um" fica no lugar, com o anel já coral, enquanto o aviso está na tela, e só depois vai para "Acabando"
 - [ ] AB5: primeira carga que configura: folha "Arrumar o que entrou" com local e "ter sempre", ou o local sugerido pela categoria
 
 Lista e compra:
