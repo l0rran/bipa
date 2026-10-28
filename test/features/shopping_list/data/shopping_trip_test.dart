@@ -16,6 +16,7 @@ import 'package:bipa/features/shopping_list/data/drift_cart_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_list_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_trip_repository.dart';
 import 'package:bipa/features/shopping_list/domain/aisle_order.dart';
+import 'package:bipa/features/shopping_list/domain/cancel_shopping_trip.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/finish_shopping_trip.dart';
 import 'package:bipa/features/shopping_list/domain/review_shopping_trip.dart';
@@ -157,18 +158,48 @@ void main() {
     expect(await review('outra'), isNull);
   });
 
-  test('cancelar a compra descarta o carrinho e não mexe no estoque nem na lista', () async {
+  test('cancelar a compra descarta o carrinho, não mexe no estoque e desmarca o que foi marcado nela', () async {
+    await list.addProduct(productId: 'arroz', name: 'Arroz');
+    await list.checkProduct('arroz');
+    now = now.add(const Duration(hours: 1));
     final trip = await trips.start();
     await list.addProduct(productId: 'cafe', name: 'Café');
     await cart.addProduct(trip.id, 'cafe');
     await list.checkProduct('cafe');
 
-    await trips.cancel(trip.id);
+    await CancelShoppingTrip(trips: trips, list: list, work: DriftUnitOfWork(db))(trip.id);
 
     expect(await trips.watchActive().first, isNull);
     expect(await cart.watchTrip(trip.id).first, isEmpty);
     expect(await stock.findByProduct('cafe'), isNull);
-    expect((await list.watchAll().first).single.item.isChecked, isTrue);
+    final checked = {for (final entry in await list.watchAll().first) entry.name: entry.item.isChecked};
+    // O café foi marcado nesta compra e volta a faltar; o arroz, de antes, fica.
+    expect(checked, {'Arroz': true, 'Café': false});
+  });
+
+  test('o marcado antes da compra não vai para casa nem sai da lista no "Terminei"', () async {
+    await list.addProduct(productId: 'arroz', name: 'Arroz');
+    await list.checkProduct('arroz');
+    now = now.add(const Duration(days: 2));
+    final trip = await trips.start();
+    await list.addProduct(productId: 'cafe', name: 'Café');
+    await list.checkProduct('cafe');
+    final review = ReviewShoppingTrip(
+      trips: trips,
+      list: list,
+      cart: cart,
+      prices: DriftPriceRepository(db),
+      products: DriftProductRepository(db),
+    );
+
+    expect((await review(trip.id))!.packages, 1);
+
+    final finished = (await finish(trip.id))!;
+
+    expect(finished.stocked, {'cafe': 1});
+    expect(await stock.findByProduct('arroz'), isNull);
+    final left = (await list.watchAll().first).single;
+    expect((left.name, left.item.isChecked), ('Arroz', true));
   });
 
   test('um segundo "Terminei" não mexe no estoque de novo', () async {

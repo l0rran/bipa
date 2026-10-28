@@ -17,6 +17,7 @@ import 'package:bipa/features/shopping_list/data/drift_shopping_list_repository.
 import 'package:bipa/features/shopping_list/data/drift_shopping_trip_repository.dart';
 import 'package:bipa/features/shopping_list/data/mlkit_live_frame_analyzer.dart';
 import 'package:bipa/features/shopping_list/domain/aisle_order.dart';
+import 'package:bipa/features/shopping_list/domain/cancel_shopping_trip.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/finish_shopping_trip.dart';
 import 'package:bipa/features/shopping_list/domain/put_product_on_list.dart';
@@ -223,6 +224,15 @@ final finishShoppingTripProvider = Provider<FinishShoppingTrip>(
     cart: ref.watch(cartRepositoryProvider),
     stock: ref.watch(stockRepositoryProvider),
     aisles: ref.watch(aisleOrderRepositoryProvider),
+    work: ref.watch(unitOfWorkProvider),
+  ),
+);
+
+/// "Cancelar compra": o carrinho sai, e o marcado na compra volta a faltar.
+final cancelShoppingTripProvider = Provider<CancelShoppingTrip>(
+  (ref) => CancelShoppingTrip(
+    trips: ref.watch(shoppingTripRepositoryProvider),
+    list: ref.watch(shoppingListRepositoryProvider),
     work: ref.watch(unitOfWorkProvider),
   ),
 );

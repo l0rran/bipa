@@ -22,7 +22,9 @@ final class TripReview {
   });
 
   /// Monta a revisão com a lista, o carrinho e os preços dos produtos da
-  /// compra em cada mercado ([referencePricesPerMarket]).
+  /// compra em cada mercado ([referencePricesPerMarket]). Com [since] (o
+  /// começo da compra), o que foi marcado antes não vai para casa nem conta
+  /// como faltando, como no "Terminei".
   ///
   /// A economia só aparece quando este mercado e outro têm preço de tudo o
   /// que vai para casa, e este saiu mais barato: comparar cestas diferentes
@@ -32,6 +34,7 @@ final class TripReview {
     required Iterable<CartEntry> cart,
     String? marketId,
     Map<String, MarketPrices> prices = const {},
+    DateTime? since,
   }) {
     Money? spent;
     var estimated = false;
@@ -57,7 +60,8 @@ final class TripReview {
       final item = entry.item;
       if (!item.isChecked) {
         missing.add(entry.name);
-      } else if (item.productId case final productId? when !inCart.contains(productId)) {
+      } else if (item.productId case final productId?
+          when !inCart.contains(productId) && (since == null || item.isCheckedSince(since))) {
         // Marcado à mão, sem passar pelo carrinho: vai com a quantidade da lista.
         quantities[productId] = item.quantity;
         packages += item.quantity;

@@ -38,7 +38,7 @@ final class ReviewShoppingTrip {
     final productIds = {
       for (final entry in cart) entry.item.productId,
       for (final entry in entries)
-        if (entry.item.isChecked) ?entry.item.productId,
+        if (entry.item.isCheckedSince(trip.startedAt)) ?entry.item.productId,
     };
     final history = await _prices.watchHistoryOfProducts(productIds).first;
     final packages = await _products.watchPackagesOfProducts(productIds).first;
@@ -47,6 +47,7 @@ final class ReviewShoppingTrip {
       entries: entries,
       cart: cart,
       marketId: trip.marketId,
+      since: trip.startedAt,
       prices: referencePricesPerMarket(
         productIds,
         history,

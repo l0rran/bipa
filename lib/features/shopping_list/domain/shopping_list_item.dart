@@ -31,6 +31,11 @@ final class ShoppingListItem {
 
   bool get isChecked => checkedAt != null;
 
+  /// Marcado a partir de [since], como o que foi comprado numa compra que
+  /// começou nessa hora. O marcado antes (em casa, ou numa compra cancelada
+  /// de antes) não conta como desta compra.
+  bool isCheckedSince(DateTime since) => checkedAt case final at? when !at.isBefore(since);
+
   @override
   bool operator ==(Object other) =>
       other is ShoppingListItem &&

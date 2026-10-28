@@ -166,10 +166,11 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
       );
   }
 
-  /// "Cancelar compra": confirma e desiste; o carrinho é descartado.
+  /// "Cancelar compra": confirma e desiste; o carrinho é descartado, e o
+  /// marcado na compra volta a faltar.
   Future<void> _cancelTrip(ShoppingTrip trip) async {
     final l10n = AppLocalizations.of(context);
-    final trips = ref.read(shoppingTripRepositoryProvider);
+    final cancel = ref.read(cancelShoppingTripProvider);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -181,7 +182,7 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
         ],
       ),
     );
-    if (confirmed == true) await trips.cancel(trip.id);
+    if (confirmed == true) await cancel(trip.id);
   }
 
   Future<void> _finish(ShoppingTrip trip) async {

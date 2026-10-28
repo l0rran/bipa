@@ -664,7 +664,7 @@
   "listTripMore": "Mais opções da compra",
   "tripCancel": "Cancelar compra",
   "tripCancelTitle": "Cancelar a compra?",
-  "tripCancelBody": "O carrinho é descartado e nada vai para o estoque. A lista continua como está.",
+  "tripCancelBody": "O carrinho é descartado e nada vai para o estoque. O que foi marcado nesta compra volta a faltar na lista.",
   "tripKeep": "Continuar comprando",
   "listCheckedRemoved": "{count, plural, =1{1 item saiu da lista} other{{count} itens saíram da lista}}",
   "@listCheckedRemoved": {

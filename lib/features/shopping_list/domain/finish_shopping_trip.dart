@@ -41,8 +41,9 @@ final class FinishedShoppingTrip {
 }
 
 /// Caso de uso: termina a compra. Entra no estoque o que está no carrinho
-/// para levar (na quantidade bipada) e o que foi marcado à mão na lista (uma
-/// embalagem). O marcado sai da lista; o que faltou continua nela.
+/// para levar (na quantidade bipada) e o que foi marcado à mão na lista
+/// durante a compra (com a quantidade da lista). O marcado na compra sai da
+/// lista; o que faltou, e o que já estava marcado antes, continuam nela.
 final class FinishShoppingTrip {
   FinishShoppingTrip({
     required ShoppingTripRepository trips,
@@ -76,9 +77,11 @@ final class FinishShoppingTrip {
 
     final cart = await _cart.watchTrip(tripId).first;
     final entries = await _list.watchAll().first;
+    // Só o que foi marcado durante esta compra: o marcado antes não foi
+    // comprado agora e fica na lista como está.
     final bought = [
       for (final entry in entries)
-        if (entry.item.isChecked) entry.item,
+        if (entry.item.isCheckedSince(active.startedAt)) entry.item,
     ];
 
     // Cada embalagem do carrinho entra no estoque do seu produto; embalagens
@@ -118,7 +121,9 @@ final class FinishShoppingTrip {
       }
       final marketId = active.marketId;
       final aisleOrderBefore = marketId == null ? null : await _learnAisles(marketId, active, bought, cart);
-      await _list.removeChecked();
+      for (final item in bought) {
+        await _list.remove(item.id);
+      }
       return FinishedShoppingTrip(
         tripId: tripId,
         bought: bought,
@@ -141,8 +146,7 @@ final class FinishShoppingTrip {
   ) async {
     final picks = <AislePick>[
       for (final item in bought)
-        if (item.checkedAt case final at? when !at.isBefore(trip.startedAt))
-          (aisle: ProductKind.of(item.name).aisle, at: at),
+        if (item.checkedAt case final at?) (aisle: ProductKind.of(item.name).aisle, at: at),
     ];
     // O que foi bipado sem estar na lista entra pelo horário do bipe.
     final onList = {for (final item in bought) item.productId};
