@@ -104,3 +104,17 @@ class StockMovements extends Table {
   @override
   Set<Column<Object>> get primaryKey => {id};
 }
+
+/// Lista de compras: privada, nunca sincronizada (ADR 0007), por isso sem
+/// `syncedAt`. Itens escritos à mão não têm produto.
+@DataClassName('ShoppingListItemRow')
+class ShoppingListItems extends Table {
+  TextColumn get id => text()();
+  TextColumn get productId => text().nullable().references(Products, #id, onDelete: KeyAction.cascade)();
+  TextColumn get name => text().withLength(min: 1, max: 160)();
+  DateTimeColumn get addedAt => dateTime()();
+  DateTimeColumn get checkedAt => dateTime().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
