@@ -21,11 +21,12 @@
 - [ ] Protótipo da confirmação com mais de um preço na etiqueta (hoje a captura mostra os outros preços como chips)
 - [x] Etiqueta de gôndola com "/kg" e sem código: ler a unidade no `PriceTagParser` e escolher o produto pelo nome (ADR 0018)
 - [ ] Testar o OCR com fotos nítidas de etiquetas reais e acrescentá-las a `tool/ocr_bench/etiquetas_reais.py`
-- [ ] Revisar e fechar o modelo dos dados (tabelas, ids, o que é privado e o que sincroniza, o que pode ser apagado) num ADR, antes do backup
+- [ ] Revisar e fechar o modelo dos dados (tabelas, ids, o que é privado e o que sincroniza, o que pode ser apagado, e o catálogo pronto separado dos dados da pessoa) num ADR, antes do backup
 
 ## Fase 1: MVP para uso pessoal
 
 - [ ] Importar cupom fiscal (QR Code da NFC-e) com fila offline: registra os preços e abastece o estoque, e serve de onboarding
+- [ ] Catálogo pronto de produtos do mercado brasileiro: o app já vem com nome, marca, tamanho e categoria por código de barras, e bipar um produto conhecido não abre o cadastro. Pede um ADR de fonte e licença: a [Open Food Facts](https://openfoodfacts.github.io/documentation/docs/Product-Opener/api/tutorials/license-be-on-the-legal-side/) é aberta (ODbL na base, CC BY-SA nas imagens), mas exige atribuição e compartilhar a base derivada na mesma licença; o [Cadastro Nacional de Produtos da GS1 Brasil](https://gs1br.org/educacao-e-eventos/Documents/API%20de%20Cadastro%20e%20Consulta%20CNP_v3.pdf) e o Cosmos da Bluesoft precisam ter os termos de acesso e reuso conferidos. Decidir também o recorte (só produtos vendidos no Brasil), o tamanho no APK ou o download na primeira abertura, e a atualização
 - [x] Modos do bipar: "Preço" no mercado, "Comprei" e "Usei" em casa, com a embalagem vazia pondo na lista ao dar baixa (ADR 0019)
 - [x] Desfazer em toda ação de passagem que muda o estoque (bipes e gestos); os steppers se desfazem no próprio botão (ADR 0019); cada item bipado é salvo na hora
 - [x] Lista de compras: itens de produto ou escritos à mão, os itens de sempre (os com "ter sempre"), seções do mercado, preço esperado e total estimado; "Pôr na lista" no Início
