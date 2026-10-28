@@ -297,5 +297,6 @@
       }
     }
   },
-  "cancel": "Cancelar"
+  "cancel": "Cancelar",
+  "cartPriceFailed": "Não deu para guardar o preço. Tente de novo."
 }

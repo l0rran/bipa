@@ -116,8 +116,11 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
 
   Future<void> _finish(ShoppingTrip trip) async {
     setState(() => _finishing = true);
-    await finishShopping(context, ref, trip.id);
-    if (mounted) setState(() => _finishing = false);
+    try {
+      await finishShopping(context, ref, trip.id);
+    } finally {
+      if (mounted) setState(() => _finishing = false);
+    }
   }
 
   /// Marcar na lista durante a compra também decide se o item do carrinho

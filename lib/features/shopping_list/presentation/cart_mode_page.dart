@@ -36,7 +36,7 @@ class CartModePage extends ConsumerStatefulWidget {
   ConsumerState<CartModePage> createState() => _CartModePageState();
 }
 
-class _CartModePageState extends ConsumerState<CartModePage> {
+class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBindingObserver {
   final _scanner = MobileScannerController(
     formats: const [BarcodeFormat.ean13, BarcodeFormat.ean8, BarcodeFormat.upcA, BarcodeFormat.upcE],
   );
@@ -51,8 +51,34 @@ class _CartModePageState extends ConsumerState<CartModePage> {
   Timer? _unlock;
   var _finishing = false;
 
+  /// Outra tela está usando a câmera: o leitor não volta sozinho ao app
+  /// voltar do fundo.
+  var _pausedForRoute = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  /// Com um controller próprio, o MobileScanner não acompanha o ciclo de vida
+  /// do app: a câmera para no fundo e volta ao reabrir.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_pausedForRoute) return;
+    switch (state) {
+      case AppLifecycleState.resumed:
+        unawaited(_camera(_scanner.start));
+      case AppLifecycleState.inactive || AppLifecycleState.paused || AppLifecycleState.hidden:
+        unawaited(_camera(_scanner.stop));
+      case AppLifecycleState.detached:
+        break;
+    }
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _unlock?.cancel();
     // Sem await: o dispose do leitor é assíncrono em algumas versões do plugin.
     _scanner.dispose();
@@ -65,20 +91,25 @@ class _CartModePageState extends ConsumerState<CartModePage> {
       final code = barcode.rawValue;
       if (code == null || !Gtin.isValid(code)) continue;
       final last = _lastSeen[code];
-      if (last != null && now.difference(last) < _rescanPause) return;
+      // A pausa se renova enquanto o código continua no visor: bipar de novo
+      // exige tirar o produto da frente da câmera.
       _lastSeen[code] = now;
+      if (last != null && now.difference(last) < _rescanPause) return;
       unawaited(_onCode(code));
       return;
     }
   }
 
   Future<void> _onCode(String code) async {
-    final product = await ref.read(productRepositoryProvider).findByBarcode(code);
-    if (!mounted) return;
-    if (product != null) {
-      await _addToCart(product);
+    final Product? product;
+    try {
+      product = await ref.read(productRepositoryProvider).findByBarcode(code);
+      if (product != null && mounted) await _addToCart(product);
+    } on Exception catch (error, stack) {
+      _report(error, stack);
       return;
     }
+    if (product != null || !mounted) return;
     final l10n = AppLocalizations.of(context);
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -91,6 +122,8 @@ class _CartModePageState extends ConsumerState<CartModePage> {
   }
 
   Future<void> _register(String code) async {
+    // O aviso pode ser tocado depois de o carrinho fechar.
+    if (!mounted) return;
     final product = await _withScannerPaused(
       () => context.push<Product>(Routes.newProduct, extra: ProductFormArgs(barcode: code)),
     );
@@ -121,60 +154,49 @@ class _CartModePageState extends ConsumerState<CartModePage> {
   }
 
   Future<void> _setTake(CartEntry entry, {required bool take}) async {
-    await ref.read(cartRepositoryProvider).setTake(entry.item.id, take: take);
+    final cart = ref.read(cartRepositoryProvider);
     final list = ref.read(shoppingListRepositoryProvider);
-    await (take ? list.checkProduct(entry.product.id) : list.uncheckProduct(entry.product.id));
+    try {
+      await cart.setTake(entry.item.id, take: take);
+      await (take ? list.checkProduct(entry.product.id) : list.uncheckProduct(entry.product.id));
+    } on Exception catch (error, stack) {
+      _report(error, stack);
+    }
   }
 
   /// Digitar o preço de um item: ele é registrado no histórico (no mercado da
   /// compra) e vale para o carrinho.
   Future<void> _typePrice(ShoppingTrip trip, CartEntry entry) async {
+    // Lidos antes dos awaits: o carrinho pode fechar no meio do caminho.
     final l10n = AppLocalizations.of(context);
-    final price = await _askPrice(entry.product.name, entry.item.price);
+    final messenger = ScaffoldMessenger.of(context);
+    final trips = ref.read(shoppingTripRepositoryProvider);
+    final register = ref.read(registerPriceObservationProvider);
+    final cart = ref.read(cartRepositoryProvider);
+
+    final price = await showDialog<Money>(
+      context: context,
+      builder: (_) => _PriceDialog(title: l10n.cartPriceTitle(entry.product.name), initial: entry.item.price),
+    );
     if (price == null || !mounted) return;
 
     var marketId = trip.marketId;
     if (marketId == null) {
       marketId = (await _withScannerPaused(() => pickMarket(context)))?.id;
       if (marketId == null) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.cartNeedMarket)));
+        messenger.showSnackBar(SnackBar(content: Text(l10n.cartNeedMarket)));
         return;
       }
-      await ref.read(shoppingTripRepositoryProvider).setMarket(trip.id, marketId);
     }
-    await ref.read(registerPriceObservationProvider).call(
-      RegisterPriceInput(marketId: marketId, productId: entry.product.id, price: price, source: PriceSource.manual),
-    );
-    await ref.read(cartRepositoryProvider).setPrice(entry.item.id, price);
-  }
-
-  Future<Money?> _askPrice(String name, Money? current) {
-    final l10n = AppLocalizations.of(context);
-    final controller = TextEditingController(text: current?.formatDecimal() ?? '');
-    return showDialog<Money>(
-      context: context,
-      builder: (context) {
-        void submit() {
-          final money = Money.tryParse(controller.text);
-          if (money != null && money.isPositive) Navigator.of(context).pop(money);
-        }
-
-        return AlertDialog(
-          title: Text(l10n.cartPriceTitle(name)),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(prefixText: r'R$ '),
-            onSubmitted: (_) => submit(),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.cancel)),
-            FilledButton(onPressed: submit, child: Text(l10n.save)),
-          ],
-        );
-      },
-    ).whenComplete(controller.dispose);
+    try {
+      if (trip.marketId == null) await trips.setMarket(trip.id, marketId);
+      await register(
+        RegisterPriceInput(marketId: marketId, productId: entry.product.id, price: price, source: PriceSource.manual),
+      );
+      await cart.setPrice(entry.item.id, price);
+    } on Exception {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.cartPriceFailed)));
+    }
   }
 
   Future<void> _chooseMarket(ShoppingTrip trip) async {
@@ -187,20 +209,41 @@ class _CartModePageState extends ConsumerState<CartModePage> {
 
   Future<void> _finish(ShoppingTrip trip) async {
     setState(() => _finishing = true);
-    await finishShopping(context, ref, trip.id);
-    if (mounted) setState(() => _finishing = false);
+    try {
+      await finishShopping(context, ref, trip.id);
+    } finally {
+      if (mounted) setState(() => _finishing = false);
+    }
   }
 
   /// Outra tela (a câmera da etiqueta, o cadastro) precisa da câmera, e o
   /// leitor não pode continuar lendo por baixo dela.
   Future<T?> _withScannerPaused<T>(Future<T?> Function() action) async {
-    await _scanner.stop();
+    _pausedForRoute = true;
+    await _camera(_scanner.stop);
     try {
       return await action();
     } finally {
-      if (mounted) await _scanner.start();
+      _pausedForRoute = false;
+      if (mounted) await _camera(_scanner.start);
     }
   }
+
+  /// A lanterna falha se a câmera não abriu (sem permissão, por exemplo).
+  Future<void> _toggleTorch() => _camera(_scanner.toggleTorch);
+
+  /// Comandos da câmera que podem falhar sem derrubar a tela: o erro vai para
+  /// o relatório e o leitor segue como está.
+  Future<void> _camera(Future<void> Function() command) async {
+    try {
+      await command();
+    } on Exception catch (error, stack) {
+      _report(error, stack);
+    }
+  }
+
+  void _report(Exception error, StackTrace stack) =>
+      FlutterError.reportError(FlutterErrorDetails(exception: error, stack: stack, library: 'shopping_list'));
 
   @override
   Widget build(BuildContext context) {
@@ -259,7 +302,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
                   CameraGlassButton(
                     icon: Icons.flashlight_on_outlined,
                     label: l10n.cartTorch,
-                    onPressed: () => _scanner.toggleTorch(),
+                    onPressed: _toggleTorch,
                   ),
                 ],
               ),
@@ -327,6 +370,52 @@ class _CartModePageState extends ConsumerState<CartModePage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// O diálogo de digitar o preço, dono do próprio campo: o controller só é
+/// descartado quando o diálogo sai da árvore, depois da animação.
+class _PriceDialog extends StatefulWidget {
+  const _PriceDialog({required this.title, this.initial});
+
+  final String title;
+  final Money? initial;
+
+  @override
+  State<_PriceDialog> createState() => _PriceDialogState();
+}
+
+class _PriceDialogState extends State<_PriceDialog> {
+  late final _controller = TextEditingController(text: widget.initial?.formatDecimal() ?? '');
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final money = Money.tryParse(_controller.text);
+    if (money != null && money.isPositive) Navigator.of(context).pop(money);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text(widget.title),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: const InputDecoration(prefixText: r'R$ '),
+        onSubmitted: (_) => _submit(),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.cancel)),
+        FilledButton(onPressed: _submit, child: Text(l10n.save)),
+      ],
     );
   }
 }
