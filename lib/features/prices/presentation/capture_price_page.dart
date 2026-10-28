@@ -56,8 +56,8 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
   String? _photoPath;
   List<Money> _candidates = const [];
 
-  /// Condição do preço principal e os outros preços da etiqueta (ADR 0011).
-  PriceCondition _condition = const AnyCustomer();
+  /// Preço principal lido da etiqueta e os outros preços dela (ADR 0011).
+  PriceOffer? _mainOffer;
   List<PriceOffer> _otherOffers = const [];
   final _selectedOffers = <PriceOffer>{};
   var _source = PriceSource.manual;
@@ -153,7 +153,7 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
     setState(() {
       _source = PriceSource.priceTag;
       _candidates = reading.candidates;
-      _condition = reading.offers.firstOrNull?.condition ?? const AnyCustomer();
+      _mainOffer = reading.offers.firstOrNull;
       _otherOffers = reading.offers.skip(1).toList(growable: false);
       _selectedOffers
         ..clear()
@@ -206,7 +206,7 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
           marketId: market.id,
           price: price,
           regularPrice: Money.tryParse(_regularPrice.text),
-          condition: _condition,
+          condition: _mainCondition,
           otherOffers: [
             for (final offer in _otherOffers)
               if (_selectedOffers.contains(offer)) offer,
@@ -244,11 +244,18 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
       _product = null;
       _photoPath = null;
       _candidates = const [];
-      _condition = const AnyCustomer();
+      _mainOffer = null;
       _otherOffers = const [];
       _selectedOffers.clear();
       _source = PriceSource.manual;
     });
+  }
+
+  /// A condição lida vale enquanto o campo tiver o preço lido. Um preço
+  /// digitado ou escolhido entre os outros valores é de varejo.
+  PriceCondition get _mainCondition {
+    final offer = _mainOffer;
+    return offer != null && Money.tryParse(_price.text) == offer.price ? offer.condition : const AnyCustomer();
   }
 
   String? _validatePrice(String? value) {
@@ -357,10 +364,12 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
                   child: TextFormField(
                     controller: _price,
                     keyboardType: priceKeyboard,
+                    // Atualiza a condição mostrada e os outros valores.
+                    onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
                       labelText: 'Preço pago',
                       prefixText: 'R\$ ',
-                      helperText: _condition.label(l10n),
+                      helperText: _mainCondition.label(l10n),
                     ),
                     validator: _validatePrice,
                   ),
