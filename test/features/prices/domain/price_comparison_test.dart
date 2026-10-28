@@ -66,6 +66,15 @@ void main() {
     expect(latestPricePerMarket(history).map((e) => e.marketName), ['Assaí', 'Bairro']);
   });
 
+  test('cartão e atacado da mesma etiqueta: o de cartão representa o mercado, em qualquer ordem', () {
+    final at = DateTime(2026, 10, 27);
+    final card = entry('Assaí', 199, at, condition: const LoyaltyMembers());
+    final wholesale = entry('Assaí', 179, at, condition: const Wholesale(minimumQuantity: 6));
+
+    expect(latestPricePerMarket([card, wholesale]).single, card);
+    expect(latestPricePerMarket([wholesale, card]).single, card);
+  });
+
   test('histórico vazio resulta em lista vazia', () {
     expect(latestPricePerMarket(const []), isEmpty);
   });
