@@ -74,6 +74,16 @@ void main() {
     expect(history.first.observation.isPromotion, isTrue);
   });
 
+  test('diz quando foi o preço mais recente de cada mercado', () async {
+    await prices.addAll([
+      observation('a', 'm1', 549, DateTime(2026, 10, 1)),
+      observation('b', 'm1', 559, DateTime(2026, 10, 9)),
+      observation('c', 'm2', 499, DateTime(2026, 10, 20)),
+    ]);
+
+    expect(await prices.watchLatestPerMarket().first, {'m1': DateTime(2026, 10, 9), 'm2': DateTime(2026, 10, 20)});
+  });
+
   test('grava e lê a condição de cada preço', () async {
     final at = DateTime(2026, 10, 27);
     final saved = [

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:bipa/core/location/geo_point.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -20,5 +22,17 @@ void main() {
     expect(saoPaulo.distanceTo(rio), closeTo(rio.distanceTo(saoPaulo), 0.001));
     // Distância em linha reta entre as capitais: ~360 km.
     expect(saoPaulo.distanceTo(rio), closeTo(360000, 5000));
+  });
+
+  test('o deslocamento plano bate com a distância em trechos curtos', () {
+    const origin = GeoPoint(latitude: -23.55, longitude: -46.63);
+    const market = GeoPoint(latitude: -23.553, longitude: -46.626);
+
+    final offset = market.offsetFrom(origin);
+
+    expect(offset.north, lessThan(0)); // ao sul
+    expect(offset.east, greaterThan(0)); // a leste
+    final planar = math.sqrt(offset.east * offset.east + offset.north * offset.north);
+    expect(planar, closeTo(origin.distanceTo(market), 1));
   });
 }

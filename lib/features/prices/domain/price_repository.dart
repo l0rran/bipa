@@ -13,4 +13,8 @@ abstract interface class PriceRepository {
   /// Histórico de vários produtos de uma vez (por exemplo, os da lista de
   /// compras), do registro mais recente para o mais antigo.
   Stream<List<PriceHistoryEntry>> watchHistoryOfProducts(Set<String> productIds);
+
+  /// Quando foi o preço mais recente de cada mercado, de qualquer produto:
+  /// mostra se os preços dali estão em dia.
+  Stream<Map<String, DateTime>> watchLatestPerMarket();
 }

@@ -44,6 +44,21 @@ final class DriftPriceRepository implements PriceRepository {
       ? Stream.value(const [])
       : _watchHistoryWhere((prices) => prices.productId.isIn(productIds));
 
+  @override
+  Stream<Map<String, DateTime>> watchLatestPerMarket() {
+    final prices = _db.priceObservations;
+    final latest = prices.observedAt.max();
+    final query = _db.selectOnly(prices)
+      ..addColumns([prices.marketId, latest])
+      ..groupBy([prices.marketId]);
+    return query.watch().map(
+      (rows) => {
+        for (final row in rows)
+          if (row.read(latest) case final at?) row.read(prices.marketId)!: at,
+      },
+    );
+  }
+
   Stream<List<PriceHistoryEntry>> _watchHistoryWhere(
     Expression<bool> Function($PriceObservationsTable prices) filter,
   ) {

@@ -30,6 +30,17 @@ final class GeoPoint {
     return _earthRadiusMeters * c;
   }
 
+  /// Onde este ponto fica em relação a [origin], em metros para o leste e
+  /// para o norte. É uma aproximação plana, boa para distâncias de bairro:
+  /// serve para desenhar os mercados em volta de quem está olhando.
+  ({double east, double north}) offsetFrom(GeoPoint origin) {
+    final metersPerDegree = _earthRadiusMeters * math.pi / 180;
+    return (
+      east: (longitude - origin.longitude) * metersPerDegree * math.cos(_toRadians(origin.latitude)),
+      north: (latitude - origin.latitude) * metersPerDegree,
+    );
+  }
+
   static double _toRadians(double degrees) => degrees * math.pi / 180;
 
   @override

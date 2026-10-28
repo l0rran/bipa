@@ -84,4 +84,14 @@ final class InMemoryPriceRepository implements PriceRepository {
     for (final o in observations.reversed)
       if (productIds.contains(o.productId)) PriceHistoryEntry(observation: o, marketName: o.marketId),
   ]);
+
+  @override
+  Stream<Map<String, DateTime>> watchLatestPerMarket() {
+    final latest = <String, DateTime>{};
+    for (final o in observations) {
+      final current = latest[o.marketId];
+      if (current == null || o.observedAt.isAfter(current)) latest[o.marketId] = o.observedAt;
+    }
+    return Stream.value(latest);
+  }
 }
