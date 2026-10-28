@@ -1209,5 +1209,13 @@
   "tripPendingMarketTitle": "Em qual mercado foi a compra?",
   "@tripPendingMarketTitle": {
     "description": "Título da escolha de mercado no \"Terminei\" quando há preços lidos à espera de um mercado (ADR 0020)."
+  },
+  "cameraWhichProduct": "Preço de qual produto?",
+  "@cameraWhichProduct": {
+    "description": "Título da escolha de produto ao digitar um preço ou completar uma etiqueta lida sem o código."
+  },
+  "cameraPhotoNoPrice": "Sem preço na foto. Chegue mais perto.",
+  "@cameraPhotoNoPrice": {
+    "description": "Aviso no visor quando a foto do disparo não tem um preço que sirva."
   }
 }

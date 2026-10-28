@@ -3,16 +3,21 @@ import 'dart:async';
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/components/camera_mode_switch.dart';
+import 'package:bipa/core/design_system/components/scan_menu.dart';
 import 'package:bipa/core/design_system/components/scan_tray.dart';
 import 'package:bipa/core/formatting/formatters.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/location/location_service.dart';
+import 'package:bipa/core/money/money.dart';
 import 'package:bipa/core/navigation/routes.dart';
+import 'package:bipa/core/widgets/price_dialog.dart';
 import 'package:bipa/features/markets/domain/market.dart';
 import 'package:bipa/features/markets/presentation/market_picker_sheet.dart';
 import 'package:bipa/features/markets/presentation/markets_providers.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
+import 'package:bipa/features/prices/domain/price_tag.dart';
 import 'package:bipa/features/prices/presentation/confirm_price_sheet.dart';
+import 'package:bipa/features/prices/presentation/prices_providers.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/scale_label.dart';
@@ -24,6 +29,7 @@ import 'package:bipa/features/shopping_list/domain/live_scan.dart';
 import 'package:bipa/features/shopping_list/domain/record_at_home.dart';
 import 'package:bipa/features/shopping_list/presentation/home_change_snack_bar.dart';
 import 'package:bipa/features/shopping_list/presentation/live_camera.dart';
+import 'package:bipa/features/shopping_list/presentation/photograph_tag.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:bipa/features/shopping_list/presentation/start_shopping.dart';
 import 'package:bipa/features/stock/presentation/stock_providers.dart';
@@ -53,6 +59,9 @@ enum CameraMode {
 
   static CameraMode fromQuery(String? value) => values.where((mode) => mode.query == value).firstOrNull ?? price;
 }
+
+/// Como completar o produto que esperava a etiqueta.
+enum _Complete { typePrice, keep }
 
 /// O que a câmera mostra abaixo da moldura depois de uma leitura.
 typedef _Notice = ({IconData icon, String? value, String detail, bool waiting});
@@ -129,39 +138,37 @@ class _CameraPageState extends ConsumerState<CameraPage> {
   Future<T?> _withScannerPaused<T>(Future<T?> Function() action) =>
       _cameraKey.currentState?.withScannerPaused(action) ?? action();
 
-  void _showNotice(_Notice notice, {TagPriceRead? granel, Duration duration = const Duration(milliseconds: 2500)}) {
+  /// [onTap] faz do aviso um botão (com a seta): o granel a escolher, ou a
+  /// leitura pela metade a completar.
+  void _showNotice(_Notice notice, {VoidCallback? onTap, Duration duration = const Duration(milliseconds: 2500)}) {
     if (!mounted) return;
     setState(() {
       _notice = notice;
-      _granel = granel;
+      _noticeTap = onTap;
     });
     _noticeTimer?.cancel();
-    _noticeTimer = Timer(duration, () {
-      if (mounted) {
-        setState(() {
-          _notice = null;
-          _granel = null;
-        });
-      }
+    _noticeTimer = Timer(duration, _clearNotice);
+  }
+
+  void _clearNotice() {
+    _noticeTimer?.cancel();
+    if (!mounted) return;
+    setState(() {
+      _notice = null;
+      _noticeTap = null;
     });
   }
 
   bool _fresh(DateTime at) => DateTime.now().difference(at) <= _waitFor;
 
-  /// A etiqueta de granel sem código, enquanto o aviso dela está na tela: o
-  /// aviso vira botão para escolher o produto (ADR 0018).
-  TagPriceRead? _granel;
+  /// O que tocar no aviso faz, enquanto ele está na tela.
+  VoidCallback? _noticeTap;
 
-  Future<void> _chooseGranel() async {
-    final read = _granel;
-    if (read == null) return;
+  /// Tocou no aviso do granel: escolhe o produto pelo nome lido (ADR 0018).
+  Future<void> _chooseGranel(TagPriceRead read) async {
     final l10n = AppLocalizations.of(context);
     final createProduct = ref.read(createProductByWeightProvider);
-    _noticeTimer?.cancel();
-    setState(() {
-      _notice = null;
-      _granel = null;
-    });
+    _clearNotice();
     final choice = await _withAnalysisPaused(
       () => pickProduct(
         context,
@@ -181,7 +188,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
       messenger.showSnackBar(SnackBar(content: Text(l10n.capturePriceFailed)));
       return;
     }
-    await _confirm(product, null, read);
+    await _confirmTag(product, null, read);
   }
 
   Future<void> _onEvent(LiveScanEvent event) async {
@@ -239,15 +246,15 @@ class _CameraPageState extends ConsumerState<CameraPage> {
         final pending = _pendingTag;
         if (pending != null && _fresh(pending.at)) {
           _pendingTag = null;
-          await _confirm(product, package, pending.read);
+          await _confirmTag(product, package, pending.read);
         } else {
           _pendingProduct = (product: product, package: package, at: DateTime.now());
-          _showNotice((
-            icon: Icons.sell_outlined,
-            value: null,
-            detail: l10n.cameraWaitingTag(product.name),
-            waiting: true,
-          ), duration: _waitFor);
+          // Etiqueta amassada ou longe: tocar no aviso completa sem ela (D5).
+          _showNotice(
+            (icon: Icons.sell_outlined, value: null, detail: l10n.cameraWaitingTag(product.name), waiting: true),
+            onTap: () => _completeProduct(product, package),
+            duration: _waitFor,
+          );
         }
     }
   }
@@ -259,7 +266,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
     if (barcode != null && ScaleLabel.isScaleCode(barcode)) return;
     if (barcode != null) {
       final scanned = await _resolve(barcode, tag: read);
-      if (scanned != null && mounted) await _confirm(scanned.product, scanned.package, read);
+      if (scanned != null && mounted) await _confirmTag(scanned.product, scanned.package, read);
       return;
     }
     // Granel sem código: não vem produto bipado. O aviso vira botão.
@@ -275,7 +282,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
           },
           waiting: false,
         ),
-        granel: read,
+        onTap: () => _chooseGranel(read),
         duration: _waitFor,
       );
       return;
@@ -283,37 +290,138 @@ class _CameraPageState extends ConsumerState<CameraPage> {
     final pending = _pendingProduct;
     if (pending != null && _fresh(pending.at)) {
       _pendingProduct = null;
-      await _confirm(pending.product, pending.package, read);
+      await _confirmTag(pending.product, pending.package, read);
       return;
     }
     _pendingTag = (read: read, at: DateTime.now());
     unawaited(HapticFeedback.selectionClick());
-    _showNotice((
-      icon: Icons.qr_code_scanner_rounded,
-      value: read.price.format(),
-      detail: l10n.cartLiveWaiting,
-      waiting: true,
-    ), duration: _waitFor);
+    // Código fora de alcance: tocar no aviso escolhe o produto pelo nome (D5).
+    _showNotice(
+      (icon: Icons.qr_code_scanner_rounded, value: read.price.format(), detail: l10n.cartLiveWaiting, waiting: true),
+      onTap: () => _chooseProductFor(read),
+      duration: _waitFor,
+    );
   }
 
-  Future<void> _confirm(Product product, ProductPackage? package, TagPriceRead read) async {
+  /// Tocou no aviso do produto que esperava a etiqueta: digitar o preço ou,
+  /// em casa, guardar uma embalagem (AB7).
+  Future<void> _completeProduct(Product product, ProductPackage package) async {
+    final l10n = AppLocalizations.of(context);
+    _clearNotice();
+    final choice = await _withAnalysisPaused(
+      () => showScanMenu<_Complete>(
+        context,
+        closeLabel: l10n.scanMenuClose,
+        items: [
+          (value: _Complete.typePrice, icon: Icons.keyboard_alt_outlined, label: l10n.cartTypePrice, hint: null),
+          (value: _Complete.keep, icon: Icons.add_home_outlined, label: l10n.scanMenuBought, hint: null),
+        ],
+      ),
+    );
+    if (!mounted) return;
+    switch (choice) {
+      case _Complete.typePrice:
+        await _typePriceFor(product, package);
+      case _Complete.keep:
+        _pendingProduct = null;
+        await _adjust(product, package, bought: true);
+      case null:
+        break;
+    }
+  }
+
+  /// Tocou no aviso do preço que esperava o produto: escolhe pelo nome lido.
+  Future<void> _chooseProductFor(TagPriceRead read) async {
+    final l10n = AppLocalizations.of(context);
+    _clearNotice();
+    final choice = await _withAnalysisPaused(
+      () => pickProduct(context, allowCreate: false, initialQuery: read.nameHint ?? '', title: l10n.cameraWhichProduct),
+    );
+    if (choice is! ExistingProduct || !mounted) return;
+    await _confirmTag(choice.product, null, read);
+  }
+
+  /// O teclado: digita o preço do produto que espera a etiqueta, ou de um
+  /// escolhido pelo nome, e confere na mesma folha da etiqueta.
+  Future<void> _typePrice() async {
+    final pending = _pendingProduct;
+    if (pending != null && _fresh(pending.at)) return _typePriceFor(pending.product, pending.package);
+    final l10n = AppLocalizations.of(context);
+    final choice = await _withAnalysisPaused(
+      () => pickProduct(context, allowCreate: false, title: l10n.cameraWhichProduct),
+    );
+    if (choice is! ExistingProduct || !mounted) return;
+    await _typePriceFor(choice.product, null);
+  }
+
+  Future<void> _typePriceFor(Product product, ProductPackage? package) async {
+    final l10n = AppLocalizations.of(context);
+    _clearNotice();
+    final price = await _withAnalysisPaused(
+      () => showPriceDialog(context, title: l10n.cartPriceTitle(CartEntry.nameOf(product, package))),
+    );
+    if (price == null || !mounted) return;
+    await _confirm(product, package, price: price, source: PriceSource.manual);
+  }
+
+  /// O disparo: fotografa pela câmera ao vivo e segue como a leitura ao vivo.
+  Future<void> _shoot() async {
+    final camera = _cameraKey.currentState;
+    if (camera == null) return;
+    final l10n = AppLocalizations.of(context);
+    final reader = ref.read(priceTagReaderProvider);
+    unawaited(HapticFeedback.mediumImpact());
+    final TagPriceRead? read;
+    try {
+      read = await camera.withAnalysisPaused(() => photographTag(camera, reader));
+    } on Exception catch (error, stack) {
+      FlutterError.reportError(FlutterErrorDetails(exception: error, stack: stack, library: 'camera'));
+      _showNotice((icon: Icons.sell_outlined, value: null, detail: l10n.cameraPhotoNoPrice, waiting: false));
+      return;
+    }
+    if (!mounted) return;
+    if (read == null) {
+      _showNotice((icon: Icons.sell_outlined, value: null, detail: l10n.cameraPhotoNoPrice, waiting: false));
+      return;
+    }
+    await _onTag(read);
+  }
+
+  Future<void> _confirmTag(Product product, ProductPackage? package, TagPriceRead read) => _confirm(
+    product,
+    package,
+    price: read.price,
+    source: PriceSource.priceTag,
+    otherOffers: read.otherOffers,
+    perKilo: read.perKilo,
+  );
+
+  /// A folha "Conferir e salvar", com o preço lido ou digitado.
+  Future<void> _confirm(
+    Product product,
+    ProductPackage? package, {
+    required Money price,
+    required PriceSource source,
+    List<PriceOffer> otherOffers = const [],
+    bool perKilo = false,
+  }) async {
     if (!mounted) return;
     // O que esperava foi usado (ou ficou para trás): não vai para a próxima leitura.
     _pendingTag = null;
     _pendingProduct = null;
     _cameraKey.currentState?.lock();
     unawaited(HapticFeedback.mediumImpact());
-    setState(() => _notice = null);
+    _clearNotice();
     final saved = await _withAnalysisPaused(
       () => showConfirmPriceSheet(
         context,
         reading: (
           product: product,
           package: package,
-          price: read.price,
-          otherOffers: read.otherOffers,
-          source: PriceSource.priceTag,
-          perKilo: read.perKilo,
+          price: price,
+          otherOffers: otherOffers,
+          source: source,
+          perKilo: perKilo,
         ),
         marketId: _market?.id,
         chooseMarket: () async {
@@ -326,7 +434,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
       final l10n = AppLocalizations.of(context);
       _showNotice((
         icon: Icons.check_rounded,
-        value: read.perKilo ? l10n.pricePerKilo(read.price.format()) : read.price.format(),
+        value: perKilo ? l10n.pricePerKilo(price.format()) : price.format(),
         detail: l10n.cameraPriceSaved(CartEntry.nameOf(product, package)),
         waiting: false,
       ));
@@ -405,6 +513,9 @@ class _CameraPageState extends ConsumerState<CameraPage> {
     final colors = context.colors;
     final notice = _notice;
     final choosing = _mode == CameraMode.price || _mode == CameraMode.find;
+    // Observado enquanto a câmera está aberta: o leitor do disparo carrega os
+    // modelos do ML Kit uma vez e os solta ao sair.
+    ref.watch(priceTagReaderProvider);
 
     return Scaffold(
       backgroundColor: colors.camera,
@@ -419,7 +530,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
             price: value,
             detail: detail,
             countdown: waiting ? _waitFor : null,
-            onTap: _granel == null ? null : _chooseGranel,
+            onTap: _noticeTap,
           ),
           null => null,
         },
@@ -479,16 +590,13 @@ class _CameraPageState extends ConsumerState<CameraPage> {
                           child: CameraGlassButton(
                             icon: Icons.keyboard_alt_outlined,
                             label: l10n.cartTypePrice,
-                            // O formulário de sempre, para digitar tudo.
-                            onPressed: () =>
-                                _withScannerPaused(() => context.push<void>(Routes.capturePriceAt(_market?.id))),
+                            onPressed: _typePrice,
                           ),
                         ),
                       ),
                       ShutterButton(
                         label: l10n.cartPhotoTag,
-                        onPressed: () =>
-                            _withScannerPaused(() => context.push<void>(Routes.capturePricePhoto(_market?.id))),
+                        onPressed: _shoot,
                       ),
                       Expanded(
                         child: Align(

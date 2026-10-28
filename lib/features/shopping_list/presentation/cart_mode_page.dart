@@ -4,7 +4,6 @@ import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/components/scan_tray.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
-import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/price_dialog.dart';
 import 'package:bipa/core/widgets/quantity_dialog.dart';
 import 'package:bipa/features/markets/presentation/market_picker_sheet.dart';
@@ -25,6 +24,7 @@ import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
 import 'package:bipa/features/shopping_list/presentation/change_trip_market.dart';
 import 'package:bipa/features/shopping_list/presentation/finish_shopping.dart';
 import 'package:bipa/features/shopping_list/presentation/live_camera.dart';
+import 'package:bipa/features/shopping_list/presentation/photograph_tag.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:bipa/features/shopping_list/presentation/trip_summary_label.dart';
 import 'package:flutter/material.dart';
@@ -47,7 +47,7 @@ class CartModePage extends ConsumerStatefulWidget {
 
 /// O aviso sobre a câmera: o preço lido e o item que o recebeu, ou o pedido
 /// de bipar o produto.
-typedef _LiveNotice = ({String price, String detail, bool waiting});
+typedef _LiveNotice = ({String? price, String detail, bool waiting});
 
 class _CartModePageState extends ConsumerState<CartModePage> {
   final _cameraKey = GlobalKey<LiveCameraState>();
@@ -65,9 +65,9 @@ class _CartModePageState extends ConsumerState<CartModePage> {
 
   _LiveNotice? _notice;
 
-  /// A etiqueta de granel sem código lida há pouco (ADR 0018), enquanto o
-  /// aviso dela está na tela.
-  TagPriceRead? _granel;
+  /// O que tocar no aviso faz, enquanto ele está na tela: escolher o produto
+  /// do granel (ADR 0018) ou do preço que espera o produto (D5).
+  VoidCallback? _noticeTap;
   String? _justReadKey;
   Timer? _noticeTimer;
 
@@ -136,19 +136,14 @@ class _CartModePageState extends ConsumerState<CartModePage> {
   /// Tocou no aviso do granel: escolhe o produto (já buscado pelo nome lido)
   /// e guarda o preço por kg no histórico do mercado. Quanto custa sai da
   /// etiqueta da balança ou do preço digitado (ADR 0018).
-  Future<void> _chooseGranel() async {
-    final read = _granel;
+  Future<void> _chooseGranel(TagPriceRead read) async {
     final trip = ref.read(activeTripProvider).value;
-    if (read == null || trip == null) return;
+    if (trip == null) return;
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final recordPrice = ref.read(recordTripPriceProvider);
     final createProduct = ref.read(createProductByWeightProvider);
-    _noticeTimer?.cancel();
-    setState(() {
-      _notice = null;
-      _granel = null;
-    });
+    _clearNotice();
     final choice = await _withAnalysisPaused(
       () => pickProduct(
         context,
@@ -293,7 +288,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
           },
           waiting: false,
         ),
-        granel: read,
+        onTap: () => _chooseGranel(read),
         duration: _router.waitFor,
       );
       return;
@@ -329,11 +324,13 @@ class _CartModePageState extends ConsumerState<CartModePage> {
         case WaitForProduct(:final pending):
           _pending = pending;
           unawaited(HapticFeedback.selectionClick());
-          _showNotice((
-            price: read.price.format(),
-            detail: l10n.cartLiveWaiting,
-            waiting: true,
-          ), duration: _router.waitFor);
+          // Código fora de alcance: tocar no aviso escolhe o produto pelo
+          // nome lido (D5).
+          _showNotice(
+            (price: read.price.format(), detail: l10n.cartLiveWaiting, waiting: true),
+            onTap: () => _chooseProductFor(read),
+            duration: _router.waitFor,
+          );
       }
     } on Exception catch (error, stack) {
       _report(error, stack);
@@ -363,27 +360,31 @@ class _CartModePageState extends ConsumerState<CartModePage> {
 
   void _lockFrame() => _cameraKey.currentState?.lock();
 
-  /// [key] é a [CartItem.key] do item que recebeu o preço, para o anel.
+  /// [key] é a [CartItem.key] do item que recebeu o preço, para o anel;
+  /// [onTap] faz do aviso um botão.
   void _showNotice(
     _LiveNotice notice, {
     String? key,
-    TagPriceRead? granel,
+    VoidCallback? onTap,
     Duration duration = const Duration(milliseconds: 2500),
   }) {
     if (!mounted) return;
     setState(() {
       _notice = notice;
       _justReadKey = key;
-      _granel = granel;
+      _noticeTap = onTap;
     });
     _noticeTimer?.cancel();
-    _noticeTimer = Timer(duration, () {
-      if (!mounted) return;
-      setState(() {
-        _notice = null;
-        _justReadKey = null;
-        _granel = null;
-      });
+    _noticeTimer = Timer(duration, _clearNotice);
+  }
+
+  void _clearNotice() {
+    _noticeTimer?.cancel();
+    if (!mounted) return;
+    setState(() {
+      _notice = null;
+      _justReadKey = null;
+      _noticeTap = null;
     });
   }
 
@@ -461,12 +462,58 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     await _withAnalysisPaused(() => changeTripMarket(context, ref, trip, market));
   }
 
-  /// O disparo abre a foto da etiqueta; o preço salvo lá entra no carrinho
-  /// e fica firmado: a etiqueta lida ao vivo na volta não o sobrescreve.
-  Future<void> _photographTag() async {
-    final marketId = ref.read(activeTripProvider).value?.marketId;
-    final priced = await _withScannerPaused(() => context.push<Set<String>>(Routes.capturePriceFromCart(marketId)));
-    if (priced != null) _settledItems.addAll(priced);
+  /// O disparo: fotografa pela própria câmera ao vivo, e o preço segue como
+  /// a leitura ao vivo.
+  Future<void> _shoot() async {
+    final camera = _cameraKey.currentState;
+    if (camera == null) return;
+    final l10n = AppLocalizations.of(context);
+    final reader = ref.read(priceTagReaderProvider);
+    unawaited(HapticFeedback.mediumImpact());
+    final TagPriceRead? read;
+    try {
+      read = await camera.withAnalysisPaused(() => photographTag(camera, reader));
+    } on Exception catch (error, stack) {
+      _report(error, stack);
+      _showNotice((price: null, detail: l10n.cameraPhotoNoPrice, waiting: false));
+      return;
+    }
+    if (!mounted) return;
+    if (read == null) {
+      _showNotice((price: null, detail: l10n.cameraPhotoNoPrice, waiting: false));
+      return;
+    }
+    await _onTagRead(read);
+  }
+
+  /// Tocou no aviso do preço que esperava o produto: escolhe pelo nome lido,
+  /// e o produto entra no carrinho com esse preço.
+  Future<void> _chooseProductFor(TagPriceRead read) async {
+    final trip = ref.read(activeTripProvider).value;
+    if (trip == null) return;
+    final l10n = AppLocalizations.of(context);
+    final cart = ref.read(cartRepositoryProvider);
+    final list = ref.read(shoppingListRepositoryProvider);
+    final recordPrice = ref.read(recordTripPriceProvider);
+    _clearNotice();
+    final choice = await _withAnalysisPaused(
+      () => pickProduct(context, allowCreate: false, initialQuery: read.nameHint ?? '', title: l10n.cameraWhichProduct),
+    );
+    if (choice is! ExistingProduct || !mounted) return;
+    // A espera foi usada: não vai para o próximo bipe.
+    if (_pending?.read == read) _pending = null;
+    final product = choice.product;
+    try {
+      await cart.addProduct(trip.id, product.id, price: read.price);
+      await list.checkProduct(product.id);
+      _settledItems.add(CartItem.keyOf(product.id, null));
+      await _recordTag(recordPrice, trip, product.id, null, read);
+    } on Exception catch (error, stack) {
+      _report(error, stack);
+      return;
+    }
+    if (!mounted) return;
+    _showNotice((price: read.price.format(), detail: product.name, waiting: false), key: CartItem.keyOf(product.id, null));
   }
 
   /// "Terminei": a escolha do mercado para os preços que esperavam vem no
@@ -500,6 +547,9 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     final summary = ref.watch(shoppingTripSummaryProvider);
     final marketName = ref.watch(activeTripMarketNameProvider);
     final notice = _notice;
+    // Observado enquanto o carrinho está aberto: o leitor do disparo carrega
+    // os modelos do ML Kit uma vez e os solta ao sair.
+    ref.watch(priceTagReaderProvider);
 
     // A compra terminou (aqui ou na Lista): o carrinho fecha.
     ref.listen(activeTripProvider, (previous, next) {
@@ -521,8 +571,9 @@ class _CartModePageState extends ConsumerState<CartModePage> {
             price: price,
             detail: detail,
             countdown: waiting ? _router.waitFor : null,
-            // O granel sem código não tem o que bipar: o aviso escolhe o produto.
-            onTap: _granel == null ? null : _chooseGranel,
+            // O granel sem código, ou o preço que espera o produto: o aviso
+            // escolhe o produto.
+            onTap: _noticeTap,
           ),
           null => null,
         },
@@ -603,7 +654,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
                   ),
                 ),
               ),
-              ShutterButton(label: l10n.cartPhotoTag, onPressed: _photographTag),
+              ShutterButton(label: l10n.cartPhotoTag, onPressed: _shoot),
               Expanded(
                 child: Align(
                   alignment: AlignmentDirectional.centerEnd,
