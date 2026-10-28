@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Mercado</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="styles/tokens.css">
+<link rel="stylesheet" href="ds/bipa/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600..800&amp;family=Figtree:wght@400..700&amp;family=JetBrains+Mono:wght@500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1C1B22}a:hover{color:#B00E28}
+.screen{position:relative;width:390px;height:844px;box-sizing:border-box;overflow:hidden;background:var(--ground)}
+.title{margin:0;font:800 28px/34px var(--font-display);letter-spacing:-0.01em;color:var(--ink)}
+.eyebrow{font:600 14px/20px var(--font-body);color:var(--ink-muted)}
+.section-title{margin:0;font:700 20px/26px var(--font-display);color:var(--ink)}
+.round-btn{display:grid;place-items:center;width:48px;height:48px;border:0;border-radius:50%;background:var(--surface);color:var(--ink)}
+.nav-wrap{position:absolute;left:12px;right:12px;bottom:16px;z-index:3}
+
+.content{display:flex;flex-direction:column;gap:20px;padding:16px 16px 140px}
+.bar{display:flex;align-items:center;justify-content:space-between}
+.hero{display:grid;justify-items:center;gap:12px;text-align:center}
+.hero-art{display:grid;place-items:center;width:132px;height:132px;border-radius:var(--radius-lg);background:var(--surface);color:var(--ink)}
+.hero-art svg{width:68px;height:68px}
+.hero h1{margin:0;font:800 24px/30px var(--font-display);letter-spacing:-.01em;text-wrap:balance}
+.hero p{margin:0;font:500 13px/18px var(--font-mono);color:var(--ink-muted);letter-spacing:.02em}
+.best{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.stock-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 12px 12px 16px;border-radius:var(--radius-lg);background:var(--surface)}
+.stock-card strong{display:block;font:700 16px/20px var(--font-body)}
+.stock-card small{font:500 13px/18px var(--font-body);color:var(--ink-muted)}
+.foot{position:absolute;left:16px;right:16px;bottom:24px;z-index:3;display:flex;gap:12px}
+.foot .bipa-btn{flex:1;height:56px;font-size:16px}
+
+
+.head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.section{display:flex;flex-direction:column;gap:8px}
+.section-head{display:flex;align-items:center;gap:8px;padding:0 4px}
+.count{font:600 13px/18px var(--font-body);color:var(--ink-muted)}
+.enter{animation:bipa-fade-up var(--duration-slow) var(--easing-standard) both}
+
+.aisles{display:grid;gap:8px;margin:0;padding:12px 16px;border-radius:var(--radius-lg);background:var(--surface);list-style:none}
+.aisles li{display:flex;align-items:center;gap:12px;font:600 15px/20px var(--font-body);color:var(--ink)}
+.aisles b{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--surface-sunken);font:800 12px/1 var(--font-display);color:var(--ink-muted)}
+</style>
+</helmet>
+<div class="screen bipa-root">
+  <div class="content">
+    <div class="bar">
+      <a class="round-btn" href="Mercados.dc.html" aria-label="Voltar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></a>
+      <button class="round-btn" type="button" aria-label="Mais opções"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18.5" cy="12" r="1.2"/></svg></button>
+    </div>
+    <div class="hero">
+      <span class="hero-art" aria-hidden="true" style="background: var(--place-soft); color: var(--place);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5L5.5 4h13L20 9.5M4 9.5h16M4 9.5v10h16v-10M9.5 19.5v-5h5v5"/></svg></span>
+      <h1>Atacarejo Vila Nova</h1>
+      <p style="font: 500 14px/20px var(--font-body); letter-spacing: 0; display: inline-flex; gap: 6px; align-items: center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg>850 m · preços de 5 dias</p>
+    </div>
+
+    <section class="section">
+      <div class="bipa-section-head"><h2>Ordem das seções</h2></div>
+      <ol class="aisles"><li><b>1</b>Limpeza</li><li><b>2</b>Hortifrúti</li><li><b>3</b>Mercearia</li><li><b>4</b>Laticínios</li></ol>
+    </section>
+
+    <section class="section">
+      <div class="bipa-section-head"><h2>Preços recentes</h2><span class="bipa-count">3</span></div>
+      <div class="bipa-mprices">
+        <div class="bipa-mprice"><span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7l7-4 7 4v10l-7 4-7-4z"/><path d="M5 7l7 4 7-4M12 11v10"/></svg></span><span class="bipa-mprice__name">Arroz branco Camil 10 kg<span class="bipa-mprice__age"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg>há 5 dias</span></span><span class="bipa-mprice__value">R$ 49,90</span></div>
+        <div class="bipa-mprice"><span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7l7-4 7 4v10l-7 4-7-4z"/><path d="M5 7l7 4 7-4M12 11v10"/></svg></span><span class="bipa-mprice__name">Café Pilão 500 g<span class="bipa-mprice__age"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg>há 5 dias</span></span><span class="bipa-mprice__value">R$ 18,99</span></div>
+        <div class="bipa-mprice"><span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7l7-4 7 4v10l-7 4-7-4z"/><path d="M5 7l7 4 7-4M12 11v10"/></svg></span><span class="bipa-mprice__name">Leite integral 1 L<span class="bipa-mprice__age"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg>há 12 dias</span></span><span class="bipa-mprice__value">R$ 4,79</span></div>
+      </div>
+    </section>
+  </div>
+  <div class="foot">
+    <a class="bipa-btn bipa-btn--neutral" href="ModoCarrinho.dc.html" style="text-decoration: none;"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16M3 12h18"/></svg> Ir às compras aqui</span></a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
