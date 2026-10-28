@@ -1,4 +1,5 @@
 import 'package:bipa/core/design_system/bipa_theme.dart';
+import 'package:bipa/core/design_system/components/dropdown_chip.dart';
 import 'package:bipa/core/design_system/components/price_history.dart';
 import 'package:bipa/core/design_system/components/quantity_stepper.dart';
 import 'package:bipa/core/design_system/components/scan_tray.dart';
@@ -247,6 +248,27 @@ void main() {
     // Os meses ficam por baixo do rótulo: o leitor de tela ouve só a frase.
     expect(find.text('hoje'), findsOneWidget);
     expect(tester.takeException(), isNull);
+    semantics.dispose();
+  });
+
+  testWidgets('o chip de escolha mostra o valor, abre ao tocar e tem rótulo próprio', (tester) async {
+    final semantics = tester.ensureSemantics();
+    var taps = 0;
+    await tester.pumpWidget(
+      _app(
+        DropdownChip(
+          icon: Icons.storefront_outlined,
+          label: 'Atacarejo',
+          semanticsLabel: 'Mercado da lista: Atacarejo. Trocar',
+          onTap: () => taps++,
+        ),
+      ),
+    );
+
+    expect(find.text('Atacarejo'), findsOneWidget);
+    await tester.tap(find.byType(DropdownChip));
+    expect(taps, 1);
+    expect(find.bySemanticsLabel('Mercado da lista: Atacarejo. Trocar'), findsOneWidget);
     semantics.dispose();
   });
 }
