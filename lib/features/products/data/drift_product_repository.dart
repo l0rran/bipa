@@ -100,6 +100,12 @@ final class DriftProductRepository implements ProductRepository {
   /// e lista somam ou deduplicam; o resto só troca de dono. As observações de
   /// preço mantêm a embalagem, que é o que elas de fato registraram.
   @override
+  Future<void> delete(String id) async {
+    // As tabelas filhas apagam em cascata (chaves estrangeiras).
+    await (_db.delete(_db.products)..where((t) => t.id.equals(id))).go();
+  }
+
+  @override
   Future<void> merge({required String fromId, required String intoId}) {
     if (fromId == intoId) return Future.value();
     return _db.transaction(() async {

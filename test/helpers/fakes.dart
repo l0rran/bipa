@@ -59,6 +59,12 @@ final class InMemoryProductRepository implements ProductRepository {
   }
 
   @override
+  Future<void> delete(String id) async {
+    products.remove(id);
+    packages.removeWhere((_, p) => p.productId == id);
+  }
+
+  @override
   Future<void> merge({required String fromId, required String intoId}) async {
     for (final package in packages.values.where((p) => p.productId == fromId).toList()) {
       packages[package.id] = package.copyWith(productId: intoId);

@@ -42,6 +42,13 @@ final class DriftMarketRepository implements MarketRepository {
       ),
     );
   }
+
+  @override
+  Future<void> delete(String id) async {
+    // Preços e ordem das seções apagam em cascata; as compras ficam sem
+    // mercado (chaves estrangeiras).
+    await (_db.delete(_db.markets)..where((t) => t.id.equals(id))).go();
+  }
 }
 
 extension MarketRowMapper on MarketRow {

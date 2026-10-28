@@ -216,6 +216,12 @@ final class DriftStockRepository implements StockRepository {
       _db.select(_db.stockLots)..where((t) => t.id.equals(id));
 
   @override
+  Future<void> remove(String productId) => _db.transaction(() async {
+    await (_db.delete(_db.stockLots)..where((t) => t.productId.equals(productId))).go();
+    await (_db.delete(_db.stockItems)..where((t) => t.productId.equals(productId))).go();
+  });
+
+  @override
   // A coluna continua minimumQuantity no banco; no domínio é o "ter sempre".
   Future<void> setTargetQuantity(String productId, double? target) =>
       _upsertSettings(productId, StockItemsCompanion(minimumQuantity: Value(target)));

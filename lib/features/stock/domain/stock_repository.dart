@@ -33,6 +33,10 @@ abstract interface class StockRepository {
   /// embalagens.
   Stream<List<StockLot>> watchLots(String productId);
 
+  /// Tira o produto de casa: o item e os lotes somem (o histórico de
+  /// movimentos fica). O produto e os preços continuam.
+  Future<void> remove(String productId);
+
   /// Define quanto a pessoa quer ter sempre em casa; `null` remove o alerta.
   Future<void> setTargetQuantity(String productId, double? target);
 

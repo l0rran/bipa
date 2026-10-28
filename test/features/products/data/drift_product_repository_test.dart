@@ -175,4 +175,34 @@ void main() {
     expect(observation.productId, 'arroz');
     expect(observation.syncedAt, isNull);
   });
+
+  test('apagar o produto leva junto embalagens, preços, estoque e lista', () async {
+    await repository.save(product('arroz', 'Arroz branco'));
+    await repository.savePackage(package('camil', 'arroz', barcode: '7896006711155'));
+    await DriftMarketRepository(db).save(Market(id: 'm', name: 'Central', createdAt: now, updatedAt: now));
+    await DriftPriceRepository(db).add(
+      PriceObservation(
+        id: 'preco',
+        productId: 'arroz',
+        packageId: 'camil',
+        marketId: 'm',
+        price: const Money.cents(2790),
+        source: PriceSource.priceTag,
+        observedAt: now,
+        createdAt: now,
+      ),
+    );
+    final stock = DriftStockRepository(db, ids: SequentialIdGenerator(), clock: () => now);
+    await stock.adjust(productId: 'arroz', delta: 1, reason: StockMovementReason.purchase);
+    final list = DriftShoppingListRepository(db, ids: SequentialIdGenerator(), clock: () => now);
+    await list.addProduct(productId: 'arroz', name: 'Arroz branco');
+
+    await repository.delete('arroz');
+
+    expect(await repository.findById('arroz'), isNull);
+    expect(await repository.findPackageByBarcode('7896006711155'), isNull);
+    expect(await db.select(db.priceObservations).get(), isEmpty);
+    expect(await stock.findByProduct('arroz'), isNull);
+    expect(await list.watchAll().first, isEmpty);
+  });
 }

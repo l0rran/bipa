@@ -11,4 +11,8 @@ abstract interface class MarketRepository {
 
   /// Cria ou atualiza o mercado.
   Future<void> save(Market market);
+
+  /// Apaga o mercado e, junto, os preços e a ordem das seções dele; as
+  /// compras feitas nele ficam sem mercado (ADR 0016).
+  Future<void> delete(String id);
 }

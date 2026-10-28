@@ -65,6 +65,17 @@ void main() {
     expect(item?.isLow, isTrue);
   });
 
+  test('tirar de casa apaga o item e os lotes, e o produto continua', () async {
+    await repository.adjust(productId: 'arroz', delta: 2, reason: StockMovementReason.purchase);
+    await repository.setTargetQuantity('arroz', 3);
+
+    await repository.remove('arroz');
+
+    expect(await repository.findByProduct('arroz'), isNull);
+    expect(await repository.watchLots('arroz').first, isEmpty);
+    expect(await DriftProductRepository(db).findById('arroz'), isNotNull);
+  });
+
   test('watchAll traz o produto junto com o item', () async {
     await repository.adjust(productId: 'arroz', delta: 1, reason: StockMovementReason.purchase);
 
