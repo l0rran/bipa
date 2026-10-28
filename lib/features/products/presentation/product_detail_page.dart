@@ -21,6 +21,7 @@ import 'package:bipa/core/widgets/confirm_destructive.dart';
 import 'package:bipa/core/widgets/empty_state.dart';
 import 'package:bipa/features/prices/domain/package_prices.dart';
 import 'package:bipa/features/prices/domain/price_trend.dart';
+import 'package:bipa/features/prices/presentation/price_sheet.dart';
 import 'package:bipa/features/prices/presentation/prices_providers.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
@@ -305,6 +306,14 @@ class _ProductView extends ConsumerWidget {
                         metaIcon: Icons.schedule_rounded,
                         value: price.unitPrice?.format() ?? price.price.format(),
                         badge: index == 0 && perMarket.length > 1 ? l10n.productCheapest : null,
+                        // A folha do preço: corrigir uma leitura errada, ou ir ao mercado (F3, H5).
+                        onTap: () => showPriceSheet(
+                          context,
+                          observation: price.entry.observation,
+                          title: price.entry.marketName,
+                          openLabel: l10n.priceOpenMarket,
+                          onOpen: () => context.push(Routes.market(price.entry.observation.marketId)),
+                        ),
                       ),
                   ],
                 ),

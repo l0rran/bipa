@@ -1292,5 +1292,21 @@
         "type": "String"
       }
     }
+  },
+  "priceCorrected": "Preço corrigido",
+  "@priceCorrected": {
+    "description": "Depois de corrigir um preço do histórico pela folha do preço."
+  },
+  "priceCorrectFailed": "Não deu para corrigir o preço. Tente de novo.",
+  "@priceCorrectFailed": {
+    "description": "Falha ao gravar a correção de um preço do histórico."
+  },
+  "priceOpenMarket": "Ver mercado",
+  "@priceOpenMarket": {
+    "description": "Na folha de um preço, na tela do produto: abre o mercado."
+  },
+  "priceOpenProduct": "Ver produto",
+  "@priceOpenProduct": {
+    "description": "Na folha de um preço, na tela do mercado: abre o produto."
   }
 }

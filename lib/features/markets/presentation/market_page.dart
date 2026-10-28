@@ -16,6 +16,7 @@ import 'package:bipa/features/markets/domain/nearest_market_finder.dart';
 import 'package:bipa/features/markets/presentation/market_meta.dart';
 import 'package:bipa/features/markets/presentation/markets_providers.dart';
 import 'package:bipa/features/prices/domain/market_price.dart';
+import 'package:bipa/features/prices/presentation/price_sheet.dart';
 import 'package:bipa/features/prices/presentation/prices_providers.dart';
 import 'package:bipa/features/shopping_list/domain/aisle_order.dart';
 import 'package:bipa/features/shopping_list/presentation/aisle_label.dart';
@@ -210,7 +211,14 @@ class _MarketView extends ConsumerWidget {
                         meta: l10n.priceAge(_ageInDays(now, price)),
                         metaIcon: Icons.schedule_rounded,
                         value: price.observation.price.format(),
-                        onTap: () => context.push(Routes.productDetail(price.observation.productId)),
+                        // A folha do preço: corrigir uma leitura errada, ou ir ao produto (F3).
+                        onTap: () => showPriceSheet(
+                          context,
+                          observation: price.observation,
+                          title: _title(price),
+                          openLabel: l10n.priceOpenProduct,
+                          onOpen: () => context.push(Routes.productDetail(price.observation.productId)),
+                        ),
                       ),
                   ],
                 ),
