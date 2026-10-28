@@ -2,28 +2,31 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:bipa/core/camera/camera_input_image.dart';
+import 'package:bipa/core/camera/live_frame_analyzer.dart';
 import 'package:bipa/core/camera/viewfinder_region.dart';
-import 'package:bipa/features/shopping_list/data/mlkit_live_frame_analyzer.dart';
 import 'package:bipa/features/shopping_list/domain/live_scan.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart' show InputImage;
 
-/// Onde a moldura está na tela e o tamanho da tela, para recortar cada quadro.
+/// Onde a moldura está, relativa à prévia, e o tamanho da prévia, para
+/// recortar cada quadro.
 typedef ViewfinderOnScreen = ({PixelRect viewfinder, double screenWidth, double screenHeight});
 
 /// A câmera do modo carrinho (ADR 0012): mostra a prévia e lê cada quadro,
 /// código de barras e etiqueta juntos, só dentro da moldura.
 ///
 /// Só um quadro é analisado por vez; os que chegam enquanto isso são pulados.
-/// [start] e [stop] podem ser chamados em qualquer ordem: rodam em fila.
+/// [start], [stop] e [toggleTorch] rodam em fila, na ordem em que foram
+/// chamados.
 final class LiveScanner extends ChangeNotifier {
   LiveScanner({
     required this.onEvents,
     required this.viewfinder,
+    required LiveFrameAnalyzer analyzer,
     this.onError,
-    MlKitLiveFrameAnalyzer? analyzer,
     LiveScanInterpreter? interpreter,
-  }) : _analyzer = analyzer ?? MlKitLiveFrameAnalyzer(),
+  }) : _analyzer = analyzer,
        _interpreter = interpreter ?? LiveScanInterpreter();
 
   /// O que a leitura concluiu (bipes e etiquetas), na ordem.
@@ -35,7 +38,7 @@ final class LiveScanner extends ChangeNotifier {
   /// Falhas da câmera ou do reconhecimento, para o relatório.
   final void Function(Object error, StackTrace stack)? onError;
 
-  final MlKitLiveFrameAnalyzer _analyzer;
+  final LiveFrameAnalyzer _analyzer;
   final LiveScanInterpreter _interpreter;
 
   /// Uma margem em volta da moldura: a etiqueta raramente cabe certinha.
@@ -43,10 +46,14 @@ final class LiveScanner extends ChangeNotifier {
 
   CameraController? _controller;
   CameraDescription? _camera;
-  var _analyzing = false;
+  Future<void>? _inFlight;
   var _torch = false;
   var _disposed = false;
   Future<void> _queue = Future.value();
+
+  /// Com a análise pausada, a prévia continua, mas nenhum quadro é lido:
+  /// enquanto um diálogo está por cima, por exemplo.
+  var analysisPaused = false;
 
   /// A câmera aberta, para a prévia; `null` enquanto está parada.
   CameraController? get controller => _controller;
@@ -73,12 +80,15 @@ final class LiveScanner extends ChangeNotifier {
       _interpreter.reset();
       _torch = false;
       _controller = controller;
-      notifyListeners();
-      await controller.startImageStream((image) => unawaited(_onImage(controller, image)));
+      _notify();
+      await controller.startImageStream((image) => _onImage(controller, image));
     } on Object {
-      if (_controller == controller) _controller = null;
-      await controller.dispose();
-      if (!_disposed) notifyListeners();
+      if (_controller == controller) {
+        _controller = null;
+        _notify();
+      }
+      // O erro que importa é o da abertura (permissão negada, por exemplo).
+      await _quietly(controller.dispose);
       rethrow;
     }
   });
@@ -89,9 +99,12 @@ final class LiveScanner extends ChangeNotifier {
     if (controller == null) return;
     _controller = null;
     _torch = false;
-    if (!_disposed) notifyListeners();
-    if (controller.value.isStreamingImages) await controller.stopImageStream();
-    await controller.dispose();
+    _notify();
+    try {
+      if (controller.value.isStreamingImages) await controller.stopImageStream();
+    } finally {
+      await controller.dispose();
+    }
   });
 
   Future<void> toggleTorch() => _enqueue(() async {
@@ -99,24 +112,30 @@ final class LiveScanner extends ChangeNotifier {
     if (controller == null) return;
     await controller.setFlashMode(_torch ? FlashMode.off : FlashMode.torch);
     _torch = !_torch;
-    if (!_disposed) notifyListeners();
+    _notify();
   });
 
   @override
   void dispose() {
     _disposed = true;
-    // A fila termina sozinha: fecha a câmera e depois os reconhecedores. Uma
-    // falha aqui não tem mais a quem avisar além do relatório.
-    unawaited(
-      stop()
-          .then<void>((_) {}, onError: (Object error, StackTrace stack) => onError?.call(error, stack))
-          .whenComplete(_analyzer.close),
-    );
+    // Fecha a câmera, espera o quadro em análise e só então os
+    // reconhecedores. Uma falha aqui só tem o relatório a quem avisar.
+    unawaited(_shutDown());
     super.dispose();
   }
 
-  Future<void> _onImage(CameraController controller, CameraImage image) async {
-    if (_analyzing || _disposed || _controller != controller) return;
+  Future<void> _shutDown() async {
+    try {
+      await stop();
+      await _inFlight;
+      await _analyzer.close();
+    } on Object catch (error, stack) {
+      onError?.call(error, stack);
+    }
+  }
+
+  void _onImage(CameraController controller, CameraImage image) {
+    if (_inFlight != null || analysisPaused || _disposed || _controller != controller) return;
     final region = viewfinder();
     if (region == null) return;
     final frame = cameraFrameToInputImage(
@@ -126,32 +145,47 @@ final class LiveScanner extends ChangeNotifier {
     );
     if (frame == null) return;
 
-    _analyzing = true;
+    final upright = uprightImageSize(image.width.toDouble(), image.height.toDouble(), frame.rotationDegrees);
+    final crop = viewfinderInImage(
+      viewfinder: region.viewfinder,
+      screenWidth: region.screenWidth,
+      screenHeight: region.screenHeight,
+      imageWidth: upright.width,
+      imageHeight: upright.height,
+    ).inflate(_cropMargin);
+    _inFlight = _analyze(controller, frame.image, crop).whenComplete(() {
+      _inFlight = null;
+    });
+  }
+
+  Future<void> _analyze(CameraController controller, InputImage image, PixelRect crop) async {
     try {
-      final upright = uprightImageSize(image.width.toDouble(), image.height.toDouble(), frame.rotationDegrees);
-      final crop = viewfinderInImage(
-        viewfinder: region.viewfinder,
-        screenWidth: region.screenWidth,
-        screenHeight: region.screenHeight,
-        imageWidth: upright.width,
-        imageHeight: upright.height,
-      ).inflate(_cropMargin);
-      final reading = await _analyzer.analyze(frame.image, at: DateTime.now(), crop: crop);
-      if (_disposed || _controller != controller) return;
+      final reading = await _analyzer.analyze(image, at: DateTime.now(), crop: crop);
+      if (_disposed || analysisPaused || _controller != controller) return;
       final events = _interpreter.add(reading);
       if (events.isNotEmpty) onEvents(events);
     } on Object catch (error, stack) {
       onError?.call(error, stack);
-    } finally {
-      _analyzing = false;
     }
+  }
+
+  void _notify() {
+    if (!_disposed) notifyListeners();
   }
 
   Future<void> _enqueue(Future<void> Function() action) {
     final next = _queue.then((_) => action());
     // A fila segue mesmo se um passo falhar; o erro volta para quem chamou.
-    _queue = next.then<void>((_) {}, onError: (_) {});
+    _queue = next.then<void>((_) {}, onError: (Object _) {});
     return next;
+  }
+
+  Future<void> _quietly(Future<void> Function() action) async {
+    try {
+      await action();
+    } on Object catch (error, stack) {
+      onError?.call(error, stack);
+    }
   }
 
   static Future<CameraDescription?> _backCamera() async {

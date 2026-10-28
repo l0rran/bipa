@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui' show Rect;
 
+import 'package:bipa/core/camera/live_frame_analyzer.dart';
 import 'package:bipa/core/camera/viewfinder_region.dart';
 import 'package:bipa/features/prices/domain/price_tag.dart';
 import 'package:bipa/features/prices/domain/price_tag_parser.dart';
@@ -11,7 +12,7 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 /// Lê um quadro da câmera do modo carrinho com o ML Kit: o código de barras e
 /// o texto saem do mesmo quadro, e só conta o que está dentro da moldura
 /// (ADR 0012). A interpretação do texto continua no [PriceTagParser].
-final class MlKitLiveFrameAnalyzer {
+final class MlKitLiveFrameAnalyzer implements LiveFrameAnalyzer {
   MlKitLiveFrameAnalyzer({PriceTagParser parser = const PriceTagParser()}) : _parser = parser;
 
   final PriceTagParser _parser;
@@ -20,8 +21,7 @@ final class MlKitLiveFrameAnalyzer {
     formats: [BarcodeFormat.ean13, BarcodeFormat.ean8, BarcodeFormat.upca, BarcodeFormat.upce],
   );
 
-  /// [crop] está nas coordenadas da imagem em pé (ver [viewfinderInImage]);
-  /// sem ele, vale o quadro inteiro.
+  @override
   Future<LiveFrame> analyze(InputImage image, {required DateTime at, PixelRect? crop}) async {
     final (text, barcodes) = await _recognize(image);
 
@@ -59,6 +59,7 @@ final class MlKitLiveFrameAnalyzer {
     }
   }
 
+  @override
   Future<void> close() async {
     await _textRecognizer.close();
     await _barcodeScanner.close();

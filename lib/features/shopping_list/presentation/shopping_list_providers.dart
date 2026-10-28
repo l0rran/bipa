@@ -1,3 +1,4 @@
+import 'package:bipa/core/camera/live_frame_analyzer.dart';
 import 'package:bipa/core/database/database_provider.dart';
 import 'package:bipa/core/di/core_providers.dart';
 import 'package:bipa/core/money/money.dart';
@@ -10,6 +11,7 @@ import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:bipa/features/shopping_list/data/drift_cart_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_list_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_trip_repository.dart';
+import 'package:bipa/features/shopping_list/data/mlkit_live_frame_analyzer.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/finish_shopping_trip.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
@@ -81,6 +83,9 @@ final cartRepositoryProvider = Provider<CartRepository>(
     clock: ref.watch(clockProvider),
   ),
 );
+
+/// Cria o leitor de quadros do modo carrinho; quem cria fecha (ADR 0012).
+final liveFrameAnalyzerFactoryProvider = Provider<LiveFrameAnalyzer Function()>((ref) => MlKitLiveFrameAnalyzer.new);
 
 final finishShoppingTripProvider = Provider<FinishShoppingTrip>(
   (ref) => FinishShoppingTrip(
