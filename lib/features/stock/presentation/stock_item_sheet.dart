@@ -12,6 +12,7 @@ import 'package:bipa/features/shopping_list/presentation/shopping_list_providers
 import 'package:bipa/features/stock/domain/stock_item.dart';
 import 'package:bipa/features/stock/domain/stock_location.dart';
 import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
+import 'package:bipa/features/stock/domain/suggested_location.dart';
 import 'package:bipa/features/stock/presentation/stock_display.dart';
 import 'package:bipa/features/stock/presentation/stock_providers.dart';
 import 'package:flutter/material.dart';
@@ -80,12 +81,14 @@ class StockItemSheet extends ConsumerWidget {
     final entry = (ref.watch(stockProvider).value ?? const <StockEntry>[])
         .where((e) => e.product.id == product.id)
         .firstOrNull;
+    // Sem item em casa, o local marcado é o que o item terá quando nascer
+    // (o mesmo do repositório), e não um que mudaria sozinho no primeiro "+".
     final item =
         entry?.item ??
         StockItem(
           productId: product.id,
           quantity: 0,
-          location: StockLocation.pantry,
+          location: suggestedLocation(product.name),
           updatedAt: ref.watch(clockProvider)(),
         );
     final target = item.targetQuantity;
