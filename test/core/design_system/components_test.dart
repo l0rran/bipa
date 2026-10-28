@@ -1,5 +1,6 @@
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/components/quantity_stepper.dart';
+import 'package:bipa/core/design_system/components/shopping_list.dart';
 import 'package:bipa/core/design_system/components/stock_gauge.dart';
 import 'package:bipa/core/design_system/components/stock_list.dart';
 import 'package:flutter/material.dart';
@@ -108,5 +109,57 @@ void main() {
 
     expect(used, 1);
     expect(find.text('Café Pilão 500 g'), findsOneWidget);
+  });
+
+  testWidgets('o item da lista marca e desmarca ao toque, com o preço no rótulo', (tester) async {
+    final semantics = tester.ensureSemantics();
+    var checked = false;
+    await tester.pumpWidget(
+      _app(
+        StatefulBuilder(
+          builder: (context, setState) => ShoppingListRow(
+            name: 'Café Pilão',
+            price: '≈ 18,99',
+            checked: checked,
+            onChanged: (value) => setState(() => checked = value),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.bySemanticsLabel('Café Pilão, ≈ 18,99'), findsOneWidget);
+    await tester.tap(find.text('Café Pilão'));
+    await tester.pumpAndSettle();
+    expect(checked, isTrue);
+    expect(find.byIcon(Icons.check_rounded), findsOneWidget);
+
+    await tester.tap(find.text('Café Pilão'));
+    await tester.pumpAndSettle();
+    expect(checked, isFalse);
+    semantics.dispose();
+  });
+
+  testWidgets('a prévia da lista mostra o número, o total e o "+N" das miniaturas', (tester) async {
+    var tapped = false;
+    await tester.pumpWidget(
+      _app(
+        ListPreviewCard(
+          count: 7,
+          countLabel: 'itens',
+          estimate: '≈ R\$ 84,30',
+          thumbs: const [Icon(Icons.coffee_outlined), Icon(Icons.egg_outlined), Icon(Icons.eco_outlined)],
+          extraCount: 4,
+          actionLabel: 'Abrir a lista',
+          actionIcon: Icons.checklist_rounded,
+          semanticLabel: 'Lista de compras: 7 itens',
+          onTap: () => tapped = true,
+        ),
+      ),
+    );
+
+    expect(find.text('≈ R\$ 84,30'), findsOneWidget);
+    expect(find.text('+4'), findsOneWidget);
+    await tester.tap(find.text('Abrir a lista'));
+    expect(tapped, isTrue);
   });
 }
