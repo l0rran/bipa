@@ -21,6 +21,7 @@
 - [ ] Protótipo da confirmação com mais de um preço na etiqueta (hoje a captura mostra os outros preços como chips)
 - [x] Etiqueta de gôndola com "/kg" e sem código: ler a unidade no `PriceTagParser` e escolher o produto pelo nome (ADR 0018)
 - [ ] Testar o OCR com fotos nítidas de etiquetas reais e acrescentá-las a `tool/ocr_bench/etiquetas_reais.py`
+- [ ] Revisar e fechar o modelo dos dados (tabelas, ids, o que é privado e o que sincroniza, o que pode ser apagado) num ADR, antes do backup
 
 ## Fase 1: MVP para uso pessoal
 
@@ -44,8 +45,57 @@
 - [ ] Lista a partir de foto de lista de papel e por voz ("acabou o café"); widget de adicionar rápido
 - [ ] Previsão de consumo a partir do histórico do estoque
 - [ ] Onboarding (a explicação antes de pedir localização e notificação já existe)
-- [ ] Backup e restauração local do banco
+- [ ] Backup e restauração local do banco, depois de fechar o modelo dos dados
 - [ ] Relatório de falhas e ícone do app
+
+### Ajustes de UX (análise de 28/10/2026)
+
+Os achados da [análise de UX](https://claude.ai/artifact/VeoUk6VjBSRWCox1prVyMr) que ainda faltam, com o código de cada um. Os já feitos estão no CHANGELOG.
+
+Primeira abertura e em casa:
+
+- [ ] AB1: ao fechar o editor do item, se o stepper cruzou o "ter sempre", um aviso oferece "Pôr na lista" ou "Tirar da lista"
+- [ ] AB3: a linha deslizada em "Usei um" fica no lugar, com o anel já coral, enquanto o aviso está na tela, e só depois vai para "Acabando"
+- [ ] AB5: primeira carga que configura: folha "Arrumar o que entrou" com local e "ter sempre", ou o local sugerido pela categoria
+- [ ] AB6: botão "Mais do item" no editor da linha, para o local, "Tirar de casa" e "Ver produto" sem passar pelo chip do "ter sempre"
+- [ ] AB7: na câmera em "Etiqueta", o produto que espera a etiqueta oferece "Guardar em casa" (quem bipou em casa pelo botão amarelo)
+
+Lista e compra:
+
+- [ ] CE3: quantidade na compra (o item "Quantidade na compra" acima)
+- [ ] CE4: o marcado à mão entra no total pelo preço esperado, com "≈", ou como "sem preço"; a prévia da lista diz "sem preço de N"
+- [ ] CE5: sem localização, a compra começa no mercado que o chip da Lista mostra
+- [ ] CE6: tocar no "3×" muda a quantidade, e o campo entende "2 leite", "leite 2" e "2x leite"
+- [ ] CE7: "Cancelar compra" também no carrinho, e o menu da Lista no canto direito
+
+Câmera e modo carrinho:
+
+- [ ] D2: uma câmera só (o item acima)
+- [ ] D3: o granel escolhido entra na bandeja sem preço, com o preço por kg como estimativa, e marca a lista
+- [ ] D4: a mesma etiqueta relida não vai para o próximo produto bipado
+- [ ] D5: os avisos de espera viram botão: "aponte para a etiqueta ›" abre "Conferir e salvar", e "bipe o produto ›" abre a escolha pelo nome lido
+- [ ] D6: trocar o produto lembrado para um código da balança
+- [ ] D7: em "Comprei" e "Usei", o Desfazer no aviso do visor quando a lista não muda, sem repetir o fato num snackbar
+- [ ] D7: a folha "Conferir e salvar" mostra o mercado, tocável para trocar
+
+Preços, mercados e produto:
+
+- [ ] F3: tocar num preço ("Nos mercados", "Preços recentes") abre a folha do preço, com "Corrigir preço" fora do carrinho
+- [ ] F4: o preço em destaque do produto desconfia de preço velho e diz o mercado quando não é recente
+- [ ] G1: "Editar produto" edita só o nome e a unidade; cada embalagem tem a própria edição
+- [ ] G2: mover uma embalagem para outro produto e apagar uma embalagem (com ADR)
+- [ ] G3: "Registrar preço" pergunta a embalagem quando há mais de uma, e o código lido de outra embalagem troca para ela
+
+Consistência e acessibilidade:
+
+- [ ] H1: a aba Produtos com os componentes de Mercados, e os formulários de produto e de mercado no design system
+- [ ] H2: textos de falha num padrão só ("Não deu para … Tente de novo."), exceções do domínio traduzidas pelo ARB e falha tratada no stepper do produto
+- [ ] H3: alturas mínimas no lugar de fixas (stepper, selos, número da seção) e teste com fonte em 200%
+- [ ] H4: rótulos para o leitor de tela ("não definido", "o quilo", "2 embalagens em casa") e o nome do produto como título
+- [ ] H5: as linhas de "Nos mercados" e da comparação abrem o mercado, e os alfinetes do mapa levam à linha
+- [ ] A barra de navegação encolhe ao rolar, como no design system
+- [ ] Movimento reduzido respeitado em todas as animações (barras da comparação e stepper)
+- [ ] Revisar no protótipo: "Modo carrinho: granel sem código", "Menu do bipar" com "Guardar em casa", "Mercados" com a idade dos preços e a pergunta "Levar os preços?"
 
 ## Fase 2: base comunitária
 
