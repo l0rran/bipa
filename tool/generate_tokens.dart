@@ -49,7 +49,9 @@ String _palette(Map<String, dynamic> tokens) {
   for (final name in names) {
     buffer.writeln('    required this.$name,');
   }
-  buffer.writeln('  });').writeln();
+  buffer
+    ..writeln('  });')
+    ..writeln();
   for (final token in colors) {
     buffer
       ..writeln('  /// ${token['usage']}')
@@ -62,7 +64,9 @@ String _palette(Map<String, dynamic> tokens) {
   for (final name in names) {
     buffer.writeln('    Color? $name,');
   }
-  buffer.writeln('  }) {').writeln('    return BipaColors(');
+  buffer
+    ..writeln('  }) {')
+    ..writeln('    return BipaColors(');
   for (final name in names) {
     buffer.writeln('      $name: $name ?? this.$name,');
   }
