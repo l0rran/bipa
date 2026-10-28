@@ -100,13 +100,14 @@ class StockItemSheet extends ConsumerWidget {
         .where((e) => e.product.id == product.id)
         .firstOrNull;
     // Sem item em casa, o local marcado é o que o item terá quando nascer
-    // (o mesmo do repositório), e não um que mudaria sozinho no primeiro "+".
+    // (o lembrado de quando saiu ou o sugerido, ADR 0021), e não um que
+    // mudaria sozinho no primeiro "+". Enquanto o banco responde, o sugerido.
     final item =
         entry?.item ??
         StockItem(
           productId: product.id,
           quantity: 0,
-          location: suggestedLocation(product.name),
+          location: ref.watch(newItemLocationProvider(product.id)).value ?? suggestedLocation(product.name),
           updatedAt: ref.watch(clockProvider)(),
         );
     final target = item.targetQuantity;

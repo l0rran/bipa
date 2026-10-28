@@ -97,6 +97,65 @@ void main() {
     expect(await DriftProductRepository(db).findById('arroz'), isNotNull);
   });
 
+  group('local lembrado ao tirar de casa (ADR 0021)', () {
+    setUp(
+      () => DriftProductRepository(
+        db,
+      ).save(Product(id: 'queijo', name: 'Queijo ralado', unit: MeasureUnit.unit, createdAt: now, updatedAt: now)),
+    );
+
+    test('produto nunca visto nasce no local sugerido pela categoria', () async {
+      expect(await repository.watchNewItemLocation('queijo').first, StockLocation.fridge);
+
+      await repository.adjust(productId: 'queijo', delta: 1, reason: StockMovementReason.purchase);
+
+      expect((await repository.findByProduct('queijo'))?.location, StockLocation.fridge);
+      expect(await db.select(db.rememberedLocations).get(), isEmpty);
+    });
+
+    test('tirar de casa e bipar de novo volta ao local escolhido', () async {
+      await repository.adjust(productId: 'queijo', delta: 1, reason: StockMovementReason.purchase);
+      await repository.setLocation('queijo', StockLocation.pantry);
+
+      await repository.remove('queijo');
+      expect(await repository.findByProduct('queijo'), isNull);
+      expect(await repository.watchNewItemLocation('queijo').first, StockLocation.pantry);
+
+      await repository.adjust(productId: 'queijo', delta: 1, reason: StockMovementReason.purchase);
+      expect((await repository.findByProduct('queijo'))?.location, StockLocation.pantry);
+    });
+
+    test('vale a última troca de local antes de tirar de casa', () async {
+      await repository.adjust(productId: 'queijo', delta: 1, reason: StockMovementReason.purchase);
+      await repository.setLocation('queijo', StockLocation.pantry);
+      await repository.remove('queijo');
+      await repository.adjust(productId: 'queijo', delta: 1, reason: StockMovementReason.purchase);
+      await repository.setLocation('queijo', StockLocation.freezer);
+
+      await repository.remove('queijo');
+      await repository.setTargetQuantity('queijo', 2);
+
+      expect((await repository.findByProduct('queijo'))?.location, StockLocation.freezer);
+    });
+
+    test('o local sugerido também fica lembrado', () async {
+      await repository.adjust(productId: 'queijo', delta: 1, reason: StockMovementReason.purchase);
+      await repository.remove('queijo');
+
+      final remembered = await db.select(db.rememberedLocations).getSingle();
+      expect((remembered.productId, remembered.location), ('queijo', StockLocation.fridge));
+    });
+
+    test('apagar o produto apaga o local lembrado', () async {
+      await repository.setLocation('queijo', StockLocation.pantry);
+      await repository.remove('queijo');
+
+      await DriftProductRepository(db).delete('queijo');
+
+      expect(await db.select(db.rememberedLocations).get(), isEmpty);
+    });
+  });
+
   test('watchAll traz o produto junto com o item', () async {
     await repository.adjust(productId: 'arroz', delta: 1, reason: StockMovementReason.purchase);
 

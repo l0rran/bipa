@@ -60,7 +60,7 @@ final class DriftStockRepository implements StockRepository {
               StockItemsCompanion.insert(
                 productId: productId,
                 quantity: quantity,
-                location: await _suggestedLocationFor(productId),
+                location: await _newItemLocation(productId),
                 updatedAt: now,
               ),
             );
@@ -225,6 +225,14 @@ final class DriftStockRepository implements StockRepository {
 
   @override
   Future<void> remove(String productId) => _db.transaction(() async {
+    // O local escolhido fica lembrado, para o item voltar a nascer ali
+    // (ADR 0021).
+    final item = await _selectItem(productId).getSingleOrNull();
+    if (item != null) {
+      await _db
+          .into(_db.rememberedLocations)
+          .insertOnConflictUpdate(RememberedLocationsCompanion.insert(productId: productId, location: item.location));
+    }
     await (_db.delete(_db.stockLots)..where((t) => t.productId.equals(productId))).go();
     await (_db.delete(_db.stockItems)..where((t) => t.productId.equals(productId))).go();
   });
@@ -250,7 +258,7 @@ final class DriftStockRepository implements StockRepository {
               StockItemsCompanion.insert(
                 productId: productId,
                 quantity: 0,
-                location: await _suggestedLocationFor(productId),
+                location: await _newItemLocation(productId),
                 updatedAt: now,
               ),
             );
@@ -259,10 +267,26 @@ final class DriftStockRepository implements StockRepository {
     });
   }
 
-  /// Local do item que nasce agora, pelo nome do produto.
-  Future<StockLocation> _suggestedLocationFor(String productId) async {
-    final product = await (_db.select(_db.products)..where((t) => t.id.equals(productId))).getSingleOrNull();
-    return product == null ? StockLocation.pantry : suggestedLocation(product.name);
+  @override
+  Stream<StockLocation> watchNewItemLocation(String productId) =>
+      _newItemLocationQuery(productId).watchSingleOrNull().map(_newItemLocationOf);
+
+  /// Local do item que nasce agora: o lembrado de quando ele saiu de casa
+  /// ou, sem ele, o sugerido pelo nome do produto (ADR 0021).
+  Future<StockLocation> _newItemLocation(String productId) async =>
+      _newItemLocationOf(await _newItemLocationQuery(productId).getSingleOrNull());
+
+  JoinedSelectStatement<HasResultSet, dynamic> _newItemLocationQuery(String productId) {
+    final products = _db.products;
+    final remembered = _db.rememberedLocations;
+    return _db.select(products).join([leftOuterJoin(remembered, remembered.productId.equalsExp(products.id))])
+      ..where(products.id.equals(productId));
+  }
+
+  StockLocation _newItemLocationOf(TypedResult? row) {
+    if (row == null) return StockLocation.pantry;
+    return row.readTableOrNull(_db.rememberedLocations)?.location ??
+        suggestedLocation(row.readTable(_db.products).name);
   }
 
   SimpleSelectStatement<$StockItemsTable, StockItemRow> _selectItem(String productId) =>

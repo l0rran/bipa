@@ -111,6 +111,21 @@ void main() {
       final item = await tester.runAsync(() => container.read(stockRepositoryProvider).findByProduct('leite'));
       expect(item?.location, StockLocation.fridge);
     });
+
+    testWidgets('depois de tirar de casa, marca o local que a pessoa tinha escolhido (ADR 0021)', (tester) async {
+      final container = await _openSheet(tester, _product('leite', 'Leite integral 1 L'));
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Despensa'));
+      await _settle(tester);
+      await tester.runAsync(() => container.read(stockRepositoryProvider).remove('leite'));
+      await _settle(tester);
+
+      expect(_selectedLocation(tester), StockLocation.pantry);
+      await tester.tap(find.bySemanticsLabel('Uma embalagem a mais'));
+      await _settle(tester);
+      expect(_selectedLocation(tester), StockLocation.pantry);
+      final item = await tester.runAsync(() => container.read(stockRepositoryProvider).findByProduct('leite'));
+      expect(item?.location, StockLocation.pantry);
+    });
   });
 
   group('falhas do banco avisam (H11)', () {

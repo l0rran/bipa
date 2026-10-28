@@ -34,8 +34,14 @@ abstract interface class StockRepository {
   Stream<List<StockLot>> watchLots(String productId);
 
   /// Tira o produto de casa: o item e os lotes somem (o histórico de
-  /// movimentos fica). O produto e os preços continuam.
+  /// movimentos fica). O produto e os preços continuam, e o local do item
+  /// fica lembrado para quando ele voltar (ADR 0021).
   Future<void> remove(String productId);
+
+  /// O local em que o item do produto nasce quando entrar em casa: o
+  /// lembrado de quando saiu ou, sem ele, o sugerido pelo nome. Serve para
+  /// mostrar o local antes de o item existir.
+  Stream<StockLocation> watchNewItemLocation(String productId);
 
   /// Define quanto a pessoa quer ter sempre em casa; `null` remove o alerta.
   Future<void> setTargetQuantity(String productId, double? target);

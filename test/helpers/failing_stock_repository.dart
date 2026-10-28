@@ -23,6 +23,9 @@ final class FailingStockRepository implements StockRepository {
   Stream<List<StockLot>> watchLots(String productId) => _reads.watchLots(productId);
 
   @override
+  Stream<StockLocation> watchNewItemLocation(String productId) => _reads.watchNewItemLocation(productId);
+
+  @override
   Future<StockChange> adjust({
     required String productId,
     required double delta,
