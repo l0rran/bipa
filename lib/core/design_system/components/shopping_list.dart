@@ -1,6 +1,9 @@
+import 'dart:math' as math;
+
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/text_scale.dart';
 import 'package:flutter/material.dart';
 
 /// A lista no Início (ListPreview do design system): quantos itens, o total
@@ -216,6 +219,17 @@ class QuickTile extends StatelessWidget {
   final VoidCallback onTap;
   final double size;
 
+  static const _padding = BipaSpacing.s2;
+  static const _iconSize = 28.0;
+  static const _gap = 6.0;
+
+  /// O lado do bloco: [size], ou mais quando a letra grande não cabe nele. A
+  /// lista horizontal usa o mesmo valor para a altura.
+  static double sideFor(BuildContext context, {double size = 76}) => math.max(
+    size,
+    _padding * 2 + _iconSize + _gap + BipaText.caption.scaledLineHeight(context),
+  );
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -228,7 +242,7 @@ class QuickTile extends StatelessWidget {
       excludeSemantics: true,
       onTap: onTap,
       child: SizedBox.square(
-        dimension: size,
+        dimension: sideFor(context, size: size),
         child: Material(
           color: selected ? colors.brandSoft : colors.surface,
           borderRadius: BorderRadius.circular(BipaRadius.md),
@@ -239,12 +253,12 @@ class QuickTile extends StatelessWidget {
               children: [
                 Positioned.fill(
                   child: Padding(
-                    padding: const EdgeInsets.all(BipaSpacing.s2),
+                    padding: const EdgeInsets.all(_padding),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(icon, size: 28, color: selected ? colors.brandText : colors.inkMuted),
-                        const SizedBox(height: 6),
+                        Icon(icon, size: _iconSize, color: selected ? colors.brandText : colors.inkMuted),
+                        const SizedBox(height: _gap),
                         Text(
                           label,
                           maxLines: 1,
@@ -456,14 +470,15 @@ class ShoppingBar extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: onTap,
-            child: SizedBox(
-              height: 60,
+            // Pelo menos 60; com letra grande, cresce em vez de cortar.
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 60),
               child: Stack(
                 // O conteúdo fica centrado na altura da barra.
                 alignment: AlignmentDirectional.centerStart,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(left: 10, right: BipaSpacing.s2),
+                    padding: const EdgeInsets.fromLTRB(10, BipaSpacing.s2, BipaSpacing.s2, BipaSpacing.s2),
                     child: Row(
                       children: [
                         Container(

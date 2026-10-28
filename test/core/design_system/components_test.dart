@@ -2,6 +2,7 @@ import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/components/dropdown_chip.dart';
 import 'package:bipa/core/design_system/components/list_cost_compare.dart';
 import 'package:bipa/core/design_system/components/market_map.dart';
+import 'package:bipa/core/design_system/components/place_filter.dart';
 import 'package:bipa/core/design_system/components/price_history.dart';
 import 'package:bipa/core/design_system/components/quantity_stepper.dart';
 import 'package:bipa/core/design_system/components/scan_tray.dart';
@@ -190,6 +191,43 @@ void main() {
     expect(find.text('R\$ 32,10 · Atacarejo'), findsOneWidget);
     await tester.tap(find.text('Continuar'));
     expect(tapped, isTrue);
+  });
+
+  testWidgets('com letra grande, a barra, o bloco e os locais crescem em vez de cortar o texto', (tester) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    Widget large(Widget child) => _app(child);
+
+    await tester.pumpWidget(
+      large(
+        ShoppingBar(
+          title: '3 de 7 itens',
+          subtitle: 'R\$ 32,10 · Atacarejo',
+          actionLabel: 'Continuar',
+          progress: 3 / 7,
+          semanticLabel: 'Compra em andamento: 3 de 7',
+          onTap: () {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(tester.getSize(find.byType(ShoppingBar)).height, greaterThan(60));
+
+    await tester.pumpWidget(large(QuickTile(icon: Icons.coffee_outlined, label: 'Café', selected: false, onTap: () {})));
+    expect(tester.takeException(), isNull);
+    expect(tester.getSize(find.byType(QuickTile)).height, greaterThan(76));
+
+    await tester.pumpWidget(
+      large(
+        PlaceFilter<int>(
+          options: const [PlaceOption(value: 0, label: 'Despensa', icon: Icons.kitchen_outlined, count: 3)],
+          selected: 0,
+          onSelected: (_) {},
+        ),
+      ),
+    );
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('o item da bandeja liga e desliga o levar e abre o preço', (tester) async {

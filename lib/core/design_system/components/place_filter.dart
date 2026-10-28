@@ -1,6 +1,7 @@
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/text_scale.dart';
 import 'package:flutter/material.dart';
 
 /// Uma opção do filtro de locais.
@@ -25,7 +26,9 @@ class PlaceFilter<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 96,
+      // A arte, o espaço e o nome, que cresce com a letra; a folga de baixo
+      // cabe a arte um pouco maior quando escolhida.
+      height: 68 + 6 + BipaText.caption.scaledLineHeight(context) + 6,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s4),

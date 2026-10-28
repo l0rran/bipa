@@ -2,6 +2,7 @@ import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
 import 'package:bipa/core/design_system/components/tap_target.dart';
+import 'package:bipa/core/design_system/text_scale.dart';
 import 'package:flutter/material.dart';
 
 /// Cartão de produto da prateleira "Acabando": a imagem grande, o medidor no
@@ -35,6 +36,13 @@ class ProductCard extends StatelessWidget {
   final String? addLabel;
   final String? removeLabel;
   final double width;
+
+  static const _nameStyle = TextStyle(fontSize: 14, height: 18 / 14);
+
+  /// A altura do cartão: a arte quadrada, o espaço e duas linhas de nome, que
+  /// crescem com a letra. A prateleira horizontal usa o mesmo valor.
+  static double heightFor(BuildContext context, {double width = 116}) =>
+      width + BipaSpacing.s2 + _nameStyle.scaledLineHeight(context, lines: 2);
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +95,7 @@ class ProductCard extends StatelessWidget {
             name,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: BipaText.bodyLarge.copyWith(fontSize: 14, height: 18 / 14, color: colors.ink),
+            style: BipaText.bodyLarge.merge(_nameStyle).copyWith(color: colors.ink),
           ),
         ],
       ),

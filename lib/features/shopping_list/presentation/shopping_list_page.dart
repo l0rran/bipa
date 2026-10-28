@@ -330,7 +330,7 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                 _sectionHeader(SectionHeader(title: l10n.listUsual)),
                 SliverToBoxAdapter(
                   child: SizedBox(
-                    height: 76,
+                    height: QuickTile.sideFor(context),
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s4),

@@ -225,7 +225,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                 _sectionHeader(SectionHeader(title: l10n.sectionRunningLow, count: low.length, alert: true)),
                 SliverToBoxAdapter(
                   child: SizedBox(
-                    height: 172,
+                    // O cartão e a folga para a sombra do "+".
+                    height: ProductCard.heightFor(context) + BipaSpacing.s3,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s4),
