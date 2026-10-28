@@ -1,5 +1,7 @@
+// Os enums (Aisle, PriceConditionKind…) são usados pelo código gerado
+// (app_database.g.dart).
+import 'package:bipa/core/catalog/product_kind.dart';
 import 'package:bipa/core/database/tables.dart';
-// Os enums abaixo são usados pelo código gerado (app_database.g.dart).
 import 'package:bipa/features/prices/domain/price_condition.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
@@ -23,6 +25,7 @@ part 'app_database.g.dart';
     ShoppingListItems,
     ShoppingTrips,
     CartItems,
+    MarketAisles,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -36,7 +39,8 @@ class AppDatabase extends _$AppDatabase {
   // v5: modo compra.
   // v6: carrinho da compra.
   // v7: produto e embalagens (ADR 0013).
-  int get schemaVersion => 7;
+  // v8: ordem das seções aprendida por mercado (ADR 0014).
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -53,6 +57,7 @@ class AppDatabase extends _$AppDatabase {
       if (from < 5) await migrator.createTable(shoppingTrips);
       if (from < 6) await migrator.createTable(cartItems);
       if (from < 7) await _splitProductsIntoPackages(migrator, hadCart: from >= 6);
+      if (from < 8) await migrator.createTable(marketAisles);
     }),
     beforeOpen: (details) async {
       // SQLite não aplica chaves estrangeiras sem este pragma.

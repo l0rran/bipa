@@ -1,3 +1,4 @@
+import 'package:bipa/core/catalog/product_kind.dart';
 import 'package:bipa/features/prices/domain/price_condition.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
@@ -193,4 +194,22 @@ class CartItems extends Table {
 
   @override
   Set<Column<Object>> get primaryKey => {id};
+}
+
+/// A ordem das seções em cada mercado, aprendida com as compras (ADR 0014,
+/// esquema v8). Privada, como a lista. A seção é gravada pelo nome do
+/// [Aisle]: renomear um valor do enum exige migração.
+@DataClassName('MarketAisleRow')
+class MarketAisles extends Table {
+  TextColumn get marketId => text().references(Markets, #id, onDelete: KeyAction.cascade)();
+  TextColumn get aisle => textEnum<Aisle>()();
+
+  /// De 0 (entrada) a 1 (fundo).
+  RealColumn get position => real()();
+
+  /// Em quantas compras a seção foi vista nesse mercado.
+  IntColumn get samples => integer()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {marketId, aisle};
 }
