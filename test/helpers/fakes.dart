@@ -43,6 +43,10 @@ final class InMemoryProductRepository implements ProductRepository {
       Stream.value([for (final p in packages.values) if (p.productId == productId) p]);
 
   @override
+  Stream<List<ProductPackage>> watchPackagesOfProducts(Set<String> productIds) =>
+      Stream.value([for (final p in packages.values) if (productIds.contains(p.productId)) p]);
+
+  @override
   Future<ProductPackage?> findPackageById(String id) async => packages[id];
 
   @override

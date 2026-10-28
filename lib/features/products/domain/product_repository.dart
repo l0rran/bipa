@@ -21,6 +21,9 @@ abstract interface class ProductRepository {
   /// As embalagens do produto, das mais novas para as mais antigas.
   Stream<List<ProductPackage>> watchPackages(String productId);
 
+  /// As embalagens de vários produtos de uma vez (os da lista, por exemplo).
+  Stream<List<ProductPackage>> watchPackagesOfProducts(Set<String> productIds);
+
   Future<ProductPackage?> findPackageById(String id);
 
   Future<ProductPackage?> findPackageByBarcode(String barcode);

@@ -63,6 +63,13 @@ final class DriftProductRepository implements ProductRepository {
   }
 
   @override
+  Stream<List<ProductPackage>> watchPackagesOfProducts(Set<String> productIds) {
+    if (productIds.isEmpty) return Stream.value(const []);
+    final select = _db.select(_db.productPackages)..where((t) => t.productId.isIn(productIds));
+    return select.watch().map((rows) => [for (final row in rows) row.toEntity()]);
+  }
+
+  @override
   Future<ProductPackage?> findPackageById(String id) async {
     final select = _db.select(_db.productPackages)..where((t) => t.id.equals(id));
     return (await select.getSingleOrNull())?.toEntity();

@@ -61,7 +61,8 @@ class _MarketsPageState extends ConsumerState<MarketsPage> {
     };
     // A comparação só faz sentido com dois mercados ou mais.
     final compare = costs.length > 1 ? costs : const <MarketListCost>[];
-    final cheapestId = compare.firstOrNull?.marketId;
+    final cheapest = compare.firstOrNull;
+    final cheapestId = cheapest == null || cheapest.isPartial ? null : cheapest.marketId;
 
     return Scaffold(
       body: AsyncValueView(
@@ -127,7 +128,8 @@ class _MarketsPageState extends ConsumerState<MarketsPage> {
                   SectionHeader(title: l10n.marketsListCost),
                   const SizedBox(height: BipaSpacing.s2),
                   ListCostCompare(
-                    bestLabel: l10n.marketsCheapest,
+                    // O selo só vale quando o primeiro tem preço da lista inteira.
+                    bestLabel: compare.first.isPartial ? null : l10n.marketsCheapest,
                     rows: [
                       for (final cost in compare)
                         ListCostRow(

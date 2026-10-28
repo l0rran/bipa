@@ -22,14 +22,15 @@ class ListCostRow {
 
 /// "Sua lista em cada mercado" (Compare do design system): uma barra por
 /// mercado. A primeira linha é a mais barata, com a barra em tinta e o selo
-/// [bestLabel]; as outras ficam neutras.
+/// [bestLabel]; as outras ficam neutras. Sem [bestLabel] (quando a
+/// comparação não é justa), nenhuma linha se destaca.
 class ListCostCompare extends StatelessWidget {
-  const ListCostCompare({required this.rows, required this.bestLabel, super.key});
+  const ListCostCompare({required this.rows, this.bestLabel, super.key});
 
   final List<ListCostRow> rows;
 
   /// "mais barato".
-  final String bestLabel;
+  final String? bestLabel;
 
   @override
   Widget build(BuildContext context) {

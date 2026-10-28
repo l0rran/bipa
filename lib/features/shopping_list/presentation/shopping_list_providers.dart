@@ -9,6 +9,7 @@ import 'package:bipa/features/prices/domain/price_comparison.dart';
 import 'package:bipa/features/prices/domain/price_observation.dart';
 import 'package:bipa/features/prices/presentation/prices_providers.dart';
 import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:bipa/features/shopping_list/data/drift_aisle_order_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_cart_repository.dart';
@@ -55,7 +56,20 @@ final listCostPerMarketProvider = Provider.autoDispose<List<MarketListCost>>((re
     for (final entry in entries)
       if (!entry.item.isChecked) ?entry.item.productId,
   };
-  return listCostPerMarket(missing, ref.watch(shoppingListHistoryProvider).value ?? const []);
+  final packages = ref.watch(listPackagesProvider).value ?? const [];
+  return listCostPerMarket(
+    missing,
+    ref.watch(shoppingListHistoryProvider).value ?? const [],
+    packages: {for (final package in packages) package.id: package},
+  );
+});
+
+/// As embalagens dos produtos da lista, para comparar pelo preço por kg.
+final listPackagesProvider = StreamProvider.autoDispose<List<ProductPackage>>((ref) async* {
+  // O ref não pode ser usado depois do await (como no histórico da lista).
+  final products = ref.watch(productRepositoryProvider);
+  final entries = await ref.watch(shoppingListProvider.future);
+  yield* products.watchPackagesOfProducts({for (final entry in entries) ?entry.item.productId});
 });
 
 /// Preço de referência dos produtos da lista, para estimar o total.
