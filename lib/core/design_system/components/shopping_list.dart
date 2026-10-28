@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/shrink_to_fit.dart';
 import 'package:bipa/core/design_system/components/tap_target.dart';
 import 'package:bipa/core/design_system/text_scale.dart';
 import 'package:flutter/material.dart';
@@ -50,8 +51,12 @@ class ListPreviewCard extends StatelessWidget {
     final circles = [
       for (final thumb in thumbs.take(3)) thumb,
       if (extraCount > 0)
+        // O círculo tem 40 fixos (é desenho): o "+N" encolhe para caber nele.
         Center(
-          child: Text('+$extraCount', style: BipaText.label.copyWith(fontSize: 13, color: colors.ink)),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text('+$extraCount', style: BipaText.label.copyWith(fontSize: 13, color: colors.ink)),
+          ),
         ),
     ];
 
@@ -122,14 +127,23 @@ class ListPreviewCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
                 Container(
-                  height: 48,
+                  // Pelo menos 48; com letra grande, o rótulo quebra a linha e
+                  // o botão cresce em vez de cortar (H3).
+                  constraints: const BoxConstraints(minHeight: 48),
+                  padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s4, vertical: BipaSpacing.s2),
                   decoration: ShapeDecoration(color: colors.brand, shape: const StadiumBorder()),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(actionIcon, size: 18, color: colors.onBrand),
                       const SizedBox(width: BipaSpacing.s2),
-                      Text(actionLabel, style: BipaText.label.copyWith(fontSize: 15, color: colors.onBrand)),
+                      Flexible(
+                        child: Text(
+                          actionLabel,
+                          textAlign: TextAlign.center,
+                          style: BipaText.label.copyWith(fontSize: 15, color: colors.onBrand),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -411,51 +425,61 @@ class ShoppingListRow extends StatelessWidget {
             constraints: const BoxConstraints(minHeight: 52),
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: BipaSpacing.s4, vertical: tappable ? 2 : BipaSpacing.s2),
-              child: Row(
-                children: [
-                  AnimatedContainer(
-                    duration: BipaMotion.base,
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: checked ? colors.ink : null,
-                      borderRadius: BorderRadius.circular(BipaRadius.sm),
-                      border: checked ? null : Border.all(color: colors.line, width: 2),
+              // A quantidade e o preço não quebram a linha: com letra grande,
+              // encolhem até um teto, e o nome fica com o resto (H3).
+              child: LayoutBuilder(
+                builder: (context, constraints) => Row(
+                  children: [
+                    AnimatedContainer(
+                      duration: BipaMotion.base,
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: checked ? colors.ink : null,
+                        borderRadius: BorderRadius.circular(BipaRadius.sm),
+                        border: checked ? null : Border.all(color: colors.line, width: 2),
+                      ),
+                      child: checked ? Icon(Icons.check_rounded, size: 18, color: colors.surface) : null,
                     ),
-                    child: checked ? Icon(Icons.check_rounded, size: 18, color: colors.surface) : null,
-                  ),
-                  if (quantity != null && tappable)
-                    _Quantity(label: quantity, onTap: onQuantityTap)
-                  else ...[
-                    const SizedBox(width: BipaSpacing.s3),
-                    if (quantity != null) ...[_Quantity(label: quantity), const SizedBox(width: BipaSpacing.s1)],
-                  ],
-                  Expanded(
-                    child: Text(
-                      name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: BipaText.bodyLarge.copyWith(
-                        fontSize: 15,
-                        height: 20 / 15,
-                        color: colors.ink,
-                        decoration: checked ? TextDecoration.lineThrough : null,
-                        decorationColor: colors.ink,
+                    if (quantity != null && tappable)
+                      _Quantity(label: quantity, maxWidth: constraints.maxWidth * 0.3, onTap: onQuantityTap)
+                    else ...[
+                      const SizedBox(width: BipaSpacing.s3),
+                      if (quantity != null) ...[
+                        _Quantity(label: quantity, maxWidth: constraints.maxWidth * 0.3),
+                        const SizedBox(width: BipaSpacing.s1),
+                      ],
+                    ],
+                    Expanded(
+                      child: Text(
+                        name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: BipaText.bodyLarge.copyWith(
+                          fontSize: 15,
+                          height: 20 / 15,
+                          color: colors.ink,
+                          decoration: checked ? TextDecoration.lineThrough : null,
+                          decorationColor: colors.ink,
+                        ),
                       ),
                     ),
-                  ),
-                  if (price != null) ...[
-                    const SizedBox(width: BipaSpacing.s3),
-                    Text(
-                      price,
-                      style: BipaText.label.copyWith(
-                        fontSize: 13,
-                        color: colors.inkMuted,
-                        fontFeatures: const [FontFeature.tabularFigures()],
+                    if (price != null) ...[
+                      const SizedBox(width: BipaSpacing.s3),
+                      ShrinkToFit(
+                        maxWidth: constraints.maxWidth * 0.35,
+                        child: Text(
+                          price,
+                          style: BipaText.label.copyWith(
+                            fontSize: 13,
+                            color: colors.inkMuted,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ),
@@ -468,22 +492,29 @@ class ShoppingListRow extends StatelessWidget {
 /// A quantidade antes do nome, tocável quando há [onTap]: a área de toque
 /// tem 48 dp, e o desenho continua o de um texto em cinza.
 class _Quantity extends StatelessWidget {
-  const _Quantity({required this.label, this.onTap});
+  const _Quantity({required this.label, required this.maxWidth, this.onTap});
 
   final String label;
+
+  /// O teto da largura: a quantidade encolhe a partir dele com letra grande.
+  final double maxWidth;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final text = Text(
-      label,
-      style: BipaText.bodyLarge.copyWith(
-        fontSize: 15,
-        height: 20 / 15,
-        fontWeight: FontWeight.w600,
-        color: colors.inkMuted,
-        fontFeatures: const [FontFeature.tabularFigures()],
+    final text = ShrinkToFit(
+      maxWidth: maxWidth,
+      alignment: AlignmentDirectional.centerStart,
+      child: Text(
+        label,
+        style: BipaText.bodyLarge.copyWith(
+          fontSize: 15,
+          height: 20 / 15,
+          fontWeight: FontWeight.w600,
+          color: colors.inkMuted,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
       ),
     );
     final onTap = this.onTap;
@@ -532,6 +563,9 @@ class ShoppingBar extends StatelessWidget {
     final colors = context.colors;
     final subtitle = this.subtitle;
     final progress = this.progress;
+    // Uma linha no normal; com letra grande, duas, e a barra cresce em vez de
+    // cortar o total e o mercado (H3).
+    final lines = MediaQuery.textScalerOf(context).scale(1) > 1.3 ? 2 : 1;
 
     return Semantics(
       button: true,
@@ -561,59 +595,67 @@ class ShoppingBar extends StatelessWidget {
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(10, BipaSpacing.s2, BipaSpacing.s2, BipaSpacing.s2),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: colors.onBrand.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) => Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: colors.onBrand.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.shopping_cart_outlined, size: 20, color: colors.onBrand),
                           ),
-                          child: Icon(Icons.shopping_cart_outlined, size: 20, color: colors.onBrand),
-                        ),
-                        const SizedBox(width: BipaSpacing.s3),
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: BipaText.number.copyWith(fontSize: 16, color: colors.onBrand),
-                              ),
-                              if (subtitle != null)
+                          const SizedBox(width: BipaSpacing.s3),
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
                                 Text(
-                                  subtitle,
-                                  maxLines: 1,
+                                  title,
+                                  maxLines: lines,
                                   overflow: TextOverflow.ellipsis,
-                                  style: BipaText.label.copyWith(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: colors.onBrand.withValues(alpha: 0.75),
-                                    fontFeatures: const [FontFeature.tabularFigures()],
-                                  ),
+                                  style: BipaText.number.copyWith(fontSize: 16, color: colors.onBrand),
                                 ),
-                            ],
+                                if (subtitle != null)
+                                  Text(
+                                    subtitle,
+                                    maxLines: lines,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: BipaText.label.copyWith(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: colors.onBrand.withValues(alpha: 0.75),
+                                      fontFeatures: const [FontFeature.tabularFigures()],
+                                    ),
+                                  ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: BipaSpacing.s2),
-                        Container(
-                          height: 44,
-                          padding: const EdgeInsets.only(left: BipaSpacing.s4, right: 14),
-                          decoration: ShapeDecoration(color: colors.ink, shape: const StadiumBorder()),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(actionLabel, style: BipaText.label.copyWith(color: colors.surface)),
-                              const SizedBox(width: BipaSpacing.s1),
-                              Icon(Icons.chevron_right_rounded, size: 18, color: colors.surface),
-                            ],
+                          const SizedBox(width: BipaSpacing.s2),
+                          Container(
+                            constraints: const BoxConstraints(minHeight: 44),
+                            padding: const EdgeInsets.only(left: BipaSpacing.s4, right: 14),
+                            decoration: ShapeDecoration(color: colors.ink, shape: const StadiumBorder()),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // O rótulo não quebra a linha: com letra grande,
+                                // encolhe até 40% da barra (H3).
+                                ShrinkToFit(
+                                  maxWidth: constraints.maxWidth * 0.4,
+                                  alignment: AlignmentDirectional.centerStart,
+                                  child: Text(actionLabel, style: BipaText.label.copyWith(color: colors.surface)),
+                                ),
+                                const SizedBox(width: BipaSpacing.s1),
+                                Icon(Icons.chevron_right_rounded, size: 18, color: colors.surface),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                   // O fio de progresso na base da barra.

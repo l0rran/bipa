@@ -4,6 +4,7 @@ import 'dart:ui' show ImageFilter;
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/shrink_to_fit.dart';
 import 'package:bipa/core/design_system/components/tap_target.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -104,49 +105,64 @@ class ScanTray extends StatelessWidget {
               const SizedBox(height: BipaSpacing.s2),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s1),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Semantics(
-                            header: true,
-                            child: Text(
-                              title,
-                              style: BipaText.number.copyWith(fontSize: 18, height: 24 / 18, color: colors.ink),
-                            ),
-                          ),
-                          if (countLabel != null)
-                            Text(
-                              countLabel,
-                              style: BipaText.label.copyWith(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: colors.inkMuted,
+                child: LayoutBuilder(
+                  builder: (context, constraints) => Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Semantics(
+                              header: true,
+                              child: Text(
+                                title,
+                                style: BipaText.number.copyWith(fontSize: 18, height: 24 / 18, color: colors.ink),
                               ),
                             ),
-                        ],
+                            if (countLabel != null)
+                              Text(
+                                countLabel,
+                                style: BipaText.label.copyWith(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: colors.inkMuted,
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
-                    if (totalValue != null)
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            totalLabel.toUpperCase(),
-                            style: BipaText.caption.copyWith(fontSize: 11, height: 14 / 11, color: colors.inkMuted),
+                      if (totalValue != null)
+                        // O total ocupa no máximo 55% da linha: o valor encolhe
+                        // e a ressalva quebra a linha com letra grande (H3).
+                        ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.55),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                totalLabel.toUpperCase(),
+                                textAlign: TextAlign.end,
+                                style: BipaText.caption.copyWith(fontSize: 11, height: 14 / 11, color: colors.inkMuted),
+                              ),
+                              ShrinkToFit(
+                                maxWidth: constraints.maxWidth * 0.55,
+                                child: Text(
+                                  totalValue,
+                                  style: BipaText.price.copyWith(fontSize: 22, height: 26 / 22, color: colors.ink),
+                                ),
+                              ),
+                              if (totalNote != null)
+                                Text(
+                                  totalNote,
+                                  textAlign: TextAlign.end,
+                                  style: BipaText.caption.copyWith(color: colors.inkMuted),
+                                ),
+                            ],
                           ),
-                          Text(
-                            totalValue,
-                            style: BipaText.price.copyWith(fontSize: 22, height: 26 / 22, color: colors.ink),
-                          ),
-                          if (totalNote != null)
-                            Text(totalNote, style: BipaText.caption.copyWith(color: colors.inkMuted)),
-                        ],
-                      ),
-                  ],
+                        ),
+                    ],
+                  ),
                 ),
               ),
               if (items.isNotEmpty) ...[
@@ -257,68 +273,78 @@ class ScanTrayItem extends StatelessWidget {
       tagText = colors.onPrice;
     }
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(BipaSpacing.s3, BipaSpacing.s1, BipaSpacing.s1, BipaSpacing.s1),
-      decoration: BoxDecoration(color: colors.ground, borderRadius: BorderRadius.circular(BipaRadius.md)),
-      child: Row(
-        children: [
-          Expanded(
-            child: onNameTap == null
-                ? nameText
-                : Semantics(
-                    button: true,
-                    label: nameTapLabel,
-                    hint: name,
-                    excludeSemantics: true,
-                    onTap: onNameTap,
-                    child: InkWell(
-                      onTap: onNameTap,
-                      borderRadius: BorderRadius.circular(BipaRadius.sm),
-                      // A área de toque tem a altura mínima de 48.
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(minHeight: 48),
-                        child: Align(alignment: AlignmentDirectional.centerStart, child: nameText),
-                      ),
-                    ),
-                  ),
-          ),
-          const SizedBox(width: BipaSpacing.s3),
-          AnimatedOpacity(
-            opacity: dimmed,
-            duration: BipaMotion.base,
-            child: Semantics(
-              button: true,
-              label: priceSemanticsLabel ?? price ?? priceTapLabel,
-              excludeSemantics: true,
-              onTap: onPriceTap,
-              // A etiqueta é pequena, mas a área de toque tem 48 de altura.
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: onPriceTap,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(minHeight: 48),
-                  child: Center(
-                    widthFactor: 1,
-                    child: AnimatedContainer(
-                      duration: BipaMotion.base,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(BipaRadius.sm),
-                        boxShadow: [if (justRead) BoxShadow(color: colors.brandSoft, spreadRadius: 3)],
-                      ),
-                      child: Material(
-                        color: tagColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(BipaRadius.sm),
-                          side: tagBorder,
-                        ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final tagMaxWidth = constraints.maxWidth * 0.45;
+        return Container(
+          padding: const EdgeInsets.fromLTRB(BipaSpacing.s3, BipaSpacing.s1, BipaSpacing.s1, BipaSpacing.s1),
+          decoration: BoxDecoration(color: colors.ground, borderRadius: BorderRadius.circular(BipaRadius.md)),
+          child: Row(
+            children: [
+              Expanded(
+                child: onNameTap == null
+                    ? nameText
+                    : Semantics(
+                        button: true,
+                        label: nameTapLabel,
+                        hint: name,
+                        excludeSemantics: true,
+                        onTap: onNameTap,
                         child: InkWell(
-                          onTap: onPriceTap,
+                          onTap: onNameTap,
                           borderRadius: BorderRadius.circular(BipaRadius.sm),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            child: Text(
-                              price ?? '—',
-                              style: BipaText.number.copyWith(fontSize: 14, height: 18 / 14, color: tagText),
+                          // A área de toque tem a altura mínima de 48.
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(minHeight: 48),
+                            child: Align(alignment: AlignmentDirectional.centerStart, child: nameText),
+                          ),
+                        ),
+                      ),
+              ),
+              const SizedBox(width: BipaSpacing.s3),
+              AnimatedOpacity(
+                opacity: dimmed,
+                duration: BipaMotion.base,
+                child: Semantics(
+                  button: true,
+                  label: priceSemanticsLabel ?? price ?? priceTapLabel,
+                  excludeSemantics: true,
+                  onTap: onPriceTap,
+                  // A etiqueta é pequena, mas a área de toque tem 48 de altura.
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: onPriceTap,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 48),
+                      child: Center(
+                        widthFactor: 1,
+                        child: AnimatedContainer(
+                          duration: BipaMotion.base,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(BipaRadius.sm),
+                            boxShadow: [if (justRead) BoxShadow(color: colors.brandSoft, spreadRadius: 3)],
+                          ),
+                          child: Material(
+                            color: tagColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(BipaRadius.sm),
+                              side: tagBorder,
+                            ),
+                            child: InkWell(
+                              onTap: onPriceTap,
+                              borderRadius: BorderRadius.circular(BipaRadius.sm),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                // Preço não quebra a linha: com letra grande, encolhe
+                                // até 45% da linha da bandeja (H3).
+                                child: ShrinkToFit(
+                                  maxWidth: tagMaxWidth,
+                                  child: Text(
+                                    price ?? '—',
+                                    style: BipaText.number.copyWith(fontSize: 14, height: 18 / 14, color: tagText),
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -327,12 +353,12 @@ class ScanTrayItem extends StatelessWidget {
                   ),
                 ),
               ),
-            ),
+              const SizedBox(width: BipaSpacing.s3),
+              BipaToggle(value: take, onChanged: onTakeChanged, semanticLabel: takeLabel),
+            ],
           ),
-          const SizedBox(width: BipaSpacing.s3),
-          BipaToggle(value: take, onChanged: onTakeChanged, semanticLabel: takeLabel),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -555,7 +581,8 @@ class CameraGlassChip extends StatelessWidget {
               child: InkWell(
                 onTap: onTap,
                 child: Container(
-                  height: 40,
+                  // Pelo menos 40; com letra grande, o chip cresce em vez de cortar (H3).
+                  constraints: const BoxConstraints(minHeight: 40),
                   padding: const EdgeInsets.only(left: BipaSpacing.s2, right: BipaSpacing.s3),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -634,45 +661,58 @@ class LiveReadChip extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
           child: Container(
-            height: 40,
+            // Pelo menos 40; com letra grande, o aviso cresce em vez de cortar (H3).
+            constraints: const BoxConstraints(minHeight: 40),
             color: colors.camera.withValues(alpha: 0.55),
             padding: const EdgeInsets.only(left: BipaSpacing.s3, right: BipaSpacing.s4),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (countdown case final countdown?)
-                  _CountdownRing(
-                    duration: countdown,
-                    color: colors.onCamera,
-                    child: Icon(icon, size: 14, color: colors.onCamera),
-                  )
-                else
-                  Icon(icon, size: 18, color: colors.onCamera),
-                const SizedBox(width: BipaSpacing.s2),
-                if (price case final price?) ...[
-                  Text(
-                    price,
-                    style: BipaText.number.copyWith(fontSize: 16, height: 20 / 16, color: colors.onCamera),
-                  ),
+            // O preço e a ação não quebram a linha: com letra grande, encolhem
+            // até um teto, e o texto fica com o resto (H3).
+            child: LayoutBuilder(
+              builder: (context, constraints) => Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (countdown case final countdown?)
+                    _CountdownRing(
+                      duration: countdown,
+                      color: colors.onCamera,
+                      child: Icon(icon, size: 14, color: colors.onCamera),
+                    )
+                  else
+                    Icon(icon, size: 18, color: colors.onCamera),
                   const SizedBox(width: BipaSpacing.s2),
-                ],
-                Flexible(
-                  child: Text(
-                    detail,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: BipaText.caption.copyWith(color: colors.onCamera.withValues(alpha: 0.75)),
-                  ),
-                ),
-                if (onTap != null)
-                  if (actionLabel case final action?) ...[
-                    const SizedBox(width: BipaSpacing.s3),
-                    Text(action, style: BipaText.label.copyWith(color: colors.onCamera)),
-                  ] else ...[
-                    const SizedBox(width: BipaSpacing.s1),
-                    Icon(Icons.chevron_right_rounded, size: 20, color: colors.onCamera),
+                  if (price case final price?) ...[
+                    ShrinkToFit(
+                      maxWidth: constraints.maxWidth * 0.5,
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Text(
+                        price,
+                        style: BipaText.number.copyWith(fontSize: 16, height: 20 / 16, color: colors.onCamera),
+                      ),
+                    ),
+                    const SizedBox(width: BipaSpacing.s2),
                   ],
-              ],
+                  Flexible(
+                    child: Text(
+                      detail,
+                      maxLines: MediaQuery.textScalerOf(context).scale(1) > 1.3 ? 2 : 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: BipaText.caption.copyWith(color: colors.onCamera.withValues(alpha: 0.75)),
+                    ),
+                  ),
+                  if (onTap != null)
+                    if (actionLabel case final action?) ...[
+                      const SizedBox(width: BipaSpacing.s3),
+                      ShrinkToFit(
+                        maxWidth: constraints.maxWidth * 0.3,
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(action, style: BipaText.label.copyWith(color: colors.onCamera)),
+                      ),
+                    ] else ...[
+                      const SizedBox(width: BipaSpacing.s1),
+                      Icon(Icons.chevron_right_rounded, size: 20, color: colors.onCamera),
+                    ],
+                ],
+              ),
             ),
           ),
         ),

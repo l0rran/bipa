@@ -34,7 +34,8 @@ class DropdownChip extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             child: Container(
-              height: 40,
+              // Pelo menos 40; com letra grande, o chip cresce em vez de cortar (H3).
+              constraints: const BoxConstraints(minHeight: 40),
               padding: const EdgeInsets.only(left: BipaSpacing.s2, right: BipaSpacing.s3),
               child: Row(
                 mainAxisSize: MainAxisSize.min,

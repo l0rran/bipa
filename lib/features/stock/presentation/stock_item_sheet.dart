@@ -156,10 +156,12 @@ class StockItemSheet extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: BipaSpacing.s4),
-            Row(
+            // Wrap: com letra grande, os dois botões descem para linhas
+            // separadas em vez de estourar a linha (H3).
+            Wrap(
+              alignment: entry == null ? WrapAlignment.end : WrapAlignment.spaceBetween,
               children: [
                 if (entry != null) TextButton(onPressed: () => _remove(context, ref), child: Text(l10n.stockRemove)),
-                const Spacer(),
                 if (!fromProduct)
                   TextButton(
                     onPressed: () {

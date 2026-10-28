@@ -28,8 +28,9 @@ class BipaSearchBar extends StatelessWidget {
     return Material(
       color: colors.surface,
       shape: const StadiumBorder(),
-      child: SizedBox(
-        height: 52,
+      // Pelo menos 52; com letra grande, o campo cresce em vez de cortar (H3).
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 52),
         child: Row(
           children: [
             const SizedBox(width: BipaSpacing.s4),

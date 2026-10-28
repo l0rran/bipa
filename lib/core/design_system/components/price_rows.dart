@@ -1,6 +1,7 @@
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/shrink_to_fit.dart';
 import 'package:flutter/material.dart';
 
 /// Um preço numa lista de preços (MarketPrice do design system): o ícone, o
@@ -85,53 +86,71 @@ class _PriceRow extends StatelessWidget {
     final value = row.value;
     final onTap = row.onTap;
     final metaColor = row.metaAlert ? colors.alertText : colors.inkMuted;
-    final content = Padding(
-      padding: const EdgeInsets.symmetric(vertical: BipaSpacing.s3),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: row.place ? colors.placeSoft : colors.surfaceSunken,
-              borderRadius: BorderRadius.circular(BipaRadius.md),
-            ),
-            child: Icon(row.icon, size: 22, color: row.place ? colors.place : colors.ink),
-          ),
-          const SizedBox(width: BipaSpacing.s3),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(row.title, style: BipaText.bodyLarge.copyWith(color: colors.ink)),
-                if (meta != null)
-                  Row(
-                    children: [
-                      if (row.metaIcon case final icon?) ...[
-                        Icon(icon, size: 14, color: metaColor),
-                        const SizedBox(width: BipaSpacing.s1),
-                      ],
-                      Flexible(
-                        child: Text(meta, style: BipaText.body.copyWith(fontSize: 13, color: metaColor)),
+    final content = LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: BipaSpacing.s3),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: row.place ? colors.placeSoft : colors.surfaceSunken,
+                  borderRadius: BorderRadius.circular(BipaRadius.md),
+                ),
+                child: Icon(row.icon, size: 22, color: row.place ? colors.place : colors.ink),
+              ),
+              const SizedBox(width: BipaSpacing.s3),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(row.title, style: BipaText.bodyLarge.copyWith(color: colors.ink)),
+                    if (meta != null)
+                      Row(
+                        children: [
+                          if (row.metaIcon case final icon?) ...[
+                            Icon(icon, size: 14, color: metaColor),
+                            const SizedBox(width: BipaSpacing.s1),
+                          ],
+                          Flexible(
+                            child: Text(meta, style: BipaText.body.copyWith(fontSize: 13, color: metaColor)),
+                          ),
+                        ],
                       ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: BipaSpacing.s3),
+              if (value != null)
+                // No máximo metade da linha: com letra grande, o selo quebra a linha
+                // em vez de empurrar o nome para fora da tela (H3).
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: width / 2),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      ShrinkToFit(
+                        maxWidth: width / 2,
+                        child: Text(value, style: BipaText.number.copyWith(color: colors.ink)),
+                      ),
+                      if (badge != null)
+                        Text(
+                          badge,
+                          textAlign: TextAlign.end,
+                          style: BipaText.caption.copyWith(color: colors.positiveText),
+                        ),
                     ],
                   ),
-              ],
-            ),
+                )
+              else if (onTap != null)
+                Icon(Icons.chevron_right_rounded, color: colors.inkMuted),
+            ],
           ),
-          const SizedBox(width: BipaSpacing.s3),
-          if (value != null)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(value, style: BipaText.number.copyWith(color: colors.ink)),
-                if (badge != null) Text(badge, style: BipaText.caption.copyWith(color: colors.positiveText)),
-              ],
-            )
-          else if (onTap != null)
-            Icon(Icons.chevron_right_rounded, color: colors.inkMuted),
-        ],
-      ),
+        );
+      },
     );
     return MergeSemantics(
       child: onTap == null

@@ -61,11 +61,19 @@ class StockGauge extends StatelessWidget {
             painter: _GaugePainter(fraction: value, state: state, colors: colors),
             child: child,
           ),
-          child: Center(
-            child: Text(
-              quantityLabel,
-              maxLines: 1,
-              style: BipaText.number.copyWith(fontSize: size * 0.42, color: numberColor),
+          // O anel tem tamanho fixo (é desenho): com letra grande, o número
+          // encolhe para caber dentro dele em vez de passar do traço (H3).
+          child: Padding(
+            padding: EdgeInsets.all(size * 0.14),
+            child: Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  quantityLabel,
+                  maxLines: 1,
+                  style: BipaText.number.copyWith(fontSize: size * 0.42, color: numberColor),
+                ),
+              ),
             ),
           ),
         ),

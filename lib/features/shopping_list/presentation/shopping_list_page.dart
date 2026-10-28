@@ -290,14 +290,17 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                         const SizedBox(height: BipaSpacing.s3),
                         // O destaque é voltar a bipar; terminar é a ação de
                         // menos peso, para um toque errado não encerrar a compra.
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
+                        // Wrap: com letra grande, os botões descem para a linha de
+                        // baixo em vez de estourar a linha (H3).
+                        Wrap(
+                          alignment: WrapAlignment.end,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: BipaSpacing.s2,
                           children: [
                             OutlinedButton(
                               onPressed: _finishing ? null : () => _finish(trip),
                               child: Text(l10n.tripFinish),
                             ),
-                            const SizedBox(width: BipaSpacing.s2),
                             FilledButton.icon(
                               onPressed: () => context.push(Routes.cartMode),
                               style: FilledButton.styleFrom(
@@ -508,7 +511,8 @@ class _AddField extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     return Container(
-      height: 52,
+      // Pelo menos 52; com letra grande, o campo cresce em vez de cortar (H3).
+      constraints: const BoxConstraints(minHeight: 52),
       padding: const EdgeInsets.only(left: BipaSpacing.s4, right: 6),
       decoration: ShapeDecoration(color: colors.surface, shape: const StadiumBorder()),
       child: Row(

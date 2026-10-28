@@ -91,8 +91,8 @@ class _PlaceTile<T> extends StatelessWidget {
                       top: -2,
                       right: -2,
                       child: Container(
-                        constraints: const BoxConstraints(minWidth: 22),
-                        height: 22,
+                        // Mínimas, não fixas: com letra grande, o número cabe (H3).
+                        constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
                         padding: const EdgeInsets.symmetric(horizontal: 6),
                         alignment: Alignment.center,
                         decoration: ShapeDecoration(

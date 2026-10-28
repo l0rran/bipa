@@ -279,10 +279,11 @@ class _AisleSteps extends StatelessWidget {
                 child: Row(
                   children: [
                     Container(
-                      width: 24,
-                      height: 24,
+                      // Mínimas, não fixas: com letra grande, o número cabe (H3).
+                      constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                      padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s1),
                       alignment: Alignment.center,
-                      decoration: BoxDecoration(color: colors.surfaceSunken, shape: BoxShape.circle),
+                      decoration: ShapeDecoration(color: colors.surfaceSunken, shape: const StadiumBorder()),
                       child: Text(
                         '${index + 1}',
                         style: BipaText.caption.copyWith(color: colors.inkMuted, fontWeight: FontWeight.w600),
