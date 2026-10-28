@@ -1,6 +1,7 @@
 import 'package:bipa/core/di/core_providers.dart';
 import 'package:bipa/core/errors/domain_exception.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
+import 'package:bipa/core/l10n/domain_error_text.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/messages.dart';
 import 'package:bipa/features/products/domain/gtin.dart';
@@ -142,7 +143,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
       if (package != null) await repository.savePackage(package);
       if (mounted) context.pop(product);
     } on DomainException catch (error) {
-      if (mounted) context.showMessage(error.message);
+      if (mounted) context.showMessage(domainErrorText(AppLocalizations.of(context), error));
     } on Exception {
       if (mounted) context.showMessage(AppLocalizations.of(context).productSaveFailed);
     } finally {

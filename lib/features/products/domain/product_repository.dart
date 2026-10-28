@@ -46,7 +46,7 @@ abstract interface class ProductRepository {
 
 final class DuplicateBarcodeException extends DomainException {
   DuplicateBarcodeException({required this.barcode, required this.productName})
-    : super('O código $barcode já está cadastrado para "$productName".');
+    : super(DomainErrorCode.duplicateBarcode, args: [barcode, productName]);
 
   final String barcode;
   final String productName;
