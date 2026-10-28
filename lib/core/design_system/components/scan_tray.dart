@@ -572,7 +572,7 @@ class CameraGlassChip extends StatelessWidget {
 /// lido"): o preço da etiqueta em destaque e, ao lado, o item que o recebeu
 /// ou o que falta fazer. Não é tocável; o leitor de tela anuncia a mudança.
 class LiveReadChip extends StatelessWidget {
-  const LiveReadChip({required this.icon, required this.price, required this.detail, this.countdown, super.key});
+  const LiveReadChip({required this.icon, required this.detail, this.price, this.countdown, super.key});
 
   final IconData icon;
 
@@ -580,8 +580,8 @@ class LiveReadChip extends StatelessWidget {
   /// tempo (o preço que espera o produto).
   final Duration? countdown;
 
-  /// "R$ 27,90".
-  final String price;
+  /// "R$ 27,90" ou "+1"; sem ele, o aviso é só o texto.
+  final String? price;
 
   /// O nome do item ou "bipe o produto".
   final String detail;
@@ -591,7 +591,7 @@ class LiveReadChip extends StatelessWidget {
     final colors = context.colors;
     return Semantics(
       liveRegion: true,
-      label: '$price, $detail',
+      label: [?price, detail].join(', '),
       excludeSemantics: true,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(BipaRadius.pill),
@@ -613,8 +613,10 @@ class LiveReadChip extends StatelessWidget {
                 else
                   Icon(icon, size: 18, color: colors.onCamera),
                 const SizedBox(width: BipaSpacing.s2),
-                Text(price, style: BipaText.number.copyWith(fontSize: 16, height: 20 / 16, color: colors.onCamera)),
-                const SizedBox(width: BipaSpacing.s2),
+                if (price case final price?) ...[
+                  Text(price, style: BipaText.number.copyWith(fontSize: 16, height: 20 / 16, color: colors.onCamera)),
+                  const SizedBox(width: BipaSpacing.s2),
+                ],
                 Flexible(
                   child: Text(
                     detail,

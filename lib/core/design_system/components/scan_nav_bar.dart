@@ -26,6 +26,8 @@ class ScanNavBar extends StatelessWidget {
     required this.onSelected,
     required this.onScan,
     required this.scanLabel,
+    this.onScanLongPress,
+    this.scanLongPressLabel,
     super.key,
   });
 
@@ -34,6 +36,12 @@ class ScanNavBar extends StatelessWidget {
   final ValueChanged<int> onSelected;
   final VoidCallback onScan;
   final String scanLabel;
+
+  /// Segurar o botão abre mais opções (protótipo "Menu do bipar").
+  final VoidCallback? onScanLongPress;
+
+  /// O que o leitor de tela diz do toque longo: "Mais opções".
+  final String? scanLongPressLabel;
 
   static const _barHeight = 72.0;
   static const _scanLift = 22.0;
@@ -89,7 +97,15 @@ class ScanNavBar extends StatelessWidget {
                 ),
               ),
             ),
-            Positioned(top: 0, child: _ScanButton(label: scanLabel, onPressed: onScan)),
+            Positioned(
+              top: 0,
+              child: _ScanButton(
+                label: scanLabel,
+                onPressed: onScan,
+                onLongPress: onScanLongPress,
+                longPressLabel: scanLongPressLabel,
+              ),
+            ),
           ],
         ),
       ),
@@ -153,19 +169,24 @@ class _Destination extends StatelessWidget {
 }
 
 class _ScanButton extends StatelessWidget {
-  const _ScanButton({required this.label, required this.onPressed});
+  const _ScanButton({required this.label, required this.onPressed, this.onLongPress, this.longPressLabel});
 
   final String label;
   final VoidCallback onPressed;
+  final VoidCallback? onLongPress;
+  final String? longPressLabel;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final onLongPress = this.onLongPress;
     return Semantics(
       button: true,
       label: label,
       excludeSemantics: true,
       onTap: onPressed,
+      onLongPress: onLongPress,
+      hintOverrides: longPressLabel == null ? null : SemanticsHintOverrides(onLongPressHint: longPressLabel),
       child: Material(
         color: colors.brand,
         shape: const CircleBorder(),
@@ -177,6 +198,12 @@ class _ScanButton extends StatelessWidget {
             HapticFeedback.lightImpact();
             onPressed();
           },
+          onLongPress: onLongPress == null
+              ? null
+              : () {
+                  HapticFeedback.mediumImpact();
+                  onLongPress();
+                },
           child: SizedBox.square(
             dimension: 64,
             child: Icon(Icons.qr_code_scanner_rounded, size: 30, color: colors.onBrand),

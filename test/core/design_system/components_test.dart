@@ -1,10 +1,12 @@
 import 'package:bipa/core/design_system/bipa_theme.dart';
+import 'package:bipa/core/design_system/components/camera_mode_switch.dart';
 import 'package:bipa/core/design_system/components/dropdown_chip.dart';
 import 'package:bipa/core/design_system/components/list_cost_compare.dart';
 import 'package:bipa/core/design_system/components/market_map.dart';
 import 'package:bipa/core/design_system/components/place_filter.dart';
 import 'package:bipa/core/design_system/components/price_history.dart';
 import 'package:bipa/core/design_system/components/quantity_stepper.dart';
+import 'package:bipa/core/design_system/components/scan_menu.dart';
 import 'package:bipa/core/design_system/components/scan_tray.dart';
 import 'package:bipa/core/design_system/components/shopping_list.dart';
 import 'package:bipa/core/design_system/components/stock_gauge.dart';
@@ -413,5 +415,64 @@ void main() {
 
     expect(find.textContaining('mais barato', findRichText: true), findsOneWidget);
     expect(find.text('sem preço de 2 itens'), findsOneWidget);
+  });
+
+  testWidgets('o seletor da câmera marca o modo escolhido e troca no toque', (tester) async {
+    final semantics = tester.ensureSemantics();
+    var selected = 0;
+    await tester.pumpWidget(
+      _app(
+        StatefulBuilder(
+          builder: (context, setState) => CameraModeSwitch<int>(
+            options: const [(value: 0, label: 'Etiqueta'), (value: 1, label: 'Código')],
+            selected: selected,
+            onSelected: (value) => setState(() => selected = value),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Código'));
+    await tester.pumpAndSettle();
+    expect(selected, 1);
+    expect(tester.getSize(find.bySemanticsLabel('Código')).height, greaterThanOrEqualTo(48));
+    semantics.dispose();
+  });
+
+  testWidgets('o menu do bipar devolve a opção tocada e fecha no "×"', (tester) async {
+    String? chosen;
+    await tester.pumpWidget(
+      _app(
+        Builder(
+          builder: (context) => TextButton(
+            onPressed: () async {
+              chosen = await showScanMenu<String>(
+                context,
+                closeLabel: 'Fechar',
+                items: const [
+                  (value: 'cart', icon: Icons.shopping_cart_outlined, label: 'Modo carrinho', hint: 'vários seguidos'),
+                  (value: 'used', icon: Icons.home_outlined, label: 'Dar baixa em casa', hint: null),
+                ],
+              );
+            },
+            child: const Text('abrir'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('abrir'));
+    await tester.pumpAndSettle();
+    expect(find.text('vários seguidos'), findsOneWidget);
+    await tester.tap(find.text('Dar baixa em casa'));
+    await tester.pumpAndSettle();
+    expect(chosen, 'used');
+  });
+
+  testWidgets('o aviso da câmera sem valor mostra só o texto', (tester) async {
+    await tester.pumpWidget(_app(const LiveReadChip(icon: Icons.add_rounded, detail: 'Café · 3 em casa')));
+
+    expect(find.text('Café · 3 em casa'), findsOneWidget);
+    expect(find.bySemanticsLabel('Café · 3 em casa'), findsOneWidget);
   });
 }
