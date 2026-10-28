@@ -8,8 +8,12 @@ import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/scale_label.dart';
 import 'package:bipa/features/shopping_list/data/drift_cart_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_scale_item_repository.dart';
+import 'package:bipa/features/shopping_list/data/drift_shopping_list_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_trip_repository.dart';
+import 'package:bipa/features/shopping_list/domain/match_list_to_cart.dart';
 import 'package:bipa/features/shopping_list/domain/scale_items.dart';
+import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
+import 'package:bipa/features/shopping_list/domain/trip_review.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/fakes.dart';
@@ -20,6 +24,8 @@ void main() {
   late ScaleItems scale;
   late DriftCartRepository cart;
   late DriftShoppingTripRepository trips;
+  late DriftShoppingListRepository list;
+  late CreateProductByWeight createProduct;
   final now = DateTime(2026, 10, 28, 10);
   final tomate = ScaleLabel.tryParse('2001230008437')!;
   final outroSaco = ScaleLabel.tryParse('2001230012991')!;
@@ -29,11 +35,13 @@ void main() {
     final ids = SequentialIdGenerator();
     cart = DriftCartRepository(db, ids: ids, clock: () => now);
     trips = DriftShoppingTripRepository(db, ids: ids, clock: () => now);
+    list = DriftShoppingListRepository(db, ids: ids, clock: () => now);
+    createProduct = CreateProductByWeight(products: DriftProductRepository(db), ids: ids, clock: () => now);
     scale = ScaleItems(
       scale: DriftScaleItemRepository(db),
       products: DriftProductRepository(db),
       cart: cart,
-      createProduct: CreateProductByWeight(products: DriftProductRepository(db), ids: ids, clock: () => now),
+      createProduct: createProduct,
     );
     await DriftMarketRepository(db).save(Market(id: 'vila', name: 'Vila', createdAt: now, updatedAt: now));
   });
@@ -107,5 +115,85 @@ void main() {
       (entry.productId, entry.quantity, entry.price, entry.priceEstimated),
       (prata.id, 1, const Money.cents(843), false),
     );
+  });
+
+  group('granel escolhido pela etiqueta por quilo (D3)', () {
+    test('entra uma linha sem embalagem e sem preço, e escolher de novo não duplica', () async {
+      final trip = await trips.start(marketId: 'vila');
+      final product = await createProduct('Tomate italiano');
+
+      await scale.addGranel(trip.id, product.id);
+      await scale.addGranel(trip.id, product.id);
+
+      final entry = (await cart.watchTrip(trip.id).first).single.item;
+      expect(
+        (entry.productId, entry.packageId, entry.quantity, entry.price, entry.priceEstimated, entry.take),
+        (product.id, null, 1, null, false, true),
+      );
+    });
+
+    test('não mexe numa linha que a pesagem já firmou', () async {
+      final trip = await trips.start(marketId: 'vila');
+      final product = await scale.remember('vila', tomate, newName: 'Tomate');
+      await scale.addToCart(trip.id, product, tomate);
+
+      await scale.addGranel(trip.id, product.id);
+
+      final entry = (await cart.watchTrip(trip.id).first).single.item;
+      expect((entry.quantity, entry.price, entry.priceEstimated), (1, const Money.cents(843), false));
+    });
+
+    test('a etiqueta da balança firma o valor na mesma linha', () async {
+      final trip = await trips.start(marketId: 'vila');
+      final product = await scale.remember('vila', tomate, newName: 'Tomate');
+      await scale.addGranel(trip.id, product.id);
+
+      await scale.addToCart(trip.id, product, tomate);
+
+      final entry = (await cart.watchTrip(trip.id).first).single.item;
+      expect(
+        (entry.packageId, entry.quantity, entry.price, entry.priceEstimated),
+        (null, 1, const Money.cents(843), false),
+      );
+      // A segunda pesagem soma na mesma linha, como sempre.
+      await scale.addToCart(trip.id, product, outroSaco);
+      expect((await cart.watchTrip(trip.id).first).single.item.price, const Money.cents(843 + 1299));
+    });
+
+    test('conta como sem preço nos totais, sem inventar valor', () async {
+      final trip = await trips.start(marketId: 'vila');
+      final cafe = await createProduct('Café');
+      final tomateItaliano = await createProduct('Tomate italiano');
+      await cart.addProduct(trip.id, cafe.id, price: const Money.cents(1899));
+      await scale.addGranel(trip.id, tomateItaliano.id);
+      final entries = await list.watchAll().first;
+      final inCart = await cart.watchTrip(trip.id).first;
+
+      final summary = ShoppingTripSummary.of(entries, inCart, since: trip.startedAt);
+      final review = TripReview.of(entries: entries, cart: inCart, since: trip.startedAt);
+
+      expect((summary.spent, summary.estimated, summary.unpriced), (const Money.cents(1899), false, 1));
+      expect(
+        (review.spent, review.estimated, review.unpriced, review.packages),
+        (const Money.cents(1899), false, 1, 2),
+      );
+    });
+
+    test('marca a lista como o bipe: "1 de 3" continua faltando', () async {
+      final trip = await trips.start(marketId: 'vila');
+      final tomateItaliano = await createProduct('Tomate italiano');
+      final batata = await createProduct('Batata');
+      await list.addProduct(productId: tomateItaliano.id, name: 'Tomate italiano', quantity: 3);
+      await list.addProduct(productId: batata.id, name: 'Batata');
+      final match = MatchListToCart(list: list, cart: cart);
+
+      for (final product in [tomateItaliano, batata]) {
+        await scale.addGranel(trip.id, product.id);
+        await match(trip.id, product.id, CartListChange.added);
+      }
+
+      final checked = {for (final entry in await list.watchAll().first) entry.item.productId: entry.item.isChecked};
+      expect(checked, {tomateItaliano.id: false, batata.id: true});
+    });
   });
 }

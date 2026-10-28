@@ -116,10 +116,43 @@ final class TripPrice {
   }
 }
 
+/// O preço por quilo do granel como estimativa das linhas do carrinho que
+/// ainda esperam a pesagem (D3), pela [CartItem.key]: a linha sem embalagem
+/// e sem preço de um produto com preço por quilo lido nesta compra.
+///
+/// É só o que a bandeja mostra ao lado do nome. Não é o valor da linha, que
+/// só a pesagem ou o preço digitado dizem, e não entra em total nenhum.
+Map<String, Money> perKiloEstimates(Iterable<CartEntry> cart, Iterable<TripPrice> prices) {
+  final perKilo = {
+    for (final price in prices)
+      if (price.perKilo && price.packageId == null) price.productId: price.price,
+  };
+  return {
+    for (final CartEntry(:item) in cart)
+      if (item.packageId == null && item.price == null) item.key: ?perKilo[item.productId],
+  };
+}
+
+/// Os itens do carrinho ([CartItem.id]) com o preço firmado pelos preços
+/// guardados com a compra, para a leitura ao vivo não os sobrescrever (ADR
+/// 0012): os que têm um preço lido ou digitado, que vale também depois de
+/// reabrir o carrinho, e a linha do granel com o preço por quilo lido, cujo
+/// valor só a etiqueta da balança ou o preço digitado dizem (ADR 0018).
+Set<String> settledByTripPrices(Iterable<CartEntry> cart, Iterable<TripPrice> prices) {
+  final keys = {for (final price in prices) CartItem.keyOf(price.productId, price.packageId)};
+  return {
+    for (final CartEntry(:item) in cart)
+      if (keys.contains(item.key)) item.id,
+  };
+}
+
 /// Os preços de cada compra.
 abstract interface class TripPriceRepository {
   /// Os preços da compra, do lido primeiro ao último.
   Future<List<TripPrice>> ofTrip(String tripId);
+
+  /// O mesmo, acompanhando cada preço novo (a bandeja do carrinho).
+  Stream<List<TripPrice>> watchTrip(String tripId);
 
   /// O preço de um item da compra ([TripPrice.itemKey]), se há.
   Future<TripPrice?> find(String tripId, String itemKey);

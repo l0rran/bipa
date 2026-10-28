@@ -9,14 +9,15 @@ final class DriftTripPriceRepository implements TripPriceRepository {
   final AppDatabase _db;
 
   @override
-  Future<List<TripPrice>> ofTrip(String tripId) async {
-    final rows =
-        await (_db.select(_db.tripPrices)
-              ..where((t) => t.tripId.equals(tripId))
-              ..orderBy([(t) => OrderingTerm.asc(t.readAt)]))
-            .get();
-    return rows.map(_toEntity).toList();
-  }
+  Future<List<TripPrice>> ofTrip(String tripId) async => (await _ofTrip(tripId).get()).map(_toEntity).toList();
+
+  @override
+  Stream<List<TripPrice>> watchTrip(String tripId) =>
+      _ofTrip(tripId).watch().map((rows) => rows.map(_toEntity).toList());
+
+  SimpleSelectStatement<$TripPricesTable, TripPriceRow> _ofTrip(String tripId) => _db.select(_db.tripPrices)
+    ..where((t) => t.tripId.equals(tripId))
+    ..orderBy([(t) => OrderingTerm.asc(t.readAt)]);
 
   @override
   Future<TripPrice?> find(String tripId, String itemKey) async {

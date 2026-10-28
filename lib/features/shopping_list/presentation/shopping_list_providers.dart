@@ -2,6 +2,7 @@ import 'package:bipa/core/camera/live_frame_analyzer.dart';
 import 'package:bipa/core/catalog/product_kind.dart';
 import 'package:bipa/core/database/database_provider.dart';
 import 'package:bipa/core/di/core_providers.dart';
+import 'package:bipa/core/money/money.dart';
 import 'package:bipa/features/markets/presentation/markets_providers.dart';
 import 'package:bipa/features/prices/domain/list_cost.dart';
 import 'package:bipa/features/prices/domain/price_comparison.dart';
@@ -300,6 +301,21 @@ final activeTripProvider = StreamProvider.autoDispose<ShoppingTrip?>(
 final activeCartProvider = StreamProvider.autoDispose<List<CartEntry>>((ref) {
   final tripId = ref.watch(activeTripProvider).value?.id;
   return tripId == null ? Stream.value(const []) : ref.watch(cartRepositoryProvider).watchTrip(tripId);
+});
+
+/// O preço por quilo de cada granel que espera a pesagem na bandeja (D3),
+/// pela [CartItem.key]. Não entra em total nenhum.
+final activeCartPerKiloEstimatesProvider = Provider.autoDispose<Map<String, Money>>(
+  (ref) => perKiloEstimates(
+    ref.watch(activeCartProvider).value ?? const [],
+    ref.watch(activeTripPricesProvider).value ?? const [],
+  ),
+);
+
+/// Os preços lidos e digitados na compra em andamento (ADR 0020).
+final activeTripPricesProvider = StreamProvider.autoDispose<List<TripPrice>>((ref) {
+  final tripId = ref.watch(activeTripProvider).value?.id;
+  return tripId == null ? Stream.value(const []) : ref.watch(tripPriceRepositoryProvider).watchTrip(tripId);
 });
 
 /// O que a barra da compra mostra, ou `null` fora de uma compra.
