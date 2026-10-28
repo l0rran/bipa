@@ -10,3 +10,7 @@ int calendarDaysSince(DateTime then, DateTime now) {
   final to = DateTime.utc(now.year, now.month, now.day);
   return math.max(0, to.difference(from).inDays);
 }
+
+/// A partir de quantos dias um preço merece ressalva: abaixo disso, a idade
+/// não muda a decisão e fica de fora (calma por padrão).
+const priceStaleAfterDays = 30;

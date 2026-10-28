@@ -185,16 +185,12 @@ class _MarketsPageState extends ConsumerState<MarketsPage> {
       .map((c) => c.total.cents)
       .fold(1, (max, cents) => cents > max ? cents : max);
 
-  /// A partir de quantos dias o preço mais antigo do total merece ressalva.
-  /// Abaixo disso, a idade não muda a decisão e fica de fora (calma por
-  /// padrão); a idade da última visita está na linha do mercado.
-  static const _staleAfterDays = 30;
-
   /// "preços de até 41 dias · sem preço de 1 item", só com o que pesa.
   static String? _costNote(AppLocalizations l10n, MarketListCost cost, DateTime now) {
     final days = calendarDaysSince(cost.oldest, now);
     final note = l10n.joinMeta([
-      if (days >= _staleAfterDays) l10n.marketsOldestPrice(days),
+      // A idade da última visita está na linha do mercado.
+      if (days >= priceStaleAfterDays) l10n.marketsOldestPrice(days),
       if (cost.isPartial) l10n.marketsMissingPrices(cost.items - cost.priced),
     ]);
     return note.isEmpty ? null : note;

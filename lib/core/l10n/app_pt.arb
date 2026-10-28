@@ -1280,5 +1280,17 @@
   "productRegisterPriceHint": "registrar o preço",
   "@productRegisterPriceHint": {
     "description": "Dica do leitor de tela ao tocar na linha de uma embalagem: abre a câmera para o preço dela."
+  },
+  "productBestPriceOld": "{market} · {age}",
+  "@productBestPriceOld": {
+    "description": "Linha da etiqueta em destaque do produto quando o preço é velho (30 dias ou mais): onde e quando, no lugar da embalagem (\"Assaí · há 41 dias\").",
+    "placeholders": {
+      "market": {
+        "type": "String"
+      },
+      "age": {
+        "type": "String"
+      }
+    }
   }
 }

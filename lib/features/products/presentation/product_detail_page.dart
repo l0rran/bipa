@@ -259,7 +259,10 @@ class _ProductView extends ConsumerWidget {
                 textAlign: TextAlign.center,
                 style: BipaText.headline.copyWith(fontSize: 24, color: colors.ink),
               ),
-              if (best != null) ...[const SizedBox(height: BipaSpacing.s3), Center(child: _BestPrice(best: best))],
+              if (best != null) ...[
+                const SizedBox(height: BipaSpacing.s3),
+                Center(child: _BestPrice(best: best, now: now)),
+              ],
               if (packageRows.isNotEmpty) ...[
                 const SizedBox(height: BipaSpacing.s6),
                 SectionHeader(title: l10n.productPackages, count: packages.length),
@@ -360,15 +363,21 @@ class _ProductView extends ConsumerWidget {
 
 /// A etiqueta do melhor preço: por kg, quando a embalagem tem tamanho.
 class _BestPrice extends StatelessWidget {
-  const _BestPrice({required this.best});
+  const _BestPrice({required this.best, required this.now});
 
   final PackagePrice best;
+  final DateTime now;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final unitPrice = best.unitPrice;
-    final label = best.package?.label;
+    // Um preço velho diz onde e quando, no lugar da embalagem: pode ser uma
+    // promoção que já acabou (F4).
+    final days = calendarDaysSince(best.entry.observation.observedAt, now);
+    final label = days >= priceStaleAfterDays
+        ? l10n.productBestPriceOld(best.entry.marketName, l10n.priceAge(days))
+        : best.package?.label;
     if (unitPrice == null) return PriceTagHero(price: best.price, unitLine: label);
     return PriceTagHero(
       price: unitPrice.price,
