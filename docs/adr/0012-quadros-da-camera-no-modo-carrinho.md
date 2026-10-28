@@ -28,9 +28,12 @@ As opções consideradas foram estas:
 - **Só o texto dentro da moldura conta.** O retângulo da moldura na tela é convertido para as coordenadas da imagem (preview em `cover` e rotação do sensor), e as linhas fora dele são descartadas antes do `PriceTagParser`. O parser não muda.
 - **Um preço só vale depois de se repetir:** o mesmo preço de varejo em 3 quadros dentro de 1,5 s. Depois de aceito, aquele preço só volta a valer quando sumir da moldura por 1 s.
 - **O destino do preço é uma regra de domínio**, testada sem câmera:
-  - etiqueta com código conhecido: o preço vai para esse produto;
-  - senão, para o último item bipado, se ele entrou há até 20 s;
+  - etiqueta com código conhecido: o preço vai para esse produto, se ele já está no carrinho; senão, espera ele ser bipado, sem entrar sozinho;
+  - etiqueta com código que nenhum produto tem: espera o produto ser cadastrado e bipado com esse código;
+  - sem código: vai para o último item bipado, se ele entrou há até 20 s e o preço dele ainda não foi firmado (lido ao vivo, digitado ou fotografado);
   - senão, o preço espera o próximo produto bipado, por até 20 s.
+- **O bipe espera um instante.** O código precisa aparecer sem preço em 2 quadros, o primeiro com pelo menos 0,6 s. É o tempo de o OCR achar o preço de uma etiqueta cujo código foi lido antes. Um produto segurado na frente de uma etiqueta conta como etiqueta, até o preço sair da moldura.
+- **Duas etiquetas vizinhas com o mesmo preço** valem as duas quando têm códigos diferentes. Sem código, valem uma vez só, se lidas sem pausa entre elas.
 - **Na dúvida, nada é escolhido.** A leitura ao vivo é ignorada quando a etiqueta tem vários preços do mesmo tamanho ou só traz preço com condição (clube, cartão, atacado). Para essas etiquetas, continua valendo o disparo, que fotografa a etiqueta e abre a confirmação.
 - A análise para quando o app vai para o fundo e quando outra tela usa a câmera.
 
@@ -38,6 +41,7 @@ As opções consideradas foram estas:
 
 - Uma dependência nova (`camera`), e duas pilhas de câmera no app: `mobile_scanner` nas telas de código e `camera` no modo carrinho.
 - Algumas regras que o `mobile_scanner` já trazia passam a ser nossas: a conversão do quadro para `InputImage`, a rotação, a lanterna (`FlashMode.torch`) e o ciclo de vida.
+- No Android, o CameraX pode escolher proporções diferentes para a prévia e para os quadros analisados. Por isso o recorte é calculado a partir do tamanho do quadro analisado, e a margem em volta da moldura absorve a diferença. Se ela for grande demais em algum aparelho, o recorte passa a considerar as duas proporções.
 - O recorte da moldura, o consenso entre quadros e o destino do preço são Dart puro e têm testes. O que depende do aparelho (rotação, formato do quadro, desempenho) só se confere no celular.
 - O consumo de bateria precisa ser medido numa compra real. Se pesar, o OCR pode rodar em quadros alternados, sem mudar o resto.
 - A leitura ao vivo é uma sugestão, como toda leitura (ADR 0005). O preço do item continua corrigível com um toque.
