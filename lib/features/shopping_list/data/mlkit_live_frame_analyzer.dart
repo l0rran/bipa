@@ -36,7 +36,7 @@ final class MlKitLiveFrameAnalyzer implements LiveFrameAnalyzer {
     }
     final codes = [
       for (final barcode in inFrame)
-        if (barcode.rawValue case final value?) value,
+        ?barcode.rawValue,
     ];
     final lines = [
       for (final block in text.blocks)

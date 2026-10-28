@@ -104,13 +104,17 @@ class AppDatabase extends _$AppDatabase {
       'INSERT INTO stock_lots (id, product_id, package_id, quantity, since) '
       'SELECT product_id, product_id, product_id, quantity, updated_at FROM stock_items WHERE quantity > 0',
     );
-    // Recria a tabela sem código, marca e tamanho.
+    // Recria a tabela sem código, marca e tamanho. O TableMigration é
+    // experimental no drift, mas é o caminho que a documentação dá para mudar
+    // colunas no SQLite; a migração tem teste.
+    // ignore: experimental_member_use
     await migrator.alterTable(TableMigration(products));
     // Um carrinho criado agora (de uma versão antes da 6) já nasce no
     // formato novo; o da v6 ganha a embalagem e perde a chave única por
     // produto.
     if (hadCart) {
       await migrator.alterTable(
+        // ignore: experimental_member_use
         TableMigration(
           cartItems,
           // A v7 refaz a tabela com a definição atual: as colunas que vieram

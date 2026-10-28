@@ -57,7 +57,7 @@ final class DriftPriceRepository implements PriceRepository {
     return query.watch().map(
       (rows) => {
         for (final row in rows)
-          if (row.read(latest) case final at?) row.read(prices.marketId)!: at,
+          row.read(prices.marketId)!: ?row.read(latest),
       },
     );
   }

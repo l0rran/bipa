@@ -124,7 +124,7 @@ class _LiveShoppingNotificationState extends ConsumerState<LiveShoppingNotificat
         // compra" pede a confirmação. Ela precisa de um contexto abaixo do
         // Navigator.
         final navigatorContext = router.routerDelegate.navigatorKey.currentContext;
-        if (navigatorContext == null) return;
+        if (navigatorContext == null || !navigatorContext.mounted) return;
         await finishShopping(navigatorContext, ref, trip.id);
     }
   }
