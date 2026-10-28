@@ -121,7 +121,11 @@ class _CameraPageState extends ConsumerState<CameraPage> {
     final repository = ref.read(productRepositoryProvider);
     try {
       final product = await repository.findById(productId);
-      if (product == null) return;
+      if (product == null) {
+        // Apagado nesse meio-tempo: a câmera volta a ser a de sempre.
+        if (mounted) setState(() => _heldGone = true);
+        return;
+      }
       final chosen = packageId == null ? null : await repository.findPackageById(packageId);
       final package = chosen?.productId == productId
           ? chosen
@@ -129,8 +133,12 @@ class _CameraPageState extends ConsumerState<CameraPage> {
       if (mounted) setState(() => _held = (product: product, package: package));
     } on Exception catch (error, stack) {
       FlutterError.reportError(FlutterErrorDetails(exception: error, stack: stack, library: 'camera'));
+      if (mounted) setState(() => _heldGone = true);
     }
   }
+
+  /// O produto pedido não carregou: sem ele, a câmera não fica presa a nada.
+  var _heldGone = false;
 
   @override
   void dispose() {
@@ -579,7 +587,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
       _ => _noticeTap,
     };
     // Aberta para um produto, a câmera só lê a etiqueta dele.
-    final forProduct = held != null || widget.productId != null;
+    final forProduct = held != null || (widget.productId != null && !_heldGone);
     final choosing = !forProduct && (_mode == CameraMode.price || _mode == CameraMode.find);
     // Observado enquanto a câmera está aberta: o leitor do disparo carrega os
     // modelos do ML Kit uma vez e os solta ao sair.
