@@ -124,6 +124,30 @@ void main() {
     ]);
   });
 
+  test('o preço da etiqueta entra no carrinho sem somar unidade', () async {
+    final trip = await trips.start();
+    await cart.setPriceForProduct(trip.id, 'cafe', const Money.cents(1799));
+    await cart.addProduct(trip.id, 'cafe');
+    await cart.setPriceForProduct(trip.id, 'cafe', const Money.cents(1699));
+
+    final entries = await cart.watchTrip(trip.id).first;
+
+    expect(entries.map((e) => (e.product.id, e.item.quantity, e.item.price)), [
+      ('cafe', 2, const Money.cents(1699)),
+    ]);
+  });
+
+  test('desmarcar na lista deixa o item do carrinho de fora', () async {
+    final trip = await trips.start();
+    await cart.addProduct(trip.id, 'cafe');
+
+    await cart.setTakeForProduct(trip.id, 'cafe', take: false);
+    await cart.setTakeForProduct(trip.id, 'arroz', take: false);
+
+    final entries = await cart.watchTrip(trip.id).first;
+    expect(entries.map((e) => (e.product.id, e.item.take)), [('cafe', false)]);
+  });
+
   test('terminar leva ao estoque o que vai no carrinho, na quantidade bipada', () async {
     final trip = await trips.start();
     await list.addProduct(productId: 'cafe', name: 'Café');

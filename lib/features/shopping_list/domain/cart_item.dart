@@ -78,5 +78,13 @@ abstract interface class CartRepository {
 
   Future<void> setPrice(String itemId, Money price);
 
+  /// Guarda o preço lido na etiqueta. Se o produto ainda não está no
+  /// carrinho, entra com uma unidade; se já está, só o preço muda.
+  Future<void> setPriceForProduct(String tripId, String productId, Money price);
+
   Future<void> setTake(String itemId, {required bool take});
+
+  /// O mesmo, pelo produto: usado quando a pessoa marca ou desmarca o item
+  /// na lista durante a compra. Não faz nada se ele não está no carrinho.
+  Future<void> setTakeForProduct(String tripId, String productId, {required bool take});
 }

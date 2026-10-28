@@ -37,9 +37,7 @@ final class DriftCartRepository implements CartRepository {
   @override
   Future<void> addProduct(String tripId, String productId, {Money? price}) {
     return _db.transaction(() async {
-      final existing = await (_db.select(_db.cartItems)
-            ..where((t) => t.tripId.equals(tripId) & t.productId.equals(productId)))
-          .getSingleOrNull();
+      final existing = await _selectProduct(tripId, productId).getSingleOrNull();
       final now = _clock();
       if (existing == null) {
         await _db.into(_db.cartItems).insert(
@@ -70,7 +68,36 @@ final class DriftCartRepository implements CartRepository {
       _write(itemId, CartItemsCompanion(priceCents: Value(price.cents)));
 
   @override
+  Future<void> setPriceForProduct(String tripId, String productId, Money price) {
+    return _db.transaction(() async {
+      final existing = await _selectProduct(tripId, productId).getSingleOrNull();
+      if (existing == null) {
+        await _db.into(_db.cartItems).insert(
+          CartItemsCompanion.insert(
+            id: _ids.newId(),
+            tripId: tripId,
+            productId: productId,
+            priceCents: Value(price.cents),
+            addedAt: _clock(),
+          ),
+        );
+      } else {
+        await _write(existing.id, CartItemsCompanion(priceCents: Value(price.cents)));
+      }
+    });
+  }
+
+  @override
   Future<void> setTake(String itemId, {required bool take}) => _write(itemId, CartItemsCompanion(take: Value(take)));
+
+  @override
+  Future<void> setTakeForProduct(String tripId, String productId, {required bool take}) async {
+    await (_db.update(_db.cartItems)..where((t) => t.tripId.equals(tripId) & t.productId.equals(productId)))
+        .write(CartItemsCompanion(take: Value(take)));
+  }
+
+  SimpleSelectStatement<$CartItemsTable, CartItemRow> _selectProduct(String tripId, String productId) =>
+      _db.select(_db.cartItems)..where((t) => t.tripId.equals(tripId) & t.productId.equals(productId));
 
   Future<void> _write(String itemId, CartItemsCompanion changes) async {
     await (_db.update(_db.cartItems)..where((t) => t.id.equals(itemId))).write(changes);
