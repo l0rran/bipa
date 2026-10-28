@@ -21,10 +21,10 @@ import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/presentation/product_photos.dart';
 import 'package:bipa/features/products/presentation/scan_product.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
+import 'package:bipa/features/shopping_list/presentation/home_change_snack_bar.dart';
 import 'package:bipa/features/shopping_list/presentation/list_preview.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:bipa/features/shopping_list/presentation/start_shopping.dart';
-import 'package:bipa/features/stock/domain/stock_item.dart';
 import 'package:bipa/features/stock/domain/stock_location.dart';
 import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
 import 'package:bipa/features/stock/presentation/stock_display.dart';
@@ -62,38 +62,27 @@ class _HomePageState extends ConsumerState<HomePage> {
     await context.push(Routes.productDetail(scanned.product.id));
   }
 
-  /// Soma [delta] ao estoque, que hoje tem [current]; uma compra entra como
-  /// [packageId], quando se sabe a embalagem. Com [undoable], mostra o aviso
-  /// com "Desfazer", que reverte exatamente o que mudou (ADR 0013).
-  Future<void> _adjust(
-    Product product,
-    double current,
-    double delta, {
-    bool undoable = false,
-    String? packageId,
-  }) async {
-    final repository = ref.read(stockRepositoryProvider);
-    final applied = StockItem.nextQuantity(current, delta) - current;
-    if (applied == 0) return;
-    final change = await repository.adjust(
-      productId: product.id,
-      packageId: packageId,
-      delta: applied,
-      reason: applied > 0 ? StockMovementReason.purchase : StockMovementReason.consumption,
-    );
-    if (!undoable || !mounted) return;
+  /// O stepper da linha aberta: corrige o estoque. Não mexe na lista nem
+  /// avisa: o botão do lado oposto já desfaz.
+  Future<void> _adjust(Product product, double delta) async {
+    await ref
+        .read(stockRepositoryProvider)
+        .adjust(
+          productId: product.id,
+          delta: delta,
+          reason: delta > 0 ? StockMovementReason.purchase : StockMovementReason.consumption,
+        );
+  }
 
+  /// Deslizar "Usei um": como o modo "Usei" da câmera, o que ficou abaixo do
+  /// "ter sempre" vai para a lista, e o "Desfazer" volta os dois.
+  Future<void> _used(Product product) async {
     final l10n = AppLocalizations.of(context);
-    final message = applied > 0 ? l10n.stockBoughtOneDone(product.name) : l10n.stockUsedOneDone(product.name);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          duration: const Duration(seconds: 4),
-          action: SnackBarAction(label: l10n.undo, onPressed: () => repository.revert(change)),
-        ),
-      );
+    final messenger = ScaffoldMessenger.of(context);
+    final record = ref.read(recordAtHomeProvider);
+    final change = await record.used(product);
+    if (change == null || !mounted) return;
+    showHomeChangeSnackBar(messenger, l10n: l10n, record: record, product: product, change: change);
   }
 
   /// Põe o produto na lista ou o tira de lá.
@@ -254,8 +243,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                               final id = entry.product.id;
                               _expandedProductId = _expandedProductId == id ? null : id;
                             }),
-                            onAdjust: (delta, {undoable = false}) =>
-                                _adjust(entry.product, entry.item.quantity, delta, undoable: undoable),
+                            onAdjust: (delta) => _adjust(entry.product, delta),
+                            onUsed: () => _used(entry.product),
                           ),
                       ],
                     ),
@@ -322,7 +311,7 @@ class _ProductArt extends StatelessWidget {
   }
 }
 
-typedef _Adjust = Future<void> Function(double delta, {bool undoable});
+typedef _Adjust = Future<void> Function(double delta);
 
 class _HomeStockRow extends StatelessWidget {
   const _HomeStockRow({
@@ -333,6 +322,7 @@ class _HomeStockRow extends StatelessWidget {
     required this.onToggleList,
     required this.onTap,
     required this.onAdjust,
+    required this.onUsed,
   });
 
   final StockEntry entry;
@@ -342,6 +332,7 @@ class _HomeStockRow extends StatelessWidget {
   final VoidCallback onToggleList;
   final VoidCallback onTap;
   final _Adjust onAdjust;
+  final VoidCallback onUsed;
 
   @override
   Widget build(BuildContext context) {
@@ -366,7 +357,7 @@ class _HomeStockRow extends StatelessWidget {
           : StockSwipeAction(
               label: l10n.stockUsedOne,
               icon: Icons.remove_rounded,
-              onTriggered: () => onAdjust(-1, undoable: true),
+              onTriggered: onUsed,
             ),
       swipeRight: StockSwipeAction(
         label: onList ? l10n.listRemoveFromList : l10n.listAddToList,
