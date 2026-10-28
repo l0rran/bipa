@@ -72,6 +72,11 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
   /// observação a cada vez que a mesma etiqueta volta à moldura.
   final _registeredTags = <String>{};
 
+  /// O último preço guardado no histórico para cada item nesta compra (pela
+  /// [CartItem.key]): digitar o preço do item o corrige (ADR 0017), para uma
+  /// leitura errada não ficar valendo.
+  final _recordedPrices = <String, String>{};
+
   /// Preços lidos antes de a compra ter mercado: esperam aqui e vão para o
   /// histórico assim que o mercado for escolhido (no chip, na lista, ao
   /// digitar um preço ou no "Terminei"). Sem isso, se perderiam.
@@ -358,7 +363,7 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
         ..add((productId: productId, packageId: packageId, read: read));
       return;
     }
-    await register(
+    final recorded = await register(
       RegisterPriceInput(
         marketId: marketId,
         productId: productId,
@@ -369,6 +374,7 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
       ),
     );
     _registeredTags.add(key);
+    _recordedPrices[CartItem.keyOf(productId, packageId)] = recorded.id;
   }
 
   static String _tagKey(String productId, String? packageId, TagPriceRead read) =>
@@ -384,7 +390,7 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
       final key = _tagKey(productId, packageId, read);
       if (_registeredTags.contains(key)) continue;
       try {
-        await register(
+        final recorded = await register(
           RegisterPriceInput(
             marketId: marketId,
             productId: productId,
@@ -395,6 +401,7 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
           ),
         );
         _registeredTags.add(key);
+        _recordedPrices[CartItem.keyOf(productId, packageId)] = recorded.id;
       } on Exception catch (error, stack) {
         _report(error, stack);
       }
@@ -474,15 +481,19 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
     }
     try {
       if (trip.marketId == null) await trips.setMarket(trip.id, marketId);
-      await register(
+      // Corrige o que foi guardado antes para o item (a etiqueta lida ou o
+      // preço digitado da outra vez), em vez de somar mais um preço.
+      final recorded = await register(
         RegisterPriceInput(
           marketId: marketId,
           productId: entry.product.id,
           packageId: entry.item.packageId,
           price: price,
           source: PriceSource.manual,
+          supersedes: _recordedPrices[entry.item.key],
         ),
       );
+      _recordedPrices[entry.item.key] = recorded.id;
       await cart.setPrice(entry.item.id, price);
       _settledItems.add(entry.item.key);
     } on Exception {
