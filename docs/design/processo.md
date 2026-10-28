@@ -90,6 +90,13 @@ O problema: **o arroz de outra marca, ou de outro tamanho, é o mesmo arroz em c
 | **Open Food Facts** e etiquetas de gôndola | O código identifica marca e tamanho; a etiqueta escreve "ARROZ BRANCO TIO JOAO 5KG" | Marca e tamanho **pertencem ao código**, não ao produto | O nome da etiqueta sugere o produto e preenche marca e tamanho, para conferir |
 | **Comparadores de preço** (preço por kg na gôndola) | O preço por unidade de medida compara tamanhos diferentes | **Preço por kg** para comparar as embalagens do mesmo produto | — |
 
+### Ordem das seções por mercado (outubro de 2026)
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **AnyList** (conjuntos de categorias) | Cada loja pode ter um conjunto de categorias, na ordem que a pessoa monta | **Uma ordem por mercado** | Nada para montar: a ordem é aprendida |
+| **Grocery – Smart Shopping List** | Guarda a ordem em que os itens são marcados para ordenar a próxima lista | **Aprender com a ordem em que se marca** | Por seção e pela mediana do horário, para uma volta ao corredor não bagunçar a lista |
+
 ### Juntar produtos (outubro de 2026)
 
 Quem cadastrou o mesmo produto uma vez por marca precisa de um jeito de juntar os cadastros.
@@ -122,6 +129,8 @@ Quem cadastrou o mesmo produto uma vez por marca precisa de um jeito de juntar o
 - [Shelf to Cart](https://shelf-to-cart-marketing.pages.dev/)
 - [Grocy 2.5.0: produtos pai e estoque somado](https://newreleases.io/project/github/grocy/grocy/release/v2.5.0)
 - [Digitalizar a geladeira com o Grocy (Galaxus)](https://www.galaxus.de/en/page/wie-ich-meinen-kuehlschrankinhalt-digitalisieren-will-und-daran-scheitere-39565)
+- [AnyList: conjuntos de categorias por loja](https://help.anylist.com/articles/category-sets/)
+- [Grocery – Smart Shopping List (App Store)](https://apps.apple.com/ca/app/id1195676848?l=en-ca)
 - [Juntar contatos duplicados (Ajuda do Google Contatos)](https://support.google.com/contacts/answer/7078226)
 - [Grocy 3.1.3: juntar tarefas (linuxserver/docker-grocy)](https://newreleases.io/project/github/linuxserver/docker-grocy/release/v3.1.3-ls128)
 - [Juntar produtos no Readysell](https://readysell.atlassian.net/wiki/spaces/RSELL7/pages/107945786/Merging+products+through+the+products+module)

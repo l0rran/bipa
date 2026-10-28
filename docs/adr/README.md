@@ -17,6 +17,7 @@ Cada arquivo registra uma decisão importante: o contexto, o que foi decidido e 
 | [0011](0011-precos-com-condicao.md) | Cada preço da etiqueta com a sua condição (atacado, cartão, varejo) | Aceito |
 | [0012](0012-quadros-da-camera-no-modo-carrinho.md) | Quadros da câmera no modo carrinho com o plugin `camera` e o ML Kit | Aceito |
 | [0013](0013-produto-e-embalagens.md) | Produto separado das embalagens (marca e tamanho) | Aceito |
+| [0014](0014-ordem-das-secoes-por-mercado.md) | Ordem das seções aprendida em cada mercado | Aceito |
 
 ## Modelo
 
