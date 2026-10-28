@@ -47,6 +47,9 @@ class CapturePricePage extends ConsumerStatefulWidget {
 
 class _CapturePricePageState extends ConsumerState<CapturePricePage> {
   final _formKey = GlobalKey<FormState>();
+
+  /// Vindo do modo carrinho: os produtos cujo preço esta tela pôs no carrinho.
+  final _pricedInCart = <String>{};
   final _barcode = TextEditingController();
   final _name = TextEditingController();
   final _price = TextEditingController();
@@ -235,6 +238,7 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
         if (widget.fromCart) {
           if (await trips.watchActive().first case final trip?) {
             await cart.setPriceForProduct(trip.id, observation.productId, observation.price);
+            _pricedInCart.add(observation.productId);
             await list.checkProduct(observation.productId);
           }
         }
@@ -247,7 +251,8 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
       if (captureAnother) {
         _resetForNextItem();
       } else {
-        context.pop();
+        // O modo carrinho recebe os produtos com o preço firmado pela foto.
+        context.pop(widget.fromCart ? _pricedInCart : null);
       }
     } on DomainException catch (error) {
       if (mounted) context.showMessage(error.message);
