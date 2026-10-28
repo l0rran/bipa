@@ -172,8 +172,12 @@ final class FinishShoppingTrip {
       for (final item in bought)
         if (item.checkedAt case final at?) (aisle: ProductKind.of(item.name).aisle, at: at),
     ];
-    // O que foi bipado sem estar na lista entra pelo horário do bipe.
-    final onList = {for (final item in bought) item.productId};
+    // O que foi bipado sem ser marcado na lista (fora dela, ou que saiu dela
+    // porque o carrinho a alcançou) entra pelo horário do bipe.
+    final onList = {
+      for (final item in bought)
+        if (item.checkedAt != null) item.productId,
+    };
     for (final entry in cart) {
       if (!onList.contains(entry.product.id)) {
         picks.add((aisle: ProductKind.of(entry.product.name).aisle, at: entry.item.addedAt));
