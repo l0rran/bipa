@@ -1,10 +1,12 @@
 import 'package:bipa/core/formatting/formatters.dart';
+import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
 import 'package:bipa/core/widgets/empty_state.dart';
 import 'package:bipa/core/widgets/messages.dart';
 import 'package:bipa/features/prices/domain/price_comparison.dart';
 import 'package:bipa/features/prices/domain/price_observation.dart';
+import 'package:bipa/features/prices/presentation/price_condition_label.dart';
 import 'package:bipa/features/prices/presentation/prices_providers.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/unit_price.dart';
@@ -194,6 +196,7 @@ class _PriceTile extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final subtitle = [
       Formatters.date(observation.observedAt),
+      ?observation.condition.label(AppLocalizations.of(context)),
       observation.source.label,
       ?unitPrice?.format(),
     ].join(' · ');

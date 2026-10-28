@@ -79,5 +79,26 @@
   "stockSheetTarget": "Ter sempre",
   "stockSheetTargetHelp": "Abaixo disso, o item aparece em \"Acabando\"",
   "stockSheetSeeProduct": "Ver produto e preços",
-  "save": "Salvar"
+  "save": "Salvar",
+  "priceConditionLoyalty": "cartão da loja",
+  "@priceConditionLoyalty": {
+    "description": "Preço que vale com o cartão, o clube ou o app da loja (ex.: Passaí Cred)."
+  },
+  "priceConditionWholesale": "a partir de {quantity} un",
+  "@priceConditionWholesale": {
+    "description": "Preço de atacado, com a quantidade mínima.",
+    "placeholders": {
+      "quantity": {
+        "type": "int"
+      }
+    }
+  },
+  "priceConditionWholesaleUnknown": "atacado",
+  "@priceConditionWholesaleUnknown": {
+    "description": "Preço de atacado quando a etiqueta não diz a quantidade mínima."
+  },
+  "captureOtherOffers": "Também na etiqueta",
+  "@captureOtherOffers": {
+    "description": "Outros preços da etiqueta, com condição, que também serão salvos."
+  }
 }

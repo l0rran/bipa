@@ -1,5 +1,7 @@
 import 'package:bipa/core/money/money.dart';
+import 'package:bipa/features/prices/domain/price_condition.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
+import 'package:bipa/features/prices/domain/price_tag.dart';
 import 'package:bipa/features/prices/domain/register_price_observation.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
@@ -112,6 +114,52 @@ void main() {
 
     expect(promotion.isPromotion, isTrue);
     expect(inconsistent.regularPrice, isNull);
+  });
+
+  test('grava cada preço da etiqueta com a sua condição, no mesmo produto e horário', () async {
+    final main = await register(
+      const RegisterPriceInput(
+        marketId: 'assai',
+        barcode: '7891000100103',
+        newProductName: 'Feijão Carioca 1kg',
+        price: Money.cents(805),
+        source: PriceSource.priceTag,
+        otherOffers: [
+          PriceOffer(price: Money.cents(785), condition: LoyaltyMembers()),
+          PriceOffer(price: Money.cents(785), condition: Wholesale(minimumQuantity: 10)),
+        ],
+      ),
+    );
+
+    expect(main.condition, const AnyCustomer());
+    expect(products.products, hasLength(1));
+    expect(prices.observations.map((o) => (o.condition, o.price.cents)), [
+      (const AnyCustomer(), 805),
+      (const LoyaltyMembers(), 785),
+      (const Wholesale(minimumQuantity: 10), 785),
+    ]);
+    expect(prices.observations.map((o) => o.productId).toSet(), {main.productId});
+    expect(prices.observations.map((o) => o.observedAt).toSet(), {now});
+  });
+
+  test('ignora ofertas repetidas na condição do preço principal', () async {
+    existingProduct();
+
+    await register(
+      const RegisterPriceInput(
+        marketId: 'assai',
+        productId: 'leite',
+        price: Money.cents(179),
+        condition: LoyaltyMembers(),
+        source: PriceSource.priceTag,
+        otherOffers: [
+          PriceOffer(price: Money.cents(199), condition: LoyaltyMembers()),
+          PriceOffer(price: Money.cents(179), condition: Wholesale(minimumQuantity: 6)),
+        ],
+      ),
+    );
+
+    expect(prices.observations.map((o) => o.condition), const [LoyaltyMembers(), Wholesale(minimumQuantity: 6)]);
   });
 
   test('rejeita preço zero', () {

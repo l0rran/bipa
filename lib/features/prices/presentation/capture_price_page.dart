@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:bipa/core/errors/domain_exception.dart';
+import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/location/location_service.dart';
 import 'package:bipa/core/money/money.dart';
 import 'package:bipa/core/navigation/routes.dart';
@@ -9,9 +10,11 @@ import 'package:bipa/core/widgets/messages.dart';
 import 'package:bipa/features/markets/domain/market.dart';
 import 'package:bipa/features/markets/presentation/market_picker_sheet.dart';
 import 'package:bipa/features/markets/presentation/markets_providers.dart';
+import 'package:bipa/features/prices/domain/price_condition.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/prices/domain/price_tag.dart';
 import 'package:bipa/features/prices/domain/register_price_observation.dart';
+import 'package:bipa/features/prices/presentation/price_condition_label.dart';
 import 'package:bipa/features/prices/presentation/prices_providers.dart';
 import 'package:bipa/features/products/domain/gtin.dart';
 import 'package:bipa/features/products/domain/product.dart';
@@ -52,6 +55,11 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
   Product? _product;
   String? _photoPath;
   List<Money> _candidates = const [];
+
+  /// Condição do preço principal e os outros preços da etiqueta (ADR 0011).
+  PriceCondition _condition = const AnyCustomer();
+  List<PriceOffer> _otherOffers = const [];
+  final _selectedOffers = <PriceOffer>{};
   var _source = PriceSource.manual;
   var _reading = false;
   var _saving = false;
@@ -145,6 +153,11 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
     setState(() {
       _source = PriceSource.priceTag;
       _candidates = reading.candidates;
+      _condition = reading.offers.firstOrNull?.condition ?? const AnyCustomer();
+      _otherOffers = reading.offers.skip(1).toList(growable: false);
+      _selectedOffers
+        ..clear()
+        ..addAll(_otherOffers);
       _price.text = reading.price?.formatDecimal() ?? _price.text;
       _regularPrice.text = reading.regularPrice?.formatDecimal() ?? '';
       if (!_productLocked && barcode != null) _barcode.text = barcode;
@@ -193,6 +206,11 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
           marketId: market.id,
           price: price,
           regularPrice: Money.tryParse(_regularPrice.text),
+          condition: _condition,
+          otherOffers: [
+            for (final offer in _otherOffers)
+              if (_selectedOffers.contains(offer)) offer,
+          ],
           source: _source,
           productId: _product?.id,
           barcode: barcode.isEmpty ? null : barcode,
@@ -226,6 +244,9 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
       _product = null;
       _photoPath = null;
       _candidates = const [];
+      _condition = const AnyCustomer();
+      _otherOffers = const [];
+      _selectedOffers.clear();
       _source = PriceSource.manual;
     });
   }
@@ -250,6 +271,12 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
     // Observar o leitor o mantém vivo enquanto esta tela estiver aberta.
     final reader = ref.watch(priceTagReaderProvider);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final offerPrices = {for (final offer in _otherOffers) offer.price};
+    final otherValues = [
+      for (final candidate in _candidates)
+        if (candidate != Money.tryParse(_price.text) && !offerPrices.contains(candidate)) candidate,
+    ];
     const priceKeyboard = TextInputType.numberWithOptions(decimal: true);
 
     return Scaffold(
@@ -271,13 +298,13 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
               reading: _reading,
               onCapture: () => _photographTag(reader),
             ),
-            if (_candidates.length > 1) ...[
+            if (otherValues.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text('Outros valores na etiqueta:', style: theme.textTheme.bodySmall),
               Wrap(
                 spacing: 8,
                 children: [
-                  for (final candidate in _candidates)
+                  for (final candidate in otherValues)
                     ActionChip(
                       label: Text(candidate.format()),
                       onPressed: () => setState(() => _price.text = candidate.formatDecimal()),
@@ -330,7 +357,11 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
                   child: TextFormField(
                     controller: _price,
                     keyboardType: priceKeyboard,
-                    decoration: const InputDecoration(labelText: 'Preço pago', prefixText: 'R\$ '),
+                    decoration: InputDecoration(
+                      labelText: 'Preço pago',
+                      prefixText: 'R\$ ',
+                      helperText: _condition.label(l10n),
+                    ),
                     validator: _validatePrice,
                   ),
                 ),
@@ -349,6 +380,29 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
                 ),
               ],
             ),
+            if (_otherOffers.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(l10n.captureOtherOffers, style: theme.textTheme.titleSmall),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final offer in _otherOffers)
+                    FilterChip(
+                      label: Text([offer.price.format(), ?offer.condition.label(l10n)].join(' · ')),
+                      selected: _selectedOffers.contains(offer),
+                      onSelected: (selected) => setState(() {
+                        if (selected) {
+                          _selectedOffers.add(offer);
+                        } else {
+                          _selectedOffers.remove(offer);
+                        }
+                      }),
+                    ),
+                ],
+              ),
+            ],
             const SizedBox(height: 32),
             FilledButton.icon(
               onPressed: _saving ? null : () => _save(captureAnother: false),

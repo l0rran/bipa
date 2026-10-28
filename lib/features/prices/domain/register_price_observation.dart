@@ -2,9 +2,11 @@ import 'package:bipa/core/errors/domain_exception.dart';
 import 'package:bipa/core/id/id_generator.dart';
 import 'package:bipa/core/money/money.dart';
 import 'package:bipa/core/time/clock.dart';
+import 'package:bipa/features/prices/domain/price_condition.dart';
 import 'package:bipa/features/prices/domain/price_observation.dart';
 import 'package:bipa/features/prices/domain/price_repository.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
+import 'package:bipa/features/prices/domain/price_tag.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_repository.dart';
@@ -14,6 +16,9 @@ import 'package:meta/meta.dart';
 ///
 /// O produto é resolvido nesta ordem: [productId], [barcode] de um produto já
 /// cadastrado ou, por fim, um produto novo chamado [newProductName].
+///
+/// [otherOffers] são os outros preços da mesma etiqueta, com outras condições
+/// (ADR 0011): cada um vira uma observação, no mesmo horário.
 @immutable
 final class RegisterPriceInput {
   const RegisterPriceInput({
@@ -21,6 +26,8 @@ final class RegisterPriceInput {
     required this.price,
     required this.source,
     this.regularPrice,
+    this.condition = const AnyCustomer(),
+    this.otherOffers = const [],
     this.productId,
     this.barcode,
     this.newProductName,
@@ -30,6 +37,8 @@ final class RegisterPriceInput {
   final String marketId;
   final Money price;
   final Money? regularPrice;
+  final PriceCondition condition;
+  final List<PriceOffer> otherOffers;
   final PriceSource source;
   final String? productId;
   final String? barcode;
@@ -55,26 +64,43 @@ final class RegisterPriceObservation {
   final IdGenerator _ids;
   final Clock _clock;
 
+  /// Retorna a observação do preço principal ([RegisterPriceInput.price]).
   Future<PriceObservation> call(RegisterPriceInput input) async {
     if (!input.price.isPositive) throw const InvalidPriceException();
 
     final product = await _resolveProduct(input);
     final now = _clock();
-    final regularPrice = input.regularPrice;
 
-    final observation = PriceObservation(
+    PriceObservation observe(PriceOffer offer) => PriceObservation(
       id: _ids.newId(),
       productId: product.id,
       marketId: input.marketId,
-      price: input.price,
-      // Um "preço sem desconto" menor ou igual ao pago não indica promoção.
-      regularPrice: regularPrice != null && regularPrice > input.price ? regularPrice : null,
+      price: offer.price,
+      regularPrice: _promotionRegularPrice(offer),
+      condition: offer.condition,
       source: input.source,
       observedAt: now,
       createdAt: now,
     );
-    await _prices.add(observation);
-    return observation;
+
+    final main = observe(
+      PriceOffer(price: input.price, condition: input.condition, regularPrice: input.regularPrice),
+    );
+    await _prices.add(main);
+
+    // Uma observação por condição: repetir a do principal duplicaria o preço.
+    final recorded = {input.condition};
+    for (final offer in input.otherOffers) {
+      if (!offer.price.isPositive || !recorded.add(offer.condition)) continue;
+      await _prices.add(observe(offer));
+    }
+    return main;
+  }
+
+  /// Um "preço sem desconto" menor ou igual ao pago não indica promoção.
+  static Money? _promotionRegularPrice(PriceOffer offer) {
+    final regular = offer.regularPrice;
+    return regular != null && regular > offer.price ? regular : null;
   }
 
   Future<Product> _resolveProduct(RegisterPriceInput input) async {
