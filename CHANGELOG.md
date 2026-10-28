@@ -79,6 +79,7 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - Compra sem lista mostra "8 no carrinho" em vez de "0 de 0 itens".
 - "a menos que no Padaria Real" virou "a menos que em Padaria Real".
 - As barras da comparação e o número do stepper respeitam o movimento reduzido do aparelho, e o stepper cresce com a fonte grande.
+- O leitor de tela ouve "o quilo" no lugar de "/kg", "não definido" no lugar de "Ter sempre —" e "2 embalagens em casa" no stepper, e o nome do produto é o título da tela.
 - Os textos de falha seguem um padrão só ("Não deu para … Tente de novo."), sem repetir o convite ao lado do botão de tentar de novo.
 - A mesma etiqueta lida de novo, logo depois de dar o preço a um produto, não vai mais para o próximo produto bipado.
 
