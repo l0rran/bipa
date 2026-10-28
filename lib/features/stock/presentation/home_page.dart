@@ -104,20 +104,28 @@ class _HomePageState extends ConsumerState<HomePage> {
     final VoidCallback undo;
     final String message;
     try {
+      // Guardado antes de mudar: o desfazer devolve o item como estava, com a
+      // quantidade e, se já estava marcado como comprado, marcado.
+      final before = [
+        for (final entry in await list.watchAll().first)
+          if (entry.item.productId == product.id) entry.item,
+      ];
       if (onList) {
-        // Guardado antes de tirar: o desfazer devolve com a quantidade.
-        final removed = [
-          for (final entry in await list.watchAll().first)
-            if (entry.item.productId == product.id) entry.item,
-        ];
         await list.removeProduct(product.id);
         message = l10n.listItemRemoved(product.name);
-        undo = () => unawaited(Future.wait(removed.map(list.restore)));
       } else {
         await ref.read(putProductOnListProvider)(product);
         message = l10n.cameraToList(product.name);
-        undo = () => unawaited(list.removeProduct(product.id));
       }
+      // O `restore` não duplica: tira o que está agora e devolve o de antes.
+      Future<void> restoreBefore() async {
+        await list.removeProduct(product.id);
+        for (final item in before) {
+          await list.restore(item);
+        }
+      }
+
+      undo = () => unawaited(restoreBefore());
     } on Exception {
       messenger.showSnackBar(SnackBar(content: Text(l10n.listUpdateFailed)));
       return;
