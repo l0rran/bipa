@@ -29,7 +29,8 @@
 - [x] Lista de compras: itens de produto ou escritos à mão, os itens de sempre (os com "ter sempre"), seções do mercado, preço esperado e total estimado; "Pôr na lista" no Início
 - [x] Modo compra: "Ir às compras" na prévia, barra da compra acima da navegação, item marcado ao registrar o preço e "Terminei", que leva o comprado ao estoque
 - [ ] Notificação ao vivo da compra (Android 16, Live Updates; precisa de código nativo)
-- [ ] Modo carrinho: bipar vários itens em sequência, com a bandeja do que você vai levar
+- [x] Modo carrinho: câmera contínua, a bandeja com o "levar", o preço esperado do mercado e o total real; o disparo fotografa a etiqueta
+- [ ] Modo carrinho: ler a etiqueta ao vivo (OCR nos quadros da câmera), sem precisar fotografar
 - [ ] Ordem dos corredores aprendida por mercado, a partir da ordem em que a pessoa bipa e marca
 - [ ] Itens de sempre pelo ritmo de consumo (hoje são os produtos com "ter sempre")
 - [ ] Fechar o ciclo: o que é bipado em "Comprei" sai da lista e entra no estoque (o "Terminei" do modo compra já faz isso com o que foi marcado)
