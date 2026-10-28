@@ -321,9 +321,11 @@ class _CartModePageState extends ConsumerState<CartModePage> {
           if (!mounted) return;
           _lockFrame();
           _showNotice((price: read.price.format(), detail: entry.name, waiting: false), key: entry.item.key);
-        case SameTagAgain():
-          // A etiqueta do último item, de volta à moldura: nada a fazer (D4).
-          break;
+        case SameTagAgain(:final entry):
+          // A etiqueta do último item, de volta à moldura: nada muda (D4),
+          // mas o aviso confirma, para quem fotografou de novo.
+          if (!mounted) return;
+          _showNotice((price: read.price.format(), detail: entry.name, waiting: false), key: entry.item.key);
         case WaitForProduct(:final pending):
           _pending = pending;
           unawaited(HapticFeedback.selectionClick());
