@@ -32,7 +32,7 @@
 - [x] Modo carrinho: câmera contínua, a bandeja com o "levar", o preço esperado do mercado e o total real; o disparo fotografa a etiqueta
 - [x] Modo carrinho: ler a etiqueta ao vivo (OCR nos quadros da câmera), sem precisar fotografar
 - [x] Produto e embalagens (ADR 0013): marca e tamanho por código de barras, folha de embalagem nova, estoque por embalagem com o total em kg, preço por kg e "Juntar com…"
-- [ ] Tela do produto: gráfico do preço nos últimos 6 meses (protótipo "Produto com embalagens")
+- [x] Tela do produto: gráfico do preço nos últimos 6 meses (protótipo "Produto com embalagens")
 - [ ] Ordem dos corredores aprendida por mercado, a partir da ordem em que a pessoa bipa e marca
 - [ ] Itens de sempre pelo ritmo de consumo (hoje são os produtos com "ter sempre")
 - [ ] Fechar o ciclo: o que é bipado em "Comprei" sai da lista e entra no estoque (o "Terminei" do modo compra já faz isso com o que foi marcado)

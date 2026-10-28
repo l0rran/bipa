@@ -1,4 +1,5 @@
 import 'package:bipa/core/design_system/bipa_theme.dart';
+import 'package:bipa/core/design_system/components/price_history.dart';
 import 'package:bipa/core/design_system/components/quantity_stepper.dart';
 import 'package:bipa/core/design_system/components/scan_tray.dart';
 import 'package:bipa/core/design_system/components/shopping_list.dart';
@@ -224,6 +225,28 @@ void main() {
     expect(find.text(r'R$ 27,90'), findsOneWidget);
     expect(find.text('Arroz Tio João 5 kg'), findsOneWidget);
     expect(find.bySemanticsLabel(r'R$ 27,90, Arroz Tio João 5 kg'), findsOneWidget);
+    semantics.dispose();
+  });
+
+  testWidgets('o gráfico de preço mostra os meses e se descreve ao leitor de tela', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(
+      _app(
+        const SizedBox(
+          width: 320,
+          child: PriceHistoryChart(
+            points: [Offset(0, 1), Offset(0.5, 0.4), Offset(1, 0)],
+            axisLabels: ['mai', 'jul', 'set', 'hoje'],
+            semanticsLabel: r'Preço do kg nos últimos 6 meses, de R$ 5,90 a R$ 4,99',
+          ),
+        ),
+      ),
+    );
+
+    expect(find.bySemanticsLabel(r'Preço do kg nos últimos 6 meses, de R$ 5,90 a R$ 4,99'), findsOneWidget);
+    // Os meses ficam por baixo do rótulo: o leitor de tela ouve só a frase.
+    expect(find.text('hoje'), findsOneWidget);
+    expect(tester.takeException(), isNull);
     semantics.dispose();
   });
 }

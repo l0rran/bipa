@@ -348,6 +348,38 @@
   "productPackages": "Embalagens",
   "productMarkets": "Nos mercados",
   "productAtHome": "Em casa",
+  "productHistory": "Últimos 6 meses",
+  "productHistoryToday": "hoje",
+  "@productHistoryToday": {
+    "description": "Último rótulo do eixo do gráfico de preço."
+  },
+  "productHistoryLabel": "Preço do {unit} nos últimos 6 meses, de {first} a {last}",
+  "@productHistoryLabel": {
+    "description": "Rótulo acessível do gráfico de preço: \"Preço do kg nos últimos 6 meses, de R$ 5,90 a R$ 4,99\".",
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      },
+      "first": {
+        "type": "String"
+      },
+      "last": {
+        "type": "String"
+      }
+    }
+  },
+  "productHistoryLabelNoUnit": "Preço nos últimos 6 meses, de {first} a {last}",
+  "@productHistoryLabelNoUnit": {
+    "description": "Rótulo acessível do gráfico de preço de uma embalagem sem tamanho.",
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "last": {
+        "type": "String"
+      }
+    }
+  },
   "productMoreOptions": "Mais opções",
   "productEdit": "Editar",
   "productRegisterPrice": "Registrar preço",

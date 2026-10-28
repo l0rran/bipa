@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/price_history.dart';
 import 'package:bipa/core/design_system/components/price_rows.dart';
 import 'package:bipa/core/design_system/components/price_tag.dart';
 import 'package:bipa/core/design_system/components/product_category_icon.dart';
@@ -16,6 +17,7 @@ import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
 import 'package:bipa/core/widgets/empty_state.dart';
 import 'package:bipa/features/prices/domain/package_prices.dart';
+import 'package:bipa/features/prices/domain/price_trend.dart';
 import 'package:bipa/features/prices/presentation/prices_providers.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
@@ -31,6 +33,7 @@ import 'package:bipa/features/stock/presentation/stock_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 /// Tela do produto (protótipo "Produto com embalagens", ADR 0013): o melhor
 /// preço por kg, as embalagens com o preço de cada uma, o melhor preço em
@@ -248,6 +251,12 @@ class _ProductView extends ConsumerWidget {
                   ],
                 ),
               ],
+              if (priceTrend(history, packages, now: now) case final trend?) ...[
+                const SizedBox(height: BipaSpacing.s6),
+                SectionHeader(title: l10n.productHistory),
+                const SizedBox(height: BipaSpacing.s2),
+                _PriceHistory(trend: trend),
+              ],
               const SizedBox(height: BipaSpacing.s6),
               SectionHeader(title: l10n.productAtHome),
               const SizedBox(height: BipaSpacing.s2),
@@ -307,6 +316,52 @@ class _BestPrice extends StatelessWidget {
       unitLine: label == null
           ? l10n.productUnitPriceOnly(unitPrice.unit.symbol)
           : l10n.productBestUnitPrice(unitPrice.unit.symbol, label),
+    );
+  }
+}
+
+/// "Últimos 6 meses": o menor preço de cada dia, por kg quando dá.
+class _PriceHistory extends StatelessWidget {
+  const _PriceHistory({required this.trend});
+
+  final PriceTrend trend;
+
+  /// Um rótulo a cada dois meses a partir do primeiro, e "hoje" na ponta.
+  static List<String> _axisLabels(PriceTrend trend, AppLocalizations l10n) {
+    final month = DateFormat.MMM(l10n.localeName);
+    final from = trend.from;
+    final to = trend.to;
+    final months = (to.year - from.year) * 12 + to.month - from.month;
+    return [
+      for (var offset = 0; offset < months; offset += 2)
+        // "mai." vira "mai", como no protótipo.
+        month.format(DateTime(from.year, from.month + offset)).replaceAll('.', ''),
+      l10n.productHistoryToday,
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final from = trend.from.millisecondsSinceEpoch;
+    final span = trend.to.difference(trend.from).inMilliseconds.clamp(1, 1 << 52);
+    final lowest = trend.lowest.cents;
+    final range = trend.highest.cents - lowest;
+    final first = trend.points.first.price.format();
+    final last = trend.points.last.price.format();
+    return PriceHistoryChart(
+      points: [
+        for (final point in trend.points)
+          Offset(
+            (point.day.millisecondsSinceEpoch - from) / span,
+            range == 0 ? 0.5 : (point.price.cents - lowest) / range,
+          ),
+      ],
+      axisLabels: _axisLabels(trend, l10n),
+      semanticsLabel: switch (trend.unit) {
+        final unit? => l10n.productHistoryLabel(unit.symbol, first, last),
+        null => l10n.productHistoryLabelNoUnit(first, last),
+      },
     );
   }
 }
