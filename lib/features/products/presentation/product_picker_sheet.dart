@@ -30,19 +30,42 @@ final class NewProduct extends ProductChoice {
 }
 
 /// Escolhe o produto de uma embalagem, ou cria um, a partir de uma busca que
-/// começa com [initialQuery].
-Future<ProductChoice?> pickProduct(BuildContext context, {String initialQuery = ''}) {
+/// começa com [initialQuery]. Sem [allowCreate], só os que existem, tirando
+/// [excludeId] (para juntar um produto com outro).
+Future<ProductChoice?> pickProduct(
+  BuildContext context, {
+  String initialQuery = '',
+  bool allowCreate = true,
+  String? excludeId,
+  String? title,
+}) {
   return showModalBottomSheet<ProductChoice>(
     context: context,
     isScrollControlled: true,
-    builder: (_) => ProductPickerSheet(initialQuery: initialQuery),
+    builder: (_) => ProductPickerSheet(
+      initialQuery: initialQuery,
+      allowCreate: allowCreate,
+      excludeId: excludeId,
+      title: title,
+    ),
   );
 }
 
 class ProductPickerSheet extends ConsumerStatefulWidget {
-  const ProductPickerSheet({this.initialQuery = '', super.key});
+  const ProductPickerSheet({
+    this.initialQuery = '',
+    this.allowCreate = true,
+    this.excludeId,
+    this.title,
+    super.key,
+  });
 
   final String initialQuery;
+  final bool allowCreate;
+  final String? excludeId;
+
+  /// Sem título, pergunta "De que produto é?".
+  final String? title;
 
   @override
   ConsumerState<ProductPickerSheet> createState() => _ProductPickerSheetState();
@@ -77,7 +100,7 @@ class _ProductPickerSheetState extends ConsumerState<ProductPickerSheet> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(BipaSpacing.s4, 0, BipaSpacing.s4, BipaSpacing.s3),
-              child: Text(l10n.productPickTitle, style: BipaText.title.copyWith(color: colors.ink)),
+              child: Text(widget.title ?? l10n.productPickTitle, style: BipaText.title.copyWith(color: colors.ink)),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s4),
@@ -101,13 +124,16 @@ class _ProductPickerSheetState extends ConsumerState<ProductPickerSheet> {
               child: StreamBuilder<List<Product>>(
                 stream: _products,
                 builder: (context, snapshot) {
-                  final items = snapshot.data ?? const <Product>[];
+                  final items = [
+                    for (final product in snapshot.data ?? const <Product>[])
+                      if (product.id != widget.excludeId) product,
+                  ];
                   final exact = items.any((p) => foldText(p.name) == foldText(_query));
                   return ListView(
                     shrinkWrap: true,
                     padding: const EdgeInsets.only(bottom: BipaSpacing.s4),
                     children: [
-                      if (_query.isNotEmpty && !exact)
+                      if (widget.allowCreate && _query.isNotEmpty && !exact)
                         ListTile(
                           leading: CircleAvatar(
                             backgroundColor: colors.brandSoft,

@@ -18,10 +18,12 @@ import 'package:bipa/features/prices/presentation/prices_providers.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/presentation/product_photos.dart';
+import 'package:bipa/features/products/presentation/product_picker_sheet.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:bipa/features/stock/domain/stock_item.dart';
 import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
+import 'package:bipa/features/stock/domain/stock_package.dart';
 import 'package:bipa/features/stock/presentation/stock_item_sheet.dart';
 import 'package:bipa/features/stock/presentation/stock_providers.dart';
 import 'package:flutter/material.dart';
@@ -72,6 +74,29 @@ class _ProductView extends ConsumerWidget {
         reason: delta > 0 ? StockMovementReason.purchase : StockMovementReason.consumption,
       );
 
+  /// "Juntar com…": escolhe o outro produto, confirma e abre o que ficou.
+  Future<void> _merge(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
+    final repository = ref.read(productRepositoryProvider);
+    final choice = await pickProduct(context, allowCreate: false, excludeId: product.id, title: l10n.productMerge);
+    if (choice is! ExistingProduct || !context.mounted) return;
+    final into = choice.product;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.productMergeTitle(into.name)),
+        content: Text(l10n.productMergeBody(product.name, into.name)),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.productMergeConfirm)),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    await repository.merge(fromId: product.id, intoId: into.id);
+    if (context.mounted) context.pushReplacement(Routes.productDetail(into.id));
+  }
+
   Future<void> _toggleList(WidgetRef ref, {required bool onList}) {
     final list = ref.read(shoppingListRepositoryProvider);
     return onList ? list.removeProduct(product.id) : list.addProduct(productId: product.id, name: product.name);
@@ -84,6 +109,8 @@ class _ProductView extends ConsumerWidget {
     final packages = ref.watch(productPackagesProvider(product.id)).value ?? const <ProductPackage>[];
     final history = ref.watch(priceHistoryProvider(product.id)).value ?? const [];
     final stock = ref.watch(stockProvider).value?.where((e) => e.item.productId == product.id).firstOrNull;
+    final stockPackages = ref.watch(stockPackagesProvider(product.id)).value ?? const <StockPackageCount>[];
+    final amount = homeAmount(stockPackages, quantity: stock?.item.quantity ?? 0);
     final onList = ref.watch(productsOnListProvider).contains(product.id);
     final photos = ref.watch(productPhotosDirectoryProvider).value;
     final now = ref.watch(clockProvider)();
@@ -132,7 +159,8 @@ class _ProductView extends ConsumerWidget {
                     style: roundButton,
                     icon: const Icon(Icons.more_horiz_rounded),
                     onSelected: (action) => action(),
-                    itemBuilder: (context) => [
+                    // As ações usam o contexto da tela: o do menu some quando ele fecha.
+                    itemBuilder: (_) => [
                       PopupMenuItem(
                         value: () => context.push(Routes.editProduct(product.id)),
                         child: Text(l10n.productEdit),
@@ -140,6 +168,10 @@ class _ProductView extends ConsumerWidget {
                       PopupMenuItem(
                         value: () => context.push(Routes.capturePriceFor(product.id)),
                         child: Text(l10n.productRegisterPrice),
+                      ),
+                      PopupMenuItem(
+                        value: () => _merge(context, ref),
+                        child: Text(l10n.productMerge),
                       ),
                     ],
                   ),
@@ -211,6 +243,9 @@ class _ProductView extends ConsumerWidget {
               const SizedBox(height: BipaSpacing.s2),
               _AtHomeCard(
                 stock: stock,
+                amount: amount == null
+                    ? null
+                    : '${Formatters.quantity(amount.amount)} ${amount.unit.symbol}',
                 onIncrement: () => _adjust(ref, 1),
                 onDecrement: (stock?.item.quantity ?? 0) > 0 ? () => _adjust(ref, -1) : null,
               ),
@@ -266,9 +301,12 @@ class _BestPrice extends StatelessWidget {
 
 /// "Em casa": quanto há (o stepper) e o "ter sempre"; tocar abre os ajustes.
 class _AtHomeCard extends StatelessWidget {
-  const _AtHomeCard({required this.stock, required this.onIncrement, this.onDecrement});
+  const _AtHomeCard({required this.stock, required this.onIncrement, this.amount, this.onDecrement});
 
   final StockEntry? stock;
+
+  /// O total das embalagens em casa: "15 kg".
+  final String? amount;
   final VoidCallback onIncrement;
   final VoidCallback? onDecrement;
 
@@ -289,9 +327,16 @@ class _AtHomeCard extends StatelessWidget {
           child: Row(
             children: [
               Expanded(
-                child: Text(
-                  target == null ? l10n.stockSheetTarget : l10n.productTargetCount(Formatters.quantity(target)),
-                  style: BipaText.body.copyWith(color: colors.inkMuted),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      target == null ? l10n.stockSheetTarget : l10n.productTargetCount(Formatters.quantity(target)),
+                      style: BipaText.body.copyWith(color: colors.inkMuted),
+                    ),
+                    if (amount case final amount?)
+                      Text(l10n.productAmountAtHome(amount), style: BipaText.bodyLarge.copyWith(color: colors.ink)),
+                  ],
                 ),
               ),
               QuantityStepper(

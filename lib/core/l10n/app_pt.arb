@@ -371,5 +371,35 @@
         "type": "int"
       }
     }
-  }
+  },
+  "productAmountAtHome": "{amount} em casa",
+  "@productAmountAtHome": {
+    "description": "Total das embalagens em casa: \"15 kg em casa\".",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "productMerge": "Juntar com…",
+  "productMergeTitle": "Juntar com {name}?",
+  "@productMergeTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "productMergeBody": "As embalagens, os preços e o estoque de {from} passam para {into}, e {from} deixa de existir.",
+  "@productMergeBody": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "into": {
+        "type": "String"
+      }
+    }
+  },
+  "productMergeConfirm": "Juntar"
 }
