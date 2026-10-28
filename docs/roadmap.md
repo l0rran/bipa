@@ -69,12 +69,11 @@ Preços, mercados e produto:
 Consistência e acessibilidade:
 
 - [ ] H1: a aba Produtos com os componentes de Mercados, e os formulários de produto e de mercado no design system
-- [ ] H2: textos de falha num padrão só ("Não deu para … Tente de novo."), exceções do domínio traduzidas pelo ARB e falha tratada no stepper do produto
-- [ ] H3: alturas mínimas no lugar de fixas (stepper, selos, número da seção) e teste com fonte em 200%
+- [ ] H2 (resto): exceções do domínio traduzidas pelo ARB e falha tratada no stepper do produto (os textos de falha já seguem "Não deu para … Tente de novo.")
+- [ ] H3 (resto): alturas mínimas nos selos e no número da seção, e teste com fonte em 200% (o stepper já cresce)
 - [ ] H4: rótulos para o leitor de tela ("não definido", "o quilo", "2 embalagens em casa") e o nome do produto como título
-- [ ] H5 (resto): as linhas da comparação abrem o mercado, e os alfinetes do mapa levam à linha ("Nos mercados" já leva, pela folha do preço)
+- [ ] H5 (resto): os alfinetes do mapa levam à linha do mercado
 - [ ] A barra de navegação encolhe ao rolar, como no design system
-- [ ] Movimento reduzido respeitado em todas as animações (barras da comparação e stepper)
 - [ ] Revisar no protótipo: o granel sem código, o aviso tocável do preço esperando e o "1 de 2" na bandeja do "Modo carrinho"; "Guardar em casa" no "Menu do bipar"; a idade dos preços e a pergunta "Levar os preços?" em "Mercados"; o mercado na "Confirmação"; o "2× Leite" e o "Cancelar compra" no "Fim da compra"; o "⋯" no editor da linha do "Início"; o "2 sem preço" na prévia da "Lista"; a "Folha do preço", nova; o mercado e a idade no preço em destaque do produto velho, sem quadro; e o "Desfazer" no aviso da câmera em "Comprei" e "Usei", que ainda não tem quadro
 
 ## Fase 2: base comunitária

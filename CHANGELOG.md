@@ -62,6 +62,7 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - Tocar num preço da tela do produto ou do mercado abre a folha dele, com "Corrigir o preço" fora do carrinho e o caminho para o mercado ou o produto.
 - O preço em destaque do produto, quando tem 30 dias ou mais, diz o mercado e a idade no lugar da embalagem.
 - "Registrar preço" na tela do produto pergunta a embalagem quando há mais de uma.
+- As linhas de "Sua lista em cada mercado" abrem o mercado.
 - O granel escolhido pelo aviso do carrinho entra na bandeja, sem preço, e marca a lista.
 - Tocar numa pesagem da bandeja troca o produto que a balança lembra para aquele código, e a linha vai junto.
 - Em "Comprei" e "Usei" da câmera, quando a lista não muda, o Desfazer fica no próprio aviso do visor, sem snackbar repetindo o fato.
@@ -77,6 +78,8 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - A alça da bandeja segue a direção do arrasto, e o preço estimado tem um sinal só (a etiqueta vazada).
 - Compra sem lista mostra "8 no carrinho" em vez de "0 de 0 itens".
 - "a menos que no Padaria Real" virou "a menos que em Padaria Real".
+- As barras da comparação e o número do stepper respeitam o movimento reduzido do aparelho, e o stepper cresce com a fonte grande.
+- Os textos de falha seguem um padrão só ("Não deu para … Tente de novo."), sem repetir o convite ao lado do botão de tentar de novo.
 - A mesma etiqueta lida de novo, logo depois de dar o preço a um produto, não vai mais para o próximo produto bipado.
 
 ## [0.1.0] - 2026-10-27
