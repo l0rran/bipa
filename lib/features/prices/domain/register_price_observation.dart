@@ -183,15 +183,15 @@ final class RegisterPriceObservation {
 }
 
 final class InvalidPriceException extends DomainException {
-  const InvalidPriceException() : super('Informe um preço maior que zero.');
+  const InvalidPriceException() : super(DomainErrorCode.invalidPrice);
 }
 
 final class MissingProductNameException extends DomainException {
-  const MissingProductNameException() : super('Informe o nome do produto.');
+  const MissingProductNameException() : super(DomainErrorCode.missingProductName);
 }
 
 final class ProductNotFoundException extends DomainException {
-  const ProductNotFoundException(this.productId) : super('Produto não encontrado.');
+  const ProductNotFoundException(this.productId) : super(DomainErrorCode.productNotFound);
 
   final String productId;
 }

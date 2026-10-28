@@ -80,15 +80,15 @@ final class RegisterPackage {
 }
 
 final class MissingPackageProductException extends DomainException {
-  const MissingPackageProductException() : super('Escolha o produto desta embalagem.');
+  const MissingPackageProductException() : super(DomainErrorCode.missingPackageProduct);
 }
 
 /// O código da balança muda a cada pesagem e não pode ser de uma embalagem
 /// (ADR 0018).
 final class ScaleBarcodeException extends DomainException {
-  const ScaleBarcodeException() : super('Código da balança: ele muda a cada pesagem.');
+  const ScaleBarcodeException() : super(DomainErrorCode.scaleBarcode);
 }
 
 final class InvalidPackageSizeException extends DomainException {
-  const InvalidPackageSizeException() : super('Informe um tamanho maior que zero.');
+  const InvalidPackageSizeException() : super(DomainErrorCode.invalidPackageSize);
 }
