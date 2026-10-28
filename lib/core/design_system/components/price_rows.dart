@@ -5,22 +5,30 @@ import 'package:flutter/material.dart';
 
 /// Um preço numa lista de preços (MarketPrice do design system): o ícone, o
 /// nome com uma linha de apoio e o valor à direita, com o selo opcional
-/// embaixo ("menor preço", "menor por kg").
+/// embaixo ("menor preço", "menor por kg"). Sem valor e com [onTap], é uma
+/// linha que abre algo, com a seta no lugar do valor (os mercados da tela de
+/// Mercados).
 @immutable
 class PriceRowData {
   const PriceRowData({
     required this.icon,
     required this.title,
-    required this.value,
+    this.value,
     this.meta,
     this.metaIcon,
     this.metaAlert = false,
     this.badge,
+    this.place = false,
+    this.onTap,
   });
 
   final IconData icon;
   final String title;
-  final String value;
+  final String? value;
+
+  /// O ícone na cor dos lugares: a linha é um mercado.
+  final bool place;
+  final VoidCallback? onTap;
 
   /// "R$ 5,58/kg", "há 5 dias".
   final String? meta;
@@ -69,51 +77,57 @@ class _PriceRow extends StatelessWidget {
     final colors = context.colors;
     final meta = row.meta;
     final badge = row.badge;
+    final value = row.value;
+    final onTap = row.onTap;
     final metaColor = row.metaAlert ? colors.alertText : colors.inkMuted;
-    return MergeSemantics(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: BipaSpacing.s3),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: colors.surfaceSunken,
-                borderRadius: BorderRadius.circular(BipaRadius.md),
-              ),
-              child: Icon(row.icon, size: 22, color: colors.ink),
+    final content = Padding(
+      padding: const EdgeInsets.symmetric(vertical: BipaSpacing.s3),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: row.place ? colors.placeSoft : colors.surfaceSunken,
+              borderRadius: BorderRadius.circular(BipaRadius.md),
             ),
-            const SizedBox(width: BipaSpacing.s3),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(row.title, style: BipaText.bodyLarge.copyWith(color: colors.ink)),
-                  if (meta != null)
-                    Row(
-                      children: [
-                        if (row.metaIcon case final icon?) ...[
-                          Icon(icon, size: 14, color: metaColor),
-                          const SizedBox(width: BipaSpacing.s1),
-                        ],
-                        Flexible(child: Text(meta, style: BipaText.body.copyWith(fontSize: 13, color: metaColor))),
+            child: Icon(row.icon, size: 22, color: row.place ? colors.place : colors.ink),
+          ),
+          const SizedBox(width: BipaSpacing.s3),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(row.title, style: BipaText.bodyLarge.copyWith(color: colors.ink)),
+                if (meta != null)
+                  Row(
+                    children: [
+                      if (row.metaIcon case final icon?) ...[
+                        Icon(icon, size: 14, color: metaColor),
+                        const SizedBox(width: BipaSpacing.s1),
                       ],
-                    ),
-                ],
-              ),
+                      Flexible(child: Text(meta, style: BipaText.body.copyWith(fontSize: 13, color: metaColor))),
+                    ],
+                  ),
+              ],
             ),
-            const SizedBox(width: BipaSpacing.s3),
+          ),
+          const SizedBox(width: BipaSpacing.s3),
+          if (value != null)
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(row.value, style: BipaText.number.copyWith(color: colors.ink)),
+                Text(value, style: BipaText.number.copyWith(color: colors.ink)),
                 if (badge != null) Text(badge, style: BipaText.caption.copyWith(color: colors.positiveText)),
               ],
-            ),
-          ],
-        ),
+            )
+          else if (onTap != null)
+            Icon(Icons.chevron_right_rounded, color: colors.inkMuted),
+        ],
       ),
+    );
+    return MergeSemantics(
+      child: onTap == null ? content : InkWell(onTap: onTap, child: content),
     );
   }
 }

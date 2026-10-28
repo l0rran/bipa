@@ -1,5 +1,7 @@
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/components/dropdown_chip.dart';
+import 'package:bipa/core/design_system/components/list_cost_compare.dart';
+import 'package:bipa/core/design_system/components/market_map.dart';
 import 'package:bipa/core/design_system/components/price_history.dart';
 import 'package:bipa/core/design_system/components/quantity_stepper.dart';
 import 'package:bipa/core/design_system/components/scan_tray.dart';
@@ -270,5 +272,50 @@ void main() {
     expect(taps, 1);
     expect(find.bySemanticsLabel('Mercado da lista: Atacarejo. Trocar'), findsOneWidget);
     semantics.dispose();
+  });
+
+  testWidgets('o mapa desenha os mercados sem cortar e se descreve ao leitor de tela', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(
+      _app(
+        const SizedBox(
+          width: 358,
+          child: MarketMap(
+            pins: [
+              MarketMapPin(east: 40, north: 30, here: true, best: true),
+              MarketMapPin(east: -600, north: 400),
+              MarketMapPin(east: 1800, north: -900),
+            ],
+            semanticsLabel: 'Mapa com 3 mercados perto de você',
+          ),
+        ),
+      ),
+    );
+
+    expect(find.bySemanticsLabel('Mapa com 3 mercados perto de você'), findsOneWidget);
+    expect(find.byIcon(Icons.storefront_rounded), findsNWidgets(3));
+    expect(tester.takeException(), isNull);
+    semantics.dispose();
+  });
+
+  testWidgets('a comparação marca só o primeiro como mais barato e mostra a ressalva', (tester) async {
+    await tester.pumpWidget(
+      _app(
+        const SizedBox(
+          width: 358,
+          child: ListCostCompare(
+            bestLabel: 'mais barato',
+            rows: [
+              ListCostRow(name: 'Atacarejo', value: r'R$ 84,30', fraction: 0.86),
+              ListCostRow(name: 'Bairro', value: r'R$ 61,70', fraction: 0.63, note: 'sem preço de 2 itens'),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('mais barato', findRichText: true), findsOneWidget);
+    expect(find.text('sem preço de 2 itens'), findsOneWidget);
   });
 }
