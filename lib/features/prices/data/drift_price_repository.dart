@@ -11,25 +11,28 @@ final class DriftPriceRepository implements PriceRepository {
   final AppDatabase _db;
 
   @override
-  Future<void> add(PriceObservation observation) async {
-    await _db.into(_db.priceObservations).insert(
-      PriceObservationsCompanion.insert(
-        id: observation.id,
-        productId: observation.productId,
-        marketId: observation.marketId,
-        priceCents: observation.price.cents,
-        regularPriceCents: Value(observation.regularPrice?.cents),
-        conditionKind: Value(observation.condition.kind),
-        minimumQuantity: Value(switch (observation.condition) {
-          Wholesale(:final minimumQuantity) => minimumQuantity,
-          AnyCustomer() || LoyaltyMembers() => null,
-        }),
-        source: observation.source,
-        observedAt: observation.observedAt,
-        createdAt: observation.createdAt,
-      ),
-    );
-  }
+  Future<void> add(PriceObservation observation) => addAll([observation]);
+
+  @override
+  Future<void> addAll(Iterable<PriceObservation> observations) => _db.batch((batch) {
+    batch.insertAll(_db.priceObservations, [for (final observation in observations) _toCompanion(observation)]);
+  });
+
+  static PriceObservationsCompanion _toCompanion(PriceObservation observation) => PriceObservationsCompanion.insert(
+    id: observation.id,
+    productId: observation.productId,
+    marketId: observation.marketId,
+    priceCents: observation.price.cents,
+    regularPriceCents: Value(observation.regularPrice?.cents),
+    conditionKind: Value(observation.condition.kind),
+    minimumQuantity: Value(switch (observation.condition) {
+      Wholesale(:final minimumQuantity) => minimumQuantity,
+      AnyCustomer() || LoyaltyMembers() => null,
+    }),
+    source: observation.source,
+    observedAt: observation.observedAt,
+    createdAt: observation.createdAt,
+  );
 
   @override
   Stream<List<PriceHistoryEntry>> watchHistory(String productId) {

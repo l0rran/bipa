@@ -44,6 +44,11 @@ final class InMemoryPriceRepository implements PriceRepository {
   }
 
   @override
+  Future<void> addAll(Iterable<PriceObservation> observations) async {
+    this.observations.addAll(observations);
+  }
+
+  @override
   Stream<List<PriceHistoryEntry>> watchHistory(String productId) => Stream.value([
     for (final o in observations.reversed)
       if (o.productId == productId) PriceHistoryEntry(observation: o, marketName: o.marketId),

@@ -86,14 +86,13 @@ final class RegisterPriceObservation {
     final main = observe(
       PriceOffer(price: input.price, condition: input.condition, regularPrice: input.regularPrice),
     );
-    await _prices.add(main);
-
     // Uma observação por condição: repetir a do principal duplicaria o preço.
     final recorded = {input.condition};
-    for (final offer in input.otherOffers) {
-      if (!offer.price.isPositive || !recorded.add(offer.condition)) continue;
-      await _prices.add(observe(offer));
-    }
+    final others = [
+      for (final offer in input.otherOffers)
+        if (offer.price.isPositive && recorded.add(offer.condition)) observe(offer),
+    ];
+    await _prices.addAll([main, ...others]);
     return main;
   }
 
