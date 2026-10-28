@@ -565,6 +565,11 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     final cart = ref.watch(activeCartProvider).value ?? const <CartEntry>[];
     final summary = ref.watch(shoppingTripSummaryProvider);
     final taken = ref.watch(takenInCartProvider);
+    // Com duas embalagens do mesmo produto, "2 de 3" em cada linha confunde.
+    final rows = <String, int>{};
+    for (final entry in cart) {
+      rows.update(entry.product.id, (n) => n + 1, ifAbsent: () => 1);
+    }
     // Quantas embalagens a lista pede de cada produto que ainda falta.
     final wanted = {
       for (final ShoppingListEntry(:item) in ref.watch(shoppingListProvider).value ?? const <ShoppingListEntry>[])
@@ -643,11 +648,8 @@ class _CartModePageState extends ConsumerState<CartModePage> {
                 key: ValueKey(entry.item.id),
                 // "1 de 3 Leite" enquanto o carrinho não alcança a lista.
                 name: switch ((wanted[entry.product.id], taken[entry.product.id] ?? 0)) {
-                  (final want?, final got) when entry.item.take && got < want => l10n.cartQuantityPartial(
-                    got,
-                    want,
-                    entry.name,
-                  ),
+                  (final want?, final got) when entry.item.take && got < want && rows[entry.product.id] == 1 =>
+                    l10n.cartQuantityPartial(got, want, entry.name),
                   _ when entry.item.quantity > 1 => l10n.cartQuantity(entry.item.quantity, entry.name),
                   _ => entry.name,
                 },
