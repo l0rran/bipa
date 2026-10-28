@@ -14,6 +14,7 @@ import 'package:bipa/features/shopping_list/data/drift_cart_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_list_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_trip_repository.dart';
 import 'package:bipa/features/stock/data/drift_stock_repository.dart';
+import 'package:bipa/features/stock/domain/stock_location.dart';
 import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
 import 'package:drift/drift.dart' hide isNull;
 import 'package:flutter_test/flutter_test.dart';
@@ -137,6 +138,27 @@ void main() {
     expect((await stock.findByProduct('arroz'))?.quantity, 3);
     expect((await stock.watchLots('arroz').first).map((lot) => lot.packageId), unorderedEquals(['tio-5', 'camil-10']));
     expect((await list.watchAll().first).map((e) => e.item.productId), ['arroz']);
+  });
+
+  test('juntar leva o local lembrado só se o outro produto não tiver um (ADR 0021)', () async {
+    await repository.save(product('tio', 'Arroz Tio João'));
+    await repository.save(product('arroz', 'Arroz branco'));
+    await repository.save(product('camil', 'Arroz Camil'));
+    final stock = DriftStockRepository(db, ids: SequentialIdGenerator(), clock: () => now);
+    await stock.setLocation('tio', StockLocation.cleaning);
+    await stock.remove('tio');
+    await stock.setLocation('camil', StockLocation.freezer);
+    await stock.remove('camil');
+
+    Future<List<(String, StockLocation)>> remembered() async => [
+      for (final row in await db.select(db.rememberedLocations).get()) (row.productId, row.location),
+    ];
+
+    await repository.merge(fromId: 'tio', intoId: 'arroz');
+    expect(await remembered(), unorderedEquals([('arroz', StockLocation.cleaning), ('camil', StockLocation.freezer)]));
+
+    await repository.merge(fromId: 'arroz', intoId: 'camil');
+    expect(await remembered(), [('camil', StockLocation.freezer)]);
   });
 
   test('juntar soma as linhas sem embalagem do carrinho, mantém a lista marcada e ressincroniza os preços', () async {

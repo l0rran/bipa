@@ -197,6 +197,13 @@ final class DriftProductRepository implements ProductRepository {
           await (_db.delete(_db.stockItems)..where((t) => t.productId.equals(fromId))).go();
         }
       }
+      // O local lembrado (ADR 0021) passa se o outro não tiver um; o que
+      // sobra sai em cascata com o produto.
+      await _db.customUpdate(
+        'UPDATE OR IGNORE remembered_locations SET product_id = ? WHERE product_id = ?',
+        variables: [Variable.withString(intoId), Variable.withString(fromId)],
+        updates: {_db.rememberedLocations},
+      );
       await (_db.delete(_db.products)..where((t) => t.id.equals(fromId))).go();
     });
   }
