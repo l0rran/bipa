@@ -231,5 +231,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "tripFinishFailed": "Não foi possível terminar a compra. Tente de novo."
 }

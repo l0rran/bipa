@@ -68,7 +68,7 @@ void main() {
     final pao = (await list.watchAll().first).firstWhere((e) => e.name == 'Pão');
     await list.setChecked(pao.item.id, checked: true);
 
-    final finished = await finish(trip.id);
+    final finished = (await finish(trip.id))!;
 
     expect(finished.stockedProductIds, ['cafe']);
     expect((await stock.findByProduct('cafe'))?.quantity, 1);
@@ -80,6 +80,28 @@ void main() {
     expect((await stock.findByProduct('cafe'))?.quantity, 0);
     expect(await list.watchAll().first, hasLength(3));
     expect((await trips.watchActive().first)?.id, trip.id);
+  });
+
+  test('um segundo "Terminei" não mexe no estoque de novo', () async {
+    final trip = await trips.start();
+    await list.addProduct(productId: 'cafe', name: 'Café');
+    await list.checkProduct('cafe');
+
+    await finish(trip.id);
+    expect(await finish(trip.id), isNull);
+
+    expect((await stock.findByProduct('cafe'))?.quantity, 1);
+  });
+
+  test('desfazer não reabre a compra antiga se outra já começou', () async {
+    final old = await trips.start();
+    final finished = (await finish(old.id))!;
+    now = now.add(const Duration(minutes: 5));
+    final current = await trips.start();
+
+    await finish.undo(finished);
+
+    expect((await trips.watchActive().first)?.id, current.id);
   });
 
   test('o resumo da compra usa o preço pago e marca quando é estimativa', () {

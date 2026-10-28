@@ -34,7 +34,14 @@ final class FinishShoppingTrip {
   final ShoppingListRepository _list;
   final StockRepository _stock;
 
-  Future<FinishedShoppingTrip> call(String tripId) async {
+  /// Devolve `null` se a compra já não está em andamento (por exemplo, num
+  /// segundo toque em "Terminei"), sem mexer no estoque de novo.
+  Future<FinishedShoppingTrip?> call(String tripId) async {
+    final active = await _trips.watchActive().first;
+    if (active?.id != tripId) return null;
+    // Fecha a compra primeiro: um segundo "Terminei" já não passa da guarda.
+    await _trips.finish(tripId);
+
     final entries = await _list.watchAll().first;
     final bought = [
       for (final entry in entries)
@@ -46,12 +53,11 @@ final class FinishShoppingTrip {
       await _stock.adjust(productId: productId, delta: 1, reason: StockMovementReason.purchase);
     }
     await _list.removeChecked();
-    await _trips.finish(tripId);
     return finished;
   }
 
   /// Desfaz o [call]: tira do estoque o que entrou, devolve os itens à lista
-  /// e reabre a compra.
+  /// e reabre a compra, se nenhuma outra tiver começado nesse meio-tempo.
   Future<void> undo(FinishedShoppingTrip finished) async {
     for (final productId in finished.stockedProductIds) {
       await _stock.adjust(productId: productId, delta: -1, reason: StockMovementReason.adjustment);

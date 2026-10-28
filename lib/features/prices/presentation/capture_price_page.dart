@@ -223,8 +223,13 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
           newProductName: _name.text,
         ),
       );
-      // Durante a compra, registrar o preço de um item da lista o marca.
-      if (await trips.watchActive().first != null) await list.checkProduct(observation.productId);
+      // Durante a compra, registrar o preço de um item da lista o marca. O
+      // preço já foi salvo: uma falha aqui não pode parecer falha ao salvar.
+      try {
+        if (await trips.watchActive().first != null) await list.checkProduct(observation.productId);
+      } on Exception catch (error, stack) {
+        FlutterError.reportError(FlutterErrorDetails(exception: error, stack: stack, library: 'shopping_list'));
+      }
       if (!mounted) return;
 
       context.showMessage('${price.format()} registrado em ${market.name}.');

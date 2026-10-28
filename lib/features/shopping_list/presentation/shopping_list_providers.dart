@@ -88,13 +88,20 @@ final activeTripProvider = StreamProvider.autoDispose<ShoppingTrip?>(
 /// O que a barra da compra mostra, ou `null` fora de uma compra.
 final shoppingTripSummaryProvider = Provider.autoDispose<ShoppingTripSummary?>((ref) {
   final trip = ref.watch(activeTripProvider).value;
-  if (trip == null) return null;
-  final entries = ref.watch(shoppingListProvider).value ?? const [];
+  // Sem a lista carregada, a barra mostraria "0 de 0 itens".
+  final entries = ref.watch(shoppingListProvider).value;
+  if (trip == null || entries == null) return null;
   final history = ref.watch(shoppingListHistoryProvider).value ?? const [];
+  final marketId = trip.marketId;
+  // O que foi registrado depois de começar a compra (no mercado dela, quando
+  // ele é conhecido) é o que foi pago.
+  final paid = history.where(
+    (e) =>
+        !e.observation.observedAt.isBefore(trip.startedAt) && (marketId == null || e.observation.marketId == marketId),
+  );
   return ShoppingTripSummary.of(
     entries,
-    // O que foi registrado depois de começar a compra é o que foi pago.
-    tripPrices: referencePrices(history.where((e) => !e.observation.observedAt.isBefore(trip.startedAt))),
+    tripPrices: referencePrices(paid),
     referencePrices: referencePrices(history),
   );
 });

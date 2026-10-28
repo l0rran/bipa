@@ -41,7 +41,7 @@ abstract interface class ShoppingTripRepository {
 
   Future<void> finish(String tripId);
 
-  /// Desfaz o "Terminei".
+  /// Desfaz o "Terminei". Não reabre se outra compra já começou.
   Future<void> reopen(String tripId);
 }
 

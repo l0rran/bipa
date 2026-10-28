@@ -44,6 +44,9 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
   /// não pode continuar na árvore depois de dispensado.
   final _dismissed = <String>{};
 
+  /// Evita o toque duplo em "Terminei".
+  var _finishing = false;
+
   @override
   void dispose() {
     _input.dispose();
@@ -111,18 +114,35 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
   /// "Terminei": o comprado vai para o estoque e sai da lista, com Desfazer.
   Future<void> _finish(ShoppingTrip trip) async {
     final finish = ref.read(finishShoppingTripProvider);
-    final finished = await finish(trip.id);
-    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
     final l10n = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(l10n.tripFinished(finished.stockedProductIds.length)),
-          duration: const Duration(seconds: 6),
-          action: SnackBarAction(label: l10n.undo, onPressed: () => finish.undo(finished)),
-        ),
-      );
+    setState(() => _finishing = true);
+    try {
+      final finished = await finish(trip.id);
+      if (finished == null) return;
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(l10n.tripFinished(finished.stockedProductIds.length)),
+            duration: const Duration(seconds: 6),
+            action: SnackBarAction(
+              label: l10n.undo,
+              onPressed: () async {
+                try {
+                  await finish.undo(finished);
+                } on Exception {
+                  messenger.showSnackBar(SnackBar(content: Text(l10n.tripFinishFailed)));
+                }
+              },
+            ),
+          ),
+        );
+    } on Exception {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.tripFinishFailed)));
+    } finally {
+      if (mounted) setState(() => _finishing = false);
+    }
   }
 
   @override
@@ -179,7 +199,7 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                         Align(
                           alignment: AlignmentDirectional.centerEnd,
                           child: FilledButton(
-                            onPressed: () => _finish(trip),
+                            onPressed: _finishing ? null : () => _finish(trip),
                             style: FilledButton.styleFrom(
                               backgroundColor: context.colors.ink,
                               foregroundColor: context.colors.surface,
