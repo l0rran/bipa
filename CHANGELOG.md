@@ -59,6 +59,9 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - O editor da linha do Início ganhou "⋯" (mais do item), que leva ao local, a "Tirar de casa" e ao produto sem passar pelo chip do "ter sempre".
 - Ao fechar a linha do Início, se o stepper levou o item abaixo do "ter sempre" (ou de volta a ele), um aviso oferece "Pôr na lista" (ou "Tirar da lista").
 - A linha que recebe "Usei um" fica no lugar enquanto o aviso aparece, e só depois vai para "Acabando".
+- Tocar num preço da tela do produto ou do mercado abre a folha dele, com "Corrigir o preço" fora do carrinho e o caminho para o mercado ou o produto.
+- O preço em destaque do produto, quando tem 30 dias ou mais, diz o mercado e a idade no lugar da embalagem.
+- "Registrar preço" na tela do produto pergunta a embalagem quando há mais de uma.
 - O granel escolhido pelo aviso do carrinho entra na bandeja, sem preço, e marca a lista.
 - Tocar numa pesagem da bandeja troca o produto que a balança lembra para aquele código, e a linha vai junto.
 - Em "Comprei" e "Usei" da câmera, quando a lista não muda, o Desfazer fica no próprio aviso do visor, sem snackbar repetindo o fato.

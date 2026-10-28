@@ -22,3 +22,7 @@ O ADR 0007 manda as observações serem imutáveis e só inseridas, para a sincr
 - Uma leitura errada deixa de distorcer o histórico assim que é corrigida, sem apagar nada.
 - Na sincronização, a correção é só mais uma inserção, e a base comunitária pode usar a mesma regra para ignorar leituras corrigidas.
 - O "Desfazer" da leitura ao vivo pedido no `BipFeedback.md` ainda não existe. A correção cobre o caso mais comum, que é a pessoa ver o preço errado e digitar o certo.
+
+## Atualização (28/10/2026)
+
+A correção também existe fora do carrinho: tocar num preço da tela do produto ("Nos mercados") ou da tela do mercado ("Preços recentes") abre a folha do preço, com "Corrigir o preço". A correção grava uma observação nova que corrige a antiga (`supersedes`), com a data da antiga, porque o preço certo é o daquele dia.
