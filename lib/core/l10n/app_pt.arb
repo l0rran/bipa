@@ -859,9 +859,9 @@
   "@tripReviewEstimated": {
     "description": "Junto do total quando algum preço do carrinho é do histórico."
   },
-  "tripReviewSavings": "{amount} a menos que no {market}",
+  "tripReviewSavings": "{amount} a menos que em {market}",
   "@tripReviewSavings": {
-    "description": "Economia da compra contra o mercado mais barato depois deste: \"R$ 6,20 a menos que no Centro\".",
+    "description": "Economia da compra contra o mercado mais barato depois deste: \"R$ 6,20 a menos que em Centro\".",
     "placeholders": {
       "amount": {
         "type": "String"
