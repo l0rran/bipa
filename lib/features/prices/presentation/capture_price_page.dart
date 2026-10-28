@@ -206,6 +206,7 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
     // Lidos antes dos awaits: a tela pode fechar no meio do caminho.
     final trips = ref.read(shoppingTripRepositoryProvider);
     final list = ref.read(shoppingListRepositoryProvider);
+    final cart = ref.read(cartRepositoryProvider);
     try {
       final observation = await ref.read(registerPriceObservationProvider).call(
         RegisterPriceInput(
@@ -223,10 +224,14 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
           newProductName: _name.text,
         ),
       );
-      // Durante a compra, registrar o preço de um item da lista o marca. O
-      // preço já foi salvo: uma falha aqui não pode parecer falha ao salvar.
+      // Durante a compra, o produto vai para o carrinho com o preço lido e é
+      // marcado na lista. O preço já foi salvo: uma falha aqui não pode
+      // parecer falha ao salvar.
       try {
-        if (await trips.watchActive().first != null) await list.checkProduct(observation.productId);
+        if (await trips.watchActive().first case final trip?) {
+          await cart.addProduct(trip.id, observation.productId, price: observation.price);
+          await list.checkProduct(observation.productId);
+        }
       } on Exception catch (error, stack) {
         FlutterError.reportError(FlutterErrorDetails(exception: error, stack: stack, library: 'shopping_list'));
       }

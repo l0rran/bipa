@@ -124,7 +124,7 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
         ..hideCurrentSnackBar()
         ..showSnackBar(
           SnackBar(
-            content: Text(l10n.tripFinished(finished.stockedProductIds.length)),
+            content: Text(l10n.tripFinished(finished.stocked.length)),
             duration: const Duration(seconds: 6),
             action: SnackBarAction(
               label: l10n.undo,
@@ -189,11 +189,7 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                         ShoppingProgress(
                           label: l10n.listProgress(tripSummary.done, tripSummary.total),
                           value: tripSummary.progress,
-                          leading: switch (tripSummary.spent?.format()) {
-                            final spent? when tripSummary.estimated => l10n.listEstimate(spent),
-                            final spent? => spent,
-                            null => null,
-                          },
+                          leading: tripSummary.spent?.format(),
                         ),
                         const SizedBox(height: BipaSpacing.s3),
                         Align(

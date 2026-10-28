@@ -12,7 +12,16 @@ part 'app_database.g.dart';
 
 /// Banco local SQLite: a fonte da verdade do app, que funciona 100% offline.
 @DriftDatabase(
-  tables: [Products, Markets, PriceObservations, StockItems, StockMovements, ShoppingListItems, ShoppingTrips],
+  tables: [
+    Products,
+    Markets,
+    PriceObservations,
+    StockItems,
+    StockMovements,
+    ShoppingListItems,
+    ShoppingTrips,
+    CartItems,
+  ],
 )
 class AppDatabase extends _$AppDatabase {
   /// Use [executor] em testes, ex.: `AppDatabase(NativeDatabase.memory())`.
@@ -23,7 +32,8 @@ class AppDatabase extends _$AppDatabase {
   // v3: observações de preço ganham a condição (ADR 0011).
   // v4: lista de compras.
   // v5: modo compra.
-  int get schemaVersion => 5;
+  // v6: carrinho da compra.
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -36,6 +46,7 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 4) await migrator.createTable(shoppingListItems);
       if (from < 5) await migrator.createTable(shoppingTrips);
+      if (from < 6) await migrator.createTable(cartItems);
     },
     beforeOpen: (details) async {
       // SQLite não aplica chaves estrangeiras sem este pragma.

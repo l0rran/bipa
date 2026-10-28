@@ -45,12 +45,7 @@ class HomeShell extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(BipaSpacing.s3, 0, BipaSpacing.s3, BipaSpacing.s2),
               child: ShoppingBar(
                 title: l10n.tripItems(summary.done, summary.total),
-                subtitle: _subtitle(
-                  l10n,
-                  summary.spent?.format(),
-                  estimated: summary.estimated,
-                  marketName: marketName,
-                ),
+                subtitle: _subtitle(summary.spent?.format(), marketName),
                 actionLabel: l10n.tripContinue,
                 progress: summary.progress,
                 semanticLabel: l10n.tripSemantics(summary.done, summary.total),
@@ -78,15 +73,9 @@ class HomeShell extends ConsumerWidget {
     );
   }
 
-  /// "R$ 32,10 · Atacarejo Vila Nova"; o total leva "≈" quando é estimado.
-  static String? _subtitle(
-    AppLocalizations l10n,
-    String? spent, {
-    required bool estimated,
-    required String? marketName,
-  }) {
-    final total = spent == null ? null : (estimated ? l10n.listEstimate(spent) : spent);
-    final parts = [?total, ?marketName];
+  /// "R$ 32,10 · Atacarejo Vila Nova": o total do carrinho e o mercado.
+  static String? _subtitle(String? spent, String? marketName) {
+    final parts = [?spent, ?marketName];
     return parts.isEmpty ? null : parts.join(' · ');
   }
 }

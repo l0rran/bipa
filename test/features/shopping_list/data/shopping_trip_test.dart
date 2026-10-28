@@ -3,8 +3,10 @@ import 'package:bipa/core/money/money.dart';
 import 'package:bipa/features/products/data/drift_product_repository.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/shopping_list/data/drift_cart_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_list_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_trip_repository.dart';
+import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/finish_shopping_trip.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
@@ -19,6 +21,7 @@ void main() {
   late DriftShoppingTripRepository trips;
   late DriftShoppingListRepository list;
   late DriftStockRepository stock;
+  late DriftCartRepository cart;
   late FinishShoppingTrip finish;
   late DateTime now;
 
@@ -30,7 +33,8 @@ void main() {
     trips = DriftShoppingTripRepository(db, ids: ids, clock: clock);
     list = DriftShoppingListRepository(db, ids: ids, clock: clock);
     stock = DriftStockRepository(db, ids: ids, clock: clock);
-    finish = FinishShoppingTrip(trips: trips, list: list, stock: stock);
+    cart = DriftCartRepository(db, ids: ids, clock: clock);
+    finish = FinishShoppingTrip(trips: trips, list: list, cart: cart, stock: stock);
 
     final products = DriftProductRepository(db);
     for (final (id, name) in [('cafe', 'Café'), ('arroz', 'Arroz')]) {
@@ -70,7 +74,7 @@ void main() {
 
     final finished = (await finish(trip.id))!;
 
-    expect(finished.stockedProductIds, ['cafe']);
+    expect(finished.stocked, {'cafe': 1});
     expect((await stock.findByProduct('cafe'))?.quantity, 1);
     expect((await list.watchAll().first).map((e) => e.name), ['Arroz']);
     expect(await trips.watchActive().first, isNull);
@@ -104,29 +108,60 @@ void main() {
     expect((await trips.watchActive().first)?.id, current.id);
   });
 
-  test('o resumo da compra usa o preço pago e marca quando é estimativa', () {
-    ShoppingListEntry entry(String id, {bool checked = false, String? productId}) => ShoppingListEntry(
-      item: ShoppingListItem(
-        id: id,
-        productId: productId,
-        name: id,
-        addedAt: now,
-        checkedAt: checked ? now : null,
-      ),
+  test('o carrinho soma unidades, traz o último bipado para o topo e guarda o preço', () async {
+    final trip = await trips.start();
+    await cart.addProduct(trip.id, 'cafe', price: const Money.cents(1899));
+    now = now.add(const Duration(minutes: 1));
+    await cart.addProduct(trip.id, 'arroz');
+    now = now.add(const Duration(minutes: 1));
+    await cart.addProduct(trip.id, 'cafe');
+
+    final entries = await cart.watchTrip(trip.id).first;
+
+    expect(entries.map((e) => (e.product.id, e.item.quantity, e.item.price)), [
+      ('cafe', 2, const Money.cents(1899)),
+      ('arroz', 1, null),
+    ]);
+  });
+
+  test('terminar leva ao estoque o que vai no carrinho, na quantidade bipada', () async {
+    final trip = await trips.start();
+    await list.addProduct(productId: 'cafe', name: 'Café');
+    await list.addProduct(productId: 'arroz', name: 'Arroz');
+    await cart.addProduct(trip.id, 'cafe');
+    await cart.addProduct(trip.id, 'cafe');
+    await cart.addProduct(trip.id, 'arroz');
+    final arroz = (await cart.watchTrip(trip.id).first).firstWhere((e) => e.product.id == 'arroz');
+    await cart.setTake(arroz.item.id, take: false);
+    await list.checkProduct('cafe');
+    await list.checkProduct('arroz');
+
+    final finished = (await finish(trip.id))!;
+
+    expect(finished.stocked, {'cafe': 2});
+    expect((await stock.findByProduct('cafe'))?.quantity, 2);
+    expect(await stock.findByProduct('arroz'), isNull);
+  });
+
+  test('o resumo da compra soma só o que vai levar, com os preços conhecidos', () async {
+    ShoppingListEntry entry(String id, {bool checked = false}) => ShoppingListEntry(
+      item: ShoppingListItem(id: id, productId: id, name: id, addedAt: now, checkedAt: checked ? now : null),
+    );
+    CartEntry inCart(String id, {Money? price, int quantity = 1, bool take = true}) => CartEntry(
+      item: CartItem(id: id, tripId: 't', productId: id, addedAt: now, price: price, quantity: quantity, take: take),
+      product: Product(id: id, name: id, unit: MeasureUnit.unit, createdAt: now, updatedAt: now),
     );
 
-    final paidOnly = ShoppingTripSummary.of(
-      [entry('cafe', checked: true, productId: 'cafe'), entry('arroz', productId: 'arroz')],
-      tripPrices: {'cafe': const Money.cents(1799)},
-      referencePrices: {'cafe': const Money.cents(1899), 'arroz': const Money.cents(2790)},
+    final summary = ShoppingTripSummary.of(
+      [entry('cafe', checked: true), entry('arroz'), entry('leite', checked: true)],
+      [
+        inCart('cafe', price: const Money.cents(1799), quantity: 2),
+        inCart('arroz', price: const Money.cents(2790), take: false),
+        inCart('leite'),
+      ],
     );
-    expect(paidOnly, const ShoppingTripSummary(done: 1, total: 2, spent: Money.cents(1799)));
 
-    final withEstimate = ShoppingTripSummary.of(
-      [entry('cafe', checked: true, productId: 'cafe'), entry('pao', checked: true)],
-      tripPrices: const {},
-      referencePrices: {'cafe': const Money.cents(1899)},
-    );
-    expect(withEstimate, const ShoppingTripSummary(done: 2, total: 2, spent: Money.cents(1899), estimated: true));
+    expect(summary, const ShoppingTripSummary(done: 2, total: 3, spent: Money.cents(3598)));
+    expect(ShoppingTripSummary.of(const [], const []).spent, isNull);
   });
 }

@@ -89,6 +89,14 @@ void main() {
     expect(referencePrices(const []), isEmpty);
   });
 
+  test('preço mais recente num mercado, ou nada se ele nunca foi visto lá', () {
+    final at = DateTime(2026, 10, 27);
+    final history = [entry('A', 500, at), entry('A', 650, at.add(const Duration(days: 1))), entry('B', 600, at)];
+
+    expect(latestPriceAt(history, 'A'), const Money.cents(650));
+    expect(latestPriceAt(history, 'C'), isNull);
+  });
+
   test('histórico vazio resulta em lista vazia', () {
     expect(latestPricePerMarket(const []), isEmpty);
   });

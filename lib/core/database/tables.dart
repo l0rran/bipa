@@ -130,3 +130,23 @@ class ShoppingTrips extends Table {
   @override
   Set<Column<Object>> get primaryKey => {id};
 }
+
+/// Carrinho de cada compra: um registro por produto, com a quantidade bipada.
+@DataClassName('CartItemRow')
+class CartItems extends Table {
+  TextColumn get id => text()();
+  TextColumn get tripId => text().references(ShoppingTrips, #id, onDelete: KeyAction.cascade)();
+  TextColumn get productId => text().references(Products, #id, onDelete: KeyAction.cascade)();
+  IntColumn get quantity => integer().withDefault(const Constant(1))();
+  IntColumn get priceCents => integer().nullable()();
+  BoolColumn get take => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get addedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+
+  @override
+  List<Set<Column<Object>>> get uniqueKeys => [
+    {tripId, productId},
+  ];
+}

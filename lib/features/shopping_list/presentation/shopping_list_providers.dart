@@ -1,14 +1,16 @@
 import 'package:bipa/core/database/database_provider.dart';
 import 'package:bipa/core/di/core_providers.dart';
-import 'package:bipa/features/markets/presentation/markets_providers.dart';
 import 'package:bipa/core/money/money.dart';
+import 'package:bipa/features/markets/presentation/markets_providers.dart';
 import 'package:bipa/features/prices/domain/price_comparison.dart';
 import 'package:bipa/features/prices/domain/price_observation.dart';
 import 'package:bipa/features/prices/presentation/prices_providers.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
+import 'package:bipa/features/shopping_list/data/drift_cart_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_list_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_trip_repository.dart';
+import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/finish_shopping_trip.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_repository.dart';
@@ -72,10 +74,19 @@ final shoppingTripRepositoryProvider = Provider<ShoppingTripRepository>(
   ),
 );
 
+final cartRepositoryProvider = Provider<CartRepository>(
+  (ref) => DriftCartRepository(
+    ref.watch(appDatabaseProvider),
+    ids: ref.watch(idGeneratorProvider),
+    clock: ref.watch(clockProvider),
+  ),
+);
+
 final finishShoppingTripProvider = Provider<FinishShoppingTrip>(
   (ref) => FinishShoppingTrip(
     trips: ref.watch(shoppingTripRepositoryProvider),
     list: ref.watch(shoppingListRepositoryProvider),
+    cart: ref.watch(cartRepositoryProvider),
     stock: ref.watch(stockRepositoryProvider),
   ),
 );
@@ -85,25 +96,19 @@ final activeTripProvider = StreamProvider.autoDispose<ShoppingTrip?>(
   (ref) => ref.watch(shoppingTripRepositoryProvider).watchActive(),
 );
 
+/// O carrinho da compra em andamento (vazio fora de uma compra).
+final activeCartProvider = StreamProvider.autoDispose<List<CartEntry>>((ref) {
+  final tripId = ref.watch(activeTripProvider).value?.id;
+  return tripId == null ? Stream.value(const []) : ref.watch(cartRepositoryProvider).watchTrip(tripId);
+});
+
 /// O que a barra da compra mostra, ou `null` fora de uma compra.
 final shoppingTripSummaryProvider = Provider.autoDispose<ShoppingTripSummary?>((ref) {
   final trip = ref.watch(activeTripProvider).value;
   // Sem a lista carregada, a barra mostraria "0 de 0 itens".
   final entries = ref.watch(shoppingListProvider).value;
   if (trip == null || entries == null) return null;
-  final history = ref.watch(shoppingListHistoryProvider).value ?? const [];
-  final marketId = trip.marketId;
-  // O que foi registrado depois de começar a compra (no mercado dela, quando
-  // ele é conhecido) é o que foi pago.
-  final paid = history.where(
-    (e) =>
-        !e.observation.observedAt.isBefore(trip.startedAt) && (marketId == null || e.observation.marketId == marketId),
-  );
-  return ShoppingTripSummary.of(
-    entries,
-    tripPrices: referencePrices(paid),
-    referencePrices: referencePrices(history),
-  );
+  return ShoppingTripSummary.of(entries, ref.watch(activeCartProvider).value ?? const []);
 });
 
 /// Nome do mercado da compra em andamento, quando ele foi detectado.

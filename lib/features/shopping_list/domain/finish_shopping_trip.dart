@@ -1,3 +1,4 @@
+import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_repository.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
@@ -8,30 +9,34 @@ import 'package:meta/meta.dart';
 /// O que o "Terminei" fez, para poder desfazer.
 @immutable
 final class FinishedShoppingTrip {
-  const FinishedShoppingTrip({required this.tripId, required this.bought});
+  const FinishedShoppingTrip({required this.tripId, required this.bought, required this.stocked});
 
   final String tripId;
 
-  /// Itens marcados como comprados, que saíram da lista.
+  /// Itens marcados na lista, que saíram dela.
   final List<ShoppingListItem> bought;
 
-  /// Produtos que entraram no estoque, um de cada.
-  Iterable<String> get stockedProductIds => bought.map((item) => item.productId).nonNulls;
+  /// Quantas unidades de cada produto entraram no estoque.
+  final Map<String, int> stocked;
 }
 
-/// Caso de uso: termina a compra. O que foi comprado entra no estoque (uma
-/// embalagem de cada) e sai da lista; o que faltou continua nela.
+/// Caso de uso: termina a compra. Entra no estoque o que está no carrinho
+/// para levar (na quantidade bipada) e o que foi marcado à mão na lista (uma
+/// embalagem). O marcado sai da lista; o que faltou continua nela.
 final class FinishShoppingTrip {
   FinishShoppingTrip({
     required ShoppingTripRepository trips,
     required ShoppingListRepository list,
+    required CartRepository cart,
     required StockRepository stock,
   }) : _trips = trips,
        _list = list,
+       _cart = cart,
        _stock = stock;
 
   final ShoppingTripRepository _trips;
   final ShoppingListRepository _list;
+  final CartRepository _cart;
   final StockRepository _stock;
 
   /// Devolve `null` se a compra já não está em andamento (por exemplo, num
@@ -42,25 +47,37 @@ final class FinishShoppingTrip {
     // Fecha a compra primeiro: um segundo "Terminei" já não passa da guarda.
     await _trips.finish(tripId);
 
+    final cart = await _cart.watchTrip(tripId).first;
     final entries = await _list.watchAll().first;
     final bought = [
       for (final entry in entries)
         if (entry.item.isChecked) entry.item,
     ];
-    final finished = FinishedShoppingTrip(tripId: tripId, bought: bought);
 
-    for (final productId in finished.stockedProductIds) {
-      await _stock.adjust(productId: productId, delta: 1, reason: StockMovementReason.purchase);
+    final stocked = <String, int>{};
+    for (final entry in cart) {
+      if (entry.item.take) stocked[entry.item.productId] = entry.item.quantity;
+    }
+    // O que foi marcado à mão, sem passar pelo carrinho, entra com uma unidade.
+    // O que está no carrinho sem "levar" não entra.
+    final inCart = {for (final entry in cart) entry.item.productId};
+    for (final item in bought) {
+      final productId = item.productId;
+      if (productId != null && !inCart.contains(productId)) stocked[productId] = 1;
+    }
+
+    for (final MapEntry(key: productId, value: quantity) in stocked.entries) {
+      await _stock.adjust(productId: productId, delta: quantity.toDouble(), reason: StockMovementReason.purchase);
     }
     await _list.removeChecked();
-    return finished;
+    return FinishedShoppingTrip(tripId: tripId, bought: bought, stocked: stocked);
   }
 
   /// Desfaz o [call]: tira do estoque o que entrou, devolve os itens à lista
   /// e reabre a compra, se nenhuma outra tiver começado nesse meio-tempo.
   Future<void> undo(FinishedShoppingTrip finished) async {
-    for (final productId in finished.stockedProductIds) {
-      await _stock.adjust(productId: productId, delta: -1, reason: StockMovementReason.adjustment);
+    for (final MapEntry(key: productId, value: quantity) in finished.stocked.entries) {
+      await _stock.adjust(productId: productId, delta: -quantity.toDouble(), reason: StockMovementReason.adjustment);
     }
     for (final item in finished.bought) {
       await _list.restore(item);

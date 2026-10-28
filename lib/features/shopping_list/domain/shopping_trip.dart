@@ -1,4 +1,5 @@
 import 'package:bipa/core/money/money.dart';
+import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:meta/meta.dart';
 
@@ -45,52 +46,40 @@ abstract interface class ShoppingTripRepository {
   Future<void> reopen(String tripId);
 }
 
-/// O que a barra da compra mostra: quantos itens já foram e quanto custaram.
+/// O que a barra da compra mostra: quantos itens da lista já foram e quanto
+/// soma o carrinho.
 @immutable
 final class ShoppingTripSummary {
-  const ShoppingTripSummary({required this.done, required this.total, this.spent, this.estimated = false});
+  const ShoppingTripSummary({required this.done, required this.total, this.spent});
 
-  /// Soma os itens marcados: o preço registrado durante a compra ([tripPrices])
-  /// ou, sem ele, o preço de referência ([referencePrices]). Nesse caso, ou se
-  /// algum item marcado não tem preço nenhum, o total é uma estimativa.
-  factory ShoppingTripSummary.of(
-    Iterable<ShoppingListEntry> entries, {
-    required Map<String, Money> tripPrices,
-    required Map<String, Money> referencePrices,
-  }) {
+  /// [spent] é a soma do que vai ser levado no carrinho, com os preços lidos
+  /// ou digitados: é um total real, sem estimativa ("≈"). Sem nenhum preço
+  /// ainda, é `null`.
+  factory ShoppingTripSummary.of(Iterable<ShoppingListEntry> entries, Iterable<CartEntry> cart) {
     var done = 0;
     var total = 0;
-    var estimated = false;
-    Money? spent;
     for (final entry in entries) {
       total++;
-      if (!entry.item.isChecked) continue;
-      done++;
-      final productId = entry.item.productId;
-      final paid = productId == null ? null : tripPrices[productId];
-      final reference = productId == null ? null : referencePrices[productId];
-      final price = paid ?? reference;
-      if (paid == null) estimated = true;
-      if (price != null) spent = (spent ?? Money.zero) + price;
+      if (entry.item.isChecked) done++;
     }
-    return ShoppingTripSummary(done: done, total: total, spent: spent, estimated: estimated);
+    Money? spent;
+    for (final entry in cart) {
+      final subtotal = entry.item.subtotal;
+      if (subtotal != null) spent = (spent ?? Money.zero) + subtotal;
+    }
+    return ShoppingTripSummary(done: done, total: total, spent: spent);
   }
 
   final int done;
   final int total;
   final Money? spent;
-  final bool estimated;
 
   double get progress => total == 0 ? 0 : done / total;
 
   @override
   bool operator ==(Object other) =>
-      other is ShoppingTripSummary &&
-      other.done == done &&
-      other.total == total &&
-      other.spent == spent &&
-      other.estimated == estimated;
+      other is ShoppingTripSummary && other.done == done && other.total == total && other.spent == spent;
 
   @override
-  int get hashCode => Object.hash(done, total, spent, estimated);
+  int get hashCode => Object.hash(done, total, spent);
 }
