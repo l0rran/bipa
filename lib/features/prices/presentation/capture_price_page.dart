@@ -570,7 +570,7 @@ class _TagPhotoCard extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  Icon(Icons.photo_camera_outlined, color: theme.colorScheme.primary),
+                  const Icon(Icons.photo_camera_outlined),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(

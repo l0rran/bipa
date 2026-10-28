@@ -67,6 +67,27 @@ abstract final class BipaTheme {
       textTheme: textTheme,
       extensions: [colors],
       splashFactory: InkSparkle.splashFactory,
+      // O primary do esquema é o amarelo da marca, que some sobre o branco.
+      // Ícones, seleção, cursor e rótulos em foco ficam em tinta; o amarelo
+      // só aparece como fundo, com texto escuro (ADR 0009).
+      iconTheme: IconThemeData(color: colors.ink),
+      listTileTheme: ListTileThemeData(
+        iconColor: colors.inkMuted,
+        textColor: colors.ink,
+        selectedColor: colors.ink,
+        selectedTileColor: colors.brandSoft,
+      ),
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: colors.ink,
+        selectionColor: colors.brandSoft,
+        selectionHandleColor: colors.ink,
+      ),
+      chipTheme: ChipThemeData(
+        selectedColor: colors.brandSoft,
+        checkmarkColor: colors.ink,
+        labelStyle: BipaText.label.copyWith(color: colors.ink),
+        side: BorderSide(color: colors.line),
+      ),
       appBarTheme: AppBarTheme(
         backgroundColor: colors.ground,
         foregroundColor: colors.ink,
@@ -109,6 +130,11 @@ abstract final class BipaTheme {
           borderSide: BorderSide.none,
         ),
         hintStyle: BipaText.body.copyWith(color: colors.inkMuted),
+        floatingLabelStyle: BipaText.body.copyWith(color: colors.ink),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(BipaRadius.md),
+          borderSide: BorderSide(color: colors.ink, width: BipaStroke.control),
+        ),
       ),
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: colors.surface,
