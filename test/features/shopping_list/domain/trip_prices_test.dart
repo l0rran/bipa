@@ -11,10 +11,12 @@ import 'package:bipa/features/prices/domain/register_price_observation.dart';
 import 'package:bipa/features/products/data/drift_product_repository.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/shopping_list/data/drift_cart_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_trip_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_trip_price_repository.dart';
 import 'package:bipa/features/shopping_list/domain/record_trip_price.dart';
 import 'package:bipa/features/shopping_list/domain/set_trip_market.dart';
+import 'package:bipa/features/shopping_list/domain/trip_price.dart';
 import 'package:drift/drift.dart' show OrderingTerm;
 import 'package:flutter_test/flutter_test.dart';
 
@@ -202,5 +204,33 @@ void main() {
 
     expect(await observations(), [('vila', 899, null), ('vila', 1350, null)]);
     expect(await tripPrices.ofTrip(trip.id), hasLength(2));
+  });
+
+  test('o preço por quilo do granel é a estimativa da linha que espera a pesagem, até ela ter preço', () async {
+    final trip = await trips.start(marketId: 'vila');
+    final cart = DriftCartRepository(db, ids: SequentialIdGenerator(), clock: () => now);
+    // O granel na bandeja, sem preço, e o café com o preço já firmado.
+    await cart.addProduct(trip.id, 'arroz');
+    await cart.addProduct(trip.id, 'cafe', price: const Money.cents(1899));
+    final prices = tripPrices.watchTrip(trip.id);
+    for (final (productId, cents) in [('arroz', 899), ('cafe', 3990)]) {
+      await record(
+        tripId: trip.id,
+        productId: productId,
+        price: Money.cents(cents),
+        source: PriceSource.priceTag,
+        perKilo: true,
+      );
+    }
+
+    // Só o que espera a pesagem ganha a estimativa.
+    expect(perKiloEstimates(await cart.watchTrip(trip.id).first, await prices.first), {
+      'arroz:': const Money.cents(899),
+    });
+
+    // A pesagem (ou o preço digitado) firma a linha, e a estimativa sai.
+    final line = (await cart.watchTrip(trip.id).first).firstWhere((entry) => entry.item.productId == 'arroz');
+    await cart.setPrice(line.item.id, const Money.cents(1350));
+    expect(perKiloEstimates(await cart.watchTrip(trip.id).first, await prices.first), isEmpty);
   });
 }

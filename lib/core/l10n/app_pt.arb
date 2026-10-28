@@ -1140,6 +1140,15 @@
       }
     }
   },
+  "cartPricePerKiloEstimated": "{price} por quilo, estimado",
+  "@cartPricePerKiloEstimated": {
+    "description": "Rótulo acessível da mini etiqueta do granel que espera a pesagem na bandeja: o preço por kg lido na gôndola, como estimativa (D3).",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "tripMovePricesTitle": "{count, plural, =1{Levar o preço lido para {market}?} other{Levar os {count} preços lidos para {market}?}}",
   "@tripMovePricesTitle": {
     "description": "Pergunta ao trocar o mercado da compra quando já há preços gravados no anterior (ADR 0020).",

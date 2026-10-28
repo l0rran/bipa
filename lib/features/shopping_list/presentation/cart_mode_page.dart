@@ -137,8 +137,8 @@ class _CartModePageState extends ConsumerState<CartModePage> {
 
   /// Tocou no aviso do granel: escolhe o produto (já buscado pelo nome lido),
   /// guarda o preço por kg no histórico do mercado e põe o produto na
-  /// bandeja, sem preço. Quanto custa sai da etiqueta da balança ou do preço
-  /// digitado (ADR 0018).
+  /// bandeja, sem preço, com o preço por kg só como estimativa (D3). Quanto
+  /// custa sai da etiqueta da balança ou do preço digitado (ADR 0018).
   Future<void> _chooseGranel(TagPriceRead read) async {
     final trip = ref.read(activeTripProvider).value;
     if (trip == null) return;
@@ -600,6 +600,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     final cart = ref.watch(activeCartProvider).value ?? const <CartEntry>[];
     final summary = ref.watch(shoppingTripSummaryProvider);
     final taken = ref.watch(takenInCartProvider);
+    final perKilo = ref.watch(activeCartPerKiloEstimatesProvider);
     final weighed = ref.watch(weighedProductIdsProvider).value ?? const <String>{};
     bool isWeighed(CartEntry entry) => entry.item.packageId == null && weighed.contains(entry.product.id);
     // Com duas embalagens do mesmo produto, "2 de 3" em cada linha confunde.
@@ -691,10 +692,17 @@ class _CartModePageState extends ConsumerState<CartModePage> {
                   _ => entry.name,
                 },
                 // O estimado se distingue só pela etiqueta vazada: um sinal só.
-                price: entry.item.price?.format(),
-                priceEstimated: entry.item.priceEstimated,
-                priceSemanticsLabel: switch (entry.item.price) {
-                  final price? when entry.item.priceEstimated => l10n.cartPriceEstimated(price.format()),
+                // O granel que espera a pesagem mostra o preço por kg lido na
+                // gôndola, também vazado, e fica fora do total (D3).
+                price: switch ((entry.item.price, perKilo[entry.item.key])) {
+                  (final price?, _) => price.format(),
+                  (null, final kilo?) => l10n.pricePerKilo(kilo.format()),
+                  (null, null) => null,
+                },
+                priceEstimated: entry.item.priceEstimated || perKilo.containsKey(entry.item.key),
+                priceSemanticsLabel: switch ((entry.item.price, perKilo[entry.item.key])) {
+                  (final price?, _) when entry.item.priceEstimated => l10n.cartPriceEstimated(price.format()),
+                  (null, final kilo?) => l10n.cartPricePerKiloEstimated(kilo.format()),
                   _ => null,
                 },
                 // A pesagem troca o produto; as outras linhas, a quantidade.
