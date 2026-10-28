@@ -49,7 +49,8 @@ final class TripPrice {
   final String? marketId;
 
   /// O preço é por quilo, do granel (ADR 0018): é outro preço do item, que
-  /// o total da pesagem não corrige, nem ele corrige o total.
+  /// o total da pesagem não corrige nem é corrigido por ele (o total nem é
+  /// guardado, [isWeighingLine]).
   final bool perKilo;
 
   /// O item da compra, como no carrinho: a embalagem ou, sem ela, o produto;
@@ -115,6 +116,20 @@ final class TripPrice {
     return true;
   }
 }
+
+/// Se a linha do carrinho é a de uma pesagem ou do granel (ADR 0018), cujo
+/// valor é o total pago pelo peso, e não o preço do produto: digitado, ele
+/// vale só para o carrinho e não vai para o histórico (D8).
+///
+/// É a linha sem embalagem ([packageId] nulo), a mesma em que `ScaleItems`
+/// põe a etiqueta da balança, o granel e a pesagem trocada de produto. A
+/// exceção é a linha sem embalagem com um preço de gôndola guardado nesta
+/// compra ([shelfPrice], o [TripPrice] da chave dela, que não é o por
+/// quilo): a etiqueta sem código cujo produto foi escolhido pelo nome. Esse
+/// é o preço do produto, e digitar outro o corrige (ADR 0017). O valor da
+/// pesagem nunca ganha esse preço, porque não é guardado com a compra.
+bool isWeighingLine({required String? packageId, required TripPrice? shelfPrice}) =>
+    packageId == null && shelfPrice == null;
 
 /// O preço por quilo do granel como estimativa das linhas do carrinho que
 /// ainda esperam a pesagem (D3), pela [CartItem.key]: a linha sem embalagem

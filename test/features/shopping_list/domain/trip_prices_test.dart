@@ -11,6 +11,7 @@ import 'package:bipa/features/prices/domain/register_price_observation.dart';
 import 'package:bipa/features/products/data/drift_product_repository.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/shopping_list/data/drift_cart_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_trip_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_trip_price_repository.dart';
@@ -68,6 +69,21 @@ void main() {
     for (final (id, name) in [('cafe', 'Café'), ('arroz', 'Arroz')]) {
       await products.save(Product(id: id, name: name, unit: MeasureUnit.unit, createdAt: now, updatedAt: now));
     }
+    await products.save(
+      Product(id: 'tomate', name: 'Tomate italiano', unit: MeasureUnit.kilogram, createdAt: now, updatedAt: now),
+    );
+    // O mesmo tomate também vem em bandeja de 500 g, com código.
+    await products.savePackage(
+      ProductPackage(
+        id: 'bandeja',
+        productId: 'tomate',
+        barcode: '7891000100103',
+        size: 500,
+        unit: MeasureUnit.gram,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
     final markets = DriftMarketRepository(db);
     for (final (id, name) in [('vila', 'Vila'), ('assai', 'Assaí'), ('centro', 'Centro')]) {
       await markets.save(Market(id: id, name: name, createdAt: now, updatedAt: now));
@@ -191,19 +207,116 @@ void main() {
     expect(await setMarket.pendingPrices(trip.id), 0);
   });
 
-  test('o preço por quilo do granel e o total da pesagem não se corrigem', () async {
-    final trip = await trips.start(marketId: 'vila');
-    await record(
-      tripId: trip.id,
-      productId: 'cafe',
+  group('valor da pesagem e do granel (D8)', () {
+    Future<bool> readPerKilo(String tripId) => record(
+      tripId: tripId,
+      productId: 'tomate',
       price: const Money.cents(899),
       source: PriceSource.priceTag,
       perKilo: true,
     );
-    await record(tripId: trip.id, productId: 'cafe', price: const Money.cents(1350), source: PriceSource.manual);
 
-    expect(await observations(), [('vila', 899, null), ('vila', 1350, null)]);
-    expect(await tripPrices.ofTrip(trip.id), hasLength(2));
+    Future<bool> typeWeighing(String tripId) =>
+        record(tripId: tripId, productId: 'tomate', price: const Money.cents(1240), source: PriceSource.manual);
+
+    test('o valor digitado no granel fica só no carrinho; o preço por quilo continua', () async {
+      final trip = await trips.start(marketId: 'vila');
+      await readPerKilo(trip.id);
+
+      expect(await typeWeighing(trip.id), isFalse);
+
+      // O tomate segue a R$ 8,99 o quilo no histórico, e não a R$ 12,40.
+      expect(await observations(), [('vila', 899, null)]);
+      expect((await tripPrices.ofTrip(trip.id)).single.perKilo, isTrue);
+    });
+
+    test('corrigir o valor de uma etiqueta da balança não grava nada', () async {
+      // A pesagem entra no carrinho sem preço guardado com a compra (ADR
+      // 0018); digitar o valor certo, duas vezes, também não guarda.
+      final trip = await trips.start(marketId: 'vila');
+
+      expect(await typeWeighing(trip.id), isFalse);
+      expect(
+        await record(tripId: trip.id, productId: 'tomate', price: const Money.cents(1310), source: PriceSource.manual),
+        isFalse,
+      );
+
+      expect(await observations(), isEmpty);
+      expect(await tripPrices.ofTrip(trip.id), isEmpty);
+    });
+
+    test('sem mercado, não fica pendente, e escolher o mercado depois grava só o preço por quilo', () async {
+      final trip = await trips.start();
+      await readPerKilo(trip.id);
+      await typeWeighing(trip.id);
+
+      expect(await setMarket.pendingPrices(trip.id), 1);
+      await setMarket(trip.id, 'vila');
+
+      expect(await observations(), [('vila', 899, null)]);
+      expect(await setMarket.pendingPrices(trip.id), 0);
+    });
+
+    test('a linha com embalagem continua indo para o histórico, e digitar corrige a etiqueta', () async {
+      final trip = await trips.start(marketId: 'vila');
+      Future<bool> price(int cents, PriceSource source) =>
+          record(tripId: trip.id, productId: 'tomate', packageId: 'bandeja', price: Money.cents(cents), source: source);
+
+      await price(899, PriceSource.priceTag);
+      final read = (await tripPrices.ofTrip(trip.id)).single.observationId;
+      expect(await price(999, PriceSource.manual), isTrue);
+
+      expect(await observations(), [('vila', 899, null), ('vila', 999, read)]);
+    });
+
+    test('digitado numa embalagem sem etiqueta lida, também vai para o histórico', () async {
+      final trip = await trips.start();
+      await record(
+        tripId: trip.id,
+        productId: 'tomate',
+        packageId: 'bandeja',
+        price: const Money.cents(999),
+        source: PriceSource.manual,
+      );
+
+      expect(await setMarket.pendingPrices(trip.id), 1);
+      await setMarket(trip.id, 'vila');
+      expect(await observations(), [('vila', 999, null)]);
+    });
+
+    test('a linha sem embalagem com etiqueta de gôndola é preço do produto, e digitar a corrige', () async {
+      // A etiqueta sem código cujo produto foi escolhido pelo nome.
+      final trip = await trips.start(marketId: 'vila');
+      await readTag(trip.id, 2190);
+      final read = (await tripPrices.ofTrip(trip.id)).single.observationId;
+
+      expect(
+        await record(tripId: trip.id, productId: 'cafe', price: const Money.cents(2790), source: PriceSource.manual),
+        isTrue,
+      );
+      expect(
+        await record(tripId: trip.id, productId: 'cafe', price: const Money.cents(2890), source: PriceSource.manual),
+        isTrue,
+      );
+
+      final saved = await observations();
+      expect(saved.map((o) => (o.$2, o.$3 != null)), [(2190, false), (2790, true), (2890, true)]);
+      expect(saved[1].$3, read);
+    });
+
+    test('a regra da linha', () {
+      final shelf = TripPrice(
+        tripId: 't',
+        productId: 'cafe',
+        price: const Money.cents(2190),
+        source: PriceSource.priceTag,
+        readAt: DateTime(2026, 10, 28),
+      );
+
+      expect(isWeighingLine(packageId: null, shelfPrice: null), isTrue);
+      expect(isWeighingLine(packageId: null, shelfPrice: shelf), isFalse);
+      expect(isWeighingLine(packageId: 'pacote', shelfPrice: null), isFalse);
+    });
   });
 
   test('o preço por quilo do granel é a estimativa da linha que espera a pesagem, até ela ter preço', () async {

@@ -13,6 +13,10 @@ import 'package:bipa/features/shopping_list/domain/trip_price.dart';
 /// Com mercado, o preço vira observação na hora e corrige a que o item já
 /// tinha nesta compra no mesmo mercado (ADR 0017). Sem mercado, fica
 /// pendente com a compra, e [SetTripMarket] o grava quando ela ganhar um.
+///
+/// O valor digitado na linha da pesagem ou do granel ([isWeighingLine]) é o
+/// total pago pelo peso, não o preço do produto (ADR 0018): não vira
+/// observação nem fica pendente, e vale só para o carrinho.
 final class RecordTripPrice {
   const RecordTripPrice({
     required ShoppingTripRepository trips,
@@ -33,8 +37,9 @@ final class RecordTripPrice {
   final Clock _clock;
 
   /// Devolve `false` quando nada foi gravado: a compra já não está em
-  /// andamento, é a mesma etiqueta lida de novo com o mesmo preço, ou é uma
-  /// etiqueta para um item cujo preço foi digitado neste mercado.
+  /// andamento, é a mesma etiqueta lida de novo com o mesmo preço, é uma
+  /// etiqueta para um item cujo preço foi digitado neste mercado, ou é o
+  /// valor digitado de uma pesagem.
   Future<bool> call({
     required String tripId,
     required String productId,
@@ -48,6 +53,12 @@ final class RecordTripPrice {
     if (trip == null || trip.id != tripId) return false;
     final marketId = trip.marketId;
     final previous = await _prices.find(tripId, TripPrice.keyOf(productId, packageId, perKilo: perKilo));
+    // O tomate a R$ 8,99/kg pago R$ 12,40 no caixa: os R$ 12,40 são da
+    // pesagem, e no histórico virariam o preço do quilo. Sem guardar, o
+    // SetTripMarket também não o grava depois.
+    if (source == PriceSource.manual && !perKilo && isWeighingLine(packageId: packageId, shelfPrice: previous)) {
+      return false;
+    }
     if (previous != null && previous.marketId == marketId && source == PriceSource.priceTag) {
       // A etiqueta volta à moldura a cada vez que o celular se move: repetir
       // o preço encheria o histórico do mesmo valor.

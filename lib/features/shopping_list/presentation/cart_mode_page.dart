@@ -421,7 +421,9 @@ class _CartModePageState extends ConsumerState<CartModePage> {
   }
 
   /// Digitar o preço de um item: ele é registrado no histórico (no mercado da
-  /// compra) e vale para o carrinho.
+  /// compra) e vale para o carrinho. Na linha da pesagem ou do granel, o
+  /// valor é o pago pelo peso e vale só para o carrinho (ADR 0018), o que o
+  /// [RecordTripPrice] decide.
   Future<void> _typePrice(ShoppingTrip trip, CartEntry entry) async {
     // Lidos antes dos awaits: o carrinho pode fechar no meio do caminho.
     final l10n = AppLocalizations.of(context);
@@ -437,7 +439,8 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     try {
       // Corrige o que foi guardado antes para o item no mesmo mercado (a
       // etiqueta lida ou o preço digitado da outra vez), em vez de somar mais
-      // um preço. Sem mercado, espera com a compra (ADR 0020).
+      // um preço. Sem mercado, espera com a compra (ADR 0020). O valor de uma
+      // pesagem não é guardado (ADR 0018).
       await recordPrice(
         tripId: trip.id,
         productId: entry.product.id,
