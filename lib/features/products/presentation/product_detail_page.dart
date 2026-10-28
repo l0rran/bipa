@@ -56,6 +56,7 @@ class ProductDetailPage extends ConsumerWidget {
       color: context.colors.ground,
       child: AsyncValueView(
         value: product,
+        onRetry: () => ref.invalidate(productProvider(productId)),
         data: (product) => switch (product) {
           final product? => _ProductView(product: product),
           null when leaving => const SizedBox.expand(),

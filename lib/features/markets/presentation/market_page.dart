@@ -43,6 +43,7 @@ class MarketPage extends ConsumerWidget {
       color: context.colors.ground,
       child: AsyncValueView(
         value: ranked,
+        onRetry: () => ref.invalidate(marketsProvider),
         data: (ranked) => switch (ranked.where((item) => item.market.id == marketId).firstOrNull) {
           final item? => _MarketView(item: item),
           null when leaving => const SizedBox.expand(),

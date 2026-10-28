@@ -56,6 +56,7 @@ class ProductsPage extends ConsumerWidget {
       ),
       body: AsyncValueView(
         value: products,
+        onRetry: () => ref.invalidate(productsProvider),
         data: (items) {
           if (items.isEmpty) {
             return query.isEmpty

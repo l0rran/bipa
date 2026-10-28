@@ -36,6 +36,7 @@ class MarketPickerSheet extends ConsumerWidget {
       constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.7),
       child: AsyncValueView(
         value: markets,
+        onRetry: () => ref.invalidate(marketsProvider),
         data: (ranked) => ListView(
           shrinkWrap: true,
           children: [

@@ -158,6 +158,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     return Scaffold(
       body: AsyncValueView(
         value: stock,
+        onRetry: () => ref.invalidate(stockProvider),
         data: (entries) {
           final visible = _visible(entries);
           // Acabou primeiro, depois o que está mais perto de acabar.

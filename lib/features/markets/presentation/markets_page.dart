@@ -69,6 +69,7 @@ class _MarketsPageState extends ConsumerState<MarketsPage> {
     return Scaffold(
       body: AsyncValueView(
         value: markets,
+        onRetry: () => ref.invalidate(marketsProvider),
         data: (ranked) {
           if (ranked.isEmpty) {
             return EmptyState(

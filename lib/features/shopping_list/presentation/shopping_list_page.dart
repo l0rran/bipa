@@ -233,6 +233,7 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
     return Scaffold(
       body: AsyncValueView(
         value: list,
+        onRetry: () => ref.invalidate(shoppingListProvider),
         data: (all) {
           // Os dispensados que o banco já apagou não precisam mais ser escondidos.
           _dismissed.removeWhere((id) => !all.any((e) => e.item.id == id));
