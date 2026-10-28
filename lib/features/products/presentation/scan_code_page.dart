@@ -26,14 +26,19 @@ class _ScanCodePageState extends State<ScanCodePage> {
   var _sawScaleCode = false;
 
   Future<void> _onEvent(LiveScanEvent event) async {
-    if (_handled || event is! ProductScanned) return;
-    if (ScaleLabel.isScaleCode(event.barcode)) {
+    // O código vale também quando a etiqueta veio junto no mesmo quadro.
+    final barcode = switch (event) {
+      ProductScanned(:final barcode) => barcode,
+      TagPriceRead(:final barcode) => barcode,
+    };
+    if (_handled || barcode == null) return;
+    if (ScaleLabel.isScaleCode(barcode)) {
       if (!_sawScaleCode) setState(() => _sawScaleCode = true);
       return;
     }
     _handled = true;
     await HapticFeedback.mediumImpact();
-    if (mounted) context.pop(event.barcode);
+    if (mounted) context.pop(barcode);
   }
 
   @override
