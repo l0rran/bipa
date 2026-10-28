@@ -9,8 +9,10 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// As migrações mais recentes, num arquivo de verdade: o banco é criado no
 /// esquema atual, volta para a versão anterior (tirando a coluna nova com
-/// `DROP COLUMN`, do SQLite 3.35 em diante) e é aberto de novo, o que roda a
-/// migração.
+/// `DROP COLUMN`) e é aberto de novo, o que roda a migração.
+///
+/// O `DROP COLUMN` exige SQLite 3.35 ou mais novo na máquina que roda os
+/// testes (no Windows, a DLL indicada no README).
 void main() {
   late Directory dir;
   late File file;
