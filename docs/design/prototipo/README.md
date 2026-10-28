@@ -17,6 +17,8 @@ Cada tela tem uma imagem (390 px de largura, em 2x) e o HTML de origem em [`font
 | **Modo carrinho, preço esperando o produto**: o preço lido antes de bipar espera o próximo produto por alguns segundos. | [ModoCarrinhoEsperando.png](telas/ModoCarrinhoEsperando.png) | Feita (ADR 0012) |
 | **Início durante a compra**: a barra da compra fica fixa acima da navegação, com o progresso da lista e o total bipado. | [CasaCompra.png](telas/CasaCompra.png) | Feita |
 | **Produto**: imagem, nome, código, preço, preço em cada mercado com a idade do preço, histórico de 6 meses, "Em casa" com o "ter sempre" e "Pôr na lista". | [Produto.png](telas/Produto.png) | Visual antigo |
+| **Embalagem nova**: ao bipar um código desconhecido, o app sugere o produto ("Arroz branco") e preenche marca e tamanho pela etiqueta; o botão de trocar escolhe outro produto. | [EmbalagemNova.png](telas/EmbalagemNova.png) | Aguardando aprovação (ADR 0013) |
+| **Produto com embalagens**: o produto é o que se usa em casa; as embalagens (marca e tamanho) mostram o preço e o preço por kg, e o estoque conta embalagens com o total em kg. | [ProdutoEmbalagens.png](telas/ProdutoEmbalagens.png) | Aguardando aprovação (ADR 0013) |
 | **Mercados**: mapa, a sua lista em cada mercado e os mercados perto de você. | [Mercados.png](telas/Mercados.png) | Visual antigo |
 | **Lista**: a prévia da lista, adicionar item (com foto de lista de papel e voz), os itens de sempre e a lista na ordem dos corredores. | [Lista.png](telas/Lista.png) | Feita, sem o seletor de mercado, sem foto e voz e com seções genéricas em vez dos corredores do mercado |
 | **Notificação ao vivo**: a compra em andamento na tela de bloqueio e na barra de status (Android 16). | [Notificacao.png](telas/Notificacao.png) | Falta |
