@@ -126,6 +126,24 @@ O "Ir às compras" pedia a localização e as notificações seguidas, sem dizer
 
 A câmera não ganhou diálogo: ela só abre quando a pessoa toca para bipar, e a dica "Aponte para o código ou a etiqueta" já aparece atrás do pedido do sistema.
 
+### Fechar o ciclo entre casa e lista (outubro de 2026)
+
+Bipar em casa mudava só o estoque: o leite comprado continuava na lista, e a embalagem vazia não punha nada nela.
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **Grocy** ([3.3.0](https://newreleases.io/project/github/linuxserver/docker-grocy/release/v3.3.0-ls151)) | Uma opção, desligada por padrão, põe na lista o que fica abaixo do estoque mínimo | **Abaixo do "ter sempre", vai para a lista**, com o que falta | Sem opção: só o bipe de "Usei" põe na lista, e o snackbar diz isso com o Desfazer ao lado |
+| **Barcode Buddy** (modos de leitura, nas fontes) | Um modo para comprar e outro para consumir, escolhidos antes de bipar | Os modos "Comprei" e "Usei" da câmera, já existentes | "Comprei" também tira da lista, ou diminui o que falta quando eram vários |
+
+### Lista mais barata (outubro de 2026)
+
+O selo "mais barato" ia para o mercado com a lista inteira, mesmo quando outro, com menos preços, saía mais barato nos itens que tinha. E nada dizia de quando eram os preços.
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **S-Group** ([comparação da cesta](https://s-etukortti.fi/en/support/grocery-basket-comparison)) | Compara só os produtos que as duas lojas têm, com preço normal (sem cartão), de menos de dois dias e do mesmo dia nas duas | **A cesta em comum decide o selo**: o primeiro precisa da lista inteira e de ganhar de cada um nos itens que os dois têm. O preço normal na frente já vinha da ADR 0011 | Os preços são da própria pessoa, de dias diferentes: em vez de descartar os antigos, cada mercado mostra a idade do mais antigo ("preços de até 12 dias") |
+| **Basket** (nas fontes) | Soma a lista em cada loja próxima, com preços da comunidade | O total por mercado, com a barra | Sem selo quando a comparação não é justa: a ordem e "sem preço de N itens" já dizem o resto |
+
 ## Fontes
 
 - [Menor Preço Brasil (Olhar Digital)](https://olhardigital.com.br/2025/08/03/dicas-e-tutoriais/quer-economizar-na-farmacia-e-supermercado-conheca-o-app-menor-preco-brasil/)

@@ -16,14 +16,15 @@ class ListCostRow {
   /// O total em relação ao maior, de 0 a 1.
   final double fraction;
 
-  /// Uma ressalva em cinza, como "sem preço de 2 itens".
+  /// Uma ressalva em cinza, como "preços de até 12 dias · sem preço de 2
+  /// itens".
   final String? note;
 }
 
 /// "Sua lista em cada mercado" (Compare do design system): uma barra por
-/// mercado. A primeira linha é a mais barata, com a barra em tinta e o selo
-/// [bestLabel]; as outras ficam neutras. Sem [bestLabel] (quando a
-/// comparação não é justa), nenhuma linha se destaca.
+/// mercado. Com [bestLabel], a primeira linha é a mais barata, com a barra
+/// em tinta e o selo; as outras ficam neutras. Sem ele (quando a comparação
+/// não é justa), nenhuma linha se destaca.
 class ListCostCompare extends StatelessWidget {
   const ListCostCompare({required this.rows, this.bestLabel, super.key});
 

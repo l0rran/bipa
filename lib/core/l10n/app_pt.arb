@@ -1145,5 +1145,14 @@
       }
     }
   },
-  "cameraAdjustFailed": "Não deu para atualizar o estoque. Tente de novo."
+  "cameraAdjustFailed": "Não deu para atualizar o estoque. Tente de novo.",
+  "marketsOldestPrice": "{days, plural, =0{preços de hoje} =1{preços de até ontem} other{preços de até {days} dias}}",
+  "@marketsOldestPrice": {
+    "description": "Ressalva na comparação da lista: a idade do preço mais antigo que entrou no total do mercado.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  }
 }

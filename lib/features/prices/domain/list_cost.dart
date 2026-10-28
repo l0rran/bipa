@@ -13,11 +13,16 @@ final class MarketListCost {
     required this.total,
     required this.priced,
     required this.items,
+    required this.oldest,
   });
 
   final String marketId;
   final String marketName;
   final Money total;
+
+  /// Quando foi visto o preço mais antigo que entrou no total: um total com
+  /// preço de meses atrás vale menos que um de ontem.
+  final DateTime oldest;
 
   /// Quantos produtos da lista têm preço nesse mercado, de [items].
   final int priced;
@@ -33,13 +38,30 @@ final class MarketListCost {
       other.marketName == marketName &&
       other.total == total &&
       other.priced == priced &&
-      other.items == items;
+      other.items == items &&
+      other.oldest == oldest;
 
   @override
-  int get hashCode => Object.hash(marketId, marketName, total, priced, items);
+  int get hashCode => Object.hash(marketId, marketName, total, priced, items, oldest);
 
   @override
   String toString() => 'MarketListCost($marketName, $total, $priced/$items)';
+}
+
+/// A lista somada em cada mercado e qual deles é, de fato, o mais barato.
+@immutable
+final class ListCostComparison {
+  const ListCostComparison({this.markets = const [], this.cheapestId});
+
+  /// Os mercados, como em [listCostPerMarket].
+  final List<MarketListCost> markets;
+
+  /// O mercado mais barato, quando a comparação é justa; senão, `null`.
+  ///
+  /// É o primeiro de [markets], se ele tem preço da lista inteira e sai mais
+  /// barato que cada um dos outros na cesta que os dois têm em comum: um
+  /// mercado com metade dos preços só perde dele nos itens que tem.
+  final String? cheapestId;
 }
 
 /// A lista (os [productIds] que faltam comprar) somada em cada mercado com
@@ -56,16 +78,29 @@ List<MarketListCost> listCostPerMarket(
   Iterable<PriceHistoryEntry> history, {
   Map<String, ProductPackage> packages = const {},
   Map<String, int> quantities = const {},
+}) => compareListCost(productIds, history, packages: packages, quantities: quantities).markets;
+
+/// [listCostPerMarket] e o mais barato numa comparação justa
+/// ([ListCostComparison.cheapestId]).
+ListCostComparison compareListCost(
+  Set<String> productIds,
+  Iterable<PriceHistoryEntry> history, {
+  Map<String, ProductPackage> packages = const {},
+  Map<String, int> quantities = const {},
 }) {
-  final perMarket = referencePricesPerMarket(productIds, history, packages: packages);
-  return [
+  final perMarket = _referencePrices(productIds, history, packages: packages, references: const {});
+  Money sum(Iterable<String> products, Map<String, _Seen> prices) =>
+      products.fold(Money.zero, (total, product) => total + prices[product]!.price * (quantities[product] ?? 1));
+
+  final markets = [
     for (final MapEntry(key: marketId, value: (:marketName, :byProduct)) in perMarket.entries)
       MarketListCost(
         marketId: marketId,
         marketName: marketName,
-        total: byProduct.entries.fold(Money.zero, (sum, entry) => sum + entry.value * (quantities[entry.key] ?? 1)),
+        total: sum(byProduct.keys, byProduct),
         priced: byProduct.length,
         items: productIds.length,
+        oldest: byProduct.values.map((seen) => seen.at).reduce((a, b) => a.isBefore(b) ? a : b),
       ),
   ]..sort((a, b) {
     final byPriced = b.priced.compareTo(a.priced);
@@ -73,6 +108,16 @@ List<MarketListCost> listCostPerMarket(
     final byTotal = a.total.compareTo(b.total);
     return byTotal != 0 ? byTotal : a.marketName.compareTo(b.marketName);
   });
+
+  final first = markets.firstOrNull;
+  if (first == null || markets.length < 2 || first.isPartial) return ListCostComparison(markets: markets);
+  final firstPrices = perMarket[first.marketId]!.byProduct;
+  // Com a lista inteira, o primeiro tem preço de tudo o que o outro tem.
+  final fair = markets.skip(1).every((other) {
+    final otherPrices = perMarket[other.marketId]!.byProduct;
+    return sum(otherPrices.keys, firstPrices) <= other.total;
+  });
+  return ListCostComparison(markets: markets, cheapestId: fair ? first.marketId : null);
 }
 
 /// Os preços de um mercado: o nome dele e o preço de cada produto que tem
@@ -95,6 +140,24 @@ Map<String, MarketPrices> referencePricesPerMarket(
   Iterable<PriceHistoryEntry> history, {
   Map<String, ProductPackage> packages = const {},
   Map<String, String?> references = const {},
+}) => {
+  for (final MapEntry(key: marketId, value: (:marketName, :byProduct))
+      in _referencePrices(productIds, history, packages: packages, references: references).entries)
+    marketId: (
+      marketName: marketName,
+      byProduct: {for (final MapEntry(key: productId, value: seen) in byProduct.entries) productId: seen.price},
+    ),
+};
+
+/// Um preço na embalagem de referência e quando ele foi visto.
+typedef _Seen = ({Money price, DateTime at});
+
+/// [referencePricesPerMarket] com a data de cada preço.
+Map<String, ({String marketName, Map<String, _Seen> byProduct})> _referencePrices(
+  Set<String> productIds,
+  Iterable<PriceHistoryEntry> history, {
+  required Map<String, ProductPackage> packages,
+  required Map<String, String?> references,
 }) {
   if (productIds.isEmpty) return const {};
   final historyByProduct = <String, List<PriceHistoryEntry>>{};
@@ -103,7 +166,7 @@ Map<String, MarketPrices> referencePricesPerMarket(
     if (productIds.contains(productId)) historyByProduct.putIfAbsent(productId, () => []).add(entry);
   }
 
-  final prices = <String, Map<String, Money>>{};
+  final prices = <String, Map<String, _Seen>>{};
   final names = <String, String>{};
   for (final MapEntry(key: productId, value: entries) in historyByProduct.entries) {
     final latestAnywhere = entries.reduce((a, b) => b.observation.observedAt.isAfter(a.observation.observedAt) ? b : a);
@@ -114,7 +177,7 @@ Map<String, MarketPrices> referencePricesPerMarket(
       final price = _inReferencePackage(latest.observation, referenceId, packages);
       if (price == null) continue;
       final marketId = latest.observation.marketId;
-      prices.putIfAbsent(marketId, () => {})[productId] = price;
+      prices.putIfAbsent(marketId, () => {})[productId] = (price: price, at: latest.observation.observedAt);
       names[marketId] = latest.marketName;
     }
   }

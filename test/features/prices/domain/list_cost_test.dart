@@ -152,6 +152,77 @@ void main() {
     expect(prices['centro']?.byProduct, {'arroz': const Money.cents(2590)});
   });
 
+  group('mais barato numa comparação justa', () {
+    test('com a lista inteira e mais barato também na cesta em comum', () {
+      final comparison = compareListCost(
+        {'arroz', 'cafe'},
+        [
+          _price('vila', 'arroz', 2790),
+          _price('vila', 'cafe', 1899),
+          _price('centro', 'arroz', 2990),
+          _price('centro', 'cafe', 1999),
+          // Só o arroz, e mais caro que na Vila.
+          _price('bairro', 'arroz', 2890),
+        ],
+      );
+
+      expect(comparison.markets.map((c) => c.marketId), ['vila', 'centro', 'bairro']);
+      expect(comparison.cheapestId, 'vila');
+    });
+
+    test('sem selo quando um mercado com menos preços é mais barato no que tem', () {
+      final comparison = compareListCost(
+        {'arroz', 'cafe'},
+        [
+          _price('vila', 'arroz', 2790),
+          _price('vila', 'cafe', 1899),
+          // O arroz sai mais barato aqui; sem o café, não dá para saber o total.
+          _price('bairro', 'arroz', 2490),
+        ],
+      );
+
+      expect(comparison.markets.first.marketId, 'vila');
+      expect(comparison.cheapestId, isNull);
+    });
+
+    test('sem selo quando nenhum mercado tem a lista inteira, ou há um só', () {
+      expect(
+        compareListCost({'arroz', 'cafe'}, [_price('vila', 'arroz', 2790), _price('centro', 'cafe', 1899)]).cheapestId,
+        isNull,
+      );
+      expect(compareListCost({'arroz'}, [_price('vila', 'arroz', 2790)]).cheapestId, isNull);
+    });
+
+    test('a cesta em comum conta as quantidades da lista', () {
+      final comparison = compareListCost(
+        {'leite', 'cafe'},
+        [
+          _price('vila', 'leite', 499),
+          _price('vila', 'cafe', 1899),
+          // O leite sai mais barato aqui, e são 3 leites na lista.
+          _price('bairro', 'leite', 459),
+        ],
+        quantities: {'leite': 3},
+      );
+
+      expect(comparison.cheapestId, isNull);
+    });
+  });
+
+  test('cada mercado guarda a data do preço mais antigo que entrou no total', () {
+    final costs = listCostPerMarket(
+      {'arroz', 'cafe'},
+      [
+        _price('vila', 'arroz', 2790, day: 3),
+        _price('vila', 'cafe', 1899, day: 20),
+        // O mais antigo do café foi substituído pelo de dia 20: não conta.
+        _price('vila', 'cafe', 1799, day: 1),
+      ],
+    );
+
+    expect(costs.single.oldest, DateTime(2026, 10, 3));
+  });
+
   test('sem lista, não há o que comparar', () {
     expect(listCostPerMarket(const {}, [_price('vila', 'arroz', 2790)]), isEmpty);
   });

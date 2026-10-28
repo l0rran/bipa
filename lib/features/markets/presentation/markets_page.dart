@@ -54,7 +54,7 @@ class _MarketsPageState extends ConsumerState<MarketsPage> {
     final markets = ref.watch(rankedMarketsProvider);
     final location = ref.watch(currentLocationProvider);
     final finder = ref.watch(nearestMarketFinderProvider);
-    final costs = ref.watch(listCostPerMarketProvider);
+    final comparison = ref.watch(listCostComparisonProvider);
     final latestPrices = ref.watch(latestPricePerMarketProvider).value ?? const <String, DateTime>{};
     final now = ref.watch(clockProvider)();
     final here = switch (location) {
@@ -62,9 +62,8 @@ class _MarketsPageState extends ConsumerState<MarketsPage> {
       _ => null,
     };
     // A comparação só faz sentido com dois mercados ou mais.
-    final compare = costs.length > 1 ? costs : const <MarketListCost>[];
-    final cheapest = compare.firstOrNull;
-    final cheapestId = cheapest == null || cheapest.isPartial ? null : cheapest.marketId;
+    final compare = comparison.markets.length > 1 ? comparison.markets : const <MarketListCost>[];
+    final cheapestId = comparison.cheapestId;
 
     return Scaffold(
       body: AsyncValueView(
@@ -135,15 +134,19 @@ class _MarketsPageState extends ConsumerState<MarketsPage> {
                   SectionHeader(title: l10n.marketsListCost),
                   const SizedBox(height: BipaSpacing.s2),
                   ListCostCompare(
-                    // O selo só vale quando o primeiro tem preço da lista inteira.
-                    bestLabel: compare.first.isPartial ? null : l10n.marketsCheapest,
+                    // O selo só vale numa comparação justa: o primeiro tem a
+                    // lista inteira e ganha de cada um na cesta em comum.
+                    bestLabel: cheapestId == null ? null : l10n.marketsCheapest,
                     rows: [
                       for (final cost in compare)
                         ListCostRow(
                           name: cost.marketName,
                           value: cost.total.format(),
                           fraction: cost.total.cents / _highest(compare),
-                          note: cost.isPartial ? l10n.marketsMissingPrices(cost.items - cost.priced) : null,
+                          note: l10n.joinMeta([
+                            l10n.marketsOldestPrice(_ageInDays(now, cost.oldest)),
+                            if (cost.isPartial) l10n.marketsMissingPrices(cost.items - cost.priced),
+                          ]),
                         ),
                     ],
                   ),
@@ -173,6 +176,10 @@ class _MarketsPageState extends ConsumerState<MarketsPage> {
     await ref.read(locationServiceProvider).requestAccess();
     if (mounted) ref.invalidate(currentLocationProvider);
   }
+
+  /// Em dias do calendário, como na tela do mercado.
+  static int _ageInDays(DateTime now, DateTime seen) =>
+      DateUtils.dateOnly(now).difference(DateUtils.dateOnly(seen)).inDays;
 
   static int _highest(List<MarketListCost> costs) =>
       costs.map((c) => c.total.cents).fold(1, (max, cents) => cents > max ? cents : max);

@@ -52,16 +52,16 @@ final shoppingListHistoryProvider = StreamProvider.autoDispose<List<PriceHistory
   yield* prices.watchHistoryOfProducts(productIds);
 });
 
-/// O que falta na lista somado em cada mercado, do mais barato ao mais caro
-/// (tela de Mercados).
-final listCostPerMarketProvider = Provider.autoDispose<List<MarketListCost>>((ref) {
+/// O que falta na lista somado em cada mercado, do mais barato ao mais caro,
+/// e qual é o mais barato de fato (tela de Mercados).
+final listCostComparisonProvider = Provider.autoDispose<ListCostComparison>((ref) {
   final entries = ref.watch(shoppingListProvider).value ?? const [];
   final missing = {
     for (final entry in entries)
       if (!entry.item.isChecked) ?entry.item.productId,
   };
   final packages = ref.watch(listPackagesProvider).value ?? const [];
-  return listCostPerMarket(
+  return compareListCost(
     missing,
     ref.watch(shoppingListHistoryProvider).value ?? const [],
     packages: {for (final package in packages) package.id: package},
