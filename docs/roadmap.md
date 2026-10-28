@@ -9,22 +9,23 @@
 - [ ] Migrar para Riverpod com geração de código e freezed
 - [x] Implementar a base do design system em `lib/core/design_system/`: tokens gerados, paleta semântica (ADR 0009), tema, fontes embutidas e os componentes do Início
 - [x] Textos em ARB (`flutter gen-l10n`): todas as telas; as mensagens das exceções do domínio continuam em português no código, porque o domínio não conhece o ARB
-- [ ] Redesenhar as telas conforme o protótipo: barra com botão de bipar, câmera direto, folha "Bipou!" (Mercados feita; falta a captura)
+- [x] Redesenhar as telas conforme o protótipo: barra com botão de bipar, câmera direto, folha de conferir e salvar
 - [x] Novo Início: busca com bipar, locais como categorias, prateleira de Acabando e lista com medidor de nível
 - [x] Início: prévia da lista
 - [ ] Início: carrossel de insights (depende da previsão de consumo)
 - [ ] Modo compra: barra fixa acima da navegação com progresso e total, em todas as abas
 - [x] Trocar "mínimo" por "ter sempre" (`StockItem.targetQuantity`, acabando abaixo dele)
 - [ ] Fotos dos produtos (ADR 0010): miniatura com ícone da categoria pronta e `photoPath` no banco; falta tirar a foto ao bipar e buscar no Open Food Facts
-- [ ] Câmera própria na captura (pacote `camera`), com leitura ao vivo em vez de foto
+- [x] Câmera própria na captura (pacote `camera`), com leitura ao vivo em vez de foto
 - [x] Preços com condição (ADR 0011): varejo, cartão da loja e atacado lidos da mesma etiqueta, com banco de testes do OCR em `tool/ocr_bench`
 - [ ] Protótipo da confirmação com mais de um preço na etiqueta (hoje a captura mostra os outros preços como chips)
+- [ ] Etiqueta de gôndola com "/kg" e sem código: ler a unidade no `PriceTagParser` e escolher o produto pelo nome (ADR 0018)
 - [ ] Testar o OCR com fotos nítidas de etiquetas reais e acrescentá-las a `tool/ocr_bench/etiquetas_reais.py`
 
 ## Fase 1: MVP para uso pessoal
 
 - [ ] Importar cupom fiscal (QR Code da NFC-e) com fila offline: registra os preços e abastece o estoque, e serve de onboarding
-- [ ] Modos do bipar: "Preço" no mercado, "Comprei" e "Usei" em casa (bipar a embalagem vazia dá baixa e põe na lista)
+- [ ] Modos do bipar: "Preço" no mercado, "Comprei" e "Usei" em casa (feitos na câmera; falta a embalagem vazia pôr na lista ao dar baixa)
 - [ ] Desfazer em toda ação que muda o estoque; cada item bipado é salvo na hora
 - [x] Lista de compras: itens de produto ou escritos à mão, os itens de sempre (os com "ter sempre"), seções do mercado, preço esperado e total estimado; "Pôr na lista" no Início
 - [x] Modo compra: "Ir às compras" na prévia, barra da compra acima da navegação, item marcado ao registrar o preço e "Terminei", que leva o comprado ao estoque
@@ -39,7 +40,7 @@
 - [ ] Sugestão de onde comprar a lista mais barata, comparando a lista inteira e mostrando a idade de cada preço
 - [ ] Lista a partir de foto de lista de papel e por voz ("acabou o café"); widget de adicionar rápido
 - [ ] Previsão de consumo a partir do histórico do estoque
-- [ ] Onboarding e explicação antes de pedir câmera e localização
+- [ ] Onboarding (a explicação antes de pedir localização e notificação já existe)
 - [ ] Backup e restauração local do banco
 - [ ] Relatório de falhas e ícone do app
 
