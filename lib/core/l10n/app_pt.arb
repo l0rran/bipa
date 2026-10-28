@@ -1276,5 +1276,9 @@
         "type": "String"
       }
     }
+  },
+  "productRegisterPriceHint": "registrar o preço",
+  "@productRegisterPriceHint": {
+    "description": "Dica do leitor de tela ao tocar na linha de uma embalagem: abre a câmera para o preço dela."
   }
 }

@@ -9,6 +9,7 @@ import 'package:bipa/core/design_system/components/price_tag.dart';
 import 'package:bipa/core/design_system/components/product_category_icon.dart';
 import 'package:bipa/core/design_system/components/product_thumb.dart';
 import 'package:bipa/core/design_system/components/quantity_stepper.dart';
+import 'package:bipa/core/design_system/components/scan_menu.dart';
 import 'package:bipa/core/design_system/components/section_header.dart';
 import 'package:bipa/core/di/core_providers.dart';
 import 'package:bipa/core/formatting/calendar_days.dart';
@@ -87,6 +88,31 @@ class _ProductView extends ConsumerWidget {
           delta: delta,
           reason: delta > 0 ? StockMovementReason.purchase : StockMovementReason.consumption,
         );
+  }
+
+  /// "Registrar preço": com mais de uma embalagem, pergunta qual antes de
+  /// abrir a câmera, em vez de cair na mais recente sem dizer (G3). Uma
+  /// etiqueta com o código de outra embalagem troca para ela na câmera.
+  Future<void> _registerPrice(BuildContext context, List<ProductPackage> packages) async {
+    final l10n = AppLocalizations.of(context);
+    final package = packages.length < 2
+        ? packages.firstOrNull
+        : await showScanMenu<ProductPackage>(
+            context,
+            items: [
+              for (final package in packages)
+                (
+                  value: package,
+                  icon: Icons.inventory_2_outlined,
+                  label: package.label ?? package.barcode ?? l10n.packageTitle,
+                  hint: null,
+                ),
+            ],
+            closeLabel: l10n.cancel,
+          );
+    if (packages.length > 1 && package == null) return;
+    if (!context.mounted) return;
+    await context.push(Routes.cameraPriceFor(product.id, packageId: package?.id));
   }
 
   /// "Juntar com…": escolhe o outro produto, confirma e abre o que ficou.
@@ -209,7 +235,7 @@ class _ProductView extends ConsumerWidget {
                         child: Text(l10n.productEdit),
                       ),
                       PopupMenuItem(
-                        value: () => context.push(Routes.cameraPriceFor(product.id)),
+                        value: () => _registerPrice(context, packages),
                         child: Text(l10n.productRegisterPrice),
                       ),
                       PopupMenuItem(value: () => _merge(context, ref), child: Text(l10n.productMerge)),
@@ -248,6 +274,7 @@ class _ProductView extends ConsumerWidget {
                         value: row.price?.price.format() ?? l10n.productNoPriceShort,
                         // Registrar o preço desta embalagem.
                         onTap: () => context.push(Routes.cameraPriceFor(product.id, packageId: row.package.id)),
+                        tapHint: l10n.productRegisterPriceHint,
                         badge: _cheapestPerUnit(l10n, row.price, isFirst: index == 0 && perPackage.length > 1),
                       ),
                   ],

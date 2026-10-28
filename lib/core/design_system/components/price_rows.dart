@@ -20,6 +20,7 @@ class PriceRowData {
     this.badge,
     this.place = false,
     this.onTap,
+    this.tapHint,
   });
 
   final IconData icon;
@@ -29,6 +30,10 @@ class PriceRowData {
   /// O ícone na cor dos lugares: a linha é um mercado.
   final bool place;
   final VoidCallback? onTap;
+
+  /// O que o toque faz, para o leitor de tela ("registrar o preço"), quando
+  /// a linha não deixa isso claro.
+  final String? tapHint;
 
   /// "R$ 5,58/kg", "há 5 dias".
   final String? meta;
@@ -129,7 +134,12 @@ class _PriceRow extends StatelessWidget {
       ),
     );
     return MergeSemantics(
-      child: onTap == null ? content : InkWell(onTap: onTap, child: content),
+      child: onTap == null
+          ? content
+          : Semantics(
+              onTapHint: row.tapHint,
+              child: InkWell(onTap: onTap, child: content),
+            ),
     );
   }
 }
