@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:bipa/core/catalog/text_fold.dart';
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
@@ -177,9 +179,10 @@ class _MarketsPageState extends ConsumerState<MarketsPage> {
     if (mounted) ref.invalidate(currentLocationProvider);
   }
 
-  /// Em dias do calendário, como na tela do mercado.
+  /// Em dias do calendário, como na tela do mercado. Um preço "do futuro"
+  /// (relógio do aparelho errado) conta como de hoje.
   static int _ageInDays(DateTime now, DateTime seen) =>
-      DateUtils.dateOnly(now).difference(DateUtils.dateOnly(seen)).inDays;
+      math.max(0, DateUtils.dateOnly(now).difference(DateUtils.dateOnly(seen)).inDays);
 
   static int _highest(List<MarketListCost> costs) =>
       costs.map((c) => c.total.cents).fold(1, (max, cents) => cents > max ? cents : max);

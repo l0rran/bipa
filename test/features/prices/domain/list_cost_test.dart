@@ -193,6 +193,15 @@ void main() {
       expect(compareListCost({'arroz'}, [_price('vila', 'arroz', 2790)]).cheapestId, isNull);
     });
 
+    test('sem selo num empate', () {
+      final comparison = compareListCost(
+        {'arroz'},
+        [_price('vila', 'arroz', 2790), _price('centro', 'arroz', 2790)],
+      );
+
+      expect(comparison.cheapestId, isNull);
+    });
+
     test('a cesta em comum conta as quantidades da lista', () {
       final comparison = compareListCost(
         {'leite', 'cafe'},

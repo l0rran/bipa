@@ -60,7 +60,8 @@ final class ListCostComparison {
   ///
   /// É o primeiro de [markets], se ele tem preço da lista inteira e sai mais
   /// barato que cada um dos outros na cesta que os dois têm em comum: um
-  /// mercado com metade dos preços só perde dele nos itens que tem.
+  /// mercado com metade dos preços só perde dele nos itens que tem. Num
+  /// empate, não há selo.
   final String? cheapestId;
 }
 
@@ -113,9 +114,10 @@ ListCostComparison compareListCost(
   if (first == null || markets.length < 2 || first.isPartial) return ListCostComparison(markets: markets);
   final firstPrices = perMarket[first.marketId]!.byProduct;
   // Com a lista inteira, o primeiro tem preço de tudo o que o outro tem.
+  // Empatado com algum, não há um mais barato.
   final fair = markets.skip(1).every((other) {
     final otherPrices = perMarket[other.marketId]!.byProduct;
-    return sum(otherPrices.keys, firstPrices) <= other.total;
+    return sum(otherPrices.keys, firstPrices) < other.total;
   });
   return ListCostComparison(markets: markets, cheapestId: fair ? first.marketId : null);
 }
