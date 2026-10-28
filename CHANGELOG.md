@@ -62,7 +62,7 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - Tocar num preço da tela do produto ou do mercado abre a folha dele, com "Corrigir o preço" fora do carrinho e o caminho para o mercado ou o produto.
 - O preço em destaque do produto, quando tem 30 dias ou mais, diz o mercado e a idade no lugar da embalagem.
 - "Registrar preço" na tela do produto pergunta a embalagem quando há mais de uma.
-- As linhas de "Sua lista em cada mercado" abrem o mercado.
+- As linhas de "Sua lista em cada mercado" e os alfinetes do mapa abrem o mercado.
 - O granel escolhido pelo aviso do carrinho entra na bandeja, sem preço, e marca a lista.
 - Tocar numa pesagem da bandeja troca o produto que a balança lembra para aquele código, e a linha vai junto.
 - Em "Comprei" e "Usei" da câmera, quando a lista não muda, o Desfazer fica no próprio aviso do visor, sem snackbar repetindo o fato.
