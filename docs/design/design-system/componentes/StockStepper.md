@@ -30,7 +30,7 @@ A lista do estoque. Cada linha mostra uma miniatura, o nome e o medidor de níve
 
 ## Gestos
 
-- **Deslizar para a esquerda:** "Usei um". **Para a direita:** "Pôr na lista". A ação vale ao passar de 30% da largura, e o aviso oferece **Desfazer**.
+- **Deslizar para a esquerda:** "Usei um", que também põe na lista o que ficou abaixo do "ter sempre" (ADR 0019). **Para a direita:** "Pôr na lista" ou "Tirar da lista". A ação vale ao passar de 30% da largura, e o aviso diz o que mudou e oferece **Desfazer**.
 - Segurar − ou + repete. No app, tocar no número do stepper abre o teclado numérico.
 - Todo gesto tem um caminho equivalente por botão.
 
@@ -42,7 +42,7 @@ A lista do estoque. Cada linha mostra uma miniatura, o nome e o medidor de níve
 ## Acessibilidade
 
 - O medidor tem `role="img"` com o estado por extenso ("2 de 4 un", "Acabou").
-- A linha é um botão com `aria-expanded`. O − é "Usei um" e o + é "Comprei um".
+- A linha é um botão com `aria-expanded`. O − e o + do stepper corrigem a quantidade e não mexem na lista: "Uma embalagem a menos" e "Uma embalagem a mais". "Usei um" e "Comprei um" ficam para os gestos e a câmera, que também mudam a lista.
 
 ## Markup
 

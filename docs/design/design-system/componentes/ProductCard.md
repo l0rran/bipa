@@ -11,7 +11,7 @@ O cartão de produto da prateleira "Acabando": imagem grande, medidor no canto e
 
 - Em vez do preço, o canto mostra o **medidor de nível** (o mesmo da lista), porque no Início o que importa é quanto resta.
 - O **"+"** é a única ação. Tocado, vira um check e o item vai para a lista.
-- Tocar no resto do cartão abre o produto.
+- Tocar no resto do cartão abre o editor do item (quanto há, "ter sempre", local), o mesmo da lista. Segurar abre o produto.
 
 ## Anatomia
 

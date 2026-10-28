@@ -12,7 +12,7 @@ Barra de navegação flutuante, de vidro, com o botão de bipar no centro: um to
 - Pílula a 12px das bordas, fundo `surface-glass` com desfoque de 18px e `shadow-float`.
 - Quatro destinos: Início, Produtos, Mercados e Lista. A aba ativa tem o fundo `brand-soft` (indicador que desliza) e ícone `brand-text`.
 - **Botão de bipar:** círculo de 64px em `brand` com `shadow-raised` e um anel que respira, 40px acima da barra.
-- **Menu do bipar** (toque longo de 420ms): véu `scrim` e três pílulas em `surface` empilhadas acima do botão: Modo carrinho, Dar baixa em casa e Ler cupom fiscal.
+- **Menu do bipar** (toque longo de 420ms): véu `scrim` e quatro pílulas em `surface` empilhadas acima do botão: Modo carrinho, Guardar em casa, Dar baixa em casa e Ler cupom fiscal.
 
 ## Movimento
 
