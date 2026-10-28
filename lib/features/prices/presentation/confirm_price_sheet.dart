@@ -144,7 +144,7 @@ class _ConfirmPriceSheetState extends ConsumerState<ConfirmPriceSheet> {
       if (bought != null) {
         showHomeChangeSnackBar(messenger, l10n: l10n, record: record, product: _product, change: bought);
       }
-      if (mounted) Navigator.of(context).pop(true);
+      if (mounted) Navigator.of(context).pop<SavedPrice>((product: _product, package: _package, price: _price));
     } on Exception {
       if (mounted) setState(() => _error = l10n.capturePriceFailed);
     } finally {
@@ -240,6 +240,7 @@ class _ConfirmPriceSheetState extends ConsumerState<ConfirmPriceSheet> {
               onTap: _changeMarket,
               child: Semantics(
                 button: true,
+                onTap: _changeMarket,
                 label: switch (_market) {
                   final market? => l10n.confirmMarketLabel(market.name),
                   null => l10n.cartChooseMarket,
