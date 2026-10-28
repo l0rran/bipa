@@ -932,5 +932,22 @@
         "type": "int"
       }
     }
+  },
+  "barcodeScale": "Código da balança: ele muda a cada pesagem e não identifica o produto.",
+  "@barcodeScale": {
+    "description": "Erro quando o código digitado ou lido é de uma etiqueta da balança (prefixo 2)."
+  },
+  "scannerScaleCode": "Este é o código da balança do mercado. Ele muda a cada pesagem: bipe no carrinho, durante a compra.",
+  "@scannerScaleCode": {
+    "description": "Dica do leitor de código ao ler uma etiqueta da balança."
+  },
+  "cartScaleTitle": "Que produto é este de {total}?",
+  "@cartScaleTitle": {
+    "description": "Título da escolha do produto de uma etiqueta da balança, perguntado uma vez por mercado.",
+    "placeholders": {
+      "total": {
+        "type": "String"
+      }
+    }
   }
 }

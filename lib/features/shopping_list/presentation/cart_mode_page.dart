@@ -16,7 +16,9 @@ import 'package:bipa/features/prices/domain/register_price_observation.dart';
 import 'package:bipa/features/prices/presentation/prices_providers.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
+import 'package:bipa/features/products/domain/scale_label.dart';
 import 'package:bipa/features/products/presentation/new_package_sheet.dart';
+import 'package:bipa/features/products/presentation/product_picker_sheet.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/live_scan.dart';
@@ -216,6 +218,8 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
   }
 
   Future<void> _onCode(String code) async {
+    // A etiqueta da balança não é código de produto (ADR 0018).
+    if (ScaleLabel.tryParse(code) case final label?) return _onScaleLabel(label);
     final repository = ref.read(productRepositoryProvider);
     final Product? product;
     try {
@@ -248,6 +252,43 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
       // O preço da etiqueta desse código esperou o cadastro, que leva tempo:
       // vale o que foi mostrado na folha.
       await _addToCart(created.product, created.package, registeredWith: fromTag);
+    } on Exception catch (error, stack) {
+      _report(error, stack);
+    }
+  }
+
+  /// Uma etiqueta da balança (ADR 0018): o produto do código é perguntado
+  /// uma vez por mercado e lembrado; o valor da pesagem vai para o carrinho.
+  Future<void> _onScaleLabel(ScaleLabel label) async {
+    final trip = ref.read(activeTripProvider).value;
+    if (trip == null) return;
+    final scale = ref.read(scaleItemsProvider);
+    final list = ref.read(shoppingListRepositoryProvider);
+    final l10n = AppLocalizations.of(context);
+    try {
+      var product = await scale.productFor(trip.marketId, label);
+      if (product == null) {
+        if (!mounted) return;
+        final choice = await _withAnalysisPaused(
+          () => pickProduct(context, title: l10n.cartScaleTitle(label.total.format())),
+        );
+        product = switch (choice) {
+          ExistingProduct(product: final chosen) => await scale.remember(trip.marketId, label, product: chosen),
+          NewProduct(:final name) => await scale.remember(trip.marketId, label, newName: name),
+          null => null,
+        };
+      }
+      if (product == null) return;
+      await scale.addToCart(trip.id, product, label);
+      await list.checkProduct(product.id);
+      unawaited(HapticFeedback.mediumImpact());
+      unawaited(SystemSound.play(SystemSoundType.click));
+      if (!mounted) return;
+      _lockFrame();
+      final key = CartItem.keyOf(product.id, null);
+      // A pesagem é o preço firmado: uma etiqueta lida depois não o troca.
+      _settledItems.add(key);
+      _showNotice((price: label.total, detail: product.name, waiting: false), key: key);
     } on Exception catch (error, stack) {
       _report(error, stack);
     }

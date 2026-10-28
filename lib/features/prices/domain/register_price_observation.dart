@@ -11,6 +11,7 @@ import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/product_repository.dart';
+import 'package:bipa/features/products/domain/scale_label.dart';
 import 'package:meta/meta.dart';
 
 /// Dados informados pelo usuário ao registrar um preço.
@@ -116,7 +117,11 @@ final class RegisterPriceObservation {
   }
 
   Future<(Product, ProductPackage?)> _resolve(RegisterPriceInput input) async {
-    final barcode = input.barcode;
+    // O código da balança muda a cada pesagem: não vira embalagem (ADR 0018).
+    final barcode = switch (input.barcode) {
+      final code? when !ScaleLabel.isScaleCode(code) => code,
+      _ => null,
+    };
     final byBarcode = barcode == null ? null : await _products.findPackageByBarcode(barcode);
 
     if (input.productId case final id?) {

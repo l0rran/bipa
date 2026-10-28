@@ -24,21 +24,39 @@ void main() {
 
   tearDown(() => dir.delete(recursive: true));
 
-  /// Reabre o banco como se ele estivesse na [version], sem as [columns]
-  /// (`tabela.coluna`) que vieram depois dela.
-  AppDatabase reopenAt(int version, List<String> columns) => AppDatabase(
+  /// Reabre o banco como se ele estivesse na [version], sem o que veio
+  /// depois dela: colunas (`tabela.coluna`) e tabelas inteiras (`tabela`).
+  AppDatabase reopenAt(int version, List<String> newer) => AppDatabase(
     NativeDatabase(
       file,
       // Roda antes de o drift olhar a versão, e portanto antes da migração.
       setup: (raw) {
-        for (final column in columns) {
-          final [table, name] = column.split('.');
-          raw.execute('ALTER TABLE $table DROP COLUMN $name');
+        for (final item in newer) {
+          switch (item.split('.')) {
+            case [final table, final column]:
+              raw.execute('ALTER TABLE $table DROP COLUMN $column');
+            case [final table]:
+              raw.execute('DROP TABLE $table');
+          }
         }
         raw.userVersion = version;
       },
     ),
   );
+
+  /// O que cada versão acrescentou, da 9 em diante.
+  const since = {
+    9: ['cart_items.price_estimated'],
+    10: ['shopping_list_items.quantity'],
+    11: ['price_observations.supersedes_id'],
+    12: ['scale_items'],
+  };
+
+  /// Tudo o que veio depois da [version].
+  List<String> after(int version) => [
+    for (final MapEntry(key: added, value: items) in since.entries)
+      if (added > version) ...items,
+  ];
 
   test('v9 → v10: os itens que já estavam na lista ficam com quantidade 1', () async {
     final current = AppDatabase(NativeDatabase(file));
@@ -47,7 +65,7 @@ void main() {
         .insert(ShoppingListItemsCompanion.insert(id: 'pao', name: 'Pão', addedAt: at));
     await current.close();
 
-    final migrated = reopenAt(9, ['shopping_list_items.quantity', 'price_observations.supersedes_id']);
+    final migrated = reopenAt(9, after(9));
     final item = await migrated.select(migrated.shoppingListItems).getSingle();
     await migrated.close();
 
@@ -84,11 +102,7 @@ void main() {
         .insert(ShoppingListItemsCompanion.insert(id: 'cafe', productId: const Value('cafe'), name: 'Café', addedAt: at));
     await current.close();
 
-    final migrated = reopenAt(8, [
-      'cart_items.price_estimated',
-      'shopping_list_items.quantity',
-      'price_observations.supersedes_id',
-    ]);
+    final migrated = reopenAt(8, after(8));
     final cart = await migrated.select(migrated.cartItems).getSingle();
     final listItem = await migrated.select(migrated.shoppingListItems).getSingle();
     await migrated.close();
@@ -120,10 +134,23 @@ void main() {
         );
     await current.close();
 
-    final migrated = reopenAt(10, ['price_observations.supersedes_id']);
+    final migrated = reopenAt(10, after(10));
     final price = await migrated.select(migrated.priceObservations).getSingle();
     await migrated.close();
 
     expect((price.priceCents, price.supersedesId), (1899, null));
+  });
+
+  test('v11 → v12: a tabela dos itens da balança é criada vazia', () async {
+    // O drift só cria o banco na primeira consulta.
+    final current = AppDatabase(NativeDatabase(file));
+    await current.select(current.scaleItems).get();
+    await current.close();
+
+    final migrated = reopenAt(11, after(11));
+    final items = await migrated.select(migrated.scaleItems).get();
+    await migrated.close();
+
+    expect(items, isEmpty);
   });
 }

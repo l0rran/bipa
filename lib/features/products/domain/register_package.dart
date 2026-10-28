@@ -5,6 +5,7 @@ import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/product_repository.dart';
+import 'package:bipa/features/products/domain/scale_label.dart';
 import 'package:meta/meta.dart';
 
 /// O que a pessoa confirmou ao bipar um código novo (ADR 0013).
@@ -43,6 +44,7 @@ final class RegisterPackage {
 
   Future<(Product, ProductPackage)> call(NewPackageInput input) async {
     final barcode = input.barcode;
+    if (barcode != null && ScaleLabel.isScaleCode(barcode)) throw const ScaleBarcodeException();
     // Conferido antes de criar o produto: um código repetido não deixa um
     // produto novo sem embalagem para trás.
     if (barcode != null) {
@@ -86,6 +88,12 @@ final class RegisterPackage {
 
 final class MissingPackageProductException extends DomainException {
   const MissingPackageProductException() : super('Escolha o produto desta embalagem.');
+}
+
+/// O código da balança muda a cada pesagem e não pode ser de uma embalagem
+/// (ADR 0018).
+final class ScaleBarcodeException extends DomainException {
+  const ScaleBarcodeException() : super('Código da balança: ele muda a cada pesagem.');
 }
 
 final class InvalidPackageSizeException extends DomainException {

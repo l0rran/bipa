@@ -224,3 +224,16 @@ class MarketAisles extends Table {
   @override
   Set<Column<Object>> get primaryKey => {marketId, aisle};
 }
+
+/// Os itens da balança de cada mercado (ADR 0018, esquema v12): o código do
+/// item na etiqueta da balança e o produto que ele é ali. Privado, como a
+/// ordem das seções; o código só vale naquele mercado.
+@DataClassName('ScaleItemRow')
+class ScaleItems extends Table {
+  TextColumn get marketId => text().references(Markets, #id, onDelete: KeyAction.cascade)();
+  TextColumn get itemKey => text()();
+  TextColumn get productId => text().references(Products, #id, onDelete: KeyAction.cascade)();
+
+  @override
+  Set<Column<Object>> get primaryKey => {marketId, itemKey};
+}

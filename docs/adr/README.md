@@ -21,6 +21,7 @@ Cada arquivo registra uma decisão importante: o contexto, o que foi decidido e 
 | [0015](0015-notificacao-ao-vivo-da-compra.md) | Notificação ao vivo da compra com código nativo | Aceito |
 | [0016](0016-apagar-produto-mercado-e-item-de-casa.md) | Apagar produto, mercado e item de casa | Aceito |
 | [0017](0017-correcao-de-preco.md) | Correção de preço sem apagar a observação | Aceito |
+| [0018](0018-etiquetas-da-balanca.md) | Etiquetas da balança no carrinho | Aceito |
 
 ## Modelo
 

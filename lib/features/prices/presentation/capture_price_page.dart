@@ -20,6 +20,7 @@ import 'package:bipa/features/prices/presentation/prices_providers.dart';
 import 'package:bipa/features/products/domain/gtin.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
+import 'package:bipa/features/products/domain/scale_label.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
@@ -180,7 +181,12 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
   }
 
   void _applyReading(PriceTagReading reading) {
-    final barcode = reading.barcode;
+    // O código da balança muda a cada pesagem: não identifica o produto
+    // (ADR 0018).
+    final barcode = switch (reading.barcode) {
+      final code? when !ScaleLabel.isScaleCode(code) => code,
+      _ => null,
+    };
     setState(() {
       _source = PriceSource.priceTag;
       _candidates = reading.candidates;
@@ -341,7 +347,9 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
 
   String? _validateBarcode(String? value) {
     final code = value?.trim() ?? '';
-    return code.isEmpty || Gtin.isValid(code) ? null : AppLocalizations.of(context).barcodeInvalid;
+    final l10n = AppLocalizations.of(context);
+    if (ScaleLabel.isScaleCode(code)) return l10n.barcodeScale;
+    return code.isEmpty || Gtin.isValid(code) ? null : l10n.barcodeInvalid;
   }
 
   @override

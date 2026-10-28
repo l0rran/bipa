@@ -2,6 +2,7 @@ import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/features/products/domain/gtin.dart';
+import 'package:bipa/features/products/domain/scale_label.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -31,6 +32,10 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
 
   var _handled = false;
 
+  /// Leu um código da balança: ele não identifica produto, então a leitura
+  /// continua e a dica explica por quê (ADR 0018).
+  var _sawScaleCode = false;
+
   @override
   void dispose() {
     _controller.dispose();
@@ -41,6 +46,10 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
     if (_handled) return;
     for (final barcode in capture.barcodes) {
       final code = barcode.rawValue;
+      if (code != null && ScaleLabel.isScaleCode(code)) {
+        if (!_sawScaleCode) setState(() => _sawScaleCode = true);
+        continue;
+      }
       if (code != null && Gtin.isValid(code)) {
         _handled = true;
         HapticFeedback.mediumImpact();
@@ -76,7 +85,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
             right: BipaSpacing.s6,
             bottom: BipaSpacing.s8 + BipaSpacing.s4,
             child: Text(
-              l10n.scannerHint,
+              _sawScaleCode ? l10n.scannerScaleCode : l10n.scannerHint,
               textAlign: TextAlign.center,
               style: TextStyle(color: colors.onCamera, fontSize: 16),
             ),

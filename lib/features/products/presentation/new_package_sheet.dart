@@ -141,6 +141,7 @@ class _NewPackageSheetState extends ConsumerState<NewPackageSheet> {
       final message = switch (error) {
         MissingPackageProductException() => l10n.packageProductMissing,
         InvalidPackageSizeException() => l10n.packageSizeNotPositive,
+        ScaleBarcodeException() => l10n.barcodeScale,
         DuplicateBarcodeException(:final barcode, :final productName) => l10n.packageDuplicate(barcode, productName),
         _ => error.message,
       };

@@ -12,6 +12,7 @@ import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:bipa/features/shopping_list/data/drift_aisle_order_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_cart_repository.dart';
+import 'package:bipa/features/shopping_list/data/drift_scale_item_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_list_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_trip_repository.dart';
 import 'package:bipa/features/shopping_list/data/mlkit_live_frame_analyzer.dart';
@@ -20,6 +21,7 @@ import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/finish_shopping_trip.dart';
 import 'package:bipa/features/shopping_list/domain/put_product_on_list.dart';
 import 'package:bipa/features/shopping_list/domain/review_shopping_trip.dart';
+import 'package:bipa/features/shopping_list/domain/scale_items.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_repository.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_sections.dart';
@@ -176,6 +178,17 @@ final listAisleOrderProvider = StreamProvider.autoDispose<AisleOrder>((ref) {
       ? Stream.value(AisleOrder.empty)
       : ref.watch(aisleOrderRepositoryProvider).watch(marketId);
 });
+
+/// As etiquetas da balança no carrinho (ADR 0018).
+final scaleItemsProvider = Provider<ScaleItems>(
+  (ref) => ScaleItems(
+    scale: DriftScaleItemRepository(ref.watch(appDatabaseProvider)),
+    products: ref.watch(productRepositoryProvider),
+    cart: ref.watch(cartRepositoryProvider),
+    ids: ref.watch(idGeneratorProvider),
+    clock: ref.watch(clockProvider),
+  ),
+);
 
 /// "Pôr na lista" com o que falta para o "ter sempre".
 final putProductOnListProvider = Provider<PutProductOnList>(

@@ -8,6 +8,7 @@ import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/product_repository.dart';
+import 'package:bipa/features/products/domain/scale_label.dart';
 import 'package:bipa/features/products/presentation/measure_unit_label.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:flutter/material.dart';
@@ -204,6 +205,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                     ),
                     validator: (value) {
                       final code = value?.trim() ?? '';
+                      if (ScaleLabel.isScaleCode(code)) return l10n.barcodeScale;
                       return code.isEmpty || Gtin.isValid(code) ? null : l10n.barcodeInvalid;
                     },
                   ),

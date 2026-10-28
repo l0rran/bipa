@@ -26,6 +26,7 @@ part 'app_database.g.dart';
     ShoppingTrips,
     CartItems,
     MarketAisles,
+    ScaleItems,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -43,7 +44,8 @@ class AppDatabase extends _$AppDatabase {
   // v9: o carrinho sabe se o preço é estimado (do histórico).
   // v10: a lista guarda quantas embalagens comprar.
   // v11: um preço pode corrigir outro (ADR 0017).
-  int get schemaVersion => 11;
+  // v12: itens da balança de cada mercado (ADR 0018).
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -67,6 +69,7 @@ class AppDatabase extends _$AppDatabase {
       // Antes da v4, a lista é criada já com a coluna nova.
       if (from >= 4 && from < 10) await migrator.addColumn(shoppingListItems, shoppingListItems.quantity);
       if (from < 11) await migrator.addColumn(priceObservations, priceObservations.supersedesId);
+      if (from < 12) await migrator.createTable(scaleItems);
     }),
     beforeOpen: (details) async {
       // SQLite não aplica chaves estrangeiras sem este pragma.
