@@ -1,3 +1,5 @@
+import 'package:bipa/core/catalog/text_fold.dart';
+
 /// Seções do mercado, na ordem em que costumam aparecer num percurso: a lista
 /// de compras agrupa os itens por elas.
 ///
@@ -38,7 +40,7 @@ enum ProductKind {
     // Espaços nas pontas: a palavra-chave precisa começar no início de uma
     // palavra ("ovo" casa com "ovos", "cha" não casa com "salsicha"), e uma
     // palavra-chave terminada em espaço só casa com a palavra inteira ("sal ").
-    final padded = ' ${_withoutAccents(name.toLowerCase())} ';
+    final padded = ' ${foldText(name)} ';
     for (final (keywords, kind) in _keywords) {
       if (keywords.any((keyword) => padded.contains(' $keyword'))) return kind;
     }
@@ -69,14 +71,3 @@ const _keywords = <(List<String>, ProductKind)>[
   (['racao'], ProductKind.pet),
   (['cerveja', 'vinho', 'refrigerante', 'suco', 'agua mineral', 'agua com gas', 'agua sem gas'], ProductKind.drinks),
 ];
-
-String _withoutAccents(String text) {
-  const from = 'áàâãäéèêëíìîïóòôõöúùûüç';
-  const to = 'aaaaaeeeeiiiiooooouuuuc';
-  final buffer = StringBuffer();
-  for (final char in text.split('')) {
-    final index = from.indexOf(char);
-    buffer.write(index >= 0 ? to[index] : char);
-  }
-  return buffer.toString();
-}
