@@ -4,7 +4,6 @@ import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 
 /// Um destino da barra de navegação.
@@ -187,7 +186,7 @@ class _ScanButton extends StatelessWidget {
       excludeSemantics: true,
       onTap: onPressed,
       onLongPress: onLongPress,
-      hintOverrides: longPressLabel == null ? null : SemanticsHintOverrides(onLongPressHint: longPressLabel),
+      onLongPressHint: longPressLabel,
       child: Material(
         color: colors.brand,
         shape: const CircleBorder(),
