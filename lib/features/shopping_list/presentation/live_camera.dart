@@ -81,6 +81,12 @@ class LiveCameraState extends ConsumerState<LiveCamera> with WidgetsBindingObser
   /// voltar do fundo.
   var _pausedForRoute = false;
 
+  static const _frameWidth = 260.0;
+  static const _frameHeight = 150.0;
+
+  /// O espaço abaixo da moldura para o aviso: a folga e um botão de 48.
+  static const _noticeBand = BipaSpacing.s4 + 48;
+
   bool get torchOn => _live.torchOn;
 
   @override
@@ -306,20 +312,33 @@ class LiveCameraState extends ConsumerState<LiveCamera> with WidgetsBindingObser
         else
           Align(
             alignment: const Alignment(0, -0.45),
-            // O tamanho fixo é o da moldura aberta: o recorte não muda quando
-            // ela trava. O aviso fica logo abaixo, sem empurrar a moldura.
+            // A faixa do aviso fica dentro da caixa, acima e abaixo da moldura
+            // (simétrica, para a moldura continuar no centro dela): fora dos
+            // limites, o aviso tocável do granel não receberia o toque.
             child: SizedBox(
-              key: _viewfinderKey,
-              width: 260,
-              height: 150,
+              width: double.infinity,
+              height: _frameHeight + 2 * _noticeBand,
               child: Stack(
-                clipBehavior: Clip.none,
                 children: [
-                  Center(child: ScanViewfinder(locked: _locked)),
                   Positioned(
-                    top: 150 + BipaSpacing.s4,
-                    left: -BipaSpacing.s8 * 2,
-                    right: -BipaSpacing.s8 * 2,
+                    top: _noticeBand,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      // O tamanho fixo é o da moldura aberta: o recorte não
+                      // muda quando ela trava.
+                      child: SizedBox(
+                        key: _viewfinderKey,
+                        width: _frameWidth,
+                        height: _frameHeight,
+                        child: Center(child: ScanViewfinder(locked: _locked)),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: _noticeBand + _frameHeight + BipaSpacing.s4,
+                    left: BipaSpacing.s4,
+                    right: BipaSpacing.s4,
                     child: Center(child: below),
                   ),
                 ],
