@@ -463,7 +463,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     final createProduct = ref.read(createProductByWeightProvider);
     final matchList = ref.read(matchListToCartProvider);
     final choice = await _withAnalysisPaused(
-      () => pickProduct(context, title: l10n.cartSwapWeighedTitle(entry.product.name)),
+      () => pickProduct(context, excludeId: entry.product.id, title: l10n.cartSwapWeighedTitle(entry.product.name)),
     );
     if (choice == null || !mounted) return;
     try {

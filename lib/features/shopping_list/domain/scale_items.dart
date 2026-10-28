@@ -59,27 +59,32 @@ final class ScaleItems {
   /// Só soma numa linha que já é de pesagens: uma embalagem, para levar, com
   /// preço firmado. Uma linha com outro preço (o por kg da etiqueta, ou um
   /// estimado) passa a ser a da pesagem.
-  Future<void> addToCart(String tripId, Product product, ScaleLabel label) async {
-    final cart = await _cart.watchTrip(tripId).first;
-    final existing = cart
-        .where((entry) => entry.item.productId == product.id && entry.item.packageId == null)
-        .firstOrNull
-        ?.item;
+  Future<void> addToCart(String tripId, Product product, ScaleLabel label) =>
+      _addWeighing(tripId, product.id, label.total);
+
+  Future<void> _addWeighing(String tripId, String productId, Money total) async {
+    final existing = await _weighingLine(tripId, productId);
     if (existing == null) {
-      await _cart.addProduct(tripId, product.id, price: label.total);
+      await _cart.addProduct(tripId, productId, price: total);
       return;
     }
     final weighed = existing.quantity == 1 && existing.take && !existing.priceEstimated;
     final previous = weighed ? existing.price ?? Money.zero : Money.zero;
-    await _cart.setPrice(existing.id, previous + label.total);
+    await _cart.setPrice(existing.id, previous + total);
     if (existing.quantity != 1) await _cart.setQuantity(existing.id, 1);
     if (!existing.take) await _cart.setTake(existing.id, take: true);
   }
 
+  /// A linha do produto sem embalagem, onde as pesagens dele caem.
+  Future<CartItem?> _weighingLine(String tripId, String productId) async => (await _cart.watchTrip(tripId).first)
+      .where((entry) => entry.item.productId == productId && entry.item.packageId == null)
+      .firstOrNull
+      ?.item;
+
   /// Troca o produto de uma pesagem lembrado errado ("Banana nanica" no lugar
   /// de "Banana prata", D6): os códigos do produto antigo neste mercado
-  /// passam a ser do novo, e a linha do carrinho vai para ele. Se o novo já
-  /// tem uma linha de pesagens, o valor soma nela, como numa pesagem a mais.
+  /// passam a ser do novo, e a linha do carrinho vai para ele como uma
+  /// pesagem a mais: soma numa linha de pesagens que ele já tenha.
   Future<void> swapProduct(String tripId, String? marketId, CartItem item, Product to) async {
     if (to.id == item.productId) return;
     if (marketId != null) {
@@ -87,23 +92,16 @@ final class ScaleItems {
         await _scale.remember(marketId, key, to.id);
       }
     }
-    final cart = await _cart.watchTrip(tripId).first;
-    final existing = cart
-        .where((entry) => entry.item.productId == to.id && entry.item.packageId == null)
-        .firstOrNull
-        ?.item;
+    final before = await _weighingLine(tripId, to.id);
     final price = item.price;
-    if (existing == null) {
-      await _cart.addProduct(tripId, to.id, price: price);
-      if (!item.take) {
-        final added = (await _cart.watchTrip(tripId).first)
-            .where((entry) => entry.item.productId == to.id && entry.item.packageId == null)
-            .first
-            .item;
-        await _cart.setTake(added.id, take: false);
-      }
-    } else if (price != null) {
-      await _cart.setPrice(existing.id, (existing.price ?? Money.zero) + price);
+    if (price != null) {
+      await _addWeighing(tripId, to.id, price);
+    } else if (before == null) {
+      await _cart.addProduct(tripId, to.id);
+    }
+    // A pesagem que não ia para casa continua sem ir, se a linha é só dela.
+    if (!item.take && before == null) {
+      if (await _weighingLine(tripId, to.id) case final line?) await _cart.setTake(line.id, take: false);
     }
     await _cart.remove(item.id);
   }
