@@ -474,8 +474,10 @@ class _HomeStockRow extends StatelessWidget {
           onIncrement: () => onAdjust(1),
           onDecrement: item.isOut ? null : () => onAdjust(-1),
         ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+        // Wrap: com letra grande, o chip do "ter sempre" desce para a linha de
+        // baixo em vez de estourar a linha (H3).
+        trailing: Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             IconButton(
               tooltip: onList ? l10n.listRemoveFromList : l10n.listAddToList,
