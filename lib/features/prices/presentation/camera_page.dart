@@ -105,10 +105,15 @@ class _CameraPageState extends ConsumerState<CameraPage> {
     final location = ref.read(locationServiceProvider);
     final markets = ref.read(marketRepositoryProvider);
     final finder = ref.read(nearestMarketFinderProvider);
-    final position = await location.currentLocation(request: false);
-    if (position is! LocationFound) return;
-    final market = finder.marketAt(position.point, await markets.all());
-    if (mounted && market != null && _market == null) setState(() => _market = market);
+    try {
+      final position = await location.currentLocation(request: false);
+      if (position is! LocationFound) return;
+      final market = finder.marketAt(position.point, await markets.all());
+      if (mounted && market != null && _market == null) setState(() => _market = market);
+    } on Exception catch (error, stack) {
+      // Sem o mercado, o chip pede para escolher: não há o que avisar.
+      FlutterError.reportError(FlutterErrorDetails(exception: error, stack: stack, library: 'camera'));
+    }
   }
 
   Future<void> _chooseMarket() async {
@@ -225,6 +230,9 @@ class _CameraPageState extends ConsumerState<CameraPage> {
 
   Future<void> _confirm(Product product, ProductPackage? package, TagPriceRead read) async {
     if (!mounted) return;
+    // O que esperava foi usado (ou ficou para trás): não vai para a próxima leitura.
+    _pendingTag = null;
+    _pendingProduct = null;
     _cameraKey.currentState?.lock();
     unawaited(HapticFeedback.mediumImpact());
     setState(() => _notice = null);
@@ -275,21 +283,43 @@ class _CameraPageState extends ConsumerState<CameraPage> {
       reason: applied > 0 ? StockMovementReason.purchase : StockMovementReason.consumption,
     );
     if (!mounted) return;
+    final amount = Formatters.quantity(applied.abs());
     _showNotice((
       icon: applied > 0 ? Icons.add_rounded : Icons.remove_rounded,
-      value: applied > 0 ? '+1' : '−1',
+      value: applied > 0 ? l10n.cameraDeltaUp(amount) : l10n.cameraDeltaDown(amount),
       detail: l10n.cameraAtHome(product.name, Formatters.quantity(current + applied)),
       waiting: false,
     ));
+    // Com menos de uma embalagem em casa, a baixa tira só o que havia.
+    final done = switch (applied) {
+      > 0.0 => l10n.stockBoughtOneDone(product.name),
+      -1.0 => l10n.stockUsedOneDone(product.name),
+      _ => l10n.cameraUsedPart(amount, product.name),
+    };
     messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(applied > 0 ? l10n.stockBoughtOneDone(product.name) : l10n.stockUsedOneDone(product.name)),
+          content: Text(done),
           duration: const Duration(seconds: 4),
           action: SnackBarAction(label: l10n.undo, onPressed: () => repository.revert(change)),
         ),
       );
+  }
+
+  /// A compra abre o carrinho por cima da Lista, e esta câmera sai: ela fecha
+  /// antes, para o carrinho achar a câmera livre. Se a compra não começar, a
+  /// câmera volta.
+  Future<void> _goShopping() async {
+    final camera = _cameraKey.currentState;
+    await camera?.stop();
+    if (!mounted) return;
+    try {
+      await startShopping(context, ref);
+    } on Exception catch (error, stack) {
+      FlutterError.reportError(FlutterErrorDetails(exception: error, stack: stack, library: 'camera'));
+      await camera?.resume();
+    }
   }
 
   String _hint(AppLocalizations l10n) => switch (_mode) {
@@ -393,12 +423,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
                           child: CameraGlassButton(
                             icon: Icons.shopping_cart_outlined,
                             label: l10n.scanMenuCart,
-                            onPressed: () async {
-                              // A compra abre o carrinho por cima da Lista, e esta câmera
-                              // sai: ela fecha antes, para o carrinho achar a câmera livre.
-                              await _cameraKey.currentState?.stop();
-                              if (context.mounted) await startShopping(context, ref);
-                            },
+                            onPressed: _goShopping,
                           ),
                         ),
                       ),

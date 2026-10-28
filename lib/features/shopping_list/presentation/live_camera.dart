@@ -48,6 +48,11 @@ class LiveCamera extends ConsumerStatefulWidget {
 }
 
 class LiveCameraState extends ConsumerState<LiveCamera> with WidgetsBindingObserver {
+  /// Quantas câmeras estão abertas: ao trocar de uma para outra (da captura
+  /// para o carrinho), a nova trava o retrato antes de a velha sair, e só a
+  /// última a sair o libera.
+  static var _open = 0;
+
   late final _live = LiveScanner(
     onEvents: _onEvents,
     viewfinder: _viewfinderOnScreen,
@@ -84,6 +89,7 @@ class LiveCameraState extends ConsumerState<LiveCamera> with WidgetsBindingObser
     WidgetsBinding.instance.addObserver(this);
     _live.addListener(_onLiveChanged);
     // A prévia e o recorte supõem o celular em pé.
+    _open++;
     unawaited(SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]));
     unawaited(_start());
   }
@@ -115,7 +121,8 @@ class LiveCameraState extends ConsumerState<LiveCamera> with WidgetsBindingObser
     _live
       ..removeListener(_onLiveChanged)
       ..dispose();
-    unawaited(SystemChrome.setPreferredOrientations(const []));
+    _open--;
+    if (_open == 0) unawaited(SystemChrome.setPreferredOrientations(const []));
     super.dispose();
   }
 
@@ -212,6 +219,13 @@ class LiveCameraState extends ConsumerState<LiveCamera> with WidgetsBindingObser
   Future<void> stop() async {
     _pausedForRoute = true;
     await _command(_live.stop);
+  }
+
+  /// Volta a abrir a câmera depois de um [stop] que não levou a lugar
+  /// nenhum (a outra tela não abriu).
+  Future<void> resume() async {
+    _pausedForRoute = false;
+    if (mounted) await _start();
   }
 
   /// A lanterna falha se a câmera não abriu (sem permissão, por exemplo).
@@ -312,10 +326,15 @@ class LiveCameraState extends ConsumerState<LiveCamera> with WidgetsBindingObser
               ),
             ),
           ),
-        SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(BipaSpacing.s4, BipaSpacing.s4, BipaSpacing.s4, 0),
-            child: widget.topBar(this),
+        // No topo: dentro do Stack que ocupa a tela, a barra se esticaria até
+        // o meio.
+        Align(
+          alignment: Alignment.topCenter,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(BipaSpacing.s4, BipaSpacing.s4, BipaSpacing.s4, 0),
+              child: widget.topBar(this),
+            ),
           ),
         ),
         if (widget.bottom case final bottom?) Align(alignment: Alignment.bottomCenter, child: bottom),

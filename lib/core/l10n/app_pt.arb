@@ -1053,5 +1053,35 @@
   "navScanMore": "Mais opções",
   "@navScanMore": {
     "description": "O que o leitor de tela diz do toque longo no botão de bipar."
+  },
+  "cameraDeltaUp": "+{amount}",
+  "@cameraDeltaUp": {
+    "description": "Quanto entrou em casa, no aviso da câmera.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "cameraDeltaDown": "−{amount}",
+  "@cameraDeltaDown": {
+    "description": "Quanto saiu de casa, no aviso da câmera.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "cameraUsedPart": "Usei {amount}: {name}",
+  "@cameraUsedPart": {
+    "description": "Baixa de menos de uma embalagem, quando era o que havia em casa.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }
