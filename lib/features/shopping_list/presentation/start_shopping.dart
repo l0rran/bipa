@@ -15,7 +15,8 @@ import 'package:go_router/go_router.dart';
 
 /// "Ir às compras": começa a compra, abre o modo carrinho (com a lista por
 /// baixo) e, se a localização permitir, descobre em qual mercado a pessoa
-/// está. O mercado escolhido no chip da lista vale mais que a localização.
+/// está. O mercado escolhido no chip da lista vale mais que a localização;
+/// sem localização, vale o que o chip mostrava, o da última compra (CE5).
 Future<void> startShopping(BuildContext context, WidgetRef ref) async {
   // Tudo lido antes dos awaits: a tela pode sair da árvore no meio do caminho.
   final trips = ref.read(shoppingTripRepositoryProvider);
@@ -48,13 +49,22 @@ Future<void> startShopping(BuildContext context, WidgetRef ref) async {
     unawaited(context.push<void>(Routes.cartMode));
   }
   if (trip.marketId != null) return;
-  // Sem pedir de novo: quem disse "Agora não" escolhe o mercado no carrinho.
+  // Sem pedir de novo: quem disse "Agora não" fica com o mercado do chip.
   final position = await location.currentLocation(request: false);
-  if (position is! LocationFound) return;
-  final market = finder.marketAt(position.point, await markets.all());
+  final marketId = switch (position) {
+    // Longe de todos os cadastrados, é um mercado novo: fica sem, e o
+    // "Terminei" pergunta.
+    LocationFound(:final point) => finder.marketAt(point, await markets.all())?.id,
+    // O que o chip da Lista mostrava sem escolha: o da última compra.
+    _ => await trips.watchLastMarketId().first,
+  };
+  // Quem escolheu o mercado no carrinho enquanto a localização não vinha
+  // fica com a escolha.
+  final active = await trips.findActive();
+  if (marketId == null || active?.id != trip.id || active?.marketId != null) return;
   // Pelo caso de uso: o que foi lido no carrinho enquanto a localização não
   // vinha espera um mercado (ADR 0020).
-  if (market != null) await setMarket(trip.id, market.id);
+  await setMarket(trip.id, marketId);
 }
 
 /// As permissões da compra, com o motivo antes do pedido do sistema: a
