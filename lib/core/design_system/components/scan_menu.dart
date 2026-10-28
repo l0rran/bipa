@@ -35,6 +35,8 @@ Future<T?> showScanMenu<T>(
 class _ScanMenu<T> extends StatelessWidget {
   const _ScanMenu({required this.items, required this.closeLabel});
 
+  static const _openShape = RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(64 * 0.3)));
+
   final List<ScanMenuItem<T>> items;
   final String closeLabel;
 
@@ -91,13 +93,14 @@ class _ScanMenu<T> extends StatelessWidget {
               const SizedBox(height: BipaSpacing.s3),
             ],
             const SizedBox(height: BipaSpacing.s2),
-            // O "×" no lugar do botão de bipar.
+            // O "×" no lugar do botão de bipar, que aberto fica com os cantos
+            // de 30% (o `.bipa-scan.is-open` do design system).
             Material(
               color: colors.brand,
-              shape: const CircleBorder(),
+              shape: _openShape,
               elevation: 4,
               child: InkWell(
-                customBorder: const CircleBorder(),
+                customBorder: _openShape,
                 onTap: () => Navigator.of(context).pop(),
                 child: SizedBox.square(
                   dimension: 64,
