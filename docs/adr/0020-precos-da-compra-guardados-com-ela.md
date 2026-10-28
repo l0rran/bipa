@@ -42,3 +42,9 @@ Os preços lidos no carrinho só viravam observações (ADR 0007) quando a compr
 ## Atualização (28/10/2026)
 
 O disparo do carrinho passou a fotografar pela câmera ao vivo, e o preço da foto segue o mesmo caminho da etiqueta lida (`RecordTripPrice`). Com isso, nenhum preço do carrinho é gravado fora da tabela.
+
+## Atualização (28/10/2026, D8)
+
+O valor digitado na linha da pesagem ou do granel não é mais guardado com a compra: é o total pago pelo peso, e o ADR 0018 já dizia que ele não vira observação de preço. O `RecordTripPrice` reconhece essa linha com `isWeighingLine`: sem embalagem e sem um preço de gôndola guardado para ela na compra. O valor vale só para o carrinho, não fica pendente e o `SetTripMarket` não o grava ao escolher o mercado. O preço por quilo lido na etiqueta de gôndola continua indo para o histórico.
+
+A linha sem embalagem que recebeu uma etiqueta de gôndola (o produto escolhido pelo nome lido) segue como preço do produto, e digitar outro valor nela corrige a leitura (ADR 0017).
