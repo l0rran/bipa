@@ -6,15 +6,16 @@ import 'package:flutter/material.dart';
 /// Uma linha da comparação: o mercado, o total e o tamanho da barra.
 @immutable
 class ListCostRow {
-  const ListCostRow({required this.name, required this.value, required this.fraction, this.note});
+  const ListCostRow({required this.name, required this.value, this.fraction, this.note});
 
   final String name;
 
   /// O total já formatado: "R$ 84,30".
   final String value;
 
-  /// O total em relação ao maior, de 0 a 1.
-  final double fraction;
+  /// O total em relação ao maior, de 0 a 1. `null` tira a barra: o total de
+  /// um mercado sem preço de tudo não se compara com o dos outros.
+  final double? fraction;
 
   /// Uma ressalva em cinza, como "preços de até 12 dias · sem preço de 2
   /// itens".
@@ -64,6 +65,7 @@ class _CompareRow extends StatelessWidget {
     final colors = context.colors;
     final best = this.best;
     final note = row.note;
+    final fraction = row.fraction;
     return MergeSemantics(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -91,33 +93,35 @@ class _CompareRow extends StatelessWidget {
               Text(row.value, style: BipaText.number.copyWith(color: colors.ink)),
             ],
           ),
-          const SizedBox(height: BipaSpacing.s2),
-          // Desenhada à mão: o LinearProgressIndicator do Material 3 põe um
-          // vão e um ponto no fim que o design system não tem.
-          ClipRRect(
-            borderRadius: BorderRadius.circular(BipaRadius.pill),
-            child: ColoredBox(
-              color: colors.surfaceSunken,
-              child: SizedBox(
-                height: 10,
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: row.fraction.clamp(0.0, 1.0)),
-                  duration: BipaMotion.slow,
-                  curve: BipaMotion.spring,
-                  builder: (context, value, _) => FractionallySizedBox(
-                    alignment: AlignmentDirectional.centerStart,
-                    widthFactor: value.clamp(0.0, 1.0),
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: best != null ? colors.ink : colors.line,
-                        borderRadius: BorderRadius.circular(BipaRadius.pill),
+          if (fraction != null) ...[
+            const SizedBox(height: BipaSpacing.s2),
+            // Desenhada à mão: o LinearProgressIndicator do Material 3 põe um
+            // vão e um ponto no fim que o design system não tem.
+            ClipRRect(
+              borderRadius: BorderRadius.circular(BipaRadius.pill),
+              child: ColoredBox(
+                color: colors.surfaceSunken,
+                child: SizedBox(
+                  height: 10,
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: fraction.clamp(0.0, 1.0)),
+                    duration: BipaMotion.slow,
+                    curve: BipaMotion.spring,
+                    builder: (context, value, _) => FractionallySizedBox(
+                      alignment: AlignmentDirectional.centerStart,
+                      widthFactor: value.clamp(0.0, 1.0),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: best != null ? colors.ink : colors.line,
+                          borderRadius: BorderRadius.circular(BipaRadius.pill),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
+          ],
           if (note != null) ...[
             const SizedBox(height: BipaSpacing.s1),
             Text(note, style: BipaText.caption.copyWith(color: colors.inkMuted)),

@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:bipa/core/catalog/text_fold.dart';
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
@@ -10,6 +8,7 @@ import 'package:bipa/core/design_system/components/market_map.dart';
 import 'package:bipa/core/design_system/components/price_rows.dart';
 import 'package:bipa/core/design_system/components/section_header.dart';
 import 'package:bipa/core/di/core_providers.dart';
+import 'package:bipa/core/formatting/calendar_days.dart';
 import 'package:bipa/core/formatting/formatters.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/l10n/meta_join.dart';
@@ -144,11 +143,10 @@ class _MarketsPageState extends ConsumerState<MarketsPage> {
                         ListCostRow(
                           name: cost.marketName,
                           value: cost.total.format(),
-                          fraction: cost.total.cents / _highest(compare),
-                          note: l10n.joinMeta([
-                            l10n.marketsOldestPrice(_ageInDays(now, cost.oldest)),
-                            if (cost.isPartial) l10n.marketsMissingPrices(cost.items - cost.priced),
-                          ]),
+                          // Sem preço de tudo, o total é de outra cesta: uma
+                          // barra mais curta diria "mais barato" sem ser.
+                          fraction: cost.isPartial ? null : cost.total.cents / _highestComplete(compare),
+                          note: _costNote(l10n, cost, now),
                         ),
                     ],
                   ),
@@ -179,13 +177,27 @@ class _MarketsPageState extends ConsumerState<MarketsPage> {
     if (mounted) ref.invalidate(currentLocationProvider);
   }
 
-  /// Em dias do calendário, como na tela do mercado. Um preço "do futuro"
-  /// (relógio do aparelho errado) conta como de hoje.
-  static int _ageInDays(DateTime now, DateTime seen) =>
-      math.max(0, DateUtils.dateOnly(now).difference(DateUtils.dateOnly(seen)).inDays);
+  /// O maior total entre os mercados com a lista inteira: a escala das
+  /// barras.
+  static int _highestComplete(List<MarketListCost> costs) => costs
+      .where((c) => !c.isPartial)
+      .map((c) => c.total.cents)
+      .fold(1, (max, cents) => cents > max ? cents : max);
 
-  static int _highest(List<MarketListCost> costs) =>
-      costs.map((c) => c.total.cents).fold(1, (max, cents) => cents > max ? cents : max);
+  /// A partir de quantos dias o preço mais antigo do total merece ressalva.
+  /// Abaixo disso, a idade não muda a decisão e fica de fora (calma por
+  /// padrão); a idade da última visita está na linha do mercado.
+  static const _staleAfterDays = 30;
+
+  /// "preços de até 41 dias · sem preço de 1 item", só com o que pesa.
+  static String? _costNote(AppLocalizations l10n, MarketListCost cost, DateTime now) {
+    final days = calendarDaysSince(cost.oldest, now);
+    final note = l10n.joinMeta([
+      if (days >= _staleAfterDays) l10n.marketsOldestPrice(days),
+      if (cost.isPartial) l10n.marketsMissingPrices(cost.items - cost.priced),
+    ]);
+    return note.isEmpty ? null : note;
+  }
 
   static MarketMapPin _pin(({double east, double north}) offset, {required bool here, required bool best}) =>
       MarketMapPin(east: offset.east, north: offset.north, here: here, best: best);

@@ -634,7 +634,7 @@
   "@marketsYours": {
     "description": "Título da lista de mercados quando a localização não está disponível."
   },
-  "marketsPriceAge": "{days, plural, =0{preços de hoje} =1{preços de ontem} other{preços de {days} dias}}",
+  "marketsPriceAge": "{days, plural, =0{atualizado hoje} =1{atualizado ontem} other{atualizado há {days} dias}}",
   "@marketsPriceAge": {
     "placeholders": {
       "days": {
@@ -1145,9 +1145,9 @@
     }
   },
   "cameraAdjustFailed": "Não deu para atualizar o estoque. Tente de novo.",
-  "marketsOldestPrice": "{days, plural, =0{preços de hoje} =1{preços de até ontem} other{preços de até {days} dias}}",
+  "marketsOldestPrice": "preços de até {days} dias",
   "@marketsOldestPrice": {
-    "description": "Ressalva na comparação da lista: a idade do preço mais antigo que entrou no total do mercado.",
+    "description": "Ressalva na comparação da lista: a idade do preço mais antigo que entrou no total, só a partir de 30 dias.",
     "placeholders": {
       "days": {
         "type": "int"
