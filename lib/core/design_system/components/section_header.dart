@@ -38,8 +38,8 @@ class SectionHeader extends StatelessWidget {
           if (count != null) ...[
             const SizedBox(width: BipaSpacing.s2),
             Container(
-              constraints: const BoxConstraints(minWidth: 26),
-              height: 26,
+              // Mínimas, não fixas: com fonte grande, o número cabe (H3).
+              constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
               padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s2),
               alignment: Alignment.center,
               decoration: ShapeDecoration(
