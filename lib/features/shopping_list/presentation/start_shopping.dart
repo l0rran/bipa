@@ -26,7 +26,18 @@ Future<void> startShopping(BuildContext context, WidgetRef ref) async {
   final chosen = ref.read(listChosenMarketProvider);
   final notifications = ref.read(liveNotificationsProvider);
 
-  await _askPermissions(context, location, notifications, needsLocation: chosen == null);
+  final explained = ref.read(_permissionsExplainedProvider.notifier);
+  // Uma vez por vez que o app abre: quem disse "Agora não" não ouve o mesmo
+  // pedido a cada compra.
+  if (!ref.read(_permissionsExplainedProvider)) {
+    await _askPermissions(
+      context,
+      location,
+      notifications,
+      needsLocation: chosen == null,
+      onExplained: explained.markShown,
+    );
+  }
 
   final trip = await trips.start(marketId: chosen);
   chosenMarket.clear();
@@ -52,12 +63,14 @@ Future<void> _askPermissions(
   LocationService location,
   LiveNotifications notifications, {
   required bool needsLocation,
+  required VoidCallback onExplained,
 }) async {
   final l10n = AppLocalizations.of(context);
   final askLocation = needsLocation && await location.access() == PermissionAccess.askable;
   final askNotifications = await notifications.access() == PermissionAccess.askable;
   if (!askLocation && !askNotifications) return;
   if (!context.mounted) return;
+  onExplained();
 
   final explained = await explainPermission(
     context,
@@ -71,4 +84,14 @@ Future<void> _askPermissions(
   if (!explained) return;
   if (askLocation) await location.requestAccess();
   if (askNotifications) await notifications.requestPermission();
+}
+
+/// Se o motivo das permissões já apareceu desde que o app abriu.
+final _permissionsExplainedProvider = NotifierProvider<_PermissionsExplained, bool>(_PermissionsExplained.new);
+
+class _PermissionsExplained extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void markShown() => state = true;
 }
