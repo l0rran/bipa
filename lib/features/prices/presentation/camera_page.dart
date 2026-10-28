@@ -404,6 +404,19 @@ class _CameraPageState extends ConsumerState<CameraPage> {
 
   /// O disparo: fotografa pela câmera ao vivo e segue como a leitura ao vivo.
   Future<void> _shoot() async {
+    // Dois toques seguidos no disparo não tiram duas fotos nem abrem duas folhas.
+    if (_shooting) return;
+    _shooting = true;
+    try {
+      await _photograph();
+    } finally {
+      _shooting = false;
+    }
+  }
+
+  var _shooting = false;
+
+  Future<void> _photograph() async {
     final camera = _cameraKey.currentState;
     if (camera == null) return;
     final l10n = AppLocalizations.of(context);

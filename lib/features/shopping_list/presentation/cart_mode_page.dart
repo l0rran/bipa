@@ -470,6 +470,19 @@ class _CartModePageState extends ConsumerState<CartModePage> {
   /// O disparo: fotografa pela própria câmera ao vivo, e o preço segue como
   /// a leitura ao vivo.
   Future<void> _shoot() async {
+    // Dois toques seguidos no disparo não tiram duas fotos.
+    if (_shooting) return;
+    _shooting = true;
+    try {
+      await _photograph();
+    } finally {
+      _shooting = false;
+    }
+  }
+
+  var _shooting = false;
+
+  Future<void> _photograph() async {
     final camera = _cameraKey.currentState;
     if (camera == null) return;
     final l10n = AppLocalizations.of(context);
