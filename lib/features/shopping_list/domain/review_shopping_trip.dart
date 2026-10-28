@@ -51,6 +51,11 @@ final class ReviewShoppingTrip {
         productIds,
         history,
         packages: {for (final package in packages) package.id: package},
+        // A cesta é a do carrinho: cada produto na embalagem que foi levada.
+        references: {
+          for (final entry in cart)
+            if (entry.item.take) entry.item.productId: entry.item.packageId,
+        },
       ),
     );
   }
