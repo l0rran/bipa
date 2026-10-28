@@ -258,6 +258,8 @@ class _ProductView extends ConsumerWidget {
                         title: row.package.label ?? row.package.barcode ?? l10n.packageTitle,
                         meta: row.price?.unitPrice?.format(),
                         value: row.price?.price.format() ?? l10n.productNoPriceShort,
+                        // Registrar o preço desta embalagem.
+                        onTap: () => context.push(Routes.capturePriceFor(product.id, packageId: row.package.id)),
                         badge: _cheapestPerUnit(l10n, row.price, isFirst: index == 0 && perPackage.length > 1),
                       ),
                   ],

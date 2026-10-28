@@ -34,10 +34,13 @@ import 'package:image_picker/image_picker.dart';
 /// 2. A foto da etiqueta preenche preço, código de barras e nome.
 /// 3. O usuário confere e salva; "Salvar e bipar outro" agiliza a sequência.
 class CapturePricePage extends ConsumerStatefulWidget {
-  const CapturePricePage({this.productId, this.fromCart = false, super.key});
+  const CapturePricePage({this.productId, this.packageId, this.fromCart = false, super.key});
 
   /// Quando informado, registra o preço deste produto (vindo da tela dele).
   final String? productId;
+
+  /// A embalagem do preço, quando aberto por uma linha de "Embalagens".
+  final String? packageId;
 
   /// Aberta pelo disparo do modo carrinho: o produto vai para o carrinho
   /// com o preço lido e é marcado na lista.
@@ -97,11 +100,15 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
   }
 
   /// Produto fixo (aberto pelo detalhe do produto): o preço vai para a
-  /// embalagem mais recente dele.
+  /// embalagem escolhida ou, sem ela, para a mais recente dele.
   Future<void> _loadProduct(String id) async {
     final repository = ref.read(productRepositoryProvider);
     final product = await repository.findById(id);
-    final package = (await repository.watchPackages(id).first).firstOrNull;
+    final packageId = widget.packageId;
+    final found = packageId == null ? null : await repository.findPackageById(packageId);
+    // Só vale a embalagem que é deste produto.
+    final chosen = found?.productId == id ? found : null;
+    final package = chosen ??(await repository.watchPackages(id).first).firstOrNull;
     if (!mounted) return;
     setState(() {
       _product = product;

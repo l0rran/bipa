@@ -43,6 +43,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: Routes.capturePrice,
         builder: (_, state) => CapturePricePage(
           productId: state.uri.queryParameters['produto'],
+          packageId: state.uri.queryParameters['embalagem'],
           fromCart: state.uri.queryParameters['carrinho'] == '1',
         ),
       ),

@@ -17,7 +17,9 @@ abstract final class Routes {
   /// a localização atual é a dele.
   static const newMarketHere = '$newMarket?aqui=1';
 
-  static String capturePriceFor(String productId) => '$capturePrice?produto=$productId';
+  /// Registrar preço de um produto; com [packageId], daquela embalagem.
+  static String capturePriceFor(String productId, {String? packageId}) =>
+      Uri(path: capturePrice, queryParameters: {'produto': productId, 'embalagem': ?packageId}).toString();
 
   /// A foto da etiqueta aberta pelo modo carrinho.
   static const capturePriceFromCart = '$capturePrice?carrinho=1';
