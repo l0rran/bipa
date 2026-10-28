@@ -463,20 +463,20 @@ class _CameraPageState extends ConsumerState<CameraPage> {
         },
       ),
     );
-    if (saved && mounted && _held?.product.id == product.id) {
+    if (saved == null || !mounted) return;
+    // O produto e o preço são os que foram salvos: a folha deixa trocar os dois.
+    if (_held?.product.id == saved.product.id) {
       // Veio da tela do produto: volta para ela, que já mostra o preço.
       context.pop();
       return;
     }
-    if (saved && mounted) {
-      final l10n = AppLocalizations.of(context);
-      _showNotice((
-        icon: Icons.check_rounded,
-        value: perKilo ? l10n.pricePerKilo(price.format()) : price.format(),
-        detail: l10n.cameraPriceSaved(CartEntry.nameOf(product, package)),
-        waiting: false,
-      ));
-    }
+    final l10n = AppLocalizations.of(context);
+    _showNotice((
+      icon: Icons.check_rounded,
+      value: perKilo ? l10n.pricePerKilo(saved.price.format()) : saved.price.format(),
+      detail: l10n.cameraPriceSaved(CartEntry.nameOf(saved.product, saved.package)),
+      waiting: false,
+    ));
   }
 
   /// "Comprei" ou "Dar baixa": uma embalagem a mais ou a menos em casa. A

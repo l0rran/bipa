@@ -40,23 +40,24 @@ typedef PriceToConfirm = ({
   bool perKilo,
 });
 
-/// Abre a folha "Conferir e salvar" (protótipo "Confirmação"). Devolve
-/// `true` quando o preço foi salvo. O mercado aparece sob o produto e se
-/// troca ali, por [chooseMarket]; sem [market], é pedido no "Salvar".
-Future<bool> showConfirmPriceSheet(
+/// O que a folha salvou: o produto e o preço podem ter sido trocados nela.
+typedef SavedPrice = ({Product product, ProductPackage? package, Money price});
+
+/// Abre a folha "Conferir e salvar" (protótipo "Confirmação"). Devolve o
+/// que foi salvo, ou `null` se a pessoa fechou a folha. O mercado aparece
+/// sob o produto e se troca ali, por [chooseMarket]; sem [market], é pedido
+/// no "Salvar".
+Future<SavedPrice?> showConfirmPriceSheet(
   BuildContext context, {
   required PriceToConfirm reading,
   required Market? market,
   required Future<Market?> Function() chooseMarket,
-}) async {
-  final saved = await showModalBottomSheet<bool>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    builder: (_) => ConfirmPriceSheet(reading: reading, market: market, chooseMarket: chooseMarket),
-  );
-  return saved ?? false;
-}
+}) => showModalBottomSheet<SavedPrice>(
+  context: context,
+  isScrollControlled: true,
+  useSafeArea: true,
+  builder: (_) => ConfirmPriceSheet(reading: reading, market: market, chooseMarket: chooseMarket),
+);
 
 /// A folha de conferir o preço: o produto (que dá para trocar), o preço em
 /// destaque (com o lápis para corrigir), "Mais barato aqui" quando é o caso
