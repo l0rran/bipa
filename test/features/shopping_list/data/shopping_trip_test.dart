@@ -1,12 +1,17 @@
+import 'package:bipa/core/catalog/product_kind.dart';
 import 'package:bipa/core/database/app_database.dart';
 import 'package:bipa/core/money/money.dart';
+import 'package:bipa/features/markets/data/drift_market_repository.dart';
+import 'package:bipa/features/markets/domain/market.dart';
 import 'package:bipa/features/products/data/drift_product_repository.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
+import 'package:bipa/features/shopping_list/data/drift_aisle_order_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_cart_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_list_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_trip_repository.dart';
+import 'package:bipa/features/shopping_list/domain/aisle_order.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/finish_shopping_trip.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
@@ -25,6 +30,7 @@ void main() {
   late DriftStockRepository stock;
   late DriftCartRepository cart;
   late FinishShoppingTrip finish;
+  late DriftAisleOrderRepository aisles;
   late DateTime now;
 
   setUp(() async {
@@ -36,7 +42,8 @@ void main() {
     list = DriftShoppingListRepository(db, ids: ids, clock: clock);
     stock = DriftStockRepository(db, ids: ids, clock: clock);
     cart = DriftCartRepository(db, ids: ids, clock: clock);
-    finish = FinishShoppingTrip(trips: trips, list: list, cart: cart, stock: stock);
+    aisles = DriftAisleOrderRepository(db);
+    finish = FinishShoppingTrip(trips: trips, list: list, cart: cart, stock: stock, aisles: aisles);
 
     final products = DriftProductRepository(db);
     for (final (id, name) in [('cafe', 'Café'), ('arroz', 'Arroz')]) {
@@ -251,5 +258,27 @@ void main() {
 
     expect(summary, const ShoppingTripSummary(done: 2, total: 3, spent: Money.cents(3598)));
     expect(ShoppingTripSummary.of(const [], const []).spent, isNull);
+  });
+
+  test('no mercado da compra, o "Terminei" aprende a ordem das seções; desfazer esquece', () async {
+    await DriftMarketRepository(db).save(Market(id: 'vila', name: 'Vila Nova', createdAt: now, updatedAt: now));
+    final trip = await trips.start(marketId: 'vila');
+    await list.addCustom('Detergente');
+    await list.addCustom('Tomate');
+    final items = await list.watchAll().first;
+    // Limpeza primeiro, hortifrúti depois: o contrário da ordem genérica.
+    for (final name in ['Detergente', 'Tomate']) {
+      now = now.add(const Duration(minutes: 5));
+      await list.setChecked(items.firstWhere((e) => e.name == name).item.id, checked: true);
+    }
+
+    final finished = (await finish(trip.id))!;
+
+    final learned = await aisles.find('vila');
+    expect(learned.sort([Aisle.produce, Aisle.cleaning]), [Aisle.cleaning, Aisle.produce]);
+
+    await finish.undo(finished);
+
+    expect(await aisles.find('vila'), AisleOrder.empty);
   });
 }

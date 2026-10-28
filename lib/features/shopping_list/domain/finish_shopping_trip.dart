@@ -1,3 +1,5 @@
+import 'package:bipa/core/catalog/product_kind.dart';
+import 'package:bipa/features/shopping_list/domain/aisle_order.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_repository.dart';
@@ -15,6 +17,8 @@ final class FinishedShoppingTrip {
     required this.bought,
     required this.stocked,
     this.changes = const [],
+    this.marketId,
+    this.aisleOrderBefore,
   });
 
   final String tripId;
@@ -28,6 +32,11 @@ final class FinishedShoppingTrip {
   /// O que cada entrada mudou no estoque, para o desfazer tirar exatamente
   /// os lotes que entraram (ADR 0013).
   final List<StockChange> changes;
+
+  /// O mercado da compra e a ordem das seções que ele tinha antes de
+  /// aprender com ela (ADR 0014); o desfazer volta para essa ordem.
+  final String? marketId;
+  final AisleOrder? aisleOrderBefore;
 }
 
 /// Caso de uso: termina a compra. Entra no estoque o que está no carrinho
@@ -39,21 +48,24 @@ final class FinishShoppingTrip {
     required ShoppingListRepository list,
     required CartRepository cart,
     required StockRepository stock,
+    required AisleOrderRepository aisles,
   }) : _trips = trips,
        _list = list,
        _cart = cart,
-       _stock = stock;
+       _stock = stock,
+       _aisles = aisles;
 
   final ShoppingTripRepository _trips;
   final ShoppingListRepository _list;
   final CartRepository _cart;
   final StockRepository _stock;
+  final AisleOrderRepository _aisles;
 
   /// Devolve `null` se a compra já não está em andamento (por exemplo, num
   /// segundo toque em "Terminei"), sem mexer no estoque de novo.
   Future<FinishedShoppingTrip?> call(String tripId) async {
     final active = await _trips.watchActive().first;
-    if (active?.id != tripId) return null;
+    if (active == null || active.id != tripId) return null;
     // Fecha a compra primeiro: um segundo "Terminei" já não passa da guarda.
     await _trips.finish(tripId);
 
@@ -93,8 +105,44 @@ final class FinishShoppingTrip {
       );
       stocked.update(productId, (q) => q + quantity, ifAbsent: () => quantity);
     }
+    final marketId = active.marketId;
+    final aisleOrderBefore = marketId == null ? null : await _learnAisles(marketId, active, bought, cart);
     await _list.removeChecked();
-    return FinishedShoppingTrip(tripId: tripId, bought: bought, stocked: stocked, changes: changes);
+    return FinishedShoppingTrip(
+      tripId: tripId,
+      bought: bought,
+      stocked: stocked,
+      changes: changes,
+      marketId: marketId,
+      aisleOrderBefore: aisleOrderBefore,
+    );
+  }
+
+  /// Aprende a ordem das seções do mercado com o que foi marcado na lista e
+  /// bipado no carrinho durante a compra (ADR 0014). Devolve a ordem de
+  /// antes, para o desfazer.
+  Future<AisleOrder> _learnAisles(
+    String marketId,
+    ShoppingTrip trip,
+    List<ShoppingListItem> bought,
+    List<CartEntry> cart,
+  ) async {
+    final picks = <AislePick>[
+      for (final item in bought)
+        if (item.checkedAt case final at? when !at.isBefore(trip.startedAt))
+          (aisle: ProductKind.of(item.name).aisle, at: at),
+    ];
+    // O que foi bipado sem estar na lista entra pelo horário do bipe.
+    final onList = {for (final item in bought) item.productId};
+    for (final entry in cart) {
+      if (!onList.contains(entry.product.id)) {
+        picks.add((aisle: ProductKind.of(entry.product.name).aisle, at: entry.item.addedAt));
+      }
+    }
+    final before = await _aisles.find(marketId);
+    final learned = before.learn(picks);
+    if (learned != before) await _aisles.save(marketId, learned);
+    return before;
   }
 
   /// Desfaz o [call]: tira do estoque o que entrou, devolve os itens à lista
@@ -105,6 +153,9 @@ final class FinishShoppingTrip {
     }
     for (final item in finished.bought) {
       await _list.restore(item);
+    }
+    if ((finished.marketId, finished.aisleOrderBefore) case (final marketId?, final before?)) {
+      await _aisles.save(marketId, before);
     }
     await _trips.reopen(finished.tripId);
   }

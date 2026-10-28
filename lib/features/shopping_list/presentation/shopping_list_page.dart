@@ -12,6 +12,7 @@ import 'package:bipa/core/widgets/async_value_view.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/presentation/product_photos.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
+import 'package:bipa/features/shopping_list/domain/aisle_order.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_sections.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
@@ -155,6 +156,9 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
               .take(5)
               .toList();
 
+    // No mercado da compra, as seções seguem a ordem aprendida nele (ADR 0014).
+    final aisleOrder = ref.watch(activeAisleOrderProvider).value ?? AisleOrder.empty;
+
     return Scaffold(
       body: AsyncValueView(
         value: list,
@@ -162,7 +166,7 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
           // Os dispensados que o banco já apagou não precisam mais ser escondidos.
           _dismissed.removeWhere((id) => !all.any((e) => e.item.id == id));
           final entries = [for (final e in all) if (!_dismissed.contains(e.item.id)) e];
-          final sections = shoppingListSections(entries);
+          final sections = shoppingListSections(entries, order: aisleOrder);
           return CustomScrollView(
             slivers: [
               SliverSafeArea(

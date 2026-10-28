@@ -8,10 +8,12 @@ import 'package:bipa/features/prices/domain/price_observation.dart';
 import 'package:bipa/features/prices/presentation/prices_providers.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
+import 'package:bipa/features/shopping_list/data/drift_aisle_order_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_cart_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_list_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_trip_repository.dart';
 import 'package:bipa/features/shopping_list/data/mlkit_live_frame_analyzer.dart';
+import 'package:bipa/features/shopping_list/domain/aisle_order.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/finish_shopping_trip.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
@@ -87,12 +89,26 @@ final cartRepositoryProvider = Provider<CartRepository>(
 /// Cria o leitor de quadros do modo carrinho; quem cria fecha (ADR 0012).
 final liveFrameAnalyzerFactoryProvider = Provider<LiveFrameAnalyzer Function()>((ref) => MlKitLiveFrameAnalyzer.new);
 
+final aisleOrderRepositoryProvider = Provider<AisleOrderRepository>(
+  (ref) => DriftAisleOrderRepository(ref.watch(appDatabaseProvider)),
+);
+
+/// A ordem das seções no mercado da compra em andamento (ADR 0014); fora de
+/// uma compra, ou sem mercado, a ordem genérica.
+final activeAisleOrderProvider = StreamProvider.autoDispose<AisleOrder>((ref) {
+  final marketId = ref.watch(activeTripProvider).value?.marketId;
+  return marketId == null
+      ? Stream.value(AisleOrder.empty)
+      : ref.watch(aisleOrderRepositoryProvider).watch(marketId);
+});
+
 final finishShoppingTripProvider = Provider<FinishShoppingTrip>(
   (ref) => FinishShoppingTrip(
     trips: ref.watch(shoppingTripRepositoryProvider),
     list: ref.watch(shoppingListRepositoryProvider),
     cart: ref.watch(cartRepositoryProvider),
     stock: ref.watch(stockRepositoryProvider),
+    aisles: ref.watch(aisleOrderRepositoryProvider),
   ),
 );
 
