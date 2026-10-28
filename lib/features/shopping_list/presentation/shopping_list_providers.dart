@@ -15,6 +15,7 @@ import 'package:bipa/features/shopping_list/data/drift_cart_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_scale_item_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_list_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_trip_repository.dart';
+import 'package:bipa/features/shopping_list/data/drift_trip_price_repository.dart';
 import 'package:bipa/features/shopping_list/data/mlkit_live_frame_analyzer.dart';
 import 'package:bipa/features/shopping_list/domain/aisle_order.dart';
 import 'package:bipa/features/shopping_list/domain/cancel_shopping_trip.dart';
@@ -22,12 +23,15 @@ import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/finish_shopping_trip.dart';
 import 'package:bipa/features/shopping_list/domain/put_product_on_list.dart';
 import 'package:bipa/features/shopping_list/domain/record_at_home.dart';
+import 'package:bipa/features/shopping_list/domain/record_trip_price.dart';
 import 'package:bipa/features/shopping_list/domain/review_shopping_trip.dart';
 import 'package:bipa/features/shopping_list/domain/scale_items.dart';
+import 'package:bipa/features/shopping_list/domain/set_trip_market.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_repository.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_sections.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
+import 'package:bipa/features/shopping_list/domain/trip_price.dart';
 import 'package:bipa/features/stock/presentation/stock_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -233,6 +237,32 @@ final cancelShoppingTripProvider = Provider<CancelShoppingTrip>(
   (ref) => CancelShoppingTrip(
     trips: ref.watch(shoppingTripRepositoryProvider),
     list: ref.watch(shoppingListRepositoryProvider),
+    work: ref.watch(unitOfWorkProvider),
+  ),
+);
+
+/// Os preços de cada compra, guardados com ela (ADR 0020).
+final tripPriceRepositoryProvider = Provider<TripPriceRepository>(
+  (ref) => DriftTripPriceRepository(ref.watch(appDatabaseProvider)),
+);
+
+/// Guarda o preço lido ou digitado no carrinho, com ou sem mercado.
+final recordTripPriceProvider = Provider<RecordTripPrice>(
+  (ref) => RecordTripPrice(
+    trips: ref.watch(shoppingTripRepositoryProvider),
+    prices: ref.watch(tripPriceRepositoryProvider),
+    register: ref.watch(registerPriceObservationProvider),
+    work: ref.watch(unitOfWorkProvider),
+    clock: ref.watch(clockProvider),
+  ),
+);
+
+/// Muda o mercado da compra, gravando os preços que esperavam por ele.
+final setTripMarketProvider = Provider<SetTripMarket>(
+  (ref) => SetTripMarket(
+    trips: ref.watch(shoppingTripRepositoryProvider),
+    prices: ref.watch(tripPriceRepositoryProvider),
+    register: ref.watch(registerPriceObservationProvider),
     work: ref.watch(unitOfWorkProvider),
   ),
 );

@@ -1,9 +1,11 @@
-// Os enums (Aisle, PriceConditionKind…) são usados pelo código gerado
-// (app_database.g.dart).
+// Os enums (Aisle, PriceConditionKind…), o PriceOffer e o conversor dele são
+// usados pelo código gerado (app_database.g.dart).
 import 'package:bipa/core/catalog/product_kind.dart';
+import 'package:bipa/core/database/price_offers_converter.dart';
 import 'package:bipa/core/database/tables.dart';
 import 'package:bipa/features/prices/domain/price_condition.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
+import 'package:bipa/features/prices/domain/price_tag.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/stock/domain/stock_location.dart';
 import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
@@ -27,6 +29,7 @@ part 'app_database.g.dart';
     CartItems,
     MarketAisles,
     ScaleItems,
+    TripPrices,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -45,7 +48,8 @@ class AppDatabase extends _$AppDatabase {
   // v10: a lista guarda quantas embalagens comprar.
   // v11: um preço pode corrigir outro (ADR 0017).
   // v12: itens da balança de cada mercado (ADR 0018).
-  int get schemaVersion => 12;
+  // v13: preços da compra guardados com ela (ADR 0020).
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -70,6 +74,7 @@ class AppDatabase extends _$AppDatabase {
       if (from >= 4 && from < 10) await migrator.addColumn(shoppingListItems, shoppingListItems.quantity);
       if (from < 11) await migrator.addColumn(priceObservations, priceObservations.supersedesId);
       if (from < 12) await migrator.createTable(scaleItems);
+      if (from < 13) await migrator.createTable(tripPrices);
     }),
     beforeOpen: (details) async {
       // SQLite não aplica chaves estrangeiras sem este pragma.

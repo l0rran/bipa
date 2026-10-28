@@ -1,4 +1,5 @@
 import 'package:bipa/core/catalog/product_kind.dart';
+import 'package:bipa/core/database/price_offers_converter.dart';
 import 'package:bipa/features/prices/domain/price_condition.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
@@ -232,3 +233,34 @@ class ScaleItems extends Table {
   @override
   Set<Column<Object>> get primaryKey => {marketId, itemKey};
 }
+
+/// O último preço lido ou digitado para cada item de uma compra (ADR 0020,
+/// esquema v13). Guarda a compra com o preço mesmo sem mercado, e aponta a
+/// observação gravada, para corrigi-la ou levá-la a outro mercado. Privada,
+/// como o carrinho: some quando a compra é cancelada.
+@DataClassName('TripPriceRow')
+class TripPrices extends Table {
+  TextColumn get tripId => text().references(ShoppingTrips, #id, onDelete: KeyAction.cascade)();
+
+  /// O item da compra, como no carrinho (`CartItem.keyOf`).
+  TextColumn get itemKey => text()();
+  TextColumn get productId => text().references(Products, #id, onDelete: KeyAction.cascade)();
+  TextColumn get packageId => text().nullable().references(ProductPackages, #id, onDelete: KeyAction.setNull)();
+  IntColumn get priceCents => integer()();
+  TextColumn get source => textEnum<PriceSource>()();
+
+  /// Os outros preços da mesma etiqueta (cartão, atacado), em JSON.
+  TextColumn get otherOffers => text().map(const PriceOffersConverter())();
+  DateTimeColumn get readAt => dateTime()();
+
+  /// A observação gravada; nula enquanto a compra não tem mercado. Sem chave
+  /// estrangeira, como `supersedesId`: a observação é só inserida.
+  TextColumn get observationId => text().nullable()();
+
+  /// O mercado da observação: corrigir só vale no mesmo mercado.
+  TextColumn get marketId => text().nullable().references(Markets, #id, onDelete: KeyAction.setNull)();
+
+  @override
+  Set<Column<Object>> get primaryKey => {tripId, itemKey};
+}
+

@@ -52,6 +52,7 @@ void main() {
     10: ['shopping_list_items.quantity'],
     11: ['price_observations.supersedes_id'],
     12: ['scale_items'],
+    13: ['trip_prices'],
   };
 
   /// Tudo o que veio depois da [version].
@@ -152,5 +153,17 @@ void main() {
     await migrated.close();
 
     expect(items, isEmpty);
+  });
+
+  test('v12 → v13: a tabela dos preços da compra é criada vazia', () async {
+    final current = AppDatabase(NativeDatabase(file));
+    await current.select(current.tripPrices).get();
+    await current.close();
+
+    final migrated = reopenAt(12, after(12));
+    final prices = await migrated.select(migrated.tripPrices).get();
+    await migrated.close();
+
+    expect(prices, isEmpty);
   });
 }
