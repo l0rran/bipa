@@ -555,13 +555,14 @@ class _CameraPageState extends ConsumerState<CameraPage> {
       detail: l10n.cameraAtHome(product.name, Formatters.quantity(atHome)),
       waiting: false,
     );
+    final done = change;
     if (change.list is ListUnchanged) {
       // Só o estoque mudou, e o aviso já diz isso: o Desfazer fica nele, sem
       // repetir o fato num snackbar que esconderia o do bipe anterior (D7).
       Future<void> undo() async {
         _clearNotice();
         try {
-          await record.undo(change);
+          await record.undo(done);
         } on Exception {
           messenger.showSnackBar(SnackBar(content: Text(l10n.cameraAdjustFailed)));
         }
