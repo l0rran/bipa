@@ -207,6 +207,13 @@ class LiveCameraState extends ConsumerState<LiveCamera> with WidgetsBindingObser
     }
   }
 
+  /// Fecha a câmera de vez, antes de outra tela abrir a dela (o carrinho, por
+  /// exemplo): não volta sozinha.
+  Future<void> stop() async {
+    _pausedForRoute = true;
+    await _command(_live.stop);
+  }
+
   /// A lanterna falha se a câmera não abriu (sem permissão, por exemplo).
   Future<void> toggleTorch() => _command(_live.toggleTorch);
 

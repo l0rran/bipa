@@ -36,7 +36,13 @@ import 'package:image_picker/image_picker.dart';
 /// 2. A foto da etiqueta preenche preço, código de barras e nome.
 /// 3. O usuário confere e salva; "Salvar e bipar outro" agiliza a sequência.
 class CapturePricePage extends ConsumerStatefulWidget {
-  const CapturePricePage({this.productId, this.packageId, this.fromCart = false, super.key});
+  const CapturePricePage({
+    this.productId,
+    this.packageId,
+    this.fromCart = false,
+    this.photoFirst = false,
+    super.key,
+  });
 
   /// Quando informado, registra o preço deste produto (vindo da tela dele).
   final String? productId;
@@ -47,6 +53,9 @@ class CapturePricePage extends ConsumerStatefulWidget {
   /// Aberta pelo disparo do modo carrinho: o produto vai para o carrinho
   /// com o preço lido e é marcado na lista.
   final bool fromCart;
+
+  /// Aberta pelo disparo da câmera: fotografa a etiqueta logo de cara.
+  final bool photoFirst;
 
   @override
   ConsumerState<CapturePricePage> createState() => _CapturePricePageState();
@@ -90,6 +99,12 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
     unawaited(_detectMarket());
     final productId = widget.productId;
     if (productId != null) unawaited(_loadProduct(productId));
+    if (widget.photoFirst) {
+      // Depois do primeiro quadro: o leitor de etiquetas vem do provider.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(_photographTag(ref.read(priceTagReaderProvider)));
+      });
+    }
   }
 
   @override

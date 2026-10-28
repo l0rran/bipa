@@ -9,6 +9,9 @@ abstract final class Routes {
   // Telas em tela cheia (fora das abas).
   static const scanner = '/scanner';
   static const capturePrice = '/bipar';
+
+  /// A câmera do botão de bipar (protótipo "Captura").
+  static const camera = '/camera';
   static const cartMode = '/carrinho';
   static const newProduct = '/produto/novo';
   static const newMarket = '/mercado/novo';
@@ -23,6 +26,15 @@ abstract final class Routes {
 
   /// A foto da etiqueta aberta pelo modo carrinho.
   static const capturePriceFromCart = '$capturePrice?carrinho=1';
+
+  /// O formulário do preço, já abrindo a câmera para fotografar a etiqueta.
+  static const capturePricePhoto = '$capturePrice?foto=1';
+
+  /// A câmera somando em casa cada código ("Comprei", o Início vazio).
+  static const cameraBought = '$camera?modo=comprei';
+
+  /// A câmera dando baixa em casa ("Dar baixa em casa", no menu do bipar).
+  static const cameraUsed = '$camera?modo=usei';
 
   static String productDetail(String id) => '/produto/$id';
 

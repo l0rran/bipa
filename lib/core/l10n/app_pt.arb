@@ -949,5 +949,109 @@
         "type": "String"
       }
     }
+  },
+  "confirmChangeProduct": "Trocar o produto",
+  "confirmEditPrice": "Corrigir o preço",
+  "confirmCheaperHere": "Mais barato aqui · −{amount}",
+  "@confirmCheaperHere": {
+    "description": "Selo verde quando o preço lido é menor que o dos outros mercados.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmAlsoBought": "Também comprei",
+  "@confirmAlsoBought": {
+    "description": "Soma uma embalagem em casa ao salvar o preço."
+  },
+  "confirmAtHome": "Em casa: {count}",
+  "@confirmAtHome": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmAtHomeAfter": "Em casa: {from} → {to}",
+  "@confirmAtHomeAfter": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "cameraModeTag": "Etiqueta",
+  "@cameraModeTag": {
+    "description": "Modo da câmera que lê o preço da etiqueta."
+  },
+  "cameraModeCode": "Código",
+  "@cameraModeCode": {
+    "description": "Modo da câmera que lê o código e abre o produto."
+  },
+  "cameraHintCode": "Aponte para o código de barras",
+  "cameraHintBought": "Bipe o que você comprou",
+  "@cameraHintBought": {
+    "description": "Dica da câmera no modo \"Comprei\" (Início vazio): cada código soma em casa."
+  },
+  "cameraHintUsed": "Bipe o que você usou",
+  "@cameraHintUsed": {
+    "description": "Dica da câmera no modo \"Dar baixa em casa\"."
+  },
+  "cameraWaitingTag": "{name}: aponte para a etiqueta",
+  "@cameraWaitingTag": {
+    "description": "O produto bipado espera a etiqueta com o preço.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cameraPriceSaved": "salvo: {name}",
+  "@cameraPriceSaved": {
+    "description": "Aviso depois de salvar o preço, ao lado do valor.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cameraAtHome": "{name} · {count} em casa",
+  "@cameraAtHome": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "cameraNotAtHome": "{name} não está em casa",
+  "@cameraNotAtHome": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cameraUnknownCode": "Este código não está cadastrado",
+  "cameraScaleCode": "Código da balança: bipe no carrinho",
+  "@cameraScaleCode": {
+    "description": "Aviso da câmera ao ler uma etiqueta da balança fora do carrinho."
+  },
+  "scanMenuCart": "Modo carrinho",
+  "scanMenuCartHint": "vários seguidos",
+  "@scanMenuCartHint": {
+    "description": "Complemento de \"Modo carrinho\" no menu do bipar."
+  },
+  "scanMenuUsed": "Dar baixa em casa",
+  "scanMenuClose": "Fechar o menu",
+  "navScanMore": "Mais opções",
+  "@navScanMore": {
+    "description": "O que o leitor de tela diz do toque longo no botão de bipar."
   }
 }

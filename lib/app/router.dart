@@ -3,6 +3,7 @@ import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/features/markets/presentation/market_form_page.dart';
 import 'package:bipa/features/markets/presentation/market_page.dart';
 import 'package:bipa/features/markets/presentation/markets_page.dart';
+import 'package:bipa/features/prices/presentation/camera_page.dart';
 import 'package:bipa/features/prices/presentation/capture_price_page.dart';
 import 'package:bipa/features/products/presentation/barcode_scanner_page.dart';
 import 'package:bipa/features/products/presentation/product_detail_page.dart';
@@ -41,11 +42,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: Routes.scanner, builder: (_, _) => const BarcodeScannerPage()),
       GoRoute(path: Routes.cartMode, builder: (_, _) => const CartModePage()),
       GoRoute(
+        path: Routes.camera,
+        builder: (_, state) => CameraPage(mode: CameraMode.fromQuery(state.uri.queryParameters['modo'])),
+      ),
+      GoRoute(
         path: Routes.capturePrice,
         builder: (_, state) => CapturePricePage(
           productId: state.uri.queryParameters['produto'],
           packageId: state.uri.queryParameters['embalagem'],
           fromCart: state.uri.queryParameters['carrinho'] == '1',
+          photoFirst: state.uri.queryParameters['foto'] == '1',
         ),
       ),
       // "/produto/novo" precisa vir antes de "/produto/:id".

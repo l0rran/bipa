@@ -29,6 +29,7 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - Folha "Fim da compra": o "Terminei" (no carrinho, na Lista ou na notificação) mostra antes o total, quantas embalagens vão para casa, a economia contra o mercado mais barato depois deste (só quando os dois têm preço de tudo) e o que faltou da lista, e só termina em "Terminar compra". O aviso depois conta embalagens, não produtos.
 - Correção de preço (ADR 0017): no modo carrinho, digitar o preço de um item corrige a etiqueta lida errado, que sai do histórico sem ser apagada. O esquema vai à versão 11.
 - Etiquetas da balança (ADR 0018): no carrinho, o código que começa com 2 pergunta o produto uma vez por mercado e entra com o valor da pesagem, sem virar embalagem. Fora do carrinho, o leitor explica que o código é da balança. O esquema vai à versão 12.
+- Câmera do bipar, como no protótipo "Captura": o botão central abre a câmera ao vivo, com "Etiqueta" (o preço lido abre a folha de conferir e salvar, com "Mais barato aqui" e "Também comprei") e "Código" (abre o produto). O mercado fica no chip do topo e só é pedido no "Salvar". Segurar o botão abre o menu com "Modo carrinho" e "Dar baixa em casa", e o Início vazio abre a câmera somando cada código em casa. A câmera ao vivo virou um componente comum ao carrinho.
 - Cópias exportadas do design system e do protótipo em `docs/design/`.
 - Banco de testes do OCR em `tool/ocr_bench`, com etiquetas sintéticas e transcrições de etiquetas reais.
 

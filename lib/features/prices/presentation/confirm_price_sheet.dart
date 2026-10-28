@@ -1,0 +1,283 @@
+import 'package:bipa/core/design_system/bipa_metrics.dart';
+import 'package:bipa/core/design_system/bipa_theme.dart';
+import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/price_tag.dart';
+import 'package:bipa/core/design_system/components/product_category_icon.dart';
+import 'package:bipa/core/design_system/components/save_badge.dart';
+import 'package:bipa/core/design_system/components/scan_tray.dart';
+import 'package:bipa/core/formatting/formatters.dart';
+import 'package:bipa/core/l10n/app_localizations.dart';
+import 'package:bipa/core/money/money.dart';
+import 'package:bipa/core/widgets/price_dialog.dart';
+import 'package:bipa/features/prices/domain/price_comparison.dart';
+import 'package:bipa/features/prices/domain/price_source.dart';
+import 'package:bipa/features/prices/domain/price_tag.dart';
+import 'package:bipa/features/prices/domain/register_price_observation.dart';
+import 'package:bipa/features/prices/presentation/prices_providers.dart';
+import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/products/domain/product_package.dart';
+import 'package:bipa/features/products/presentation/product_picker_sheet.dart';
+import 'package:bipa/features/shopping_list/domain/cart_item.dart';
+import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
+import 'package:bipa/features/stock/presentation/stock_providers.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// O preço lido, para conferir antes de salvar.
+typedef PriceToConfirm = ({
+  Product product,
+  ProductPackage? package,
+  Money price,
+  List<PriceOffer> otherOffers,
+  PriceSource source,
+});
+
+/// Abre a folha "Conferir e salvar" (protótipo "Confirmação"). Devolve
+/// `true` quando o preço foi salvo. Sem [marketId], o mercado é pedido no
+/// "Salvar" por [chooseMarket].
+Future<bool> showConfirmPriceSheet(
+  BuildContext context, {
+  required PriceToConfirm reading,
+  required String? marketId,
+  required Future<String?> Function() chooseMarket,
+}) async {
+  final saved = await showModalBottomSheet<bool>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    builder: (_) => ConfirmPriceSheet(reading: reading, marketId: marketId, chooseMarket: chooseMarket),
+  );
+  return saved ?? false;
+}
+
+/// A folha de conferir o preço: o produto (que dá para trocar), o preço em
+/// destaque (com o lápis para corrigir), "Mais barato aqui" quando é o caso
+/// e "Também comprei", que soma uma embalagem em casa.
+class ConfirmPriceSheet extends ConsumerStatefulWidget {
+  const ConfirmPriceSheet({required this.reading, required this.marketId, required this.chooseMarket, super.key});
+
+  final PriceToConfirm reading;
+  final String? marketId;
+  final Future<String?> Function() chooseMarket;
+
+  @override
+  ConsumerState<ConfirmPriceSheet> createState() => _ConfirmPriceSheetState();
+}
+
+class _ConfirmPriceSheetState extends ConsumerState<ConfirmPriceSheet> {
+  late Product _product = widget.reading.product;
+  late ProductPackage? _package = widget.reading.package;
+  late Money _price = widget.reading.price;
+  late PriceSource _source = widget.reading.source;
+  var _alsoBought = false;
+  var _saving = false;
+  String? _error;
+
+  Future<void> _changeProduct() async {
+    final title = AppLocalizations.of(context).confirmChangeProduct;
+    final choice = await pickProduct(context, allowCreate: false, title: title);
+    if (choice is! ExistingProduct || !mounted) return;
+    setState(() {
+      _product = choice.product;
+      // A embalagem lida era de outro produto.
+      _package = null;
+    });
+  }
+
+  Future<void> _editPrice() async {
+    final l10n = AppLocalizations.of(context);
+    final price = await showPriceDialog(context, title: l10n.confirmEditPrice, initial: _price);
+    if (price == null || !mounted) return;
+    setState(() {
+      _price = price;
+      _source = PriceSource.manual;
+    });
+  }
+
+  Future<void> _save() async {
+    final l10n = AppLocalizations.of(context);
+    final register = ref.read(registerPriceObservationProvider);
+    final stock = ref.read(stockRepositoryProvider);
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      // O mercado só é pedido aqui, no "Salvar" (protótipo "Captura").
+      final marketId = widget.marketId ?? await widget.chooseMarket();
+      if (marketId == null) {
+        if (mounted) setState(() => _error = l10n.cartNeedMarket);
+        return;
+      }
+      final packageId = _package?.id;
+      await register(
+        RegisterPriceInput(
+          marketId: marketId,
+          productId: _product.id,
+          packageId: packageId,
+          price: _price,
+          source: _source,
+          // Corrigido à mão, os outros preços da etiqueta podem não valer mais.
+          otherOffers: _source == PriceSource.priceTag ? widget.reading.otherOffers : const [],
+        ),
+      );
+      if (_alsoBought) {
+        await stock.adjust(
+          productId: _product.id,
+          packageId: packageId,
+          delta: 1,
+          reason: StockMovementReason.purchase,
+        );
+      }
+      if (mounted) Navigator.of(context).pop(true);
+    } on Exception {
+      if (mounted) setState(() => _error = l10n.capturePriceFailed);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  /// Quanto este preço fica abaixo do menor dos outros mercados, para a
+  /// mesma embalagem; `null` se não fica.
+  Money? _cheaperBy() {
+    final marketId = widget.marketId;
+    final packageId = _package?.id;
+    final history = ref.watch(priceHistoryProvider(_product.id)).value ?? const [];
+    final others = [
+      for (final entry in latestPricePerMarket([
+        for (final entry in history)
+          if (packageId == null || entry.observation.packageId == packageId) entry,
+      ]))
+        if (entry.observation.marketId != marketId) entry.observation.price,
+    ];
+    if (others.isEmpty) return null;
+    final cheapestOther = others.reduce((a, b) => a < b ? a : b);
+    return cheapestOther > _price ? cheapestOther - _price : null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final colors = context.colors;
+    final package = _package;
+    final barcode = package?.barcode;
+    final unitPrice = package?.unitPrice(_price);
+    final atHome = (ref.watch(stockProvider).value ?? const [])
+        .where((entry) => entry.product.id == _product.id)
+        .firstOrNull
+        ?.item
+        .quantity;
+    final current = atHome ?? 0;
+    final cheaperBy = _cheaperBy();
+    final error = _error;
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(
+        BipaSpacing.s4,
+        0,
+        BipaSpacing.s4,
+        BipaSpacing.s4 + MediaQuery.paddingOf(context).bottom,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: colors.surfaceSunken,
+                  borderRadius: BorderRadius.circular(BipaRadius.md),
+                ),
+                child: Icon(productCategoryIcon(_product.name), size: 30, color: colors.ink),
+              ),
+              const SizedBox(width: BipaSpacing.s3),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      CartEntry.nameOf(_product, package),
+                      style: BipaText.bodyLarge.copyWith(fontWeight: FontWeight.w700, color: colors.ink),
+                    ),
+                    if (barcode != null)
+                      Text(barcode, style: BipaText.barcode.copyWith(fontSize: 13, color: colors.inkMuted)),
+                  ],
+                ),
+              ),
+              IconButton.filledTonal(
+                tooltip: l10n.confirmChangeProduct,
+                onPressed: _changeProduct,
+                icon: const Icon(Icons.swap_horiz_rounded),
+              ),
+            ],
+          ),
+          const SizedBox(height: BipaSpacing.s4),
+          Row(
+            children: [
+              PriceTagHero(price: _price, unitLine: unitPrice?.format()),
+              const Spacer(),
+              IconButton.filledTonal(
+                tooltip: l10n.confirmEditPrice,
+                onPressed: _editPrice,
+                icon: const Icon(Icons.edit_outlined),
+              ),
+            ],
+          ),
+          if (cheaperBy != null) ...[
+            const SizedBox(height: BipaSpacing.s4),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: SaveBadge(label: l10n.confirmCheaperHere(cheaperBy.format())),
+            ),
+          ],
+          const SizedBox(height: BipaSpacing.s4),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.surfaceSunken,
+              borderRadius: BorderRadius.circular(BipaRadius.md),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(BipaSpacing.s4, BipaSpacing.s2, BipaSpacing.s2, BipaSpacing.s2),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l10n.confirmAlsoBought, style: BipaText.bodyLarge.copyWith(color: colors.ink)),
+                        Text(
+                          _alsoBought
+                              ? l10n.confirmAtHomeAfter(Formatters.quantity(current), Formatters.quantity(current + 1))
+                              : l10n.confirmAtHome(Formatters.quantity(current)),
+                          style: BipaText.body.copyWith(fontSize: 13, color: colors.inkMuted),
+                        ),
+                      ],
+                    ),
+                  ),
+                  BipaToggle(
+                    value: _alsoBought,
+                    semanticLabel: l10n.confirmAlsoBought,
+                    onChanged: (value) => setState(() => _alsoBought = value),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (error != null) ...[
+            const SizedBox(height: BipaSpacing.s3),
+            Text(error, style: BipaText.body.copyWith(color: colors.alertText)),
+          ],
+          const SizedBox(height: BipaSpacing.s4),
+          FilledButton(
+            style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),
+            onPressed: _saving ? null : _save,
+            child: Text(l10n.save),
+          ),
+        ],
+      ),
+    );
+  }
+}

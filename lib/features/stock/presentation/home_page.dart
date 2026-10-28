@@ -62,19 +62,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     await context.push(Routes.productDetail(scanned.product.id));
   }
 
-  /// Casa vazia: bipa um produto atrás do outro, cada um entrando em casa,
-  /// até a pessoa fechar o leitor.
-  Future<void> _stockByBarcode() async {
-    while (mounted) {
-      final scanned = await scanAndResolvePackage(context, ref);
-      if (scanned == null || !mounted) return;
-      final (:product, :package) = scanned;
-      final current = await ref.read(stockRepositoryProvider).findByProduct(product.id);
-      if (!mounted) return;
-      await _adjust(product, current?.quantity ?? 0, 1, undoable: true, packageId: package.id);
-    }
-  }
-
   /// Soma [delta] ao estoque, que hoje tem [current]; uma compra entra como
   /// [packageId], quando se sabe a embalagem. Com [undoable], mostra o aviso
   /// com "Desfazer", que reverte exatamente o que mudou (ADR 0013).
@@ -195,7 +182,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                     icon: Icons.kitchen_outlined,
                     message: l10n.homeEmpty,
                     actionLabel: l10n.homeEmptyAction,
-                    onAction: _stockByBarcode,
+                    // A câmera fica aberta somando cada código em casa ("Comprei").
+                    onAction: () => context.push(Routes.cameraBought),
                   ),
                 )
               else

@@ -1,10 +1,12 @@
 import 'package:bipa/core/design_system/bipa_metrics.dart';
+import 'package:bipa/core/design_system/components/scan_menu.dart';
 import 'package:bipa/core/design_system/components/scan_nav_bar.dart';
 import 'package:bipa/core/design_system/components/shopping_list.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/l10n/meta_join.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
+import 'package:bipa/features/shopping_list/presentation/start_shopping.dart';
 import 'package:bipa/features/shopping_list/presentation/trip_summary_label.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -59,9 +61,11 @@ class HomeShell extends ConsumerWidget {
           ScanNavBar(
             selectedIndex: navigationShell.currentIndex,
             onSelected: goBranch,
-            // Durante a compra, bipar é o modo carrinho; fora dela, a captura.
-            onScan: () => context.push(trip == null ? Routes.capturePrice : Routes.cartMode),
+            // Durante a compra, bipar é o modo carrinho; fora dela, a câmera.
+            onScan: () => context.push(trip == null ? Routes.camera : Routes.cartMode),
             scanLabel: l10n.navScan,
+            onScanLongPress: () => _openScanMenu(context, ref, shopping: trip != null),
+            scanLongPressLabel: l10n.navScanMore,
             destinations: [
               ScanNavDestination(icon: Icons.home_outlined, selectedIcon: Icons.home_rounded, label: l10n.navHome),
               ScanNavDestination(icon: Icons.sell_outlined, selectedIcon: Icons.sell_rounded, label: l10n.navProducts),
@@ -78,9 +82,41 @@ class HomeShell extends ConsumerWidget {
     );
   }
 
+  /// Segurar o bipar: o modo carrinho ou dar baixa em casa.
+  static Future<void> _openScanMenu(BuildContext context, WidgetRef ref, {required bool shopping}) async {
+    final l10n = AppLocalizations.of(context);
+    final choice = await showScanMenu<_ScanAction>(
+      context,
+      closeLabel: l10n.scanMenuClose,
+      items: [
+        (
+          value: _ScanAction.cart,
+          icon: Icons.shopping_cart_outlined,
+          label: l10n.scanMenuCart,
+          hint: l10n.scanMenuCartHint,
+        ),
+        (value: _ScanAction.used, icon: Icons.home_outlined, label: l10n.scanMenuUsed, hint: null),
+      ],
+    );
+    if (!context.mounted) return;
+    switch (choice) {
+      case _ScanAction.cart when shopping:
+        await context.push(Routes.cartMode);
+      case _ScanAction.cart:
+        await startShopping(context, ref);
+      case _ScanAction.used:
+        await context.push(Routes.cameraUsed);
+      case null:
+        break;
+    }
+  }
+
   /// "R$ 32,10 · Atacarejo Vila Nova": o total do carrinho e o mercado.
   static String? _subtitle(AppLocalizations l10n, String? spent, String? marketName) {
     final parts = [?spent, ?marketName];
     return parts.isEmpty ? null : l10n.joinMeta(parts);
   }
 }
+
+/// As opções do menu do bipar.
+enum _ScanAction { cart, used }
