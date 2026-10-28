@@ -519,7 +519,6 @@
     }
   },
   "productMergeConfirm": "Juntar",
-  "marketsRefreshLocation": "Atualizar localização",
   "marketsNew": "Novo mercado",
   "marketsNoLocation": "{reason} Os mercados estão em ordem alfabética.",
   "@marketsNoLocation": {
@@ -635,6 +634,39 @@
     "placeholders": {
       "error": {
         "type": "String"
+      }
+    }
+  },
+  "marketsSearch": "Buscar mercado",
+  "marketsMapLabel": "{count, plural, =1{Mapa com 1 mercado perto de você} other{Mapa com {count} mercados perto de você}}",
+  "@marketsMapLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "marketsListCost": "Sua lista em cada mercado",
+  "marketsCheapest": "mais barato",
+  "marketsMissingPrices": "{count, plural, =1{sem preço de 1 item} other{sem preço de {count} itens}}",
+  "@marketsMissingPrices": {
+    "description": "Ressalva na comparação da lista: o total desse mercado não tem todos os itens.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "marketsNearby": "Perto de você",
+  "marketsYours": "Seus mercados",
+  "@marketsYours": {
+    "description": "Título da lista de mercados quando a localização não está disponível."
+  },
+  "marketsPriceAge": "{days, plural, =0{preços de hoje} =1{preços de ontem} other{preços de {days} dias}}",
+  "@marketsPriceAge": {
+    "placeholders": {
+      "days": {
+        "type": "int"
       }
     }
   }

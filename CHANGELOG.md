@@ -21,6 +21,7 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - Gráfico dos últimos 6 meses na tela do produto: o menor preço de cada dia, por kg quando as embalagens têm tamanho, sem os preços de cartão e de atacado.
 - A lista aprende a ordem das seções em cada mercado (ADR 0014): no "Terminei", as seções visitadas ficam na ordem em que foram percorridas, e a lista da próxima compra naquele mercado segue esse percurso. O esquema vai à versão 8. O chip do mercado ao lado do título da Lista mostra e troca o mercado: o da compra, ou o escolhido para a próxima (por padrão, o da última compra).
 - Notificação ao vivo da compra (ADR 0015): na tela de bloqueio e como chip na barra de status do Android 16, com o progresso, o total, a próxima seção e os botões Bipar, Lista e Terminei. Antes do Android 16, é uma notificação fixa com barra de progresso. Primeiro código nativo do app (Kotlin) e androidx.core 1.17.
+- Nova tela de Mercados, como no protótipo: busca, mapa esquemático com os mercados em volta, quanto a lista custa em cada mercado (com ressalva quando faltam preços) e os mercados do mais perto ao mais longe, com a idade dos preços.
 - Cópias exportadas do design system e do protótipo em `docs/design/`.
 - Banco de testes do OCR em `tool/ocr_bench`, com etiquetas sintéticas e transcrições de etiquetas reais.
 

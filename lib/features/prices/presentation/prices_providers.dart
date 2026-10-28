@@ -33,3 +33,8 @@ final registerPriceObservationProvider = Provider<RegisterPriceObservation>(
 final priceHistoryProvider = StreamProvider.autoDispose.family<List<PriceHistoryEntry>, String>(
   (ref, productId) => ref.watch(priceRepositoryProvider).watchHistory(productId),
 );
+
+/// Quando foi o preço mais recente de cada mercado.
+final latestPricePerMarketProvider = StreamProvider.autoDispose<Map<String, DateTime>>(
+  (ref) => ref.watch(priceRepositoryProvider).watchLatestPerMarket(),
+);

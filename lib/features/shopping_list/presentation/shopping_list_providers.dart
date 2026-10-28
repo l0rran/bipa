@@ -4,6 +4,7 @@ import 'package:bipa/core/database/database_provider.dart';
 import 'package:bipa/core/di/core_providers.dart';
 import 'package:bipa/core/money/money.dart';
 import 'package:bipa/features/markets/presentation/markets_providers.dart';
+import 'package:bipa/features/prices/domain/list_cost.dart';
 import 'package:bipa/features/prices/domain/price_comparison.dart';
 import 'package:bipa/features/prices/domain/price_observation.dart';
 import 'package:bipa/features/prices/presentation/prices_providers.dart';
@@ -44,6 +45,17 @@ final shoppingListHistoryProvider = StreamProvider.autoDispose<List<PriceHistory
   final entries = await ref.watch(shoppingListProvider.future);
   final productIds = {for (final entry in entries) ?entry.item.productId};
   yield* prices.watchHistoryOfProducts(productIds);
+});
+
+/// O que falta na lista somado em cada mercado, do mais barato ao mais caro
+/// (tela de Mercados).
+final listCostPerMarketProvider = Provider.autoDispose<List<MarketListCost>>((ref) {
+  final entries = ref.watch(shoppingListProvider).value ?? const [];
+  final missing = {
+    for (final entry in entries)
+      if (!entry.item.isChecked) ?entry.item.productId,
+  };
+  return listCostPerMarket(missing, ref.watch(shoppingListHistoryProvider).value ?? const []);
 });
 
 /// Preço de referência dos produtos da lista, para estimar o total.

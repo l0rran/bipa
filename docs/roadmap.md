@@ -9,7 +9,7 @@
 - [ ] Migrar para Riverpod com geração de código e freezed
 - [x] Implementar a base do design system em `lib/core/design_system/`: tokens gerados, paleta semântica (ADR 0009), tema, fontes embutidas e os componentes do Início
 - [x] Textos em ARB (`flutter gen-l10n`): todas as telas; as mensagens das exceções do domínio continuam em português no código, porque o domínio não conhece o ARB
-- [ ] Redesenhar as telas conforme o protótipo: barra com botão de bipar, câmera direto, folha "Bipou!"
+- [ ] Redesenhar as telas conforme o protótipo: barra com botão de bipar, câmera direto, folha "Bipou!" (Mercados feita; falta a captura)
 - [x] Novo Início: busca com bipar, locais como categorias, prateleira de Acabando e lista com medidor de nível
 - [x] Início: prévia da lista
 - [ ] Início: carrossel de insights (depende da previsão de consumo)
