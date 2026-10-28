@@ -507,7 +507,8 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     if (_pending?.read == read) _pending = null;
     final product = choice.product;
     try {
-      await cart.addProduct(trip.id, product.id, price: read.price);
+      // Só o preço: se o produto já está no carrinho, não soma uma unidade.
+      await cart.setPriceForProduct(trip.id, product.id, read.price);
       await list.checkProduct(product.id);
       _settledItems.add(CartItem.keyOf(product.id, null));
       await _recordTag(recordPrice, trip, product.id, null, read);
