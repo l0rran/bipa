@@ -12,6 +12,7 @@ import 'package:bipa/features/shopping_list/domain/finish_shopping_trip.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
 import 'package:bipa/features/stock/data/drift_stock_repository.dart';
+import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/fakes.dart';
@@ -194,6 +195,40 @@ void main() {
 
     final finished = (await finish(trip.id))!;
     expect(finished.stocked, {'arroz': 3});
+    final lots = await stock.watchLots('arroz').first;
+    expect(lots.map((lot) => (lot.packageId, lot.quantity)), unorderedEquals([('tio-joao', 1.0), ('camil', 2.0)]));
+
+    await finish.undo(finished);
+
+    expect((await stock.findByProduct('arroz'))?.quantity, 0);
+    expect(await stock.watchLots('arroz').first, isEmpty);
+  });
+
+  test('desfazer o "Terminei" tira o que entrou, não o que já estava em casa', () async {
+    final products = DriftProductRepository(db);
+    for (final (id, day) in [('tio-joao', 1), ('camil', 2)]) {
+      await products.savePackage(
+        ProductPackage(
+          id: id,
+          productId: 'arroz',
+          size: 5,
+          unit: MeasureUnit.kilogram,
+          createdAt: DateTime(2026, 9, day),
+          updatedAt: DateTime(2026, 9, day),
+        ),
+      );
+    }
+    await stock.adjust(productId: 'arroz', packageId: 'tio-joao', delta: 1, reason: StockMovementReason.purchase);
+    final trip = await trips.start();
+    // Marcado à mão na lista: entra sem embalagem informada, na mais nova.
+    await list.addProduct(productId: 'arroz', name: 'Arroz');
+    await list.checkProduct('arroz');
+
+    final finished = (await finish(trip.id))!;
+    await finish.undo(finished);
+
+    final lots = await stock.watchLots('arroz').first;
+    expect(lots.map((lot) => (lot.packageId, lot.quantity)), [('tio-joao', 1.0)]);
   });
 
   test('o resumo da compra soma só o que vai levar, com os preços conhecidos', () async {

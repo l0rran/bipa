@@ -13,9 +13,9 @@ class ProductsPage extends ConsumerWidget {
   const ProductsPage({super.key});
 
   Future<void> _scan(BuildContext context, WidgetRef ref) async {
-    final product = await scanAndResolveProduct(context, ref);
-    if (product != null && context.mounted) {
-      await context.push(Routes.productDetail(product.id));
+    final scanned = await scanAndResolvePackage(context, ref);
+    if (scanned != null && context.mounted) {
+      await context.push(Routes.productDetail(scanned.product.id));
     }
   }
 

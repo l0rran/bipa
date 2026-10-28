@@ -126,7 +126,7 @@ void main() {
     expect(await repository.findByBarcode('7896006711155'), product('arroz', 'Arroz branco'));
     expect((await repository.watchPackages('arroz').first).map((p) => p.id), unorderedEquals(['tio-5', 'camil-10']));
     expect((await stock.findByProduct('arroz'))?.quantity, 3);
-    expect((await stock.watchPackages('arroz').first).map((c) => c.package.id), unorderedEquals(['tio-5', 'camil-10']));
+    expect((await stock.watchLots('arroz').first).map((lot) => lot.packageId), unorderedEquals(['tio-5', 'camil-10']));
     expect((await list.watchAll().first).map((e) => e.item.productId), ['arroz']);
   });
 }

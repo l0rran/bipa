@@ -113,7 +113,7 @@ final class DriftProductRepository implements ProductRepository {
         _db.priceObservations,
         _db.cartItems,
         _db.stockMovements,
-        _db.stockPackages,
+        _db.stockLots,
       ]) {
         await move(table);
       }

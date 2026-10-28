@@ -23,7 +23,7 @@ import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:bipa/features/stock/domain/stock_item.dart';
 import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
-import 'package:bipa/features/stock/domain/stock_package.dart';
+import 'package:bipa/features/stock/domain/stock_lot.dart';
 import 'package:bipa/features/stock/presentation/stock_item_sheet.dart';
 import 'package:bipa/features/stock/presentation/stock_providers.dart';
 import 'package:flutter/material.dart';
@@ -66,13 +66,15 @@ class _ProductView extends ConsumerWidget {
 
   final Product product;
 
-  Future<void> _adjust(WidgetRef ref, double delta) => ref
-      .read(stockRepositoryProvider)
-      .adjust(
-        productId: product.id,
-        delta: delta,
-        reason: delta > 0 ? StockMovementReason.purchase : StockMovementReason.consumption,
-      );
+  Future<void> _adjust(WidgetRef ref, double delta) async {
+    await ref
+        .read(stockRepositoryProvider)
+        .adjust(
+          productId: product.id,
+          delta: delta,
+          reason: delta > 0 ? StockMovementReason.purchase : StockMovementReason.consumption,
+        );
+  }
 
   /// "Juntar com…": escolhe o outro produto, confirma e abre o que ficou.
   Future<void> _merge(BuildContext context, WidgetRef ref) async {
@@ -109,8 +111,7 @@ class _ProductView extends ConsumerWidget {
     final packages = ref.watch(productPackagesProvider(product.id)).value ?? const <ProductPackage>[];
     final history = ref.watch(priceHistoryProvider(product.id)).value ?? const [];
     final stock = ref.watch(stockProvider).value?.where((e) => e.item.productId == product.id).firstOrNull;
-    final stockPackages = ref.watch(stockPackagesProvider(product.id)).value ?? const <StockPackageCount>[];
-    final amount = homeAmount(stockPackages, quantity: stock?.item.quantity ?? 0);
+    final amount = homeAmount(ref.watch(stockLotsProvider(product.id)).value ?? const <StockLot>[]);
     final onList = ref.watch(productsOnListProvider).contains(product.id);
     final photos = ref.watch(productPhotosDirectoryProvider).value;
     final now = ref.watch(clockProvider)();

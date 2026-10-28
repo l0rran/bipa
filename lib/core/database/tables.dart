@@ -101,21 +101,23 @@ class PriceObservations extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
-/// Quantas embalagens de cada tipo há em casa (ADR 0013, esquema v7): 1 de
-/// 5 kg e 1 de 10 kg somam 15 kg. A soma pode ser menor que a quantidade do
-/// produto quando o estoque veio de antes das embalagens.
-@DataClassName('StockPackageRow')
-class StockPackages extends Table {
+/// O que há em casa, por entrada (ADR 0013, esquema v7): cada compra é um
+/// lote, com a embalagem e quando entrou. 1 de 5 kg e 1 de 10 kg somam
+/// 15 kg, e o "Usei um" tira do lote mais antigo. A soma dos lotes é sempre
+/// a quantidade do produto em [StockItems].
+@DataClassName('StockLotRow')
+@TableIndex(name: 'stock_lots_product', columns: {#productId})
+class StockLots extends Table {
+  TextColumn get id => text()();
   TextColumn get productId => text().references(Products, #id, onDelete: KeyAction.cascade)();
-  TextColumn get packageId => text().references(ProductPackages, #id, onDelete: KeyAction.cascade)();
-  RealColumn get quantity => real()();
 
-  /// Quando essa embalagem entrou em casa: no "Usei um", a mais antiga sai
-  /// primeiro.
+  /// Nula quando o produto não tem embalagem (ou ela foi apagada).
+  TextColumn get packageId => text().nullable().references(ProductPackages, #id, onDelete: KeyAction.setNull)();
+  RealColumn get quantity => real()();
   DateTimeColumn get since => dateTime()();
 
   @override
-  Set<Column<Object>> get primaryKey => {productId, packageId};
+  Set<Column<Object>> get primaryKey => {id};
 }
 
 /// Estado atual do estoque: um registro por produto.

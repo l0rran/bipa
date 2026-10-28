@@ -2,6 +2,7 @@ import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_repository.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
+import 'package:bipa/features/stock/domain/stock_lot.dart';
 import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
 import 'package:bipa/features/stock/domain/stock_repository.dart';
 import 'package:meta/meta.dart';
@@ -13,7 +14,7 @@ final class FinishedShoppingTrip {
     required this.tripId,
     required this.bought,
     required this.stocked,
-    this.stockedPackages = const {},
+    this.changes = const [],
   });
 
   final String tripId;
@@ -24,9 +25,9 @@ final class FinishedShoppingTrip {
   /// Quantas unidades de cada produto entraram no estoque.
   final Map<String, int> stocked;
 
-  /// As mesmas unidades por (produto, embalagem), para o desfazer tirar
-  /// exatamente as embalagens que entraram (ADR 0013).
-  final Map<(String, String?), int> stockedPackages;
+  /// O que cada entrada mudou no estoque, para o desfazer tirar exatamente
+  /// os lotes que entraram (ADR 0013).
+  final List<StockChange> changes;
 }
 
 /// Caso de uso: termina a compra. Entra no estoque o que está no carrinho
@@ -80,29 +81,27 @@ final class FinishShoppingTrip {
     }
 
     final stocked = <String, int>{};
+    final changes = <StockChange>[];
     for (final MapEntry(key: (productId, packageId), value: quantity) in byPackage.entries) {
-      await _stock.adjust(
-        productId: productId,
-        packageId: packageId,
-        delta: quantity.toDouble(),
-        reason: StockMovementReason.purchase,
+      changes.add(
+        await _stock.adjust(
+          productId: productId,
+          packageId: packageId,
+          delta: quantity.toDouble(),
+          reason: StockMovementReason.purchase,
+        ),
       );
       stocked.update(productId, (q) => q + quantity, ifAbsent: () => quantity);
     }
     await _list.removeChecked();
-    return FinishedShoppingTrip(tripId: tripId, bought: bought, stocked: stocked, stockedPackages: byPackage);
+    return FinishedShoppingTrip(tripId: tripId, bought: bought, stocked: stocked, changes: changes);
   }
 
   /// Desfaz o [call]: tira do estoque o que entrou, devolve os itens à lista
   /// e reabre a compra, se nenhuma outra tiver começado nesse meio-tempo.
   Future<void> undo(FinishedShoppingTrip finished) async {
-    for (final MapEntry(key: (productId, packageId), value: quantity) in finished.stockedPackages.entries) {
-      await _stock.adjust(
-        productId: productId,
-        packageId: packageId,
-        delta: -quantity.toDouble(),
-        reason: StockMovementReason.adjustment,
-      );
+    for (final change in finished.changes) {
+      await _stock.revert(change);
     }
     for (final item in finished.bought) {
       await _list.restore(item);

@@ -95,37 +95,88 @@ void main() {
       }
     });
 
-    Future<Map<String, double>> counts() async => {
-      for (final count in await stock.watchPackages('arroz').first) count.package.id: count.quantity,
-    };
+    /// Os lotes em casa, do mais antigo para o mais novo.
+    Future<List<(String?, double)>> lots() async => [
+      for (final lot in await stock.watchLots('arroz').first) (lot.packageId, lot.quantity),
+    ];
 
-    test('a compra entra na embalagem informada e, sem ela, na mais nova', () async {
+    Future<double?> quantity() async => (await stock.findByProduct('arroz'))?.quantity;
+
+    test('cada compra vira um lote, da embalagem informada ou da mais nova', () async {
       await stock.adjust(productId: 'arroz', packageId: 'tio-joao', delta: 1, reason: StockMovementReason.purchase);
       clock = clock.add(const Duration(days: 1));
       await stock.adjust(productId: 'arroz', delta: 1, reason: StockMovementReason.purchase);
 
-      expect(await counts(), {'tio-joao': 1, 'camil': 1});
-      expect((await stock.findByProduct('arroz'))?.quantity, 2);
+      expect(await lots(), [('tio-joao', 1.0), ('camil', 1.0)]);
+      expect((await stock.watchLots('arroz').first).map((lot) => lot.package?.size), [5.0, 10.0]);
+      expect(await quantity(), 2);
     });
 
-    test('"usei um" tira a embalagem que está em casa há mais tempo', () async {
+    test('"usei um" tira do lote mais antigo, mesmo que seja da mesma embalagem de um mais novo', () async {
       await stock.adjust(productId: 'arroz', packageId: 'camil', delta: 1, reason: StockMovementReason.purchase);
       clock = clock.add(const Duration(days: 1));
       await stock.adjust(productId: 'arroz', packageId: 'tio-joao', delta: 1, reason: StockMovementReason.purchase);
+      clock = clock.add(const Duration(days: 1));
+      await stock.adjust(productId: 'arroz', packageId: 'camil', delta: 1, reason: StockMovementReason.purchase);
 
       await stock.adjust(productId: 'arroz', delta: -1, reason: StockMovementReason.consumption);
 
-      expect(await counts(), {'tio-joao': 1});
+      expect(await lots(), [('tio-joao', 1.0), ('camil', 1.0)]);
+      expect(await quantity(), 2);
     });
 
-    test('o desfazer de uma compra tira a embalagem que entrou', () async {
+    test('desfazer uma compra tira exatamente o lote que entrou', () async {
+      await stock.adjust(productId: 'arroz', packageId: 'camil', delta: 1, reason: StockMovementReason.purchase);
+      clock = clock.add(const Duration(days: 1));
+      final change = await stock.adjust(productId: 'arroz', delta: 1, reason: StockMovementReason.purchase);
+
+      await stock.revert(change);
+
+      expect(await lots(), [('camil', 1.0)]);
+      expect(await quantity(), 1);
+    });
+
+    test('desfazer um "usei um" devolve o lote que saiu, com a data dele', () async {
       await stock.adjust(productId: 'arroz', packageId: 'tio-joao', delta: 1, reason: StockMovementReason.purchase);
       clock = clock.add(const Duration(days: 1));
       await stock.adjust(productId: 'arroz', packageId: 'camil', delta: 1, reason: StockMovementReason.purchase);
+      final used = await stock.adjust(productId: 'arroz', delta: -1, reason: StockMovementReason.consumption);
+      expect(await lots(), [('camil', 1.0)]);
 
-      await stock.adjust(productId: 'arroz', packageId: 'camil', delta: -1, reason: StockMovementReason.adjustment);
+      await stock.revert(used);
 
-      expect(await counts(), {'tio-joao': 1});
+      expect(await lots(), [('tio-joao', 1.0), ('camil', 1.0)]);
+      expect((await stock.watchLots('arroz').first).first.since, DateTime(2026, 10, 1));
+      expect(await quantity(), 2);
+    });
+
+    test('desfazer uma compra já usada tira o resto do lote mais antigo', () async {
+      await stock.adjust(productId: 'arroz', packageId: 'tio-joao', delta: 2, reason: StockMovementReason.purchase);
+      clock = clock.add(const Duration(days: 1));
+      final bought = await stock.adjust(
+        productId: 'arroz',
+        packageId: 'camil',
+        delta: 1,
+        reason: StockMovementReason.purchase,
+      );
+      await stock.adjust(productId: 'arroz', packageId: 'camil', delta: -1, reason: StockMovementReason.consumption);
+
+      await stock.revert(bought);
+
+      expect(await lots(), [('tio-joao', 1.0)]);
+      expect(await quantity(), 1);
+    });
+
+    test('a soma dos lotes acompanha a quantidade, inclusive sem embalagem', () async {
+      await DriftProductRepository(db).save(
+        Product(id: 'banana', name: 'Banana', unit: MeasureUnit.unit, createdAt: now, updatedAt: now),
+      );
+      await stock.adjust(productId: 'banana', delta: 6, reason: StockMovementReason.purchase);
+      await stock.adjust(productId: 'banana', delta: -2, reason: StockMovementReason.consumption);
+
+      final bananas = await stock.watchLots('banana').first;
+      expect(bananas.map((lot) => (lot.packageId, lot.quantity)), [(null, 4.0)]);
+      expect((await stock.findByProduct('banana'))?.quantity, 4);
     });
   });
 }

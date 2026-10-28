@@ -53,22 +53,30 @@ class _HomePageState extends ConsumerState<HomePage> {
   String? _expandedProductId;
 
   Future<void> _addByBarcode() async {
-    final product = await scanAndResolveProduct(context, ref);
-    if (product == null || !mounted) return;
+    final scanned = await scanAndResolvePackage(context, ref);
+    if (scanned == null || !mounted) return;
+    final (:product, :package) = scanned;
     final current = await ref.read(stockRepositoryProvider).findByProduct(product.id);
     if (!mounted) return;
-    await _adjust(product, current?.quantity ?? 0, 1, undoable: true);
+    await _adjust(product, current?.quantity ?? 0, 1, undoable: true, packageId: package.id);
   }
 
-  /// Soma [delta] ao estoque, que hoje tem [current]. Com [undoable], mostra o
-  /// aviso com "Desfazer", que reverte só o que mudou de fato (a quantidade
-  /// nunca fica negativa, então uma baixa pode mudar menos que [delta]).
-  Future<void> _adjust(Product product, double current, double delta, {bool undoable = false}) async {
+  /// Soma [delta] ao estoque, que hoje tem [current]; uma compra entra como
+  /// [packageId], quando se sabe a embalagem. Com [undoable], mostra o aviso
+  /// com "Desfazer", que reverte exatamente o que mudou (ADR 0013).
+  Future<void> _adjust(
+    Product product,
+    double current,
+    double delta, {
+    bool undoable = false,
+    String? packageId,
+  }) async {
     final repository = ref.read(stockRepositoryProvider);
     final applied = StockItem.nextQuantity(current, delta) - current;
     if (applied == 0) return;
-    await repository.adjust(
+    final change = await repository.adjust(
       productId: product.id,
+      packageId: packageId,
       delta: applied,
       reason: applied > 0 ? StockMovementReason.purchase : StockMovementReason.consumption,
     );
@@ -84,11 +92,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           duration: const Duration(seconds: 4),
           action: SnackBarAction(
             label: l10n.undo,
-            onPressed: () => repository.adjust(
-              productId: product.id,
-              delta: -applied,
-              reason: StockMovementReason.adjustment,
-            ),
+            onPressed: () => repository.revert(change),
           ),
         ),
       );
