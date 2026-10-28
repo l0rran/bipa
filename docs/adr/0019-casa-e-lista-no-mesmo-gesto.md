@@ -18,6 +18,8 @@ Nem toda mudança no estoque é igual. Um bipe ou um gesto acontece de passagem,
 - Passam pelo `RecordAtHome` as ações de passagem: os modos "Comprei" e "Usei" da câmera, o deslizar "Usei um" do Início e o "Também comprei" da folha de conferir preço. Todas mostram o mesmo aviso (`showHomeChangeSnackBar`), que diz o que mudou na lista, com "Desfazer".
 - No "Usei", um item já marcado como comprado (durante uma compra) conta como "na lista" e não volta a faltar: o "Terminei" ainda vai levar para casa o que foi comprado.
 - Os steppers (linha aberta do Início, folha do item e tela do produto) são correções. Eles mudam só o estoque, sem aviso: o botão oposto é o desfazer.
+- Os steppers se anunciam como correção ("Uma embalagem a menos" / "a mais"). "Usei um" e "Comprei um" ficam só para o que passa pelo `RecordAtHome`, para o mesmo nome ter sempre o mesmo efeito.
+- A compra segue a mesma ideia: o "Terminei" só leva para casa, e só tira da lista, o que foi marcado depois do começo dela (`ShoppingListItem.isCheckedSince`), e cancelar desmarca isso. Um item marcado em casa dias antes não vira compra de hoje.
 - "Tirar de casa" continua com confirmação (ADR 0016), porque apaga os lotes.
 - O "Terminei" do modo compra já fazia o mesmo com o que foi marcado e tem o próprio desfazer.
 

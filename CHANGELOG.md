@@ -43,10 +43,22 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - O preço clube deixa de ser tratado como promoção: vira o preço com cartão da loja.
 - A comparação entre mercados usa o preço sem condição.
 - Gradle 9.3.1, Android Gradle Plugin 9.1.0 e Kotlin 2.4.0; o app pede Flutter 3.47 ou mais novo.
+- "Guardar em casa" no menu do bipar: o modo "Comprei" da câmera deixa de existir só no Início vazio.
+- O stepper do estoque passa a se anunciar como correção ("Uma embalagem a menos/a mais"); "Usei um" e "Comprei um" ficam para os gestos e a câmera, que mexem na lista.
+- Pôr ou tirar da lista pela linha do Início avisa o que mudou, com Desfazer.
+- Telas que não carregam oferecem "Tentar de novo".
+- Ações que apagam ou descartam se confirmam no botão neutro, com verbo e objeto ("Apagar mercado").
 
 ### Corrigido
 - Leitura da etiqueta: centavos sobrescritos lidos à parte, milhar ("1.299,90"), preço seguido de KG ou UN, parcelas confundidas com o preço, dígitos espaçados pelo OCR e rótulos como "LEVE 3 PAGUE 2" tomados pelo nome do produto.
 - Etiqueta com mais de um preço e nenhum rótulo lido (foto de longe ou borrada) não grava mais o preço do cartão ou do atacado como varejo: o campo fica em branco e os valores lidos ficam para tocar. Um preço lido sem a vírgula ao lado de outro ("13,89 1535") também entra entre os valores.
+- O "Terminei" e a folha "Fim da compra" levam para casa só o que foi marcado durante a compra; o marcado antes, em casa ou numa compra cancelada, fica na lista como está. Cancelar a compra desmarca o que foi marcado nela.
+- A foto da etiqueta tirada no carrinho, e a foto e o teclado da câmera, gravam o preço no mercado da compra ou do chip, e não no que a localização achar.
+- O mercado sem preço de tudo fica sem barra na comparação, que contradizia o selo "mais barato". A idade do preço mais antigo só aparece a partir de 30 dias, e a lista de mercados diz "atualizado há N dias".
+- A idade dos preços não aparece mais como "há -1 dias" com o relógio do aparelho atrasado.
+- A alça da bandeja segue a direção do arrasto, e o preço estimado tem um sinal só (a etiqueta vazada).
+- Compra sem lista mostra "8 no carrinho" em vez de "0 de 0 itens".
+- "a menos que no Padaria Real" virou "a menos que em Padaria Real".
 
 ## [0.1.0] - 2026-10-27
 
