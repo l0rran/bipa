@@ -16,6 +16,8 @@ Na primeira execução depois da atualização, o banco migra sozinho para o esq
 
 Durante o desenvolvimento, deixe `dart run build_runner watch -d` rodando num terminal à parte.
 
+O emulador não tem câmera de verdade. Para testar a leitura de código e de etiqueta nele, use a câmera virtual com as imagens de [`tool/kit_emulador`](../tool/kit_emulador/README.md).
+
 ## Antes de cada commit
 
 ```bash
