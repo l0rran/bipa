@@ -1,5 +1,6 @@
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/components/quantity_stepper.dart';
+import 'package:bipa/core/design_system/components/scan_tray.dart';
 import 'package:bipa/core/design_system/components/shopping_list.dart';
 import 'package:bipa/core/design_system/components/stock_gauge.dart';
 import 'package:bipa/core/design_system/components/stock_list.dart';
@@ -183,5 +184,34 @@ void main() {
     expect(find.text('R\$ 32,10 · Atacarejo'), findsOneWidget);
     await tester.tap(find.text('Continuar'));
     expect(tapped, isTrue);
+  });
+
+  testWidgets('o item da bandeja liga e desliga o levar e abre o preço', (tester) async {
+    final semantics = tester.ensureSemantics();
+    var take = true;
+    var priceTaps = 0;
+    await tester.pumpWidget(
+      _app(
+        StatefulBuilder(
+          builder: (context, setState) => ScanTrayItem(
+            name: '2× Café Pilão',
+            take: take,
+            takeLabel: 'Levar Café Pilão',
+            onTakeChanged: (value) => setState(() => take = value),
+            priceTapLabel: 'Digitar o preço',
+            onPriceTap: () => priceTaps++,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('—'), findsOneWidget);
+    await tester.tap(find.text('—'));
+    expect(priceTaps, 1);
+
+    await tester.tap(find.bySemanticsLabel('Levar Café Pilão'));
+    await tester.pumpAndSettle();
+    expect(take, isFalse);
+    semantics.dispose();
   });
 }
