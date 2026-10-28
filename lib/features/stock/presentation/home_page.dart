@@ -73,8 +73,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     await context.push(Routes.productDetail(scanned.product.id));
   }
 
-  /// O stepper da linha aberta: corrige o estoque. Não mexe na lista nem
-  /// avisa: o botão do lado oposto já desfaz.
   /// Abre ou fecha o editor da linha. Ao fechar uma linha cujo stepper
   /// cruzou o "ter sempre", oferece pôr na lista ou tirar dela: o stepper é
   /// correção e não mexe na lista sozinho (ADR 0019).
@@ -109,6 +107,8 @@ class _HomePageState extends ConsumerState<HomePage> {
       );
   }
 
+  /// O stepper da linha aberta: corrige o estoque. Não mexe na lista nem
+  /// avisa: o botão do lado oposto já desfaz.
   Future<void> _adjust(Product product, double delta) async {
     await ref
         .read(stockRepositoryProvider)
