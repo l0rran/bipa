@@ -10,4 +10,5 @@
 | [Processo de design](design/processo.md) | Como pesquisamos referências, inspirações e o benchmark de apps parecidos |
 | [Como contribuir](contribuindo.md) | Ambiente, comandos, commits, branches e onde colocar cada coisa |
 | [Roadmap](roadmap.md) | O que já foi feito e o que vem a seguir |
+| [Análise de UX (28/10/2026)](ux/analise-ux-2026-10-28.md) | Cada achado com o código (AB1, CE3, H4...), o problema e a solução proposta |
 | [Changelog](../CHANGELOG.md) | O que mudou em cada versão |

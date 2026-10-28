@@ -51,7 +51,7 @@
 
 ### Ajustes de UX (análise de 28/10/2026)
 
-Os achados da [análise de UX](https://claude.ai/artifact/VeoUk6VjBSRWCox1prVyMr) que ainda faltam, com o código de cada um. Os já feitos estão no CHANGELOG.
+Os achados da [análise de UX](ux/analise-ux-2026-10-28.md) ([publicada](https://claude.ai/artifact/VeoUk6VjBSRWCox1prVyMr)) que ainda faltam, com o código de cada um. Os já feitos estão no CHANGELOG.
 
 Primeira abertura e em casa:
 
