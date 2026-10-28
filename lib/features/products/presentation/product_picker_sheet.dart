@@ -109,7 +109,7 @@ class _ProductPickerSheetState extends ConsumerState<ProductPickerSheet> {
                 autofocus: true,
                 textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
-                  hintText: l10n.productPickSearch,
+                  hintText: widget.allowCreate ? l10n.productPickSearch : l10n.productPickSearchOnly,
                   prefixIcon: const Icon(Icons.search_rounded),
                   fillColor: colors.surfaceSunken,
                 ),
