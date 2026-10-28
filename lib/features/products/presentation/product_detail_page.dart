@@ -83,14 +83,20 @@ class _ProductView extends ConsumerWidget {
 
   final Product product;
 
-  Future<void> _adjust(WidgetRef ref, double delta) async {
-    await ref
-        .read(stockRepositoryProvider)
-        .adjust(
-          productId: product.id,
-          delta: delta,
-          reason: delta > 0 ? StockMovementReason.purchase : StockMovementReason.consumption,
-        );
+  Future<void> _adjust(BuildContext context, WidgetRef ref, double delta) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context);
+    try {
+      await ref
+          .read(stockRepositoryProvider)
+          .adjust(
+            productId: product.id,
+            delta: delta,
+            reason: delta > 0 ? StockMovementReason.purchase : StockMovementReason.consumption,
+          );
+    } on Exception {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.stockAdjustFailed)));
+    }
   }
 
   /// "Registrar preço": com mais de uma embalagem, pergunta qual antes de
@@ -355,8 +361,8 @@ class _ProductView extends ConsumerWidget {
                 amount: amount == null
                     ? null
                     : l10n.measureAmount(Formatters.quantity(amount.amount), amount.unit.symbol),
-                onIncrement: () => _adjust(ref, 1),
-                onDecrement: (stock?.item.quantity ?? 0) > 0 ? () => _adjust(ref, -1) : null,
+                onIncrement: () => _adjust(context, ref, 1),
+                onDecrement: (stock?.item.quantity ?? 0) > 0 ? () => _adjust(context, ref, -1) : null,
               ),
             ],
           ),
