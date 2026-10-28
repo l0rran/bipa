@@ -75,6 +75,20 @@ void main() {
     expect(latestPricePerMarket([wholesale, card]).single, card);
   });
 
+  test('preço de referência: o menor entre os mais recentes de cada mercado, por produto', () {
+    final at = DateTime(2026, 10, 27);
+    final history = [
+      entry('A', 500, at),
+      entry('A', 650, at.add(const Duration(days: 1))),
+      entry('B', 600, at),
+      entry('Assaí', 480, at, condition: const LoyaltyMembers()),
+      entry('Assaí', 520, at),
+    ];
+
+    expect(referencePrices(history), {'leite': const Money.cents(520)});
+    expect(referencePrices(const []), isEmpty);
+  });
+
   test('histórico vazio resulta em lista vazia', () {
     expect(latestPricePerMarket(const []), isEmpty);
   });

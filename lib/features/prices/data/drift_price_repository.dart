@@ -35,14 +35,24 @@ final class DriftPriceRepository implements PriceRepository {
   );
 
   @override
-  Stream<List<PriceHistoryEntry>> watchHistory(String productId) {
+  Stream<List<PriceHistoryEntry>> watchHistory(String productId) =>
+      _watchHistoryWhere((prices) => prices.productId.equals(productId));
+
+  @override
+  Stream<List<PriceHistoryEntry>> watchHistoryOfProducts(Set<String> productIds) => productIds.isEmpty
+      ? Stream.value(const [])
+      : _watchHistoryWhere((prices) => prices.productId.isIn(productIds));
+
+  Stream<List<PriceHistoryEntry>> _watchHistoryWhere(
+    Expression<bool> Function($PriceObservationsTable prices) filter,
+  ) {
     final prices = _db.priceObservations;
     final markets = _db.markets;
 
     final query = _db.select(prices).join([
       innerJoin(markets, markets.id.equalsExp(prices.marketId)),
     ])
-      ..where(prices.productId.equals(productId))
+      ..where(filter(prices))
       ..orderBy([OrderingTerm.desc(prices.observedAt)]);
 
     return query.watch().map(

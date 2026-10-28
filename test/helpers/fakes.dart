@@ -49,8 +49,11 @@ final class InMemoryPriceRepository implements PriceRepository {
   }
 
   @override
-  Stream<List<PriceHistoryEntry>> watchHistory(String productId) => Stream.value([
+  Stream<List<PriceHistoryEntry>> watchHistory(String productId) => watchHistoryOfProducts({productId});
+
+  @override
+  Stream<List<PriceHistoryEntry>> watchHistoryOfProducts(Set<String> productIds) => Stream.value([
     for (final o in observations.reversed)
-      if (o.productId == productId) PriceHistoryEntry(observation: o, marketName: o.marketId),
+      if (productIds.contains(o.productId)) PriceHistoryEntry(observation: o, marketName: o.marketId),
   ]);
 }

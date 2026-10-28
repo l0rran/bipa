@@ -9,4 +9,8 @@ abstract interface class PriceRepository {
 
   /// Histórico do produto, do registro mais recente para o mais antigo.
   Stream<List<PriceHistoryEntry>> watchHistory(String productId);
+
+  /// Histórico de vários produtos de uma vez (por exemplo, os da lista de
+  /// compras), do registro mais recente para o mais antigo.
+  Stream<List<PriceHistoryEntry>> watchHistoryOfProducts(Set<String> productIds);
 }

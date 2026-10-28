@@ -1,3 +1,4 @@
+import 'package:bipa/core/money/money.dart';
 import 'package:bipa/features/prices/domain/price_condition.dart';
 import 'package:bipa/features/prices/domain/price_observation.dart';
 
@@ -31,4 +32,18 @@ bool _isPreferred(PriceObservation candidate, PriceObservation current) {
   final byCondition = candidate.condition.kind.index.compareTo(current.condition.kind.index);
   if (byCondition != 0) return byCondition < 0;
   return candidate.price < current.price;
+}
+
+/// Preço de referência de cada produto do histórico: o menor entre os preços
+/// mais recentes de cada mercado, com o preço sem condição na frente.
+/// É o que a lista de compras usa para estimar o total.
+Map<String, Money> referencePrices(Iterable<PriceHistoryEntry> history) {
+  final byProduct = <String, List<PriceHistoryEntry>>{};
+  for (final entry in history) {
+    byProduct.putIfAbsent(entry.observation.productId, () => []).add(entry);
+  }
+  return {
+    for (final MapEntry(key: productId, value: entries) in byProduct.entries)
+      productId: latestPricePerMarket(entries).first.observation.price,
+  };
 }
