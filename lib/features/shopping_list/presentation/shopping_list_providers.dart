@@ -296,7 +296,14 @@ final shoppingTripSummaryProvider = Provider.autoDispose<ShoppingTripSummary?>((
   // Sem a lista carregada, a barra mostraria "0 de 0 itens".
   final entries = ref.watch(shoppingListProvider).value;
   if (trip == null || entries == null) return null;
-  return ShoppingTripSummary.of(entries, ref.watch(activeCartProvider).value ?? const [], since: trip.startedAt);
+  // O marcado à mão entra no total pelo preço que a Lista mostra (CE4).
+  final listed = ref.watch(shoppingListItemPricesProvider);
+  return ShoppingTripSummary.of(
+    entries,
+    ref.watch(activeCartProvider).value ?? const [],
+    since: trip.startedAt,
+    expected: {for (final MapEntry(key: productId, value: (:price, exact: _)) in listed.entries) productId: price},
+  );
 });
 
 /// Nome do mercado da compra em andamento, quando ele foi detectado.

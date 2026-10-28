@@ -4,6 +4,7 @@ import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/components/product_category_icon.dart';
 import 'package:bipa/core/design_system/components/shopping_list.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
+import 'package:bipa/core/l10n/meta_join.dart';
 import 'package:bipa/features/products/presentation/product_photos.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_sections.dart';
@@ -30,11 +31,13 @@ class ListPreview extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final missing = entries.where((e) => !e.item.isChecked).toList();
     final estimate = summary.estimate?.format();
+    // A estimativa diz o que deixou de fora, como em Mercados (CE4).
+    final unpriced = estimate != null && summary.unpriced > 0 ? l10n.marketsMissingPrices(summary.unpriced) : null;
 
     return ListPreviewCard(
       count: summary.remaining,
       countLabel: l10n.listItems(summary.remaining),
-      estimate: estimate == null ? null : l10n.listEstimate(estimate),
+      estimate: estimate == null ? null : l10n.joinMeta([l10n.listEstimate(estimate), ?unpriced]),
       thumbs: [for (final entry in missing.take(3)) _ListThumb(entry: entry, photos: photos)],
       extraCount: missing.length > 3 ? missing.length - 3 : 0,
       actionLabel: l10n.listGoShopping,
@@ -43,6 +46,7 @@ class ListPreview extends StatelessWidget {
       semanticLabel: [
         l10n.listPreviewSemantics(summary.remaining),
         if (estimate != null) l10n.listAbout(estimate),
+        ?unpriced,
         l10n.listGoShopping,
       ].join(', '),
     );

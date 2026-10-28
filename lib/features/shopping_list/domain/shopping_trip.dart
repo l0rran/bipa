@@ -70,8 +70,11 @@ final class ShoppingTripSummary {
     this.packages = 0,
   });
 
-  /// [spent] é a soma do que vai ser levado no carrinho. Sem nenhum preço
-  /// ainda, é `null`.
+  /// [spent] é a soma do que vai ser levado no carrinho e do que foi
+  /// marcado à mão na lista, pelo preço esperado ([expected], o preço de
+  /// uma embalagem de cada produto), que deixa o total estimado. Sem preço,
+  /// o marcado à mão conta em [unpriced] (CE4). Sem nenhum preço ainda, é
+  /// `null`.
   ///
   /// Com [since] (o começo da compra), o item marcado antes dela e que não
   /// está no carrinho fica de fora da conta, como no "Terminei": não foi
@@ -80,6 +83,7 @@ final class ShoppingTripSummary {
     Iterable<ShoppingListEntry> entries,
     Iterable<CartEntry> cart, {
     DateTime? since,
+    Map<String, Money> expected = const {},
   }) {
     final taken = {
       for (final entry in cart)
@@ -109,6 +113,23 @@ final class ShoppingTripSummary {
       spent = (spent ?? Money.zero) + subtotal;
       if (entry.item.priceEstimated) estimated = true;
     }
+    // O marcado à mão, sem passar pelo carrinho, vai com a quantidade da
+    // lista, como no "Terminei".
+    final inCart = {for (final entry in cart) entry.item.productId};
+    for (final ShoppingListEntry(:item) in entries) {
+      if (!item.isChecked || (since != null && !item.isCheckedSince(since))) continue;
+      if (inCart.contains(item.productId)) continue;
+      final price = switch (item.productId) {
+        final productId? => expected[productId],
+        null => null,
+      };
+      if (price == null) {
+        unpriced++;
+      } else {
+        spent = (spent ?? Money.zero) + price * item.quantity;
+        estimated = true;
+      }
+    }
     return ShoppingTripSummary(
       done: done,
       total: total,
@@ -126,7 +147,8 @@ final class ShoppingTripSummary {
   /// Algum preço do total ainda é o do histórico: o total leva "≈".
   final bool estimated;
 
-  /// Itens que vão ser levados sem preço: ficam fora do total.
+  /// Itens que vão ser levados sem preço (no carrinho ou marcados à mão):
+  /// ficam fora do total.
   final int unpriced;
 
   /// Embalagens no carrinho para levar: o que a barra diz numa compra sem

@@ -1,4 +1,5 @@
 import 'package:bipa/features/prices/domain/list_cost.dart';
+import 'package:bipa/features/prices/domain/price_comparison.dart';
 import 'package:bipa/features/prices/domain/price_repository.dart';
 import 'package:bipa/features/products/domain/product_repository.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
@@ -48,6 +49,14 @@ final class ReviewShoppingTrip {
       cart: cart,
       marketId: trip.marketId,
       since: trip.startedAt,
+      // O preço esperado do marcado à mão, como a Lista mostra.
+      expected: {
+        for (final MapEntry(key: productId, value: (:price, exact: _)) in listPrices(
+          history,
+          marketId: trip.marketId,
+        ).entries)
+          productId: price,
+      },
       prices: referencePricesPerMarket(
         productIds,
         history,

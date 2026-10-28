@@ -47,7 +47,8 @@ void main() {
 
     expect(review.spent, const Money.cents(1899 * 2 + 700));
     expect(review.estimated, isTrue);
-    expect(review.unpriced, 1);
+    // O sabão do carrinho e o leite marcado à mão, sem preço esperado.
+    expect(review.unpriced, 2);
     // Café (2), pão e sabão do carrinho, mais o leite marcado à mão (2).
     expect(review.packages, 6);
     expect(review.missing, [(name: 'arroz', quantity: 1)]);
@@ -100,5 +101,17 @@ void main() {
 
     // O arroz sem "levar" não conta: faltam os dois.
     expect(review.missing, [(name: 'leite', quantity: 2), (name: 'arroz', quantity: 2)]);
+  });
+
+  test('o marcado à mão entra no total pelo preço esperado, ou como sem preço', () {
+    final review = TripReview.of(
+      entries: [_listed('leite', checked: true, quantity: 2), _listed('ovos', checked: true)],
+      cart: [_cart('cafe', cents: 1899)],
+      expected: {'leite': const Money.cents(499)},
+    );
+
+    expect(review.spent, const Money.cents(1899 + 2 * 499));
+    expect(review.estimated, isTrue);
+    expect(review.unpriced, 1);
   });
 }

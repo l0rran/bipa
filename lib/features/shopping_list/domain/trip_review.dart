@@ -33,12 +33,16 @@ final class TripReview {
   /// A economia só aparece quando este mercado e outro têm preço de tudo o
   /// que vai para casa, e este saiu mais barato: comparar cestas diferentes
   /// enganaria.
+  ///
+  /// O marcado à mão entra no total pelo preço esperado ([expected], o de
+  /// uma embalagem de cada produto) ou conta como sem preço.
   factory TripReview.of({
     required Iterable<ShoppingListEntry> entries,
     required Iterable<CartEntry> cart,
     String? marketId,
     Map<String, MarketPrices> prices = const {},
     DateTime? since,
+    Map<String, Money> expected = const {},
   }) {
     Money? spent;
     var estimated = false;
@@ -72,9 +76,20 @@ final class TripReview {
         if (short > 0) missing.add((name: entry.name, quantity: short));
       } else if (item.productId case final productId?
           when !inCart.contains(productId) && (since == null || item.isCheckedSince(since))) {
-        // Marcado à mão, sem passar pelo carrinho: vai com a quantidade da lista.
+        // Marcado à mão, sem passar pelo carrinho: vai com a quantidade da
+        // lista e entra no total pelo preço esperado, que o deixa estimado;
+        // sem ele, conta como sem preço (CE4).
         quantities[productId] = item.quantity;
         packages += item.quantity;
+        if (expected[productId] case final price?) {
+          spent = (spent ?? Money.zero) + price * item.quantity;
+          estimated = true;
+        } else {
+          unpriced++;
+        }
+      } else if (item.productId == null && (since == null || item.isCheckedSince(since))) {
+        // Escrito à mão ("pão") e marcado na compra: foi pago, sem preço.
+        unpriced++;
       }
     }
 
@@ -96,7 +111,7 @@ final class TripReview {
   /// "Terminei".
   final List<MissingItem> missing;
 
-  /// O total do carrinho; `null` sem nenhum preço.
+  /// O total do carrinho e do marcado à mão; `null` sem nenhum preço.
   final Money? spent;
 
   /// Algum preço do total ainda é o do histórico.

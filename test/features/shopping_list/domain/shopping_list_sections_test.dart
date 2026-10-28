@@ -72,7 +72,8 @@ void main() {
       {'cafe': const Money.cents(1899), 'arroz': const Money.cents(2790)},
     );
 
-    expect(summary, const ShoppingListSummary(done: 1, total: 4, estimate: Money.cents(1899)));
+    // Pão e Leite faltam sem preço: ficam fora da estimativa, contados à parte.
+    expect(summary, const ShoppingListSummary(done: 1, total: 4, estimate: Money.cents(1899), unpriced: 2));
     expect(summary.remaining, 3);
     expect(summary.progress, 0.25);
   });
