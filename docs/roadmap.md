@@ -28,7 +28,7 @@
 - [ ] Desfazer em toda ação que muda o estoque; cada item bipado é salvo na hora
 - [x] Lista de compras: itens de produto ou escritos à mão, os itens de sempre (os com "ter sempre"), seções do mercado, preço esperado e total estimado; "Pôr na lista" no Início
 - [x] Modo compra: "Ir às compras" na prévia, barra da compra acima da navegação, item marcado ao registrar o preço e "Terminei", que leva o comprado ao estoque
-- [ ] Notificação ao vivo da compra (Android 16, Live Updates; precisa de código nativo)
+- [x] Notificação ao vivo da compra (Android 16, Live Updates, ADR 0015)
 - [x] Modo carrinho: câmera contínua, a bandeja com o "levar", o preço esperado do mercado e o total real; o disparo fotografa a etiqueta
 - [x] Modo carrinho: ler a etiqueta ao vivo (OCR nos quadros da câmera), sem precisar fotografar
 - [x] Produto e embalagens (ADR 0013): marca e tamanho por código de barras, folha de embalagem nova, estoque por embalagem com o total em kg, preço por kg e "Juntar com…"

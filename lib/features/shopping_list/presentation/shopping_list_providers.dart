@@ -1,4 +1,5 @@
 import 'package:bipa/core/camera/live_frame_analyzer.dart';
+import 'package:bipa/core/catalog/product_kind.dart';
 import 'package:bipa/core/database/database_provider.dart';
 import 'package:bipa/core/di/core_providers.dart';
 import 'package:bipa/core/money/money.dart';
@@ -170,4 +171,27 @@ final activeTripMarketNameProvider = Provider.autoDispose<String?>((ref) {
   if (marketId == null) return null;
   final markets = ref.watch(marketsProvider).value ?? const [];
   return markets.where((m) => m.id == marketId).firstOrNull?.name;
+});
+
+/// O que a notificação ao vivo mostra, ou `null` fora de uma compra
+/// (ADR 0015): o progresso, o mercado e a próxima seção do percurso.
+typedef LiveShopping = ({
+  String tripId,
+  ShoppingTripSummary summary,
+  String? marketName,
+  ({Aisle aisle, List<String> items})? next,
+});
+
+final liveShoppingProvider = Provider.autoDispose<LiveShopping?>((ref) {
+  final trip = ref.watch(activeTripProvider).value;
+  final summary = ref.watch(shoppingTripSummaryProvider);
+  final entries = ref.watch(shoppingListProvider).value;
+  if (trip == null || summary == null || entries == null) return null;
+  final order = ref.watch(listAisleOrderProvider).value ?? AisleOrder.empty;
+  return (
+    tripId: trip.id,
+    summary: summary,
+    marketName: ref.watch(listMarketNameProvider),
+    next: nextAisle(shoppingListSections(entries, order: order)),
+  );
 });

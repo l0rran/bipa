@@ -277,6 +277,50 @@
   },
   "cartRegister": "Cadastrar",
   "cartChooseMarket": "Escolha o mercado",
+  "liveShopping": "Compra em andamento",
+  "@liveShopping": {
+    "description": "Título da notificação ao vivo quando a compra não tem lista."
+  },
+  "liveTitle": "{items} · {total}",
+  "@liveTitle": {
+    "description": "Título da notificação ao vivo: \"4 de 7 itens · R$ 54,88\".",
+    "placeholders": {
+      "items": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "liveNext": "Próximo · {aisle}: {items}",
+  "@liveNext": {
+    "description": "A próxima seção do percurso e o que falta nela: \"Próximo · Laticínios: leite, ovos\".",
+    "placeholders": {
+      "aisle": {
+        "type": "String"
+      },
+      "items": {
+        "type": "String"
+      }
+    }
+  },
+  "liveAllPicked": "Tudo da lista no carrinho",
+  "liveChip": "{done}/{total}",
+  "@liveChip": {
+    "description": "Chip da barra de status durante a compra (até 7 caracteres aparecem inteiros).",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "liveScan": "Bipar",
+  "liveChannelName": "Compra em andamento",
+  "liveChannelDescription": "Mostra o progresso da compra na tela de bloqueio e na barra de status.",
   "listMarketLabel": "Mercado da lista: {name}. Trocar",
   "@listMarketLabel": {
     "description": "Rótulo acessível do chip do mercado na lista.",

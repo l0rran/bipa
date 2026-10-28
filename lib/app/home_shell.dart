@@ -3,6 +3,7 @@ import 'package:bipa/core/design_system/components/scan_nav_bar.dart';
 import 'package:bipa/core/design_system/components/shopping_list.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
+import 'package:bipa/features/shopping_list/presentation/live_shopping_notification.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -33,44 +34,46 @@ class HomeShell extends ConsumerWidget {
       initialLocation: index == navigationShell.currentIndex,
     );
 
-    return Scaffold(
-      // O conteúdo passa por trás das barras; as telas usam o
-      // MediaQuery.padding.bottom para deixar espaço embaixo.
-      extendBody: true,
-      body: navigationShell,
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (trip case final summary? when navigationShell.currentIndex != _listBranch)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(BipaSpacing.s3, 0, BipaSpacing.s3, BipaSpacing.s2),
-              child: ShoppingBar(
-                title: l10n.tripItems(summary.done, summary.total),
-                subtitle: _subtitle(summary.spent?.format(), marketName),
-                actionLabel: l10n.tripContinue,
-                progress: summary.progress,
-                semanticLabel: l10n.tripSemantics(summary.done, summary.total),
-                // "Continuar" volta para o modo carrinho.
-                onTap: () => context.push(Routes.cartMode),
+    return LiveShoppingNotification(
+      child: Scaffold(
+        // O conteúdo passa por trás das barras; as telas usam o
+        // MediaQuery.padding.bottom para deixar espaço embaixo.
+        extendBody: true,
+        body: navigationShell,
+        bottomNavigationBar: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (trip case final summary? when navigationShell.currentIndex != _listBranch)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(BipaSpacing.s3, 0, BipaSpacing.s3, BipaSpacing.s2),
+                child: ShoppingBar(
+                  title: l10n.tripItems(summary.done, summary.total),
+                  subtitle: _subtitle(summary.spent?.format(), marketName),
+                  actionLabel: l10n.tripContinue,
+                  progress: summary.progress,
+                  semanticLabel: l10n.tripSemantics(summary.done, summary.total),
+                  // "Continuar" volta para o modo carrinho.
+                  onTap: () => context.push(Routes.cartMode),
+                ),
               ),
+            ScanNavBar(
+              selectedIndex: navigationShell.currentIndex,
+              onSelected: goBranch,
+              onScan: () => context.push(Routes.capturePrice),
+              scanLabel: l10n.navScan,
+              destinations: [
+                ScanNavDestination(icon: Icons.home_outlined, selectedIcon: Icons.home_rounded, label: l10n.navHome),
+                ScanNavDestination(icon: Icons.sell_outlined, selectedIcon: Icons.sell_rounded, label: l10n.navProducts),
+                ScanNavDestination(icon: Icons.place_outlined, selectedIcon: Icons.place_rounded, label: l10n.navMarkets),
+                ScanNavDestination(
+                  icon: Icons.checklist_outlined,
+                  selectedIcon: Icons.checklist_rounded,
+                  label: l10n.navList,
+                ),
+              ],
             ),
-          ScanNavBar(
-            selectedIndex: navigationShell.currentIndex,
-            onSelected: goBranch,
-            onScan: () => context.push(Routes.capturePrice),
-            scanLabel: l10n.navScan,
-            destinations: [
-              ScanNavDestination(icon: Icons.home_outlined, selectedIcon: Icons.home_rounded, label: l10n.navHome),
-              ScanNavDestination(icon: Icons.sell_outlined, selectedIcon: Icons.sell_rounded, label: l10n.navProducts),
-              ScanNavDestination(icon: Icons.place_outlined, selectedIcon: Icons.place_rounded, label: l10n.navMarkets),
-              ScanNavDestination(
-                icon: Icons.checklist_outlined,
-                selectedIcon: Icons.checklist_rounded,
-                label: l10n.navList,
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
