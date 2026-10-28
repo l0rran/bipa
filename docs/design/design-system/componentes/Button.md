@@ -16,6 +16,7 @@ Botões em pílula para ações; o principal é amarelo (`brand`) com texto escu
 - Pressionado: encolhe para 96% e o raio vai de 28 para 14px (pílula → retângulo arredondado), com mola; a sombra some.
 - Desabilitado: fundo `surface-sunken`, texto `ink-muted`, sem contorno nem sombra.
 - O rótulo diz o que acontece: verbo + objeto ("Salvar preço"), nunca "OK".
+- **Ações que apagam ou descartam** ("Apagar mercado", "Cancelar compra", "Tirar de casa") se confirmam num diálogo, no botão neutro em `ink`, nunca no principal: o amarelo chama para salvar e bipar, não para apagar. O coral fica só para o estoque abaixo do "ter sempre".
 
 ## Movimento
 
