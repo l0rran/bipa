@@ -213,6 +213,7 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
     final tripSummary = ref.watch(shoppingTripSummaryProvider);
     final photos = ref.watch(productPhotosDirectoryProvider).value;
     final itemPrices = ref.watch(shoppingListItemPricesProvider);
+    final taken = ref.watch(takenInCartProvider);
     final summary = ref.watch(shoppingListSummaryProvider);
     final onList = ref.watch(productsOnListProvider);
     final usual = _usualProducts(ref.watch(stockProvider).value ?? const []);
@@ -422,10 +423,8 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                                     (:final price, exact: false) => l10n.listEstimate(price.formatDecimal()),
                                     null => null,
                                   },
-                                  quantity: entry.item.quantity > 1 ? l10n.listQuantity(entry.item.quantity) : null,
-                                  quantitySpoken: entry.item.quantity > 1
-                                      ? l10n.listQuantitySpoken(entry.item.quantity)
-                                      : null,
+                                  quantity: _quantityLabel(l10n, entry.item, taken),
+                                  quantitySpoken: _quantityLabel(l10n, entry.item, taken, spoken: true),
                                   onLongPress: () => _setQuantity(entry),
                                   onChanged: (checked) => _setChecked(entry, checked: checked),
                                 ),
@@ -444,6 +443,17 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
         },
       ),
     );
+  }
+
+  /// A quantidade antes do nome: "3×", ou, na compra, "1 de 3" enquanto o
+  /// carrinho não alcança a lista. `null` para uma embalagem só.
+  String? _quantityLabel(AppLocalizations l10n, ShoppingListItem item, Map<String, int> taken, {bool spoken = false}) {
+    final got = taken[item.productId] ?? 0;
+    if (item.isPartlyIn(got)) {
+      return spoken ? l10n.listQuantityPartialSpoken(got, item.quantity) : l10n.listQuantityPartial(got, item.quantity);
+    }
+    if (item.quantity == 1) return null;
+    return spoken ? l10n.listQuantitySpoken(item.quantity) : l10n.listQuantity(item.quantity);
   }
 
   /// Os produtos que a pessoa quer ter sempre: os que estão acabando primeiro.

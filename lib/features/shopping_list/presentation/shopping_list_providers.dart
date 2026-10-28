@@ -21,6 +21,7 @@ import 'package:bipa/features/shopping_list/domain/aisle_order.dart';
 import 'package:bipa/features/shopping_list/domain/cancel_shopping_trip.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/finish_shopping_trip.dart';
+import 'package:bipa/features/shopping_list/domain/match_list_to_cart.dart';
 import 'package:bipa/features/shopping_list/domain/put_product_on_list.dart';
 import 'package:bipa/features/shopping_list/domain/record_at_home.dart';
 import 'package:bipa/features/shopping_list/domain/record_trip_price.dart';
@@ -194,6 +195,17 @@ final scaleItemsProvider = Provider<ScaleItems>(
     cart: ref.watch(cartRepositoryProvider),
     createProduct: ref.watch(createProductByWeightProvider),
   ),
+);
+
+/// Marca o produto na lista quando o carrinho alcança a quantidade dela.
+final matchListToCartProvider = Provider<MatchListToCart>(
+  (ref) => MatchListToCart(list: ref.watch(shoppingListRepositoryProvider), cart: ref.watch(cartRepositoryProvider)),
+);
+
+/// Quantas embalagens de cada produto estão no carrinho para levar, na
+/// compra em andamento ("1 de 3" na lista e na bandeja).
+final takenInCartProvider = Provider.autoDispose<Map<String, int>>(
+  (ref) => CartEntry.takenByProduct(ref.watch(activeCartProvider).value ?? const []),
 );
 
 /// "Pôr na lista" com o que falta para o "ter sempre".

@@ -17,6 +17,7 @@ final class FinishedShoppingTrip {
     required this.tripId,
     required this.bought,
     required this.stocked,
+    this.shortened = const [],
     this.changes = const [],
     this.marketId,
     this.aisleOrderBefore,
@@ -30,6 +31,10 @@ final class FinishedShoppingTrip {
   /// Quantas unidades de cada produto entraram no estoque.
   final Map<String, int> stocked;
 
+  /// Itens comprados só em parte ("1 de 3"), como estavam antes: ficaram na
+  /// lista com o que faltou, e o desfazer volta a quantidade.
+  final List<ShoppingListItem> shortened;
+
   /// O que cada entrada mudou no estoque, para o desfazer tirar exatamente
   /// os lotes que entraram (ADR 0013).
   final List<StockChange> changes;
@@ -42,8 +47,10 @@ final class FinishedShoppingTrip {
 
 /// Caso de uso: termina a compra. Entra no estoque o que está no carrinho
 /// para levar (na quantidade bipada) e o que foi marcado à mão na lista
-/// durante a compra (com a quantidade da lista). O marcado na compra sai da
-/// lista; o que faltou, e o que já estava marcado antes, continuam nela.
+/// durante a compra (com a quantidade da lista). Sai da lista o marcado na
+/// compra e o que o carrinho alcançou; o que faltou, e o que já estava
+/// marcado antes, continuam nela. Do item comprado em parte ("1 de 3"),
+/// fica na lista a diferença.
 final class FinishShoppingTrip {
   FinishShoppingTrip({
     required ShoppingTripRepository trips,
@@ -78,18 +85,23 @@ final class FinishShoppingTrip {
     final cart = await _cart.watchTrip(tripId).first;
     final entries = await _list.watchAll().first;
     // Só o que foi marcado durante esta compra, ou que está no carrinho
-    // para levar: o marcado antes, e que não foi bipado, não foi comprado
-    // agora e fica na lista como está.
-    final taken = {
-      for (final entry in cart)
-        if (entry.item.take) entry.item.productId,
-    };
-    final bought = [
-      for (final entry in entries)
-        if (entry.item.isCheckedSince(active.startedAt) ||
-            entry.item.isChecked && taken.contains(entry.item.productId))
-          entry.item,
-    ];
+    // para levar na quantidade da lista: o marcado antes, e que não foi
+    // bipado, não foi comprado agora e fica na lista como está.
+    final taken = CartEntry.takenByProduct(cart);
+    final bought = <ShoppingListItem>[];
+    final shortened = <ShoppingListItem>[];
+    for (final ShoppingListEntry(:item) in entries) {
+      final got = switch (item.productId) {
+        final productId? => taken[productId] ?? 0,
+        null => 0,
+      };
+      if (item.isCheckedSince(active.startedAt) || item.isChecked && got > 0) {
+        bought.add(item);
+      } else if (got > 0) {
+        // O carrinho alcançou a lista, ou só uma parte dela.
+        (item.missingWith(got) == 0 ? bought : shortened).add(item);
+      }
+    }
 
     // Cada embalagem do carrinho entra no estoque do seu produto; embalagens
     // diferentes do mesmo produto somam nele.
@@ -131,9 +143,14 @@ final class FinishShoppingTrip {
       for (final item in bought) {
         await _list.remove(item.id);
       }
+      for (final item in shortened) {
+        final productId = item.productId!;
+        await _list.setQuantity(item.id, item.missingWith(taken[productId] ?? 0));
+      }
       return FinishedShoppingTrip(
         tripId: tripId,
         bought: bought,
+        shortened: shortened,
         stocked: stocked,
         changes: changes,
         marketId: marketId,
@@ -176,6 +193,9 @@ final class FinishShoppingTrip {
     }
     for (final item in finished.bought) {
       await _list.restore(item);
+    }
+    for (final item in finished.shortened) {
+      await _list.setQuantity(item.id, item.quantity);
     }
     if ((finished.marketId, finished.aisleOrderBefore) case (final marketId?, final before?)) {
       await _aisles.save(marketId, before);

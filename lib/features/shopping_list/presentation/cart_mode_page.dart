@@ -20,6 +20,7 @@ import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/live_scan.dart';
 import 'package:bipa/features/shopping_list/domain/live_tag_router.dart';
 import 'package:bipa/features/shopping_list/domain/record_trip_price.dart';
+import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
 import 'package:bipa/features/shopping_list/presentation/change_trip_market.dart';
 import 'package:bipa/features/shopping_list/presentation/finish_shopping.dart';
@@ -178,7 +179,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     final trip = ref.read(activeTripProvider).value;
     if (trip == null) return;
     final scale = ref.read(scaleItemsProvider);
-    final list = ref.read(shoppingListRepositoryProvider);
+    final matchList = ref.read(matchListToCartProvider);
     final l10n = AppLocalizations.of(context);
     try {
       var product = await scale.productFor(trip.marketId, label);
@@ -195,7 +196,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
       }
       if (product == null) return;
       await scale.addToCart(trip.id, product, label);
-      await list.checkProduct(product.id);
+      await matchList(trip.id, product.id);
       unawaited(HapticFeedback.mediumImpact());
       unawaited(SystemSound.play(SystemSoundType.click));
       if (!mounted) return;
@@ -209,7 +210,8 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     }
   }
 
-  /// Põe a embalagem no carrinho e marca o produto na lista. O preço é o da
+  /// Põe a embalagem no carrinho e marca o produto na lista quando o
+  /// carrinho alcança a quantidade dela ("1 de 3" antes). O preço é o da
   /// etiqueta lida há pouco, se ela esperava por esta embalagem (ou o
   /// [registeredWith], a etiqueta que a folha de cadastro mostrou); senão, o
   /// último dela no mercado da compra.
@@ -217,7 +219,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     final trip = ref.read(activeTripProvider).value;
     if (trip == null) return;
     final cart = ref.read(cartRepositoryProvider);
-    final list = ref.read(shoppingListRepositoryProvider);
+    final matchList = ref.read(matchListToCartProvider);
     final prices = ref.read(priceRepositoryProvider);
     final recordPrice = ref.read(recordTripPriceProvider);
 
@@ -245,7 +247,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
       // O preço do histórico é uma estimativa até a etiqueta ser lida.
       estimated: fromTag == null,
     );
-    await list.checkProduct(product.id);
+    await matchList(trip.id, product.id);
     unawaited(HapticFeedback.mediumImpact());
     // O bipe: o som de clique do sistema, que segue a configuração de sons de
     // toque do aparelho (desligado lá, desligado aqui).
@@ -393,21 +395,14 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     });
   }
 
+  /// O "levar" decide se o item conta para a lista: o produto fica marcado
+  /// enquanto o que vai no carrinho (de todas as embalagens) alcança a lista.
   Future<void> _setTake(CartEntry entry, {required bool take}) async {
     final cart = ref.read(cartRepositoryProvider);
-    final list = ref.read(shoppingListRepositoryProvider);
-    // Outra embalagem do mesmo produto que vai no carrinho mantém o produto
-    // marcado na lista.
-    final otherTaken = (ref.read(activeCartProvider).value ?? const <CartEntry>[]).any(
-      (other) => other.item.id != entry.item.id && other.product.id == entry.product.id && other.item.take,
-    );
+    final matchList = ref.read(matchListToCartProvider);
     try {
       await cart.setTake(entry.item.id, take: take);
-      if (take) {
-        await list.checkProduct(entry.product.id);
-      } else if (!otherTaken) {
-        await list.uncheckProduct(entry.product.id);
-      }
+      await matchList(entry.item.tripId, entry.product.id);
     } on Exception catch (error, stack) {
       _report(error, stack);
     }
@@ -445,15 +440,17 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     }
   }
 
-  /// Tocar no nome: quantas unidades vão.
+  /// Tocar no nome: quantas unidades vão. A lista acompanha ("2 de 3").
   Future<void> _setQuantity(CartEntry entry) async {
     final cart = ref.read(cartRepositoryProvider);
+    final matchList = ref.read(matchListToCartProvider);
     final chosen = await _withAnalysisPaused(
       () => showQuantityDialog(context, title: entry.name, initial: entry.item.quantity),
     );
     if (chosen == null || chosen == entry.item.quantity) return;
     try {
       await cart.setQuantity(entry.item.id, chosen);
+      await matchList(entry.item.tripId, entry.product.id);
     } on Exception catch (error, stack) {
       _report(error, stack);
     }
@@ -511,7 +508,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     if (trip == null) return;
     final l10n = AppLocalizations.of(context);
     final cart = ref.read(cartRepositoryProvider);
-    final list = ref.read(shoppingListRepositoryProvider);
+    final matchList = ref.read(matchListToCartProvider);
     final recordPrice = ref.read(recordTripPriceProvider);
     _clearNotice();
     final choice = await _withAnalysisPaused(
@@ -524,7 +521,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     try {
       // Só o preço: se o produto já está no carrinho, não soma uma unidade.
       await cart.setPriceForProduct(trip.id, product.id, read.price);
-      await list.checkProduct(product.id);
+      await matchList(trip.id, product.id);
       _settledItems.add(CartItem.keyOf(product.id, null));
       await _recordTag(recordPrice, trip, product.id, null, read);
     } on Exception catch (error, stack) {
@@ -565,6 +562,12 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     final trip = ref.watch(activeTripProvider).value;
     final cart = ref.watch(activeCartProvider).value ?? const <CartEntry>[];
     final summary = ref.watch(shoppingTripSummaryProvider);
+    final taken = ref.watch(takenInCartProvider);
+    // Quantas embalagens a lista pede de cada produto que ainda falta.
+    final wanted = {
+      for (final ShoppingListEntry(:item) in ref.watch(shoppingListProvider).value ?? const <ShoppingListEntry>[])
+        if (item.productId case final productId? when !item.isChecked) productId: item.quantity,
+    };
     final marketName = ref.watch(activeTripMarketNameProvider);
     final notice = _notice;
     // Observado enquanto o carrinho está aberto: o leitor do disparo carrega
@@ -636,7 +639,16 @@ class _CartModePageState extends ConsumerState<CartModePage> {
             for (final entry in cart)
               ScanTrayItem(
                 key: ValueKey(entry.item.id),
-                name: entry.item.quantity > 1 ? l10n.cartQuantity(entry.item.quantity, entry.name) : entry.name,
+                // "1 de 3 Leite" enquanto o carrinho não alcança a lista.
+                name: switch ((wanted[entry.product.id], taken[entry.product.id] ?? 0)) {
+                  (final want?, final got) when entry.item.take && got < want => l10n.cartQuantityPartial(
+                    got,
+                    want,
+                    entry.name,
+                  ),
+                  _ when entry.item.quantity > 1 => l10n.cartQuantity(entry.item.quantity, entry.name),
+                  _ => entry.name,
+                },
                 // O estimado se distingue só pela etiqueta vazada: um sinal só.
                 price: entry.item.price?.format(),
                 priceEstimated: entry.item.priceEstimated,

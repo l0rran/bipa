@@ -31,6 +31,13 @@ final class ShoppingListItem {
 
   bool get isChecked => checkedAt != null;
 
+  /// Quantas embalagens ainda faltam com [taken] no carrinho: 0 quando o
+  /// carrinho alcançou a lista ("3× Leite" com 1 no carrinho: faltam 2).
+  int missingWith(int taken) => taken >= quantity ? 0 : quantity - taken;
+
+  /// O carrinho tem parte do que falta ("1 de 3"): nem nada, nem tudo.
+  bool isPartlyIn(int taken) => !isChecked && taken > 0 && missingWith(taken) > 0;
+
   /// Marcado a partir de [since], como o que foi comprado numa compra que
   /// começou nessa hora. O marcado antes (em casa, ou numa compra cancelada
   /// de antes) não conta como desta compra.

@@ -319,7 +319,7 @@
   },
   "cartQuantity": "{count}× {name}",
   "@cartQuantity": {
-    "description": "Nome do item quando foi bipado mais de uma vez.",
+    "description": "Nome com a quantidade, quando é mais de uma: o item bipado mais de uma vez, ou o que faltou na folha \"Fim da compra\" (\"2× Leite\").",
     "placeholders": {
       "count": {
         "type": "int"
@@ -1182,6 +1182,45 @@
     "placeholders": {
       "market": {
         "type": "String"
+      }
+    }
+  },
+  "cartQuantityPartial": "{taken} de {wanted} {name}",
+  "@cartQuantityPartial": {
+    "description": "Nome do item na bandeja quando o carrinho tem só parte do que a lista pede: \"1 de 3 Leite\".",
+    "placeholders": {
+      "taken": {
+        "type": "int"
+      },
+      "wanted": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listQuantityPartial": "{taken} de {wanted}",
+  "@listQuantityPartial": {
+    "description": "Quantidade antes do nome do item da lista, na compra, quando o carrinho tem só uma parte: \"1 de 3 Leite\".",
+    "placeholders": {
+      "taken": {
+        "type": "int"
+      },
+      "wanted": {
+        "type": "int"
+      }
+    }
+  },
+  "listQuantityPartialSpoken": "{taken} de {wanted} embalagens no carrinho",
+  "@listQuantityPartialSpoken": {
+    "description": "O \"1 de 3\" do item da lista para o leitor de tela. Só aparece com mais de uma embalagem pedida.",
+    "placeholders": {
+      "taken": {
+        "type": "int"
+      },
+      "wanted": {
+        "type": "int"
       }
     }
   }

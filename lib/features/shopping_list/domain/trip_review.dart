@@ -7,6 +7,10 @@ import 'package:meta/meta.dart';
 /// Quanto a compra saiu mais barata que no mercado mais barato depois deste.
 typedef TripSavings = ({String marketName, Money amount});
 
+/// O que faltou de um item da lista: o nome e quantas embalagens ("2" de
+/// "3× Leite" com uma no carrinho).
+typedef MissingItem = ({String name, int quantity});
+
 /// O que o "Terminei" vai fazer, mostrado antes de confirmar (folha "Fim da
 /// compra"): o total, quantas embalagens vão para casa, a economia contra
 /// outro mercado e o que faltou da lista.
@@ -55,11 +59,17 @@ final class TripReview {
       if (entry.item.priceEstimated) estimated = true;
     }
     final inCart = {for (final entry in cart) entry.item.productId};
-    final missing = <String>[];
+    final taken = CartEntry.takenByProduct(cart);
+    final missing = <MissingItem>[];
     for (final entry in entries) {
       final item = entry.item;
       if (!item.isChecked) {
-        missing.add(entry.name);
+        // O carrinho pode ter alcançado só uma parte da lista ("1 de 3").
+        final short = item.missingWith(switch (item.productId) {
+          final productId? => taken[productId] ?? 0,
+          null => 0,
+        });
+        if (short > 0) missing.add((name: entry.name, quantity: short));
       } else if (item.productId case final productId?
           when !inCart.contains(productId) && (since == null || item.isCheckedSince(since))) {
         // Marcado à mão, sem passar pelo carrinho: vai com a quantidade da lista.
@@ -82,8 +92,9 @@ final class TripReview {
   /// à mão na lista.
   final int packages;
 
-  /// O que faltou da lista; continua nela depois do "Terminei".
-  final List<String> missing;
+  /// O que faltou da lista, com quantas embalagens; continua nela depois do
+  /// "Terminei".
+  final List<MissingItem> missing;
 
   /// O total do carrinho; `null` sem nenhum preço.
   final Money? spent;
@@ -135,7 +146,7 @@ final class TripReview {
       other.unpriced == unpriced &&
       other.savings == savings;
 
-  static bool _sameList(List<String> a, List<String> b) {
+  static bool _sameList(List<MissingItem> a, List<MissingItem> b) {
     if (a.length != b.length) return false;
     for (var i = 0; i < a.length; i++) {
       if (a[i] != b[i]) return false;

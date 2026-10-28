@@ -19,6 +19,7 @@ import 'package:bipa/features/shopping_list/domain/aisle_order.dart';
 import 'package:bipa/features/shopping_list/domain/cancel_shopping_trip.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/finish_shopping_trip.dart';
+import 'package:bipa/features/shopping_list/domain/match_list_to_cart.dart';
 import 'package:bipa/features/shopping_list/domain/review_shopping_trip.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
@@ -153,7 +154,7 @@ void main() {
 
     expect(result.spent, const Money.cents(1899));
     expect(result.packages, 1);
-    expect(result.missing, ['Arroz']);
+    expect(result.missing, [(name: 'Arroz', quantity: 1)]);
     expect(result.savings, (marketName: 'Centro', amount: const Money.cents(200)));
     expect(await review('outra'), isNull);
   });
@@ -195,6 +196,50 @@ void main() {
 
     expect(finished.stocked, {'arroz': 1});
     expect(await list.watchAll().first, isEmpty);
+  });
+
+  test('"3× Café" com um no carrinho continua faltando, e o "Terminei" deixa os outros dois na lista', () async {
+    await list.addProduct(productId: 'cafe', name: 'Café', quantity: 3);
+    final trip = await trips.start();
+    final match = MatchListToCart(list: list, cart: cart);
+    await cart.addProduct(trip.id, 'cafe');
+    await match(trip.id, 'cafe');
+
+    expect((await list.watchAll().first).single.item.isChecked, isFalse);
+    final review = ReviewShoppingTrip(
+      trips: trips,
+      list: list,
+      cart: cart,
+      prices: DriftPriceRepository(db),
+      products: DriftProductRepository(db),
+    );
+    expect((await review(trip.id))!.missing, [(name: 'Café', quantity: 2)]);
+
+    final finished = (await finish(trip.id))!;
+
+    expect(finished.stocked, {'cafe': 1});
+    final left = (await list.watchAll().first).single.item;
+    expect((left.quantity, left.isChecked), (2, false));
+
+    await finish.undo(finished);
+    expect((await list.watchAll().first).single.item.quantity, 3);
+  });
+
+  test('o carrinho que alcança a lista marca o item, e desligar o "levar" desmarca', () async {
+    await list.addProduct(productId: 'cafe', name: 'Café', quantity: 2);
+    final trip = await trips.start();
+    final match = MatchListToCart(list: list, cart: cart);
+    Future<bool> checked() async => (await list.watchAll().first).single.item.isChecked;
+
+    await cart.addProduct(trip.id, 'cafe');
+    await cart.addProduct(trip.id, 'cafe');
+    await match(trip.id, 'cafe');
+    expect(await checked(), isTrue);
+
+    final item = (await cart.watchTrip(trip.id).first).single.item;
+    await cart.setTake(item.id, take: false);
+    await match(trip.id, 'cafe');
+    expect(await checked(), isFalse);
   });
 
   test('o marcado antes da compra não vai para casa nem sai da lista no "Terminei"', () async {

@@ -50,7 +50,7 @@ void main() {
     expect(review.unpriced, 1);
     // Café (2), pão e sabão do carrinho, mais o leite marcado à mão (2).
     expect(review.packages, 6);
-    expect(review.missing, ['arroz']);
+    expect(review.missing, [(name: 'arroz', quantity: 1)]);
   });
 
   test('a economia compara a mesma cesta, com as quantidades, contra o mais barato depois deste', () {
@@ -90,5 +90,15 @@ void main() {
 
     expect(reviewAt({'cafe': const Money.cents(1899)}).savings, isNull);
     expect(reviewAt(const {}).savings, isNull);
+  });
+
+  test('o que o carrinho não alcançou da lista falta com a diferença', () {
+    final review = TripReview.of(
+      entries: [_listed('leite', quantity: 3), _listed('cafe', quantity: 2), _listed('arroz', quantity: 2)],
+      cart: [_cart('leite'), _cart('cafe', quantity: 2), _cart('arroz', quantity: 2, take: false)],
+    );
+
+    // O arroz sem "levar" não conta: faltam os dois.
+    expect(review.missing, [(name: 'leite', quantity: 2), (name: 'arroz', quantity: 2)]);
   });
 }

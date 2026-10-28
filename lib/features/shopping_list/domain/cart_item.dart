@@ -88,6 +88,17 @@ final class CartEntry {
   static String nameOf(Product product, ProductPackage? package) =>
       [product.name, ?package?.brand, ?package?.sizeLabel].join(' ');
 
+  /// Quantas embalagens de cada produto vão ser levadas: as do carrinho com
+  /// o "levar" ligado, somando as embalagens diferentes do mesmo produto.
+  static Map<String, int> takenByProduct(Iterable<CartEntry> cart) {
+    final taken = <String, int>{};
+    for (final entry in cart) {
+      if (!entry.item.take) continue;
+      taken.update(entry.item.productId, (q) => q + entry.item.quantity, ifAbsent: () => entry.item.quantity);
+    }
+    return taken;
+  }
+
   @override
   bool operator ==(Object other) =>
       other is CartEntry && other.item == item && other.product == product && other.package == package;

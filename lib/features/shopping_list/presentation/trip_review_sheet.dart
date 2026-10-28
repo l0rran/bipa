@@ -86,7 +86,13 @@ class TripReviewSheet extends StatelessWidget {
                   children: [
                     Text(l10n.tripReviewMissing(missing.length), style: BipaText.bodyLarge.copyWith(color: colors.ink)),
                     Text(
-                      l10n.tripReviewMissingDetail(missing.length, l10n.joinNames(missing)),
+                      l10n.tripReviewMissingDetail(
+                        missing.length,
+                        l10n.joinNames([
+                          for (final (:name, :quantity) in missing)
+                            quantity > 1 ? l10n.cartQuantity(quantity, name) : name,
+                        ]),
+                      ),
                       style: BipaText.body.copyWith(fontSize: 13, color: colors.inkMuted),
                     ),
                   ],
