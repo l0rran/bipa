@@ -48,6 +48,9 @@ void main() {
 
     expect(products.products[product.id]?.name, 'Café');
     expect(products.packages[package.id]?.productId, product.id);
+    // O produto conta em kg; a embalagem fica em gramas.
+    expect(product.unit, MeasureUnit.kilogram);
+    expect(package.unit, MeasureUnit.gram);
   });
 
   test('um código que já é de outra embalagem não cria nada', () async {

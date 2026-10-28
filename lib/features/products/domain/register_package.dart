@@ -62,7 +62,9 @@ final class RegisterPackage {
     } else {
       final name = input.newProductName?.trim() ?? '';
       if (name.isEmpty) throw const MissingPackageProductException();
-      product = Product(id: _ids.newId(), name: name, unit: input.unit, createdAt: now, updatedAt: now);
+      // O produto conta na grandeza base: uma embalagem de 500 g cria um
+      // produto em kg, que soma com as de 1 kg.
+      product = Product(id: _ids.newId(), name: name, unit: input.unit.baseUnit, createdAt: now, updatedAt: now);
       await _products.save(product);
     }
 

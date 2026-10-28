@@ -111,6 +111,8 @@ void main() {
 
     final package = products.packages[observation.packageId]!;
     expect((package.productId, package.barcode), ('leite', '7891000100103'));
+    // Na unidade do produto, não na padrão de um produto novo.
+    expect(package.unit, MeasureUnit.liter);
   });
 
   test('cadastra o produto quando o código ainda não existe', () async {

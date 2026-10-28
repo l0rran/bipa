@@ -62,6 +62,10 @@ class _NewPackageSheetState extends ConsumerState<NewPackageSheet> {
   late final _brand = TextEditingController(text: widget.suggestion.brand ?? '');
   late final _size = TextEditingController(text: _formatSize(widget.suggestion.size));
   late var _unit = widget.suggestion.unit ?? widget.suggestion.product?.unit ?? MeasureUnit.unit;
+
+  /// A unidade acompanha o produto escolhido até a pessoa escolher outra (ou
+  /// até vir do nome lido na etiqueta, "5 kg").
+  late var _unitChosen = widget.suggestion.unit != null;
   var _saving = false;
   String? _error;
 
@@ -90,6 +94,7 @@ class _NewPackageSheetState extends ConsumerState<NewPackageSheet> {
         case ExistingProduct(:final product):
           _product = product;
           _newName = null;
+          if (!_unitChosen) _unit = product.unit;
         case NewProduct(:final name):
           _product = null;
           _newName = name;
@@ -101,6 +106,12 @@ class _NewPackageSheetState extends ConsumerState<NewPackageSheet> {
   Future<void> _save() async {
     final l10n = AppLocalizations.of(context);
     final register = ref.read(registerPackageProvider);
+    final sizeText = _size.text.trim();
+    final size = _sizeValue;
+    if (sizeText.isNotEmpty && size == null) {
+      setState(() => _error = l10n.packageSizeInvalid);
+      return;
+    }
     setState(() {
       _saving = true;
       _error = null;
@@ -112,7 +123,7 @@ class _NewPackageSheetState extends ConsumerState<NewPackageSheet> {
           productId: _product?.id,
           newProductName: _newName,
           brand: _brand.text,
-          size: _size.text.trim().isEmpty ? null : _sizeValue,
+          size: size,
           unit: _unit,
         ),
       );
@@ -210,18 +221,25 @@ class _NewPackageSheetState extends ConsumerState<NewPackageSheet> {
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: field.copyWith(
                       labelText: l10n.packageSize,
-                      suffixIcon: DropdownButtonHideUnderline(
-                        child: DropdownButton<MeasureUnit>(
-                          value: _unit,
-                          borderRadius: BorderRadius.circular(BipaRadius.md),
-                          style: BipaText.label.copyWith(color: colors.inkMuted),
-                          items: [
-                            for (final unit in MeasureUnit.values)
-                              DropdownMenuItem(value: unit, child: Text(unit.symbol)),
-                          ],
-                          onChanged: (unit) {
-                            if (unit != null) setState(() => _unit = unit);
-                          },
+                      suffixIcon: Semantics(
+                        label: l10n.packageUnit,
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<MeasureUnit>(
+                            value: _unit,
+                            borderRadius: BorderRadius.circular(BipaRadius.md),
+                            style: BipaText.label.copyWith(color: colors.inkMuted),
+                            items: [
+                              for (final unit in MeasureUnit.values)
+                                DropdownMenuItem(value: unit, child: Text(unit.symbol)),
+                            ],
+                            onChanged: (unit) {
+                              if (unit == null) return;
+                              setState(() {
+                                _unit = unit;
+                                _unitChosen = true;
+                              });
+                            },
+                          ),
                         ),
                       ),
                     ),

@@ -328,6 +328,10 @@
   "packageBrand": "Marca",
   "packageSize": "Tamanho",
   "packageUnit": "Unidade",
+  "@packageUnit": {
+    "description": "Rótulo acessível do seletor de unidade ao lado do tamanho."
+  },
+  "packageSizeInvalid": "O tamanho precisa ser um número, como 5 ou 0,5.",
   "packageSaveFailed": "Não deu para salvar a embalagem.",
   "productPickTitle": "De que produto é?",
   "productPickSearch": "Buscar ou criar",

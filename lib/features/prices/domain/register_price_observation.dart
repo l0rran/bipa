@@ -122,7 +122,8 @@ final class RegisterPriceObservation {
       if (package != null && package.productId == product.id) return (product, package);
       // Um código que ainda não é de ninguém vira embalagem deste produto.
       if (barcode != null && byBarcode == null && input.packageId == null) {
-        return (product, await _newPackage(product, barcode, input.newProductUnit));
+        // Embalagem nova de um produto que já existe: na unidade dele.
+        return (product, await _newPackage(product, barcode, product.unit));
       }
       return (product, null);
     }
@@ -139,7 +140,7 @@ final class RegisterPriceObservation {
     final product = Product(
       id: _ids.newId(),
       name: name,
-      unit: input.newProductUnit,
+      unit: input.newProductUnit.baseUnit,
       createdAt: now,
       updatedAt: now,
     );
