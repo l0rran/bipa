@@ -21,10 +21,10 @@ import 'package:bipa/features/products/presentation/product_picker_sheet.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/live_scan.dart';
+import 'package:bipa/features/shopping_list/domain/record_at_home.dart';
 import 'package:bipa/features/shopping_list/presentation/live_camera.dart';
+import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:bipa/features/shopping_list/presentation/start_shopping.dart';
-import 'package:bipa/features/stock/domain/stock_item.dart';
-import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
 import 'package:bipa/features/stock/presentation/stock_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -231,9 +231,9 @@ class _CameraPageState extends ConsumerState<CameraPage> {
       case CameraMode.find:
         await GoRouter.of(context).pushReplacement<void>(Routes.productDetail(product.id));
       case CameraMode.bought:
-        await _adjust(product, package, 1);
+        await _adjust(product, package, bought: true);
       case CameraMode.used:
-        await _adjust(product, package, -1);
+        await _adjust(product, package, bought: false);
       case CameraMode.price:
         final pending = _pendingTag;
         if (pending != null && _fresh(pending.at)) {
@@ -332,15 +332,27 @@ class _CameraPageState extends ConsumerState<CameraPage> {
     }
   }
 
-  /// "Comprei" ou "Dar baixa": uma embalagem a mais ou a menos em casa, com
-  /// Desfazer.
-  Future<void> _adjust(Product product, ProductPackage package, int delta) async {
+  /// "Comprei" ou "Dar baixa": uma embalagem a mais ou a menos em casa. A
+  /// lista acompanha (RecordAtHome), e o Desfazer volta os dois.
+  Future<void> _adjust(Product product, ProductPackage package, {required bool bought}) async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    final repository = ref.read(stockRepositoryProvider);
-    final current = (await repository.findByProduct(product.id))?.quantity ?? 0;
-    final applied = StockItem.nextQuantity(current, delta.toDouble()) - current;
-    if (applied == 0) {
+    final record = ref.read(recordAtHomeProvider);
+    final HomeChange? change;
+    try {
+      change = bought
+          ? await record.bought(product, packageId: package.id)
+          : await record.used(product, packageId: package.id);
+    } on Exception {
+      if (mounted) {
+        messenger
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(l10n.cameraAdjustFailed)));
+      }
+      return;
+    }
+    if (!mounted) return;
+    if (change == null) {
       _showNotice((
         icon: Icons.remove_rounded,
         value: null,
@@ -349,25 +361,28 @@ class _CameraPageState extends ConsumerState<CameraPage> {
       ));
       return;
     }
-    final change = await repository.adjust(
-      productId: product.id,
-      packageId: package.id,
-      delta: applied,
-      reason: applied > 0 ? StockMovementReason.purchase : StockMovementReason.consumption,
-    );
+    final applied = change.stock.applied;
+    final atHome = (await ref.read(stockRepositoryProvider).findByProduct(product.id))?.quantity ?? 0;
     if (!mounted) return;
     final amount = Formatters.quantity(applied.abs());
     _showNotice((
       icon: applied > 0 ? Icons.add_rounded : Icons.remove_rounded,
       value: applied > 0 ? l10n.cameraDeltaUp(amount) : l10n.cameraDeltaDown(amount),
-      detail: l10n.cameraAtHome(product.name, Formatters.quantity(current + applied)),
+      detail: l10n.cameraAtHome(product.name, Formatters.quantity(atHome)),
       waiting: false,
     ));
-    // Com menos de uma embalagem em casa, a baixa tira só o que havia.
-    final done = switch (applied) {
-      > 0.0 => l10n.stockBoughtOneDone(product.name),
-      -1.0 => l10n.stockUsedOneDone(product.name),
-      _ => l10n.cameraUsedPart(amount, product.name),
+    // O aviso já mostra o estoque; o snackbar diz o que mudou na lista, que
+    // é o que o Desfazer também volta.
+    final done = switch (change.list) {
+      RemovedFromList() => l10n.cameraOffList(product.name),
+      ListQuantityLowered(:final before) => l10n.cameraStillMissing(before - 1, product.name),
+      AddedToList() => l10n.cameraToList(product.name),
+      ListUnchanged() => switch (applied) {
+        > 0.0 => l10n.stockBoughtOneDone(product.name),
+        -1.0 => l10n.stockUsedOneDone(product.name),
+        // Com menos de uma embalagem em casa, a baixa tira só o que havia.
+        _ => l10n.cameraUsedPart(amount, product.name),
+      },
     };
     messenger
       ..hideCurrentSnackBar()
@@ -375,7 +390,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
         SnackBar(
           content: Text(done),
           duration: const Duration(seconds: 4),
-          action: SnackBarAction(label: l10n.undo, onPressed: () => repository.revert(change)),
+          action: SnackBarAction(label: l10n.undo, onPressed: () => unawaited(record.undo(change))),
         ),
       );
   }

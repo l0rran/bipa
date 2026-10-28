@@ -1114,5 +1114,36 @@
         "type": "String"
       }
     }
-  }
+  },
+  "cameraOffList": "{name} saiu da lista",
+  "@cameraOffList": {
+    "description": "Snackbar do modo \"Comprei\" quando o produto bipado era o último que faltava na lista.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cameraStillMissing": "{count, plural, =1{{name}: falta 1 na lista} other{{name}: faltam {count} na lista}}",
+  "@cameraStillMissing": {
+    "description": "Snackbar do modo \"Comprei\" quando ainda faltam embalagens do produto na lista.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cameraToList": "{name} foi para a lista",
+  "@cameraToList": {
+    "description": "Snackbar do modo \"Dar baixa\" quando o produto ficou abaixo do \"ter sempre\" e entrou na lista.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cameraAdjustFailed": "Não deu para atualizar o estoque. Tente de novo."
 }
