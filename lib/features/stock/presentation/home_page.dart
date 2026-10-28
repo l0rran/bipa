@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:bipa/core/design_system/bipa_metrics.dart';
@@ -93,10 +94,45 @@ class _HomePageState extends ConsumerState<HomePage> {
     showHomeChangeSnackBar(messenger, l10n: l10n, record: record, product: product, change: change);
   }
 
-  /// Põe o produto na lista ou o tira de lá.
-  Future<void> _toggleList(Product product, {required bool onList}) => onList
-      ? ref.read(shoppingListRepositoryProvider).removeProduct(product.id)
-      : ref.read(putProductOnListProvider)(product);
+  /// Põe o produto na lista ou o tira de lá. Com [notify] (o gesto e o
+  /// botão da linha), avisa o que mudou, com "Desfazer"; o "+" do cartão de
+  /// "Acabando" mostra o próprio estado e dispensa o aviso.
+  Future<void> _toggleList(Product product, {required bool onList, bool notify = false}) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final list = ref.read(shoppingListRepositoryProvider);
+    final VoidCallback undo;
+    final String message;
+    try {
+      if (onList) {
+        // Guardado antes de tirar: o desfazer devolve com a quantidade.
+        final removed = [
+          for (final entry in await list.watchAll().first)
+            if (entry.item.productId == product.id) entry.item,
+        ];
+        await list.removeProduct(product.id);
+        message = l10n.listItemRemoved(product.name);
+        undo = () => unawaited(Future.wait(removed.map(list.restore)));
+      } else {
+        await ref.read(putProductOnListProvider)(product);
+        message = l10n.cameraToList(product.name);
+        undo = () => unawaited(list.removeProduct(product.id));
+      }
+    } on Exception {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.listUpdateFailed)));
+      return;
+    }
+    if (!notify) return;
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          duration: const Duration(seconds: 4),
+          action: SnackBarAction(label: l10n.undo, onPressed: undo),
+        ),
+      );
+  }
 
   List<StockEntry> _visible(List<StockEntry> entries) {
     final query = _query.trim().toLowerCase();
@@ -246,7 +282,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                             photo: productPhotoFile(entry.product, photos),
                             expanded: _expandedProductId == entry.product.id,
                             onList: onList.contains(entry.product.id),
-                            onToggleList: () => _toggleList(entry.product, onList: onList.contains(entry.product.id)),
+                            onToggleList: () =>
+                                _toggleList(entry.product, onList: onList.contains(entry.product.id), notify: true),
                             onTap: () => setState(() {
                               final id = entry.product.id;
                               _expandedProductId = _expandedProductId == id ? null : id;

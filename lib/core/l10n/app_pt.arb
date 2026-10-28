@@ -1165,5 +1165,6 @@
   "stockOneMore": "Uma embalagem a mais",
   "@stockOneMore": {
     "description": "Rótulo acessível do + do stepper de estoque: corrige a quantidade, sem mexer na lista (ADR 0019)."
-  }
+  },
+  "listUpdateFailed": "Não deu para mudar a lista. Tente de novo."
 }
