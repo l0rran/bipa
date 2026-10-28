@@ -18,6 +18,7 @@ part 'app_database.g.dart';
     Markets,
     PriceObservations,
     StockItems,
+    StockPackages,
     StockMovements,
     ShoppingListItems,
     ShoppingTrips,
@@ -77,6 +78,12 @@ class AppDatabase extends _$AppDatabase {
       await migrator.addColumn(priceObservations, priceObservations.packageId);
       await migrator.createIndex(priceObservationsPackage);
       await customStatement('UPDATE price_observations SET package_id = product_id');
+      // O estoque de cada produto vai para a sua embalagem.
+      await migrator.createTable(stockPackages);
+      await customStatement(
+        'INSERT INTO stock_packages (product_id, package_id, quantity, since) '
+        'SELECT product_id, product_id, quantity, updated_at FROM stock_items WHERE quantity > 0',
+      );
       // Recria a tabela sem código, marca e tamanho.
       await migrator.alterTable(TableMigration(products));
       // Um carrinho criado agora (de uma versão antes da 6) já nasce no

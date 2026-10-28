@@ -2,6 +2,7 @@ import 'package:bipa/core/database/database_provider.dart';
 import 'package:bipa/core/di/core_providers.dart';
 import 'package:bipa/features/stock/data/drift_stock_repository.dart';
 import 'package:bipa/features/stock/domain/stock_item.dart';
+import 'package:bipa/features/stock/domain/stock_package.dart';
 import 'package:bipa/features/stock/domain/stock_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,4 +16,9 @@ final stockRepositoryProvider = Provider<StockRepository>(
 
 final stockProvider = StreamProvider.autoDispose<List<StockEntry>>(
   (ref) => ref.watch(stockRepositoryProvider).watchAll(),
+);
+
+/// Quantas embalagens de cada tipo há em casa (ADR 0013).
+final stockPackagesProvider = StreamProvider.autoDispose.family<List<StockPackageCount>, String>(
+  (ref, productId) => ref.watch(stockRepositoryProvider).watchPackages(productId),
 );
