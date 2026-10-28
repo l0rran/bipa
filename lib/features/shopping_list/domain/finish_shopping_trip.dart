@@ -55,8 +55,10 @@ final class FinishShoppingTrip {
     ];
 
     final stocked = <String, int>{};
+    // Embalagens diferentes do mesmo produto somam no estoque dele.
     for (final entry in cart) {
-      if (entry.item.take) stocked[entry.item.productId] = entry.item.quantity;
+      final quantity = entry.item.quantity;
+      if (entry.item.take) stocked.update(entry.item.productId, (q) => q + quantity, ifAbsent: () => quantity);
     }
     // O que foi marcado à mão, sem passar pelo carrinho, entra com uma unidade.
     // O que está no carrinho sem "levar" não entra.

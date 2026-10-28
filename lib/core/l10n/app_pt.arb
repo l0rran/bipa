@@ -305,5 +305,71 @@
   "cartLiveWaiting": "bipe o produto",
   "cartCameraDenied": "Sem acesso à câmera.\nLibere nas configurações do Android.",
   "cartCameraFailed": "Não deu para abrir a câmera.",
-  "cartCameraRetry": "Tentar de novo"
+  "cartCameraRetry": "Tentar de novo",
+  "packageNewOf": "Embalagem nova de",
+  "@packageNewOf": {
+    "description": "Rótulo acima do produto sugerido, ao bipar um código desconhecido."
+  },
+  "packageChooseProduct": "Escolher o produto",
+  "packageOtherProduct": "Escolher outro produto",
+  "packageTitle": "Embalagem",
+  "packageBrand": "Marca",
+  "packageSize": "Tamanho",
+  "packageUnit": "Unidade",
+  "packageSaveFailed": "Não deu para salvar a embalagem.",
+  "productPickTitle": "De que produto é?",
+  "productPickSearch": "Buscar ou criar",
+  "productPickCreate": "Criar \u201c{name}\u201d",
+  "@productPickCreate": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "productPackages": "Embalagens",
+  "productMarkets": "Nos mercados",
+  "productAtHome": "Em casa",
+  "productMoreOptions": "Mais opções",
+  "productEdit": "Editar",
+  "productRegisterPrice": "Registrar preço",
+  "productCheapest": "menor preço",
+  "productCheapestPerUnit": "menor por {unit}",
+  "@productCheapestPerUnit": {
+    "description": "Selo da embalagem mais barata por unidade de medida: \"menor por kg\".",
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "productBestUnitPrice": "o {unit} · {package}",
+  "@productBestUnitPrice": {
+    "description": "Linha sob o melhor preço por unidade: \"o kg · Camil 10 kg\".",
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      },
+      "package": {
+        "type": "String"
+      }
+    }
+  },
+  "productTargetCount": "Ter sempre {count}",
+  "@productTargetCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "productNoPrices": "Nenhum preço ainda. Bipe a etiqueta no mercado.",
+  "priceAge": "{days, plural, =0{hoje} =1{ontem} other{há {days} dias}}",
+  "@priceAge": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  }
 }

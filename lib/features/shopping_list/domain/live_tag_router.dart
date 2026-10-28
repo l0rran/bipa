@@ -5,32 +5,24 @@ import 'package:meta/meta.dart';
 /// Um preço lido ao vivo que ainda não achou o seu item.
 @immutable
 final class PendingTagPrice {
-  const PendingTagPrice({required this.read, required this.readAt, this.productId, this.barcode});
+  const PendingTagPrice({required this.read, required this.readAt, this.barcode});
 
   final TagPriceRead read;
   final DateTime readAt;
 
-  /// O produto da etiqueta, quando o código dela é conhecido: só ele leva o
-  /// preço.
-  final String? productId;
-
-  /// O código da etiqueta, quando ele ainda não é de nenhum produto: só o
-  /// produto cadastrado com ele leva o preço.
+  /// O código da etiqueta, quando ela tinha um: só a embalagem com esse
+  /// código leva o preço.
   final String? barcode;
 
   @override
   bool operator ==(Object other) =>
-      other is PendingTagPrice &&
-      other.read == read &&
-      other.readAt == readAt &&
-      other.productId == productId &&
-      other.barcode == barcode;
+      other is PendingTagPrice && other.read == read && other.readAt == readAt && other.barcode == barcode;
 
   @override
-  int get hashCode => Object.hash(read, readAt, productId, barcode);
+  int get hashCode => Object.hash(read, readAt, barcode);
 
   @override
-  String toString() => 'PendingTagPrice($read, $readAt, $productId, $barcode)';
+  String toString() => 'PendingTagPrice($read, $readAt, $barcode)';
 }
 
 /// Para onde vai um preço lido ao vivo.
@@ -72,11 +64,11 @@ final class WaitForProduct extends LiveTagDestination {
 
 /// Decide a que item vai o preço de uma etiqueta lida ao vivo (ADR 0012).
 ///
-/// 1. Etiqueta com o código de um produto conhecido: o preço é desse
-///    produto. Se ele ainda não está no carrinho, espera ser bipado, sem
-///    entrar sozinho.
-/// 2. Etiqueta com um código que nenhum produto tem: espera o produto ser
-///    cadastrado e bipado com esse código.
+/// 1. Etiqueta com o código de uma embalagem conhecida: o preço é dessa
+///    embalagem (ADR 0013). Se ela ainda não está no carrinho, espera ser
+///    bipada, sem entrar sozinha.
+/// 2. Etiqueta com um código que nenhuma embalagem tem: espera a embalagem
+///    ser cadastrada e bipada com esse código.
 /// 3. Sem código: vai para o último item bipado, se ele entrou há até
 ///    [recent] e o preço dele ainda não foi firmado (lido ao vivo, digitado
 ///    ou fotografado). Assim, a etiqueta do lado, lida logo depois, não
@@ -89,23 +81,22 @@ final class LiveTagRouter {
   final Duration waitFor;
 
   /// [cart] vem do mais recente para o mais antigo, como o repositório
-  /// entrega. [settled] são os itens com o preço já firmado: lido ao vivo,
-  /// digitado ou fotografado. O preço esperado, vindo do histórico, não
+  /// entrega. [tagPackageId] é a embalagem do código da etiqueta, quando ele
+  /// é conhecido. [settled] são os itens com o preço já firmado: lido ao
+  /// vivo, digitado ou fotografado. O preço esperado, vindo do histórico, não
   /// firma o item.
   LiveTagDestination route(
     TagPriceRead read, {
     required List<CartEntry> cart,
     required DateTime now,
-    String? tagProductId,
+    String? tagPackageId,
     Set<String> settled = const {},
   }) {
-    if (tagProductId != null) {
-      final entry = cart.where((entry) => entry.product.id == tagProductId).firstOrNull;
-      return entry != null
-          ? PriceCartItem(entry)
-          : WaitForProduct(PendingTagPrice(read: read, readAt: now, productId: tagProductId));
-    }
     final barcode = read.barcode;
+    if (tagPackageId != null) {
+      final entry = cart.where((entry) => entry.item.packageId == tagPackageId).firstOrNull;
+      if (entry != null) return PriceCartItem(entry);
+    }
     if (barcode != null) return WaitForProduct(PendingTagPrice(read: read, readAt: now, barcode: barcode));
 
     final newest = cart.firstOrNull;
@@ -117,20 +108,11 @@ final class LiveTagRouter {
     return WaitForProduct(PendingTagPrice(read: read, readAt: now));
   }
 
-  /// Se o preço que espera serve para um produto ainda não cadastrado, bipado
-  /// com [barcode]: a etiqueta é desse código ou não tinha código. Serve para
-  /// sugerir o nome da etiqueta no cadastro.
-  bool fitsUnknownProduct(PendingTagPrice pending, {required String barcode, required DateTime now}) {
-    if (now.difference(pending.readAt) > waitFor || pending.productId != null) return false;
-    return pending.barcode == null || pending.barcode == barcode;
-  }
-
-  /// Se o preço que espera vale para o produto que acabou de ser bipado com
-  /// [barcode].
-  bool fits(PendingTagPrice pending, {required String productId, required String barcode, required DateTime now}) {
+  /// Se o preço que espera vale para a embalagem que acabou de ser bipada
+  /// (ou cadastrada) com [barcode]: a etiqueta não tinha código ou tinha
+  /// esse mesmo.
+  bool fits(PendingTagPrice pending, {required String barcode, required DateTime now}) {
     if (now.difference(pending.readAt) > waitFor) return false;
-    if (pending.productId case final expected?) return expected == productId;
-    if (pending.barcode case final expected?) return expected == barcode;
-    return true;
+    return pending.barcode == null || pending.barcode == barcode;
   }
 }

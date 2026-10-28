@@ -3,6 +3,7 @@ import 'package:bipa/core/money/money.dart';
 import 'package:bipa/features/products/data/drift_product_repository.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/shopping_list/data/drift_cart_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_list_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_trip_repository.dart';
@@ -165,6 +166,34 @@ void main() {
     expect(finished.stocked, {'cafe': 2});
     expect((await stock.findByProduct('cafe'))?.quantity, 2);
     expect(await stock.findByProduct('arroz'), isNull);
+  });
+
+  test('embalagens diferentes do mesmo produto são itens diferentes e somam no estoque dele', () async {
+    final products = DriftProductRepository(db);
+    for (final (id, brand, size) in [('tio-joao', 'Tio João', 5.0), ('camil', 'Camil', 10.0)]) {
+      await products.savePackage(
+        ProductPackage(
+          id: id,
+          productId: 'arroz',
+          brand: brand,
+          size: size,
+          unit: MeasureUnit.kilogram,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+    }
+    final trip = await trips.start();
+    await cart.addProduct(trip.id, 'arroz', packageId: 'tio-joao', price: const Money.cents(2790));
+    now = now.add(const Duration(minutes: 1));
+    await cart.addProduct(trip.id, 'arroz', packageId: 'camil', price: const Money.cents(4990));
+    await cart.addProduct(trip.id, 'arroz', packageId: 'camil');
+
+    final entries = await cart.watchTrip(trip.id).first;
+    expect(entries.map((e) => (e.name, e.item.quantity)), [('Arroz Camil 10 kg', 2), ('Arroz Tio João 5 kg', 1)]);
+
+    final finished = (await finish(trip.id))!;
+    expect(finished.stocked, {'arroz': 3});
   });
 
   test('o resumo da compra soma só o que vai levar, com os preços conhecidos', () async {

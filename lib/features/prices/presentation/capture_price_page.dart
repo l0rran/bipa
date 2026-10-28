@@ -20,6 +20,7 @@ import 'package:bipa/features/products/domain/gtin.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
+import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -49,7 +50,8 @@ class CapturePricePage extends ConsumerStatefulWidget {
 class _CapturePricePageState extends ConsumerState<CapturePricePage> {
   final _formKey = GlobalKey<FormState>();
 
-  /// Vindo do modo carrinho: os produtos cujo preço esta tela pôs no carrinho.
+  /// Vindo do modo carrinho: os itens ([CartItem.key]) cujo preço esta tela
+  /// pôs no carrinho.
   final _pricedInCart = <String>{};
   final _barcode = TextEditingController();
   final _name = TextEditingController();
@@ -94,9 +96,17 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
     super.dispose();
   }
 
+  /// Produto fixo (aberto pelo detalhe do produto): o preço vai para a
+  /// embalagem mais recente dele.
   Future<void> _loadProduct(String id) async {
-    final product = await ref.read(productRepositoryProvider).findById(id);
-    if (mounted) setState(() => _product = product);
+    final repository = ref.read(productRepositoryProvider);
+    final product = await repository.findById(id);
+    final package = (await repository.watchPackages(id).first).firstOrNull;
+    if (!mounted) return;
+    setState(() {
+      _product = product;
+      _package = package;
+    });
   }
 
   Future<void> _detectMarket() async {
@@ -253,8 +263,13 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
       try {
         if (widget.fromCart) {
           if (await trips.watchActive().first case final trip?) {
-            await cart.setPriceForProduct(trip.id, observation.productId, observation.price);
-            _pricedInCart.add(observation.productId);
+            await cart.setPriceForProduct(
+              trip.id,
+              observation.productId,
+              observation.price,
+              packageId: observation.packageId,
+            );
+            _pricedInCart.add(CartItem.keyOf(observation.productId, observation.packageId));
             await list.checkProduct(observation.productId);
           }
         }
@@ -369,7 +384,7 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
             Text('Produto', style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             if (_productLocked)
-              _ProductSummary(product: _product)
+              _ProductSummary(product: _product, package: _package)
             else ...[
               TextFormField(
                 controller: _barcode,

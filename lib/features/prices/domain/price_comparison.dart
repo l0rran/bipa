@@ -50,8 +50,14 @@ Map<String, Money> referencePrices(Iterable<PriceHistoryEntry> history) {
 
 /// O preço mais recente do produto num mercado (o sem condição na frente),
 /// ou `null` se ele nunca foi visto lá. É o preço esperado no modo carrinho.
-Money? latestPriceAt(Iterable<PriceHistoryEntry> history, String marketId) => latestPricePerMarket(history)
-    .where((entry) => entry.observation.marketId == marketId)
-    .firstOrNull
-    ?.observation
-    .price;
+/// Com [packageId], só vale o preço dessa embalagem (ADR 0013): o arroz de
+/// 10 kg não diz quanto custa o de 5 kg.
+Money? latestPriceAt(Iterable<PriceHistoryEntry> history, String marketId, {String? packageId}) =>
+    latestPricePerMarket([
+          for (final entry in history)
+            if (packageId == null || entry.observation.packageId == packageId) entry,
+        ])
+        .where((entry) => entry.observation.marketId == marketId)
+        .firstOrNull
+        ?.observation
+        .price;

@@ -14,7 +14,8 @@ import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/prices/domain/register_price_observation.dart';
 import 'package:bipa/features/prices/presentation/prices_providers.dart';
 import 'package:bipa/features/products/domain/product.dart';
-import 'package:bipa/features/products/presentation/product_form_page.dart';
+import 'package:bipa/features/products/domain/product_package.dart';
+import 'package:bipa/features/products/presentation/new_package_sheet.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/live_scan.dart';
@@ -60,16 +61,17 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
   /// O preço lido antes de bipar, esperando o próximo produto.
   PendingTagPrice? _pending;
 
-  /// Produtos com o preço firmado nesta compra (lido ao vivo, digitado ou
-  /// fotografado): uma etiqueta sem código lida depois não os sobrescreve.
-  final _settledProducts = <String>{};
+  /// Itens com o preço firmado nesta compra (lido ao vivo, digitado ou
+  /// fotografado), pela [CartItem.key]: uma etiqueta sem código lida depois
+  /// não os sobrescreve.
+  final _settledItems = <String>{};
 
   /// Preços de etiqueta já guardados no histórico, para não repetir a
   /// observação a cada vez que a mesma etiqueta volta à moldura.
   final _registeredTags = <String>{};
 
   _LiveNotice? _notice;
-  String? _justReadProductId;
+  String? _justReadKey;
   Timer? _noticeTimer;
 
   /// Os eventos da câmera são tratados um por vez, na ordem: um bipe termina
@@ -199,10 +201,12 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
   }
 
   Future<void> _onCode(String code) async {
+    final repository = ref.read(productRepositoryProvider);
     final Product? product;
     try {
-      product = await ref.read(productRepositoryProvider).findByBarcode(code);
-      if (product != null && mounted) await _addToCart(product, barcode: code);
+      final package = await repository.findPackageByBarcode(code);
+      product = package == null ? null : await repository.findById(package.productId);
+      if (product != null && package != null && mounted) await _addToCart(product, package);
     } on Exception catch (error, stack) {
       _report(error, stack);
       return;
@@ -222,27 +226,26 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
   Future<void> _register(String code) async {
     // O aviso pode ser tocado depois de o carrinho fechar.
     if (!mounted) return;
-    // A etiqueta lida há pouco sugere o nome; a pessoa confere no formulário.
+    // A etiqueta lida há pouco sugere o produto, a marca e o tamanho, e mostra
+    // o preço; a pessoa confere na folha (ADR 0013).
     final pending = _pending;
-    final nameHint = pending != null && _router.fitsUnknownProduct(pending, barcode: code, now: DateTime.now())
-        ? pending.read.nameHint
-        : null;
-    final product = await _withScannerPaused(
-      () => context.push<Product>(Routes.newProduct, extra: ProductFormArgs(barcode: code, name: nameHint)),
+    final fromTag = pending != null && _router.fits(pending, barcode: code, now: DateTime.now()) ? pending.read : null;
+    final created = await _withAnalysisPaused(
+      () => showNewPackageSheet(context, ref, barcode: code, nameHint: fromTag?.nameHint, price: fromTag?.price),
     );
-    if (product == null || !mounted) return;
+    if (created == null || !mounted) return;
     try {
       // O preço da etiqueta desse código esperou o cadastro, que leva tempo.
-      await _addToCart(product, barcode: code, afterRegistration: true);
+      await _addToCart(created.product, created.package, afterRegistration: true);
     } on Exception catch (error, stack) {
       _report(error, stack);
     }
   }
 
-  /// Põe o produto no carrinho e o marca na lista. O preço é o da etiqueta
-  /// lida há pouco, se ela esperava por este produto; senão, o último dele no
-  /// mercado da compra.
-  Future<void> _addToCart(Product product, {required String barcode, bool afterRegistration = false}) async {
+  /// Põe a embalagem no carrinho e marca o produto na lista. O preço é o da
+  /// etiqueta lida há pouco, se ela esperava por esta embalagem; senão, o
+  /// último dela no mercado da compra.
+  Future<void> _addToCart(Product product, ProductPackage package, {bool afterRegistration = false}) async {
     final trip = ref.read(activeTripProvider).value;
     if (trip == null) return;
     final cart = ref.read(cartRepositoryProvider);
@@ -251,7 +254,7 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
     final register = ref.read(registerPriceObservationProvider);
 
     final pending = _pending;
-    final fromTag = pending != null && _pendingFits(pending, product.id, barcode, afterRegistration: afterRegistration)
+    final fromTag = pending != null && _pendingFits(pending, package.barcode, afterRegistration: afterRegistration)
         ? pending.read
         : null;
     // Consumido na hora: outro bipe durante a gravação não leva o mesmo preço.
@@ -259,31 +262,28 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
     final marketId = trip.marketId;
     final expected = fromTag != null || marketId == null
         ? null
-        : latestPriceAt(await prices.watchHistory(product.id).first, marketId);
+        : latestPriceAt(await prices.watchHistory(product.id).first, marketId, packageId: package.id);
 
-    await cart.addProduct(trip.id, product.id, price: fromTag?.price ?? expected);
+    await cart.addProduct(trip.id, product.id, packageId: package.id, price: fromTag?.price ?? expected);
     await list.checkProduct(product.id);
     unawaited(HapticFeedback.mediumImpact());
+    final key = CartItem.keyOf(product.id, package.id);
     if (fromTag != null) {
-      _settledProducts.add(product.id);
-      await _rememberTagPrice(register, trip, product.id, fromTag);
+      _settledItems.add(key);
+      await _rememberTagPrice(register, trip, product.id, package.id, fromTag);
     }
     if (!mounted) return;
     _lockFrame();
     if (fromTag != null) {
-      _showNotice((price: fromTag.price, detail: product.name, waiting: false), productId: product.id);
+      _showNotice((price: fromTag.price, detail: CartEntry.nameOf(product, package), waiting: false), key: key);
     }
   }
 
-  /// O preço que espera vale para este produto? Depois de um cadastro, o
-  /// prazo não conta: o formulário costuma demorar mais que ele.
-  bool _pendingFits(PendingTagPrice pending, String productId, String barcode, {required bool afterRegistration}) =>
-      _router.fits(
-        pending,
-        productId: productId,
-        barcode: barcode,
-        now: afterRegistration ? pending.readAt : DateTime.now(),
-      );
+  /// O preço que espera vale para esta embalagem? Depois de um cadastro, o
+  /// prazo não conta: a folha costuma demorar mais que ele.
+  bool _pendingFits(PendingTagPrice pending, String? barcode, {required bool afterRegistration}) =>
+      barcode != null &&
+      _router.fits(pending, barcode: barcode, now: afterRegistration ? pending.readAt : DateTime.now());
 
   /// Uma etiqueta lida ao vivo: o preço vai para o item certo ou espera o
   /// próximo produto (ADR 0012).
@@ -296,23 +296,23 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
     final l10n = AppLocalizations.of(context);
     try {
       final barcode = read.barcode;
-      final tagProduct = barcode == null ? null : await products.findByBarcode(barcode);
+      final tagPackage = barcode == null ? null : await products.findPackageByBarcode(barcode);
       if (!mounted) return;
       final cart = ref.read(activeCartProvider).value ?? const <CartEntry>[];
       final settled = {
         for (final entry in cart)
-          if (_settledProducts.contains(entry.product.id)) entry.item.id,
+          if (_settledItems.contains(entry.item.key)) entry.item.id,
       };
       final now = DateTime.now();
-      switch (_router.route(read, cart: cart, now: now, tagProductId: tagProduct?.id, settled: settled)) {
+      switch (_router.route(read, cart: cart, now: now, tagPackageId: tagPackage?.id, settled: settled)) {
         case PriceCartItem(:final entry):
           await cartRepository.setPrice(entry.item.id, read.price);
-          _settledProducts.add(entry.product.id);
-          await _rememberTagPrice(register, trip, entry.product.id, read);
+          _settledItems.add(entry.item.key);
+          await _rememberTagPrice(register, trip, entry.product.id, entry.item.packageId, read);
           unawaited(HapticFeedback.lightImpact());
           if (!mounted) return;
           _lockFrame();
-          _showNotice((price: read.price, detail: entry.product.name, waiting: false), productId: entry.product.id);
+          _showNotice((price: read.price, detail: entry.name, waiting: false), key: entry.item.key);
         case WaitForProduct(:final pending):
           _pending = pending;
           unawaited(HapticFeedback.selectionClick());
@@ -330,15 +330,17 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
     RegisterPriceObservation register,
     ShoppingTrip trip,
     String productId,
+    String? packageId,
     TagPriceRead read,
   ) async {
     final marketId = trip.marketId;
-    final key = '$productId:${read.price.cents}';
+    final key = '${CartItem.keyOf(productId, packageId)}:${read.price.cents}';
     if (marketId == null || _registeredTags.contains(key)) return;
     await register(
       RegisterPriceInput(
         marketId: marketId,
         productId: productId,
+        packageId: packageId,
         price: read.price,
         source: PriceSource.priceTag,
         otherOffers: read.otherOffers,
@@ -355,18 +357,19 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
     });
   }
 
-  void _showNotice(_LiveNotice notice, {String? productId, Duration duration = const Duration(milliseconds: 2500)}) {
+  /// [key] é a [CartItem.key] do item que recebeu o preço, para o anel.
+  void _showNotice(_LiveNotice notice, {String? key, Duration duration = const Duration(milliseconds: 2500)}) {
     if (!mounted) return;
     setState(() {
       _notice = notice;
-      _justReadProductId = productId;
+      _justReadKey = key;
     });
     _noticeTimer?.cancel();
     _noticeTimer = Timer(duration, () {
       if (!mounted) return;
       setState(() {
         _notice = null;
-        _justReadProductId = null;
+        _justReadKey = null;
       });
     });
   }
@@ -395,7 +398,7 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
     final price = await _withAnalysisPaused(
       () => showDialog<Money>(
         context: context,
-        builder: (_) => _PriceDialog(title: l10n.cartPriceTitle(entry.product.name), initial: entry.item.price),
+        builder: (_) => _PriceDialog(title: l10n.cartPriceTitle(entry.name), initial: entry.item.price),
       ),
     );
     if (price == null || !mounted) return;
@@ -411,10 +414,16 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
     try {
       if (trip.marketId == null) await trips.setMarket(trip.id, marketId);
       await register(
-        RegisterPriceInput(marketId: marketId, productId: entry.product.id, price: price, source: PriceSource.manual),
+        RegisterPriceInput(
+          marketId: marketId,
+          productId: entry.product.id,
+          packageId: entry.item.packageId,
+          price: price,
+          source: PriceSource.manual,
+        ),
       );
       await cart.setPrice(entry.item.id, price);
-      _settledProducts.add(entry.product.id);
+      _settledItems.add(entry.item.key);
     } on Exception {
       messenger.showSnackBar(SnackBar(content: Text(l10n.cartPriceFailed)));
     }
@@ -429,7 +438,7 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
   /// e fica firmado: a etiqueta lida ao vivo na volta não o sobrescreve.
   Future<void> _photographTag() async {
     final priced = await _withScannerPaused(() => context.push<Set<String>>(Routes.capturePriceFromCart));
-    if (priced != null) _settledProducts.addAll(priced);
+    if (priced != null) _settledItems.addAll(priced);
   }
 
   Future<void> _finish(ShoppingTrip trip) async {
@@ -623,12 +632,12 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
                   ScanTrayItem(
                     key: ValueKey(entry.item.id),
                     name: entry.item.quantity > 1
-                        ? l10n.cartQuantity(entry.item.quantity, entry.product.name)
-                        : entry.product.name,
+                        ? l10n.cartQuantity(entry.item.quantity, entry.name)
+                        : entry.name,
                     price: entry.item.price?.format(),
-                    justRead: entry.product.id == _justReadProductId,
+                    justRead: entry.item.key == _justReadKey,
                     take: entry.item.take,
-                    takeLabel: l10n.cartTake(entry.product.name),
+                    takeLabel: l10n.cartTake(entry.name),
                     onTakeChanged: (take) => _setTake(entry, take: take),
                     priceTapLabel: l10n.cartTypePrice,
                     onPriceTap: () {

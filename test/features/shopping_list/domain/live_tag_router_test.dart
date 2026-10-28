@@ -10,10 +10,18 @@ final _now = DateTime(2026, 10, 28, 9, 30);
 const _read = TagPriceRead(price: Money.cents(2790));
 const _router = LiveTagRouter();
 const _riceCode = '7891910000197';
+const _coffeeCode = '7891000100103';
 
-/// Item bipado há [secondsAgo] segundos.
+/// Item bipado há [secondsAgo] segundos; a embalagem tem o id do produto com
+/// o sufixo `-pkg`.
 CartEntry _inCart(String id, {required int secondsAgo}) => CartEntry(
-  item: CartItem(id: 'item-$id', tripId: 't', productId: id, addedAt: _now.subtract(Duration(seconds: secondsAgo))),
+  item: CartItem(
+    id: 'item-$id',
+    tripId: 't',
+    productId: id,
+    packageId: '$id-pkg',
+    addedAt: _now.subtract(Duration(seconds: secondsAgo)),
+  ),
   product: Product(id: id, name: id, unit: MeasureUnit.unit, createdAt: _now, updatedAt: _now),
 );
 
@@ -42,29 +50,24 @@ void main() {
     expect(destination, isA<WaitForProduct>());
   });
 
-  test('etiqueta com código: o preço é do produto do código, esteja onde estiver no carrinho', () {
+  test('etiqueta com código: o preço é da embalagem do código, esteja onde estiver no carrinho', () {
     final coffee = _inCart('coffee', secondsAgo: 300);
     final cart = [_inCart('rice', secondsAgo: 2), coffee];
-    const read = TagPriceRead(price: Money.cents(1899), barcode: '7891000100103');
+    const read = TagPriceRead(price: Money.cents(1899), barcode: _coffeeCode);
 
     expect(
-      _router.route(read, cart: cart, now: _now, tagProductId: 'coffee', settled: {'item-coffee'}),
+      _router.route(read, cart: cart, now: _now, tagPackageId: 'coffee-pkg', settled: {'item-coffee'}),
       PriceCartItem(coffee),
-    );
-    expect(
-      _router.route(read, cart: cart, now: _now, tagProductId: 'milk'),
-      WaitForProduct(PendingTagPrice(read: read, readAt: _now, productId: 'milk')),
     );
   });
 
-  test('etiqueta com um código que nenhum produto tem não vai para o último item', () {
-    final cart = [_inCart('coffee', secondsAgo: 2)];
-    const read = TagPriceRead(price: Money.cents(2790), barcode: _riceCode);
+  test('etiqueta com código fora do carrinho, conhecido ou não, espera aquela embalagem', () {
+    final cart = [_inCart('rice', secondsAgo: 2)];
+    const read = TagPriceRead(price: Money.cents(1899), barcode: _coffeeCode);
+    final expected = WaitForProduct(PendingTagPrice(read: read, readAt: _now, barcode: _coffeeCode));
 
-    expect(
-      _router.route(read, cart: cart, now: _now),
-      WaitForProduct(PendingTagPrice(read: read, readAt: _now, barcode: _riceCode)),
-    );
+    expect(_router.route(read, cart: cart, now: _now, tagPackageId: 'coffee-pkg'), expected);
+    expect(_router.route(read, cart: cart, now: _now), expected);
   });
 
   test('carrinho vazio: o preço espera', () {
@@ -76,30 +79,14 @@ void main() {
     final later = _now.add(const Duration(seconds: 10));
     final tooLate = _now.add(const Duration(seconds: 30));
 
-    expect(_router.fits(pending, productId: 'rice', barcode: _riceCode, now: later), isTrue);
-    expect(_router.fits(pending, productId: 'rice', barcode: _riceCode, now: tooLate), isFalse);
+    expect(_router.fits(pending, barcode: _riceCode, now: later), isTrue);
+    expect(_router.fits(pending, barcode: _riceCode, now: tooLate), isFalse);
   });
 
-  test('o preço de uma etiqueta com código só vale para aquele produto', () {
-    final byProduct = PendingTagPrice(read: _read, readAt: _now, productId: 'milk');
+  test('o preço de uma etiqueta com código só vale para a embalagem com esse código', () {
     final byCode = PendingTagPrice(read: _read, readAt: _now, barcode: _riceCode);
 
-    expect(_router.fits(byProduct, productId: 'milk', barcode: '7891000100103', now: _now), isTrue);
-    expect(_router.fits(byProduct, productId: 'rice', barcode: _riceCode, now: _now), isFalse);
-    expect(_router.fits(byCode, productId: 'rice', barcode: _riceCode, now: _now), isTrue);
-    expect(_router.fits(byCode, productId: 'coffee', barcode: '7891000100103', now: _now), isFalse);
-  });
-
-  test('o nome da etiqueta que espera vale para cadastrar um produto novo com o mesmo código, ou sem código', () {
-    final byCode = PendingTagPrice(read: _read, readAt: _now, barcode: _riceCode);
-    final noCode = PendingTagPrice(read: _read, readAt: _now);
-    final byProduct = PendingTagPrice(read: _read, readAt: _now, productId: 'milk');
-    final tooLate = _now.add(const Duration(seconds: 30));
-
-    expect(_router.fitsUnknownProduct(byCode, barcode: _riceCode, now: _now), isTrue);
-    expect(_router.fitsUnknownProduct(byCode, barcode: '7891000100103', now: _now), isFalse);
-    expect(_router.fitsUnknownProduct(noCode, barcode: _riceCode, now: _now), isTrue);
-    expect(_router.fitsUnknownProduct(noCode, barcode: _riceCode, now: tooLate), isFalse);
-    expect(_router.fitsUnknownProduct(byProduct, barcode: _riceCode, now: _now), isFalse);
+    expect(_router.fits(byCode, barcode: _riceCode, now: _now), isTrue);
+    expect(_router.fits(byCode, barcode: _coffeeCode, now: _now), isFalse);
   });
 }
