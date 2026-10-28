@@ -183,15 +183,20 @@ class _CartModePageState extends ConsumerState<CartModePage> {
         ExistingProduct(product: final chosen) => chosen,
         NewProduct(:final name) => await createProduct(name),
       };
-      await register(
-        RegisterPriceInput(
-          marketId: marketId,
-          productId: product.id,
-          price: read.price,
-          source: PriceSource.priceTag,
-          otherOffers: read.otherOffers,
-        ),
-      );
+      // A mesma etiqueta, tocada de novo depois de voltar à moldura, não
+      // repete o preço no histórico.
+      final key = _tagKey(product.id, null, read);
+      if (_registeredTags.add(key)) {
+        await register(
+          RegisterPriceInput(
+            marketId: marketId,
+            productId: product.id,
+            price: read.price,
+            source: PriceSource.priceTag,
+            otherOffers: read.otherOffers,
+          ),
+        );
+      }
       if (!mounted) return;
       _lockFrame();
       _showNotice((

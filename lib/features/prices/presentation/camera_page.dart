@@ -173,10 +173,17 @@ class _CameraPageState extends ConsumerState<CameraPage> {
       ),
     );
     if (choice == null || !mounted) return;
-    final product = switch (choice) {
-      ExistingProduct(product: final chosen) => chosen,
-      NewProduct(:final name) => await createProduct(name),
-    };
+    final messenger = ScaffoldMessenger.of(context);
+    final Product product;
+    try {
+      product = switch (choice) {
+        ExistingProduct(product: final chosen) => chosen,
+        NewProduct(:final name) => await createProduct(name),
+      };
+    } on Exception {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.capturePriceFailed)));
+      return;
+    }
     await _confirm(product, null, read);
   }
 

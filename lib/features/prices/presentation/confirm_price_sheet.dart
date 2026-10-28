@@ -15,6 +15,7 @@ import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/prices/domain/price_tag.dart';
 import 'package:bipa/features/prices/domain/register_price_observation.dart';
 import 'package:bipa/features/prices/presentation/prices_providers.dart';
+import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/presentation/product_picker_sheet.dart';
@@ -228,7 +229,7 @@ class _ConfirmPriceSheetState extends ConsumerState<ConfirmPriceSheet> {
               Flexible(
                 child: PriceTagHero(
                   price: _price,
-                  unitLine: widget.reading.perKilo ? l10n.productUnitPriceOnly('kg') : unitPrice?.format(),
+                  unitLine: widget.reading.perKilo ? l10n.productUnitPriceOnly(MeasureUnit.kilogram.symbol) : unitPrice?.format(),
                 ),
               ),
               const SizedBox(width: BipaSpacing.s3),
