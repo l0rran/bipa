@@ -1,6 +1,7 @@
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/tap_target.dart';
 import 'package:flutter/material.dart';
 
 /// Cartão de produto da prateleira "Acabando": a imagem grande, o medidor no
@@ -65,10 +66,11 @@ class ProductCard extends StatelessWidget {
                         child: gauge,
                       ),
                     ),
+                    // O botão de 36 fica a 6 da borda; a área de toque, de 48, encosta nela.
                     if (toggle != null)
                       Positioned(
-                        right: 6,
-                        bottom: 6,
+                        right: 0,
+                        bottom: 0,
                         child: _ListButton(
                           onList: onList,
                           onPressed: toggle,
@@ -109,25 +111,28 @@ class _ListButton extends StatelessWidget {
       label: label,
       excludeSemantics: true,
       onTap: onPressed,
-      child: Material(
-        color: onList ? colors.ink : colors.surface,
-        shape: const CircleBorder(),
-        elevation: 2,
-        shadowColor: colors.ink.withValues(alpha: 0.3),
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onPressed,
-          child: SizedBox.square(
-            dimension: 36,
-            child: AnimatedSwitcher(
-              duration: BipaMotion.base,
-              switchInCurve: BipaMotion.spring,
-              transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
-              child: Icon(
-                onList ? Icons.check_rounded : Icons.add_rounded,
-                key: ValueKey(onList),
-                size: 20,
-                color: onList ? colors.surface : colors.ink,
+      child: TapTarget(
+        onTap: onPressed,
+        child: Material(
+          color: onList ? colors.ink : colors.surface,
+          shape: const CircleBorder(),
+          elevation: 2,
+          shadowColor: colors.ink.withValues(alpha: 0.3),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onPressed,
+            child: SizedBox.square(
+              dimension: 36,
+              child: AnimatedSwitcher(
+                duration: BipaMotion.base,
+                switchInCurve: BipaMotion.spring,
+                transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
+                child: Icon(
+                  onList ? Icons.check_rounded : Icons.add_rounded,
+                  key: ValueKey(onList),
+                  size: 20,
+                  color: onList ? colors.surface : colors.ink,
+                ),
               ),
             ),
           ),

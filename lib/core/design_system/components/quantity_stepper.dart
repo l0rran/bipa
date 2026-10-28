@@ -38,7 +38,8 @@ class QuantityStepper extends StatelessWidget {
     return AnimatedContainer(
       duration: BipaMotion.base,
       height: 52,
-      padding: const EdgeInsets.symmetric(horizontal: 6),
+      // O círculo de 40 fica a 6 da borda; a área de toque, de 48, a 2.
+      padding: const EdgeInsets.symmetric(horizontal: 2),
       decoration: ShapeDecoration(
         shape: const StadiumBorder(),
         color: highlighted ? colors.alertSoft : colors.surfaceSunken,
@@ -131,17 +132,24 @@ class _RepeatButtonState extends State<_RepeatButton> {
         onLongPressStart: (_) => _start(),
         onLongPressEnd: (_) => _stop(),
         onLongPressCancel: _stop,
-        child: AnimatedOpacity(
-          duration: BipaMotion.base,
-          opacity: enabled ? 1 : 0.45,
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: enabled ? colors.surface : Colors.transparent,
-              shape: BoxShape.circle,
+        // O toque vale nos 48 dp em volta do círculo, não só nele.
+        behavior: HitTestBehavior.opaque,
+        child: SizedBox.square(
+          dimension: 48,
+          child: Center(
+            child: AnimatedOpacity(
+              duration: BipaMotion.base,
+              opacity: enabled ? 1 : 0.45,
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: enabled ? colors.surface : Colors.transparent,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(widget.icon, size: 20, color: colors.ink),
+              ),
             ),
-            child: Icon(widget.icon, size: 20, color: colors.ink),
           ),
         ),
       ),

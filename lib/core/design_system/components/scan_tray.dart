@@ -4,6 +4,7 @@ import 'dart:ui' show ImageFilter;
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/tap_target.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -526,33 +527,37 @@ class CameraGlassChip extends StatelessWidget {
       label: label,
       excludeSemantics: true,
       onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(BipaRadius.pill),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-          child: Material(
-            color: colors.camera.withValues(alpha: 0.55),
-            child: InkWell(
-              onTap: onTap,
-              child: Container(
-                height: 40,
-                padding: const EdgeInsets.only(left: BipaSpacing.s2, right: BipaSpacing.s3),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(icon, size: 18, color: colors.onCamera),
-                    const SizedBox(width: BipaSpacing.s2),
-                    Flexible(
-                      child: Text(
-                        label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: BipaText.label.copyWith(color: colors.onCamera),
+      // O chip tem 40 de altura; a área de toque, 48.
+      child: TapTarget(
+        onTap: onTap,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(BipaRadius.pill),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+            child: Material(
+              color: colors.camera.withValues(alpha: 0.55),
+              child: InkWell(
+                onTap: onTap,
+                child: Container(
+                  height: 40,
+                  padding: const EdgeInsets.only(left: BipaSpacing.s2, right: BipaSpacing.s3),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(icon, size: 18, color: colors.onCamera),
+                      const SizedBox(width: BipaSpacing.s2),
+                      Flexible(
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: BipaText.label.copyWith(color: colors.onCamera),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: BipaSpacing.s1),
-                    Icon(Icons.expand_more_rounded, size: 16, color: colors.onCamera),
-                  ],
+                      const SizedBox(width: BipaSpacing.s1),
+                      Icon(Icons.expand_more_rounded, size: 16, color: colors.onCamera),
+                    ],
+                  ),
                 ),
               ),
             ),

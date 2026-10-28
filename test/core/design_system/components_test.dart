@@ -46,6 +46,8 @@ void main() {
       ),
     );
 
+    // O círculo tem 40, mas a área de toque tem 48×48.
+    expect(tester.getSize(find.bySemanticsLabel('Comprei um')), const Size(48, 48));
     await tester.tap(find.bySemanticsLabel('Comprei um'));
     await tester.pumpAndSettle();
     expect(value, 2);
@@ -298,6 +300,10 @@ void main() {
     expect(find.text('Atacarejo'), findsOneWidget);
     await tester.tap(find.byType(DropdownChip));
     expect(taps, 1);
+    // O chip tem 40 de altura, mas a área de toque tem 48, e a folga também vale.
+    expect(tester.getSize(find.byType(DropdownChip)).height, 48);
+    await tester.tapAt(tester.getTopLeft(find.byType(DropdownChip)) + const Offset(24, 2));
+    expect(taps, 2);
     expect(find.bySemanticsLabel('Mercado da lista: Atacarejo. Trocar'), findsOneWidget);
     semantics.dispose();
   });
