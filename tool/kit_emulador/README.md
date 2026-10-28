@@ -15,7 +15,7 @@ Para gerar de novo: `python3 tool/kit_emulador/gerar.py` (usa o desenho de etiqu
 2. Clique em **Show Advanced Settings** e ponha **Camera Back** em **VirtualScene**. Salve e inicie o emulador.
 3. No emulador, abra **Extended controls** (os três pontos da barra lateral) > **Camera** > **Virtual scene images**. Ponha `parede.png` na parede e `mesa.png` na mesa.
 4. Para andar na sala, clique na tela do emulador, segure **Alt** (no Windows e no Linux; **Option** no macOS) e use **W/A/S/D** (frente, lados, trás), **Q/E** (descer, subir) e o mouse para girar. Em versões mais novas do emulador, a tecla é **Shift**. As imagens ficam na sala de jantar, atrás da porta que está às costas da posição inicial.
-   - As teclas só funcionam com o emulador em **janela própria**. Se ele abre dentro do Android Studio (painel *Running Devices*), desmarque **Settings > Tools > Emulator > Launch in the Running Devices tool window** e reinicie o emulador.
+   - As teclas costumam funcionar só com o emulador em **janela própria**. Se ele abre dentro do Android Studio (painel *Running Devices*), desmarque **Settings > Tools > Emulator > Launch in the Running Devices tool window** e reinicie o emulador.
    - Sem teclado, dá para mover a câmera por **Extended controls > Virtual sensors**, na aba da posição do aparelho (*Device Pose*).
 
 ## Preparar o app
