@@ -131,10 +131,20 @@ class StockRow extends StatelessWidget {
             child: row,
           );
 
+    // Os gestos de deslizar não existem para o leitor de tela: as mesmas
+    // ações aparecem no menu de ações dele.
+    final withActions = Semantics(
+      customSemanticsActions: {
+        if (right != null) CustomSemanticsAction(label: right.label): right.onTriggered,
+        if (left != null) CustomSemanticsAction(label: left.label): left.onTriggered,
+      },
+      child: swipeable,
+    );
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        swipeable,
+        withActions,
         AnimatedSize(
           duration: BipaMotion.slow,
           curve: BipaMotion.standard,
@@ -194,12 +204,14 @@ class StockRowEditor extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final trailing = this.trailing;
-    return Row(
-      children: [
-        stepper,
-        const Spacer(),
-        ?trailing,
-      ],
+    // Em telas estreitas (ou com fonte grande), o que vem depois do stepper
+    // desce para a linha de baixo em vez de estourar.
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: BipaSpacing.s2,
+      runSpacing: BipaSpacing.s2,
+      children: [stepper, ?trailing],
     );
   }
 }

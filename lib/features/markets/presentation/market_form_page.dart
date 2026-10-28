@@ -109,11 +109,42 @@ class _MarketFormPageState extends ConsumerState<MarketFormPage> {
     }
   }
 
+  /// "Apagar mercado": confirma dizendo o que vai junto (ADR 0016).
+  Future<void> _delete() async {
+    final market = _original;
+    if (market == null) return;
+    final l10n = AppLocalizations.of(context);
+    final repository = ref.read(marketRepositoryProvider);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.marketDeleteTitle(market.name)),
+        content: Text(l10n.marketDeleteBody),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.marketDelete)),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await repository.delete(market.id);
+      if (mounted) context.pop();
+    } on Exception {
+      if (mounted) context.showMessage(AppLocalizations.of(context).marketDeleteFailed);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditing ? l10n.marketEdit : l10n.marketsNew)),
+      appBar: AppBar(
+        title: Text(_isEditing ? l10n.marketEdit : l10n.marketsNew),
+        actions: [
+          if (_original != null) TextButton(onPressed: _delete, child: Text(l10n.marketDelete)),
+        ],
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : Form(

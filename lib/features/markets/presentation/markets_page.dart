@@ -99,12 +99,9 @@ class _MarketsPageState extends ConsumerState<MarketsPage> {
                   child: Text(l10n.navMarkets, style: BipaText.headline.copyWith(color: colors.ink)),
                 ),
                 const SizedBox(height: BipaSpacing.s4),
-                BipaSearchBar(
-                  hint: l10n.marketsSearch,
-                  onChanged: (value) => setState(() => _query = value),
-                  onScan: () => context.push(Routes.capturePrice),
-                  scanLabel: l10n.searchScan,
-                ),
+                // Sem o bipar: aqui a busca é por mercado, e um código de barras
+                // não acha mercado nenhum.
+                BipaSearchBar(hint: l10n.marketsSearch, onChanged: (value) => setState(() => _query = value)),
                 if (location case AsyncData(value: LocationUnavailable(:final failure))) ...[
                   const SizedBox(height: BipaSpacing.s3),
                   _NoLocation(

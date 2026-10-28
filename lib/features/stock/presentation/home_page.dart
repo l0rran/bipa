@@ -4,6 +4,7 @@ import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
 import 'package:bipa/core/design_system/components/bipa_search_bar.dart';
+import 'package:bipa/core/design_system/components/dropdown_chip.dart';
 import 'package:bipa/core/design_system/components/place_filter.dart';
 import 'package:bipa/core/design_system/components/product_card.dart';
 import 'package:bipa/core/design_system/components/product_category_icon.dart';
@@ -11,6 +12,7 @@ import 'package:bipa/core/design_system/components/product_thumb.dart';
 import 'package:bipa/core/design_system/components/quantity_stepper.dart';
 import 'package:bipa/core/design_system/components/section_header.dart';
 import 'package:bipa/core/design_system/components/stock_list.dart';
+import 'package:bipa/core/formatting/formatters.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
@@ -52,13 +54,25 @@ class _HomePageState extends ConsumerState<HomePage> {
   /// Só uma linha fica aberta por vez.
   String? _expandedProductId;
 
-  Future<void> _addByBarcode() async {
+  /// O bipar da busca encontra: abre o produto do código (ou a folha
+  /// "Embalagem nova", se ele for novo), como a busca por texto.
+  Future<void> _findByBarcode() async {
     final scanned = await scanAndResolvePackage(context, ref);
     if (scanned == null || !mounted) return;
-    final (:product, :package) = scanned;
-    final current = await ref.read(stockRepositoryProvider).findByProduct(product.id);
-    if (!mounted) return;
-    await _adjust(product, current?.quantity ?? 0, 1, undoable: true, packageId: package.id);
+    await context.push(Routes.productDetail(scanned.product.id));
+  }
+
+  /// Casa vazia: bipa um produto atrás do outro, cada um entrando em casa,
+  /// até a pessoa fechar o leitor.
+  Future<void> _stockByBarcode() async {
+    while (mounted) {
+      final scanned = await scanAndResolvePackage(context, ref);
+      if (scanned == null || !mounted) return;
+      final (:product, :package) = scanned;
+      final current = await ref.read(stockRepositoryProvider).findByProduct(product.id);
+      if (!mounted) return;
+      await _adjust(product, current?.quantity ?? 0, 1, undoable: true, packageId: package.id);
+    }
   }
 
   /// Soma [delta] ao estoque, que hoje tem [current]; uma compra entra como
@@ -129,14 +143,6 @@ class _HomePageState extends ConsumerState<HomePage> {
       body: AsyncValueView(
         value: stock,
         data: (entries) {
-          if (entries.isEmpty) {
-            return EmptyState(
-              icon: Icons.kitchen_outlined,
-              message: l10n.homeEmpty,
-              actionLabel: l10n.homeEmptyAction,
-              onAction: _addByBarcode,
-            );
-          }
 
           final visible = _visible(entries);
           // Acabou primeiro, depois o que está mais perto de acabar.
@@ -165,7 +171,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                         BipaSearchBar(
                           hint: l10n.searchHome,
                           onChanged: (value) => setState(() => _query = value),
-                          onScan: _addByBarcode,
+                          onScan: _findByBarcode,
                           scanLabel: l10n.searchScan,
                         ),
                         if (listSummary.remaining > 0 && !shopping) ...[
@@ -182,13 +188,29 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                 ),
               ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: BipaSpacing.s6),
-                  child: _PlaceFilter(entries: entries, selected: _place, onSelected: (p) => setState(() => _place = p)),
+              // Casa vazia: a busca e a prévia da lista continuam, e o convite
+              // a bipar o que há em casa fica embaixo.
+              if (entries.isEmpty)
+                SliverToBoxAdapter(
+                  child: EmptyState(
+                    icon: Icons.kitchen_outlined,
+                    message: l10n.homeEmpty,
+                    actionLabel: l10n.homeEmptyAction,
+                    onAction: _stockByBarcode,
+                  ),
+                )
+              else
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: BipaSpacing.s6),
+                    child: _PlaceFilter(
+                      entries: entries,
+                      selected: _place,
+                      onSelected: (p) => setState(() => _place = p),
+                    ),
+                  ),
                 ),
-              ),
-              if (visible.isEmpty)
+              if (entries.isNotEmpty && visible.isEmpty)
                 SliverPadding(
                   padding: const EdgeInsets.all(BipaSpacing.s8),
                   sliver: SliverToBoxAdapter(
@@ -216,8 +238,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                           name: entry.product.name,
                           image: _ProductArt(product: entry.product, photo: productPhotoFile(entry.product, photos)),
                           gauge: entry.item.gauge(l10n, size: 36),
-                          onTap: () => context.push(Routes.productDetail(entry.product.id)),
-                          onLongPress: () => showStockItemSheet(context, entry),
+                          // O toque abre o mesmo editor da linha (Comprei um, lista,
+                          // "ter sempre"); o toque longo, o produto.
+                          onTap: () => showStockItemSheet(context, entry.product),
+                          onLongPress: () => context.push(Routes.productDetail(entry.product.id)),
                           onList: isOnList,
                           onToggleList: () => _toggleList(entry.product, onList: isOnList),
                           addLabel: l10n.listAddToList,
@@ -376,10 +400,26 @@ class _HomeStockRow extends StatelessWidget {
           onIncrement: () => onAdjust(1),
           onDecrement: item.isOut ? null : () => onAdjust(-1),
         ),
-        trailing: IconButton(
-          tooltip: l10n.stockSettings,
-          onPressed: () => showStockItemSheet(context, entry),
-          icon: const Icon(Icons.tune_rounded),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: onList ? l10n.listRemoveFromList : l10n.listAddToList,
+              onPressed: onToggleList,
+              isSelected: onList,
+              icon: const Icon(Icons.playlist_add_rounded),
+              selectedIcon: const Icon(Icons.playlist_add_check_rounded),
+            ),
+            // O "ter sempre" à vista, com o valor: tocar abre o editor.
+            DropdownChip(
+              icon: Icons.flag_outlined,
+              label: switch (item.targetQuantity) {
+                final target? => l10n.productTargetCount(Formatters.quantity(target)),
+                null => l10n.productTargetCount(l10n.stockTargetNone),
+              },
+              onTap: () => showStockItemSheet(context, product),
+            ),
+          ],
         ),
       ),
     );

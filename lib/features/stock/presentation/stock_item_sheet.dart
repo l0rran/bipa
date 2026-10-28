@@ -1,111 +1,211 @@
+import 'package:bipa/core/design_system/bipa_metrics.dart';
+import 'package:bipa/core/design_system/bipa_theme.dart';
+import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/quantity_stepper.dart';
+import 'package:bipa/core/di/core_providers.dart';
 import 'package:bipa/core/formatting/formatters.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
+import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:bipa/features/stock/domain/stock_item.dart';
 import 'package:bipa/features/stock/domain/stock_location.dart';
+import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
 import 'package:bipa/features/stock/presentation/stock_display.dart';
 import 'package:bipa/features/stock/presentation/stock_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// Configurações de um item do estoque: local e quanto ter sempre.
-Future<void> showStockItemSheet(BuildContext context, StockEntry entry) {
+/// Abre o editor de um item de casa: quanto há, a lista, o "ter sempre" e
+/// onde fica. Serve também para um produto que ainda não está em casa.
+/// Aberto da tela do produto ([fromProduct]), não mostra "Ver produto".
+Future<void> showStockItemSheet(BuildContext context, Product product, {bool fromProduct = false}) {
   return showModalBottomSheet<void>(
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
-    builder: (_) => StockItemSheet(entry: entry),
+    builder: (_) => StockItemSheet(product: product, fromProduct: fromProduct),
   );
 }
 
-class StockItemSheet extends ConsumerStatefulWidget {
-  const StockItemSheet({required this.entry, super.key});
+/// O editor do item de casa. Tudo vale na hora, sem "Salvar": é o mesmo que
+/// abre no "Acabando", no ajuste da linha e no cartão "Em casa" do produto.
+class StockItemSheet extends ConsumerWidget {
+  const StockItemSheet({required this.product, this.fromProduct = false, super.key});
 
-  final StockEntry entry;
+  final Product product;
+  final bool fromProduct;
 
-  @override
-  ConsumerState<StockItemSheet> createState() => _StockItemSheetState();
-}
-
-class _StockItemSheetState extends ConsumerState<StockItemSheet> {
-  late final _target = TextEditingController(
-    text: switch (widget.entry.item.targetQuantity) {
-      final target? => Formatters.quantity(target),
-      null => '',
-    },
-  );
-  late var _location = widget.entry.item.location;
-
-  @override
-  void dispose() {
-    _target.dispose();
-    super.dispose();
+  Future<void> _adjust(WidgetRef ref, double delta) async {
+    await ref
+        .read(stockRepositoryProvider)
+        .adjust(
+          productId: product.id,
+          delta: delta,
+          reason: delta > 0 ? StockMovementReason.purchase : StockMovementReason.consumption,
+        );
   }
 
-  Future<void> _save() async {
+  /// "Ter sempre": − até 1 e depois some (sem alerta); + a partir do nada
+  /// começa em 1.
+  Future<void> _setTarget(WidgetRef ref, double? target) =>
+      ref.read(stockRepositoryProvider).setTargetQuantity(product.id, target);
+
+  Future<void> _toggleList(WidgetRef ref, {required bool onList}) {
+    final list = ref.read(shoppingListRepositoryProvider);
+    return onList ? list.removeProduct(product.id) : list.addProduct(productId: product.id, name: product.name);
+  }
+
+  /// "Tirar de casa": o produto sai do Início (e do "Acabando"); ele e os
+  /// preços continuam.
+  Future<void> _remove(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
     final repository = ref.read(stockRepositoryProvider);
-    final productId = widget.entry.product.id;
-    final text = _target.text.trim().replaceAll(',', '.');
-
-    await repository.setTargetQuantity(productId, text.isEmpty ? null : double.tryParse(text));
-    await repository.setLocation(productId, _location);
-    if (mounted) Navigator.of(context).pop();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.stockRemoveTitle(product.name)),
+        content: Text(l10n.stockRemoveBody),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.stockRemove)),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await repository.remove(product.id);
+    if (context.mounted) Navigator.of(context).pop();
   }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final colors = context.colors;
+    final entry = (ref.watch(stockProvider).value ?? const <StockEntry>[])
+        .where((e) => e.product.id == product.id)
+        .firstOrNull;
+    final item =
+        entry?.item ??
+        StockItem(
+          productId: product.id,
+          quantity: 0,
+          location: StockLocation.pantry,
+          updatedAt: ref.watch(clockProvider)(),
+        );
+    final target = item.targetQuantity;
+    final onList = ref.watch(productsOnListProvider).contains(product.id);
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        BipaSpacing.s4,
+        0,
+        BipaSpacing.s4,
+        BipaSpacing.s4 + MediaQuery.viewInsetsOf(context).bottom,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(product.name, style: BipaText.title.copyWith(color: colors.ink)),
+            const SizedBox(height: BipaSpacing.s4),
+            _Labeled(
+              label: l10n.productAtHome,
+              child: QuantityStepper(
+                value: item.quantityLabel,
+                unit: l10n.unitPackages,
+                decrementLabel: l10n.stockUsedOne,
+                incrementLabel: l10n.stockBoughtOne,
+                highlighted: item.isLow,
+                onIncrement: () => _adjust(ref, 1),
+                onDecrement: item.isOut ? null : () => _adjust(ref, -1),
+              ),
+            ),
+            const SizedBox(height: BipaSpacing.s3),
+            _Labeled(
+              label: l10n.stockSheetTarget,
+              hint: l10n.stockSheetTargetHelp,
+              child: QuantityStepper(
+                value: target == null ? l10n.stockTargetNone : Formatters.quantity(target),
+                unit: l10n.unitPackages,
+                decrementLabel: l10n.stockTargetLess,
+                incrementLabel: l10n.stockTargetMore,
+                onIncrement: () => _setTarget(ref, (target ?? 0) + 1),
+                onDecrement: target == null ? null : () => _setTarget(ref, target <= 1 ? null : target - 1),
+              ),
+            ),
+            const SizedBox(height: BipaSpacing.s4),
+            FilledButton.tonalIcon(
+              onPressed: () => _toggleList(ref, onList: onList),
+              icon: Icon(onList ? Icons.playlist_remove_rounded : Icons.playlist_add_rounded),
+              label: Text(onList ? l10n.listRemoveFromList : l10n.listAddToList),
+            ),
+            const SizedBox(height: BipaSpacing.s4),
+            Text(l10n.stockSheetWhere, style: BipaText.label.copyWith(color: colors.inkMuted)),
+            const SizedBox(height: BipaSpacing.s2),
+            Wrap(
+              spacing: BipaSpacing.s2,
+              runSpacing: BipaSpacing.s2,
+              children: [
+                for (final location in StockLocation.values)
+                  ChoiceChip(
+                    label: Text(location.localizedLabel(l10n)),
+                    selected: item.location == location,
+                    onSelected: (_) => ref.read(stockRepositoryProvider).setLocation(product.id, location),
+                  ),
+              ],
+            ),
+            const SizedBox(height: BipaSpacing.s4),
+            Row(
+              children: [
+                if (entry != null)
+                  TextButton(onPressed: () => _remove(context, ref), child: Text(l10n.stockRemove)),
+                const Spacer(),
+                if (!fromProduct)
+                  TextButton(
+                    onPressed: () {
+                      final router = GoRouter.of(context);
+                      Navigator.of(context).pop();
+                      router.push(Routes.productDetail(product.id));
+                    },
+                    child: Text(l10n.stockSheetSeeProduct),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Um controle com o nome à esquerda e, embaixo do nome, uma explicação.
+class _Labeled extends StatelessWidget {
+  const _Labeled({required this.label, required this.child, this.hint});
+
+  final String label;
+  final String? hint;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final product = widget.entry.product;
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-
-    return Padding(
-      padding: EdgeInsets.fromLTRB(16, 0, 16, 16 + MediaQuery.viewInsetsOf(context).bottom),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(product.name, style: theme.textTheme.titleLarge),
-          const SizedBox(height: 16),
-          Text(l10n.stockSheetWhere, style: theme.textTheme.titleSmall),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
+    final colors = context.colors;
+    final hint = this.hint;
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              for (final location in StockLocation.values)
-                ChoiceChip(
-                  label: Text(location.localizedLabel(l10n)),
-                  selected: _location == location,
-                  onSelected: (_) => setState(() => _location = location),
-                ),
+              Text(label, style: BipaText.bodyLarge.copyWith(color: colors.ink)),
+              if (hint != null) Text(hint, style: BipaText.caption.copyWith(color: colors.inkMuted)),
             ],
           ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _target,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(
-              labelText: l10n.stockSheetTarget,
-              helperText: l10n.stockSheetTargetHelp,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              TextButton(
-                onPressed: () {
-                  final router = GoRouter.of(context);
-                  Navigator.of(context).pop();
-                  router.push(Routes.productDetail(product.id));
-                },
-                child: Text(l10n.stockSheetSeeProduct),
-              ),
-              const Spacer(),
-              FilledButton(onPressed: _save, child: Text(l10n.save)),
-            ],
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(width: BipaSpacing.s3),
+        child,
+      ],
     );
   }
 }

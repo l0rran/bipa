@@ -118,6 +118,32 @@ class _ProductView extends ConsumerWidget {
     }
   }
 
+  /// "Apagar produto": confirma dizendo o que vai junto (ADR 0016).
+  Future<void> _delete(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
+    final repository = ref.read(productRepositoryProvider);
+    final messenger = ScaffoldMessenger.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.productDeleteTitle(product.name)),
+        content: Text(l10n.productDeleteBody),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.productDelete)),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    // Sai da tela antes de apagar: ela não chega a mostrar o produto sumindo.
+    context.pop();
+    try {
+      await repository.delete(product.id);
+    } on Exception {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.productDeleteFailed)));
+    }
+  }
+
   Future<void> _toggleList(WidgetRef ref, {required bool onList}) {
     final list = ref.read(shoppingListRepositoryProvider);
     return onList ? list.removeProduct(product.id) : list.addProduct(productId: product.id, name: product.name);
@@ -192,6 +218,10 @@ class _ProductView extends ConsumerWidget {
                       PopupMenuItem(
                         value: () => _merge(context, ref),
                         child: Text(l10n.productMerge),
+                      ),
+                      PopupMenuItem(
+                        value: () => _delete(context, ref),
+                        child: Text(l10n.productDelete),
                       ),
                     ],
                   ),
@@ -269,9 +299,8 @@ class _ProductView extends ConsumerWidget {
               const SizedBox(height: BipaSpacing.s2),
               _AtHomeCard(
                 stock: stock,
-                amount: amount == null
-                    ? null
-                    : '${Formatters.quantity(amount.amount)} ${amount.unit.symbol}',
+                onTap: () => showStockItemSheet(context, product, fromProduct: true),
+                amount: amount == null ? null : l10n.measureAmount(Formatters.quantity(amount.amount), amount.unit.symbol),
                 onIncrement: () => _adjust(ref, 1),
                 onDecrement: (stock?.item.quantity ?? 0) > 0 ? () => _adjust(ref, -1) : null,
               ),
@@ -378,9 +407,19 @@ class _PriceHistory extends StatelessWidget {
 
 /// "Em casa": quanto há (o stepper) e o "ter sempre"; tocar abre os ajustes.
 class _AtHomeCard extends StatelessWidget {
-  const _AtHomeCard({required this.stock, required this.onIncrement, this.amount, this.onDecrement});
+  const _AtHomeCard({
+    required this.stock,
+    required this.onTap,
+    required this.onIncrement,
+    this.amount,
+    this.onDecrement,
+  });
 
   final StockEntry? stock;
+
+  /// Abre o editor do item, mesmo sem nada em casa: é onde se define o "ter
+  /// sempre".
+  final VoidCallback onTap;
 
   /// O total das embalagens em casa: "15 kg".
   final String? amount;
@@ -398,7 +437,7 @@ class _AtHomeCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(BipaRadius.lg),
       child: InkWell(
         borderRadius: BorderRadius.circular(BipaRadius.lg),
-        onTap: stock == null ? null : () => showStockItemSheet(context, stock),
+        onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(BipaSpacing.s4, BipaSpacing.s3, BipaSpacing.s3, BipaSpacing.s3),
           child: Row(
@@ -407,9 +446,18 @@ class _AtHomeCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      target == null ? l10n.stockSheetTarget : l10n.productTargetCount(Formatters.quantity(target)),
-                      style: BipaText.body.copyWith(color: colors.inkMuted),
+                    // "Ter sempre —" quando não há meta: o traço e a seta dizem que
+                    // dá para definir.
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            l10n.productTargetCount(target == null ? l10n.stockTargetNone : Formatters.quantity(target)),
+                            style: BipaText.body.copyWith(color: colors.inkMuted),
+                          ),
+                        ),
+                        Icon(Icons.chevron_right_rounded, size: 18, color: colors.inkMuted),
+                      ],
                     ),
                     if (amount case final amount?)
                       Text(l10n.productAmountAtHome(amount), style: BipaText.bodyLarge.copyWith(color: colors.ink)),

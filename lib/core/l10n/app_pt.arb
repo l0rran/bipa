@@ -63,11 +63,10 @@
   "homeEmptyAction": "Bipar produtos",
   "homeNoResults": "Nada com esse nome na sua casa.",
   "navList": "Lista",
-  "unitPackages": "un",
+  "unitPackages": "emb.",
   "@unitPackages": {
     "description": "Unidade das quantidades do estoque (embalagens)."
   },
-  "stockSettings": "Ajustar item",
   "placePantry": "Despensa",
   "placeFridge": "Geladeira",
   "placeFreezer": "Freezer",
@@ -692,5 +691,62 @@
         "type": "String"
       }
     }
-  }
+  },
+  "stockTargetNone": "—",
+  "@stockTargetNone": {
+    "description": "O \"ter sempre\" quando não foi definido."
+  },
+  "stockTargetLess": "Ter sempre menos",
+  "stockTargetMore": "Ter sempre mais",
+  "stockRemove": "Tirar de casa",
+  "stockRemoveTitle": "Tirar {name} de casa?",
+  "@stockRemoveTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "stockRemoveBody": "Ele sai do Início e do \"Acabando\". O produto e os preços continuam.",
+  "unitPackagesSpoken": "embalagens",
+  "@unitPackagesSpoken": {
+    "description": "A unidade \"emb.\" como o leitor de tela fala."
+  },
+  "measureAmount": "{amount} {unit}",
+  "@measureAmount": {
+    "description": "Quantidade com a unidade: \"15 kg\".",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "productDelete": "Apagar produto",
+  "productDeleteTitle": "Apagar {name}?",
+  "@productDeleteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "productDeleteBody": "As embalagens, os preços, o que está em casa e o item da lista dele também são apagados. Não dá para desfazer.",
+  "productDeleteFailed": "Não foi possível apagar o produto.",
+  "marketDelete": "Apagar",
+  "@marketDelete": {
+    "description": "Ação de apagar o mercado, na barra do formulário."
+  },
+  "marketDeleteTitle": "Apagar {name}?",
+  "@marketDeleteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "marketDeleteBody": "Os preços anotados nele e a ordem das seções que o app aprendeu também são apagados. Não dá para desfazer.",
+  "marketDeleteFailed": "Não foi possível apagar o mercado."
 }

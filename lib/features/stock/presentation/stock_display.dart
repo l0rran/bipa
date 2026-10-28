@@ -17,7 +17,7 @@ extension StockItemDisplay on StockItem {
 
   /// O estado por extenso, para o leitor de tela: "Acabou", "2 de 4 un", "3 un".
   String levelDescription(AppLocalizations l10n) {
-    final unit = l10n.unitPackages;
+    final unit = l10n.unitPackagesSpoken;
     final target = targetQuantity;
     return switch (level) {
       StockLevel.out => l10n.stockLevelOut,

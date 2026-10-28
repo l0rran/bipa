@@ -383,28 +383,34 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                         progress: '${section.done}/${section.total}',
                         children: [
                           for (final entry in section.entries)
-                            Dismissible(
-                              key: ValueKey('list-${entry.item.id}'),
-                              direction: DismissDirection.endToStart,
-                              background: ColoredBox(
-                                color: context.colors.surfaceSunken,
-                                child: Align(
-                                  alignment: Alignment.centerRight,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(right: BipaSpacing.s4),
-                                    child: Icon(Icons.delete_outline_rounded, color: context.colors.ink),
+                            // Deslizar não existe para o leitor de tela: a mesma ação fica no menu dele.
+                            Semantics(
+                              customSemanticsActions: {
+                                CustomSemanticsAction(label: l10n.listRemoveFromList): () => _remove(entry),
+                              },
+                              child: Dismissible(
+                                key: ValueKey('list-${entry.item.id}'),
+                                direction: DismissDirection.endToStart,
+                                background: ColoredBox(
+                                  color: context.colors.surfaceSunken,
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(right: BipaSpacing.s4),
+                                      child: Icon(Icons.delete_outline_rounded, color: context.colors.ink),
+                                    ),
                                   ),
                                 ),
-                              ),
-                              onDismissed: (_) => _remove(entry),
-                              child: ShoppingListRow(
-                                name: entry.name,
-                                checked: entry.item.isChecked,
-                                price: switch (entry.item.productId) {
-                                  final id? when prices[id] != null => l10n.listEstimate(prices[id]!.formatDecimal()),
-                                  _ => null,
-                                },
-                                onChanged: (checked) => _setChecked(entry, checked: checked),
+                                onDismissed: (_) => _remove(entry),
+                                child: ShoppingListRow(
+                                  name: entry.name,
+                                  checked: entry.item.isChecked,
+                                  price: switch (entry.item.productId) {
+                                    final id? when prices[id] != null => l10n.listEstimate(prices[id]!.formatDecimal()),
+                                    _ => null,
+                                  },
+                                  onChanged: (checked) => _setChecked(entry, checked: checked),
+                                ),
                               ),
                             ),
                         ],
