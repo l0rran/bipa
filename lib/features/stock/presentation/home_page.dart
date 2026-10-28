@@ -457,11 +457,7 @@ class _HomeStockRow extends StatelessWidget {
       onTap: onTap,
       swipeLeft: item.isOut
           ? null
-          : StockSwipeAction(
-              label: l10n.stockUsedOne,
-              icon: Icons.remove_rounded,
-              onTriggered: onUsed,
-            ),
+          : StockSwipeAction(label: l10n.stockUsedOne, icon: Icons.remove_rounded, onTriggered: onUsed),
       swipeRight: StockSwipeAction(
         label: onList ? l10n.listRemoveFromList : l10n.listAddToList,
         icon: onList ? Icons.playlist_remove_rounded : Icons.playlist_add_rounded,

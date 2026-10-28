@@ -428,10 +428,7 @@ class ShoppingListRow extends StatelessWidget {
                     _Quantity(label: quantity, onTap: onQuantityTap)
                   else ...[
                     const SizedBox(width: BipaSpacing.s3),
-                    if (quantity != null) ...[
-                      _Quantity(label: quantity),
-                      const SizedBox(width: BipaSpacing.s1),
-                    ],
+                    if (quantity != null) ...[_Quantity(label: quantity), const SizedBox(width: BipaSpacing.s1)],
                   ],
                   Expanded(
                     child: Text(

@@ -284,7 +284,9 @@ class _ProductView extends ConsumerWidget {
               ),
               if (best != null) ...[
                 const SizedBox(height: BipaSpacing.s3),
-                Center(child: _BestPrice(best: best, now: now)),
+                Center(
+                  child: _BestPrice(best: best, now: now),
+                ),
               ],
               if (packageRows.isNotEmpty) ...[
                 const SizedBox(height: BipaSpacing.s6),
@@ -382,8 +384,7 @@ class _ProductView extends ConsumerWidget {
 
   /// Em dias do calendário: um preço de ontem à noite visto hoje cedo é de
   /// "ontem", não de "hoje".
-  static int _ageInDays(DateTime now, PackagePrice price) =>
-      calendarDaysSince(price.entry.observation.observedAt, now);
+  static int _ageInDays(DateTime now, PackagePrice price) => calendarDaysSince(price.entry.observation.observedAt, now);
 
   /// "menor por kg", só para a primeira de várias, quando ela tem tamanho.
   static String? _cheapestPerUnit(AppLocalizations l10n, PackagePrice? price, {required bool isFirst}) {

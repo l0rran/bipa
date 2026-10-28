@@ -93,22 +93,23 @@ ListCostComparison compareListCost(
   Money sum(Iterable<String> products, Map<String, _Seen> prices) =>
       products.fold(Money.zero, (total, product) => total + prices[product]!.price * (quantities[product] ?? 1));
 
-  final markets = [
-    for (final MapEntry(key: marketId, value: (:marketName, :byProduct)) in perMarket.entries)
-      MarketListCost(
-        marketId: marketId,
-        marketName: marketName,
-        total: sum(byProduct.keys, byProduct),
-        priced: byProduct.length,
-        items: productIds.length,
-        oldest: byProduct.values.map((seen) => seen.at).reduce((a, b) => a.isBefore(b) ? a : b),
-      ),
-  ]..sort((a, b) {
-    final byPriced = b.priced.compareTo(a.priced);
-    if (byPriced != 0) return byPriced;
-    final byTotal = a.total.compareTo(b.total);
-    return byTotal != 0 ? byTotal : a.marketName.compareTo(b.marketName);
-  });
+  final markets =
+      [
+        for (final MapEntry(key: marketId, value: (:marketName, :byProduct)) in perMarket.entries)
+          MarketListCost(
+            marketId: marketId,
+            marketName: marketName,
+            total: sum(byProduct.keys, byProduct),
+            priced: byProduct.length,
+            items: productIds.length,
+            oldest: byProduct.values.map((seen) => seen.at).reduce((a, b) => a.isBefore(b) ? a : b),
+          ),
+      ]..sort((a, b) {
+        final byPriced = b.priced.compareTo(a.priced);
+        if (byPriced != 0) return byPriced;
+        final byTotal = a.total.compareTo(b.total);
+        return byTotal != 0 ? byTotal : a.marketName.compareTo(b.marketName);
+      });
 
   final first = markets.firstOrNull;
   if (first == null || markets.length < 2 || first.isPartial) return ListCostComparison(markets: markets);
@@ -143,8 +144,12 @@ Map<String, MarketPrices> referencePricesPerMarket(
   Map<String, ProductPackage> packages = const {},
   Map<String, String?> references = const {},
 }) => {
-  for (final MapEntry(key: marketId, value: (:marketName, :byProduct))
-      in _referencePrices(productIds, history, packages: packages, references: references).entries)
+  for (final MapEntry(key: marketId, value: (:marketName, :byProduct)) in _referencePrices(
+    productIds,
+    history,
+    packages: packages,
+    references: references,
+  ).entries)
     marketId: (
       marketName: marketName,
       byProduct: {for (final MapEntry(key: productId, value: seen) in byProduct.entries) productId: seen.price},

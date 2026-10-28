@@ -194,10 +194,7 @@ void main() {
     });
 
     test('sem selo num empate', () {
-      final comparison = compareListCost(
-        {'arroz'},
-        [_price('vila', 'arroz', 2790), _price('centro', 'arroz', 2790)],
-      );
+      final comparison = compareListCost({'arroz'}, [_price('vila', 'arroz', 2790), _price('centro', 'arroz', 2790)]);
 
       expect(comparison.cheapestId, isNull);
     });

@@ -24,10 +24,9 @@ final class DriftScaleItemRepository implements ScaleItemRepository {
   }
 
   @override
-  Stream<Set<String>> watchProductIdsIn(String marketId) =>
-      (_db.select(_db.scaleItems)..where((t) => t.marketId.equals(marketId))).watch().map(
-        (rows) => {for (final row in rows) row.productId},
-      );
+  Stream<Set<String>> watchProductIdsIn(String marketId) => (_db.select(
+    _db.scaleItems,
+  )..where((t) => t.marketId.equals(marketId))).watch().map((rows) => {for (final row in rows) row.productId});
 
   /// Escolher outro produto para o mesmo código troca o lembrado.
   @override

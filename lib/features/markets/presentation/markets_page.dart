@@ -186,10 +186,8 @@ class _MarketsPageState extends ConsumerState<MarketsPage> {
 
   /// O maior total entre os mercados com a lista inteira: a escala das
   /// barras.
-  static int _highestComplete(List<MarketListCost> costs) => costs
-      .where((c) => !c.isPartial)
-      .map((c) => c.total.cents)
-      .fold(1, (max, cents) => cents > max ? cents : max);
+  static int _highestComplete(List<MarketListCost> costs) =>
+      costs.where((c) => !c.isPartial).map((c) => c.total.cents).fold(1, (max, cents) => cents > max ? cents : max);
 
   /// "preços de até 41 dias · sem preço de 1 item", só com o que pesa.
   static String? _costNote(AppLocalizations l10n, MarketListCost cost, DateTime now) {

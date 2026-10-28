@@ -254,8 +254,7 @@ class _MarketView extends ConsumerWidget {
   }
 
   /// Em dias do calendário, como na tela do produto.
-  static int _ageInDays(DateTime now, MarketPrice price) =>
-      calendarDaysSince(price.observation.observedAt, now);
+  static int _ageInDays(DateTime now, MarketPrice price) => calendarDaysSince(price.observation.observedAt, now);
 }
 
 /// As seções na ordem do percurso, numeradas.
