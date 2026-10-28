@@ -282,8 +282,9 @@ class _ProductView extends ConsumerWidget {
                         icon: Icons.storefront_outlined,
                         title: price.entry.marketName,
                         meta: l10n.priceAge(_ageInDays(now, price)),
+                        // A idade fica em cinza: o coral é só do estoque abaixo
+                        // do "ter sempre".
                         metaIcon: Icons.schedule_rounded,
-                        metaAlert: _ageInDays(now, price) > 30,
                         value: price.unitPrice?.format() ?? price.price.format(),
                         badge: index == 0 && perMarket.length > 1 ? l10n.productCheapest : null,
                       ),
