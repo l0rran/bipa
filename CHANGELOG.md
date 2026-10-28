@@ -68,7 +68,7 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - Tocar numa pesagem da bandeja troca o produto que a balança lembra para aquele código, e a linha vai junto.
 - Em "Comprei" e "Usei" da câmera, quando a lista não muda, o Desfazer fica no próprio aviso do visor, sem snackbar repetindo o fato.
 - Na compra, o marcado à mão entra no total pelo preço esperado, com "≈", ou conta como sem preço, na barra e na folha "Fim da compra"; a prévia da lista diz quantos itens ficaram fora da estimativa ("2 sem preço").
-- O item novo do estoque nasce no local sugerido pela categoria do produto (leite na Geladeira, sorvete no Freezer, sabão em Limpeza, xampu no Banheiro); na dúvida, Despensa.
+- O item novo do estoque nasce no local sugerido pela categoria do produto (leite na Geladeira, congelados no Freezer, leite de caixinha e enlatados na Despensa, sabão em Limpeza, xampu no Banheiro); na dúvida, Despensa. O "Comprei" da câmera diz onde o item novo ficou ("Leite · 1 na Geladeira"), e a folha do item mostra esse local antes de ele existir. A categoria nova "mercearia" também dá ícone e seção a enlatados e longa vida.
 - A linha do granel na bandeja mostra o preço por kg como estimativa ("R$ 8,99/kg"), sem entrar no total; a etiqueta da balança firma o valor na mesma linha, e uma etiqueta sem código lida em seguida não vira o preço dela.
 - A barra de navegação encolhe ao rolar a aba para baixo (rótulos somem, bipar menor) e volta ao rolar para cima, ao chegar ao topo e ao trocar de aba; com movimento reduzido, troca sem animar.
 - Os erros de regra de negócio (preço zerado, código repetido, código da balança...) vêm dos textos do app, e não mais escritos no código.
@@ -82,7 +82,8 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - A idade dos preços não aparece mais como "há -1 dias" com o relógio do aparelho atrasado.
 - A alça da bandeja segue a direção do arrasto, e o preço estimado tem um sinal só (a etiqueta vazada).
 - Com a letra do Android em 200%, as telas principais não cortam mais: alturas fixas viraram mínimas, preços e totais se ajustam à largura e botões descem para a linha de baixo.
-- Uma falha ao mudar a quantidade pelo stepper da tela do produto agora avisa, em vez de passar calada.
+- Uma falha ao mudar a quantidade pelo stepper (na tela do produto, na linha do Início e na folha do item) agora avisa, em vez de passar calada.
+- O valor digitado numa linha de granel ou pesagem do carrinho não entra mais no histórico como preço do produto; vale só para o carrinho (ADR 0018).
 - O app voltou a compilar com o Dart 3.13 (Desfazer da câmera e "Terminei").
 - Compra sem lista mostra "8 no carrinho" em vez de "0 de 0 itens".
 - "a menos que no Padaria Real" virou "a menos que em Padaria Real".

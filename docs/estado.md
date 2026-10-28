@@ -12,7 +12,7 @@ Retrato de 28/10/2026, para quem continua o trabalho (pessoa ou agente). Leia an
 
 ## Compilado e testado
 
-Em 28/10, no Windows (Flutter 3.47.8, Dart 3.13.7): `flutter analyze` sem problemas, `flutter test` com 433 testes passando e o banco do OCR passando. A compilação acusou só dois problemas, corrigidos (`fa01eb4`). No Windows, o banco do OCR roda com `py -3 tool/ocr_bench/testes.py`, porque não há `python3`.
+Em 28/10, no Windows (Flutter 3.47.8, Dart 3.13.7): `flutter analyze` sem problemas, `flutter test` com 468 testes passando e o banco do OCR passando. A compilação acusou só dois problemas, corrigidos (`fa01eb4`). No Windows, o banco do OCR roda com `py -3 tool/ocr_bench/testes.py`, porque não há `python3`.
 
 O lote 8 (AB5 em parte, D3, H2, H3 e a barra que encolhe ao rolar) foi feito por agentes em paralelo, cada um num worktree, e juntado em `main` com merges. Depois, uma [revisão de UX do lote](ux/analise-ux-2026-10-28-lote8.md) achou o que está no roadmap como "análise do lote 8".
 
@@ -33,7 +33,7 @@ Achados "prováveis" das revisões que ficaram como estão, por serem raros ou p
 
 Pela ordem que vínhamos seguindo. Os detalhes de cada código estão na [análise de UX](ux/analise-ux-2026-10-28.md) e no [roadmap](roadmap.md).
 
-1. **D8** (alto, protege dado): o valor digitado do granel ou da pesagem não vira preço do produto. Depois, AB9, AB10 e H11, que são pequenos.
+1. **Feitos depois da análise do lote 8:** D8, AB9, a parte do AB10 que cabe sem mudar o esquema, e H11 (468 testes passando). O resto do AB10 ("Tirar de casa" lembrar o local) pede a migração v14 e um ADR, e espera o mantenedor.
 2. **Protótipo antes do código:** a folha "Arrumar o que entrou" (AB5), a linha do granel na bandeja (D9), os quadros que faltam e a barra igual ao design system. Depois, a rodada de letra grande (H8, H9, H10 e os formulários).
 3. **Maiores, com ADR ou protótipo antes:** G2 (mover e apagar embalagem, com ADR) e H1 (aba Produtos com os componentes de Mercados).
 4. **Fase 0:** o ADR do modelo de dados (antes do backup) e o ADR do catálogo pronto de produtos brasileiros (fonte e licença).

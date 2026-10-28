@@ -80,10 +80,12 @@ Consistência e acessibilidade:
 
 Os achados da [análise do lote 8](ux/analise-ux-2026-10-28-lote8.md), feita depois da AB5, D3, H2, H3 e da barra que encolhe.
 
-- [ ] D8 (alto): o valor digitado numa linha de granel ou pesagem não pode virar preço do produto no histórico (ADR 0018). Fazer primeiro: protege dado
-- [ ] AB9: corrigir o local sugerido (leite de caixinha, enlatados e "Ovomaltine" não vão para a Geladeira; congelados vão para o Freezer) e dizer no aviso da câmera onde o item ficou
-- [ ] AB10: a folha do item mostra o local sugerido enquanto o item não existe, e "Tirar de casa" lembra o local escolhido
-- [ ] H11: o stepper da linha do Início e da folha do item avisa quando falha, como o da tela do produto
+- [x] D8 (alto): o valor digitado numa linha de granel ou pesagem não vira preço do produto no histórico (ADR 0018)
+- [x] AB9: corrigir o local sugerido (leite de caixinha, enlatados e "Ovomaltine" não vão para a Geladeira; congelados vão para o Freezer) e dizer no aviso da câmera onde o item ficou
+- [x] AB10 (parte): a folha do item mostra o local sugerido enquanto o item não existe
+- [ ] AB10 (resto): "Tirar de casa" lembra o local escolhido. Pede mudar o esquema (coluna em `StockItems`, migração v14) e um ADR curto; espera o mantenedor
+- [ ] AB9 (resto): tocar no local do aviso da câmera abre a escolha (quadro no protótipo antes)
+- [x] H11: o stepper da linha do Início e da folha do item avisa quando falha, como o da tela do produto
 - [ ] D9: a linha do granel na bandeja com sinal próprio para o preço por kg (quadro no protótipo antes; substitui o quadro da linha do granel pedido acima)
 - [ ] H8, H9, H10: rodada de letra grande: rótulos da navegação que cortam, nome do produto que perde para o preço e um teste que meça leitura, não só estouro (junto com o "H3 (formulários)")
 
