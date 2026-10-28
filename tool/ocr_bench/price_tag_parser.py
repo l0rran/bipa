@@ -207,7 +207,7 @@ def _quantity_in(text):
     if not m:
         return None
     n = NUMBER.search(text, m.end())
-    return int(n.group(1)) if n else None
+    return (int(n.group(1)) or None) if n else None
 
 
 def _h_overlap(a: Line, b: Line):
@@ -247,9 +247,9 @@ def _quantity_near(label_idx, lines):
             continue
         if label.has_geometry and other.has_geometry:
             if _h_overlap(label, other) > 0 and _v_gap(label, other) < 2 * label.height:
-                return int(QUANTITY_ONLY.match(other.text).group(1))
+                return int(QUANTITY_ONLY.match(other.text).group(1)) or None
         elif j == label_idx + 1:
-            return int(QUANTITY_ONLY.match(other.text).group(1))
+            return int(QUANTITY_ONLY.match(other.text).group(1)) or None
     return None
 
 
@@ -274,46 +274,65 @@ def condition_of(c: Cand) -> Condition:
     return ANY
 
 
+def _labels_of(text):
+    """O que uma linha sem preço diz sobre o preço a que se refere (ou None)."""
+    labels = dict(
+        wholesale=bool(WHOLESALE.search(text)),
+        loyalty=bool(LOYALTY.search(text)),
+        promo=bool(PROMO_LABEL.match(text)),
+        regular=bool(REGULAR_LABEL.match(text)),
+        min_quantity=None,
+    )
+    return labels if any(v for k, v in labels.items() if k != "min_quantity") else None
+
+
+def _merge_labels(a, b):
+    if a is None:
+        return b
+    return dict(
+        wholesale=a["wholesale"] or b["wholesale"],
+        loyalty=a["loyalty"] or b["loyalty"],
+        promo=a["promo"] or b["promo"],
+        regular=a["regular"] or b["regular"],
+        min_quantity=a["min_quantity"] if a["min_quantity"] is not None else b["min_quantity"],
+    )
+
+
 def parse(lines, barcodes=()):
-    raw = sorted((Line(normalize(l.text), l.top, l.height, l.left, l.width) for l in lines), key=lambda l: l.top)
-    ordered = merge_cents([Line(DATE.sub(" ", l.text).strip(), l.top, l.height, l.left, l.width) for l in raw])
+    # Mesma ordem do Dart: normaliza, junta os centavos, ordena e só então tira as datas.
+    normalized = [Line(normalize(l.text), l.top, l.height, l.left, l.width) for l in lines]
+    ordered = sorted(merge_cents(normalized), key=lambda l: l.top)
+    texts = [DATE.sub(" ", l.text).strip() for l in ordered]
+
+    price_lines = [i for i, t in enumerate(texts) if t and find_prices(t, 0, i)]
+
+    labels_by_line = {}
+    for i, text in enumerate(texts):
+        if not text or i in price_lines:
+            continue
+        found = _labels_of(text)
+        if found is None:
+            continue
+        if found["wholesale"]:
+            found["min_quantity"] = _quantity_in(text) or _quantity_near(i, ordered)
+        target = _nearest_price_line(i, ordered, price_lines)
+        if target is not None:
+            labels_by_line[target] = _merge_labels(labels_by_line.get(target), found)
 
     cands, unit = [], []
-    price_lines = []
-    for i, line in enumerate(ordered):
-        if not line.text:
-            continue
-        found = find_prices(line.text, line.height, i)
-        if found:
-            price_lines.append(i)
-            (unit if UNIT_PRICE.search(line.text) else cands).extend(found)
-
-    # Rótulos em linhas próprias aplicam-se ao preço da mesma coluna ou linha.
-    for i, line in enumerate(ordered):
-        if i in price_lines or not line.text:
-            continue
-        is_wholesale = bool(WHOLESALE.search(line.text))
-        is_loyalty = bool(LOYALTY.search(line.text))
-        is_promo = bool(PROMO_LABEL.match(line.text))
-        is_regular = bool(REGULAR_LABEL.match(line.text))
-        if not (is_wholesale or is_loyalty or is_promo or is_regular):
-            continue
-        target = _nearest_price_line(i, ordered, price_lines)
-        if target is None:
-            continue
-        qty = _quantity_in(line.text) or (_quantity_near(i, ordered) if is_wholesale else None)
-        for c in cands + unit:
-            if c.line != target:
-                continue
-            if is_wholesale:
-                c.wholesale = True
-                c.min_quantity = c.min_quantity or qty
-            if is_loyalty:
-                c.loyalty = True
-            if is_promo and c.role == "neutral":
-                c.role = "promo"
-            if is_regular and c.role == "neutral":
-                c.role = "regular"
+    for i in price_lines:
+        found = find_prices(texts[i], ordered[i].height, i)
+        lab = labels_by_line.get(i)
+        if lab:
+            for c in found:
+                if c.role == "neutral":
+                    c.role = "promo" if lab["promo"] else "regular" if lab["regular"] else "neutral"
+                if lab["wholesale"]:
+                    c.wholesale = True
+                    c.min_quantity = c.min_quantity or lab["min_quantity"]
+                if lab["loyalty"]:
+                    c.loyalty = True
+        (unit if UNIT_PRICE.search(texts[i]) else cands).extend(found)
 
     pool = cands or unit
     offers = _offers(pool)
@@ -326,7 +345,7 @@ def parse(lines, barcodes=()):
         price=main.price if main else None,
         regular_price=main.regular_price if main else None,
         barcode=_barcode(barcodes, ordered),
-        name=_name(ordered),
+        name=_name(ordered),  # como no Dart, com as datas
         candidates=seen,
         offers=offers,
     )
@@ -340,18 +359,23 @@ def _offers(pool):
     groups: dict[Condition, list[Cand]] = {}
     for c in big:
         groups.setdefault(condition_of(c), []).append(c)
-    offers = []
+    offers, orphans = [], None
     for cond, group in groups.items():
+        if cond == ANY and len(groups) > 1 and all(c.role == "regular" for c in group):
+            orphans = group  # "de R$" solto: é o preço normal da oferta principal
+            continue
         best = choose(group)
-        if best.role == "regular" and cond == ANY and len(groups) > 1 and all(c.role == "regular" for c in group):
-            continue  # só o "de" sem condição: é o preço normal de outra oferta, não uma oferta
         regular = None
         for c in group:
             if c.role == "regular" and c.cents > best.cents and (regular is None or c.cents > regular):
                 regular = c.cents
         offers.append(Offer(best.cents, cond, regular))
     rank = {"any": 0, "loyalty": 1, "wholesale": 2}
-    offers.sort(key=lambda o: rank[o.condition.kind])
+    offers.sort(key=lambda o: rank[o.condition.kind])  # sort do Python é estável
+    if orphans and offers[0].regular_price is None:
+        regular = max(c.cents for c in orphans)
+        if regular > offers[0].price:
+            offers[0].regular_price = regular
     return offers
 
 
@@ -368,7 +392,7 @@ def _barcode(barcodes, lines):
     return None
 
 
-NOISE = re.compile(r"([A-Za-z])\1{3,}", AI)
+NOISE = re.compile(r"([A-Za-z])\1{3,}", A)
 
 
 def _looks_like_noise(text):

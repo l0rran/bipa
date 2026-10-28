@@ -56,6 +56,9 @@ confere("clube", (r.price, r.regular_price, ofertas(r)), (849, None, [("any", No
 r = parse(tag([("DET LIQ MINUANO 500ML", 20), ("R$ 1,79", 60), ("Atacado 3,58", 10)]))
 confere("bloco de informações", (ofertas(r), r.candidates), ([("any", None, 179)], [179, 358]))
 
+r = parse(tag([("CAFE PILAO 500G", 20), ("DE R$ 9,99", 30), ("NO APP", 20), ("R$ 7,99", 80)]))
+confere("de solto", (ofertas(r), r.regular_price), ([("loyalty", None, 799)], 999))
+
 for nome, f in FIXTURES.items():
     r = parse([OcrLine(t, top, h, left, w) for (t, left, top, w, h) in f["lines"]])
     confere(nome, (ofertas(r), r.name), (f["offers"], f["name"]))

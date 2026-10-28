@@ -155,19 +155,31 @@ final class PriceTagParser {
     }
 
     final offers = <PriceOffer>[];
+    List<_Candidate>? orphanRegulars;
     for (final MapEntry(key: condition, value: group) in byCondition.entries) {
-      // Um "de R$" solto, sem condição, é o preço normal de outra oferta.
+      // Um "de R$" solto, sem condição, não é uma oferta: é o preço normal da principal.
       final onlyRegular = group.every((c) => c.role == _Role.regular);
-      if (onlyRegular && condition is AnyCustomer && byCondition.length > 1) continue;
+      if (onlyRegular && condition is AnyCustomer && byCondition.length > 1) {
+        orphanRegulars = group;
+        continue;
+      }
 
       final best = _choosePrice(group);
       offers.add(PriceOffer(price: best.money, condition: condition, regularPrice: _chooseRegularPrice(group, best)));
     }
-    return [
+    final ordered = [
       ...offers.where((o) => o.condition is AnyCustomer),
       ...offers.where((o) => o.condition is LoyaltyMembers),
       ...offers.where((o) => o.condition is Wholesale),
     ];
+    if (orphanRegulars != null && ordered.first.regularPrice == null) {
+      final main = ordered.first;
+      final regular = orphanRegulars.map((c) => c.money).reduce((a, b) => a > b ? a : b);
+      if (regular > main.price) {
+        ordered[0] = PriceOffer(price: main.price, condition: main.condition, regularPrice: regular);
+      }
+    }
+    return ordered;
   }
 
   _Candidate _choosePrice(List<_Candidate> pool) {

@@ -242,6 +242,22 @@ void main() {
       ]);
     });
 
+    test('"de R\$" solto vira o preço normal da oferta principal', () {
+      final reading = parser.parse(
+        tag([
+          ('CAFE PILAO 500G', 20),
+          ('DE R\$ 9,99', 30),
+          ('NO APP', 20),
+          ('R\$ 7,99', 80),
+        ]),
+      );
+
+      expect(reading.offers, const [
+        PriceOffer(price: Money.cents(799), condition: LoyaltyMembers(), regularPrice: Money.cents(999)),
+      ]);
+      expect(reading.regularPrice, const Money.cents(999));
+    });
+
     test('preços pequenos do bloco de informações não viram ofertas', () {
       final reading = parser.parse(
         tag([
