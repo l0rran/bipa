@@ -168,15 +168,18 @@ final class FinishShoppingTrip {
     List<ShoppingListItem> bought,
     List<CartEntry> cart,
   ) async {
+    // Só a marcação feita nesta compra diz por onde a pessoa passou.
     final picks = <AislePick>[
       for (final item in bought)
-        if (item.checkedAt case final at?) (aisle: ProductKind.of(item.name).aisle, at: at),
+        if (item.checkedAt case final at? when item.isCheckedSince(trip.startedAt))
+          (aisle: ProductKind.of(item.name).aisle, at: at),
     ];
-    // O que foi bipado sem ser marcado na lista (fora dela, ou que saiu dela
-    // porque o carrinho a alcançou) entra pelo horário do bipe.
+    // O que foi bipado sem ser marcado na lista nesta compra (fora dela,
+    // marcado antes, ou que saiu dela porque o carrinho a alcançou) entra
+    // pelo horário do bipe.
     final onList = {
       for (final item in bought)
-        if (item.checkedAt != null) item.productId,
+        if (item.isCheckedSince(trip.startedAt)) item.productId,
     };
     for (final entry in cart) {
       if (!onList.contains(entry.product.id)) {
