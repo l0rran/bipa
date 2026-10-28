@@ -2,6 +2,7 @@
 
 | Documento | Para quê |
 | --- | --- |
+| [Estado do trabalho](estado.md) | Onde o trabalho parou, o que falta verificar, os próximos passos e as decisões pendentes |
 | [Arquitetura](arquitetura.md) | Como o código é organizado, camadas, estado, dados e testes |
 | [Decisões (ADRs)](adr/README.md) | Por que cada escolha importante foi feita |
 | [Identidade visual](design/identidade-visual.md) | Cores, tipografia, forma e voz, com links para o design system e o protótipo |

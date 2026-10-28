@@ -1,6 +1,6 @@
 # Bipa: guia para agentes
 
-App Android em Flutter para controlar o estoque da casa e o histórico de preços de mercado. É offline-first, e a captura usa a câmera (código de barras e OCR da etiqueta) para evitar digitação. Comece por [docs/README.md](docs/README.md).
+App Android em Flutter para controlar o estoque da casa e o histórico de preços de mercado. É offline-first, e a captura usa a câmera (código de barras e OCR da etiqueta) para evitar digitação. Comece por [docs/estado.md](docs/estado.md), que diz onde o trabalho parou, o que falta verificar e o que vem a seguir, e depois por [docs/README.md](docs/README.md).
 
 ## Idioma
 
@@ -29,6 +29,12 @@ App Android em Flutter para controlar o estoque da casa e o histórico de preço
 - **Um acento por tela:** uma cor de destaque e o resto neutro. A marca é o amarelo da etiqueta (`brand`), sempre com texto escuro por cima; o coral (`alert`) só marca o que está abaixo do "ter sempre".
 - **Todo texto precisa se justificar:** antes de pôr um texto na tela, pergunte se é o lugar dele, se é necessário e se dá para dizer o mesmo de outra forma (ícone, número, cor, componente) sem prejudicar a compreensão. Navegação e ações que apagam algo ficam com texto, e todo elemento visual tem rótulo acessível.
 - O visual é aprovado no protótipo antes de ser implementado.
+
+## Agente local (com Flutter)
+
+- Antes de cada commit, rode `dart format .`, `flutter analyze` e `flutter test` ([docs/contribuindo.md](docs/contribuindo.md)); depois de mudar o Drift, `dart run build_runner build -d`, e depois de mudar o ARB, `flutter gen-l10n`.
+- Sem acesso ao claude.ai, use as cópias do design system e do protótipo no repositório. Para mudar uma tela, siga [docs/design/prototipo/README.md](docs/design/prototipo/README.md#como-mudar-uma-tela-sem-acesso-ao-claudeai).
+- Ao terminar uma etapa, atualize [docs/estado.md](docs/estado.md), o roadmap e o CHANGELOG.
 
 ## Ambiente de agentes na nuvem
 
