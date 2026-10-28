@@ -16,6 +16,7 @@ Nem toda mudança no estoque é igual. Um bipe ou um gesto acontece de passagem,
   - **Usei** tira uma embalagem. Se o produto fica abaixo do "ter sempre" (ou acaba) e não está na lista, entra nela com o que falta (`PutProductOnList`).
   - Ele devolve um `HomeChange`, com o `StockChange` (ADR 0013) e o que mudou na lista. O `undo` volta os dois. Quando o produto já estava na lista, o desfazer não o tira de lá.
 - Passam pelo `RecordAtHome` as ações de passagem: os modos "Comprei" e "Usei" da câmera, o deslizar "Usei um" do Início e o "Também comprei" da folha de conferir preço. Todas mostram o mesmo aviso (`showHomeChangeSnackBar`), que diz o que mudou na lista, com "Desfazer".
+- No "Usei", um item já marcado como comprado (durante uma compra) conta como "na lista" e não volta a faltar: o "Terminei" ainda vai levar para casa o que foi comprado.
 - Os steppers (linha aberta do Início, folha do item e tela do produto) são correções. Eles mudam só o estoque, sem aviso: o botão oposto é o desfazer.
 - "Tirar de casa" continua com confirmação (ADR 0016), porque apaga os lotes.
 - O "Terminei" do modo compra já fazia o mesmo com o que foi marcado e tem o próprio desfazer.
