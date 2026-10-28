@@ -97,6 +97,19 @@ void main() {
     expect(costs.map((c) => c.marketId), ['vila']);
   });
 
+  test('os preços de cada produto em cada mercado, com o nome do mercado', () {
+    final prices = referencePricesPerMarket({'arroz', 'cafe'}, [
+      _price('vila', 'arroz', 2790),
+      _price('vila', 'cafe', 1899),
+      _price('centro', 'arroz', 2590),
+    ]);
+
+    // Mapas dentro de um record não se comparam por conteúdo: um campo de cada vez.
+    expect(prices['vila']?.marketName, 'vila');
+    expect(prices['vila']?.byProduct, {'arroz': const Money.cents(2790), 'cafe': const Money.cents(1899)});
+    expect(prices['centro']?.byProduct, {'arroz': const Money.cents(2590)});
+  });
+
   test('sem lista, não há o que comparar', () {
     expect(listCostPerMarket(const {}, [_price('vila', 'arroz', 2790)]), isEmpty);
   });
