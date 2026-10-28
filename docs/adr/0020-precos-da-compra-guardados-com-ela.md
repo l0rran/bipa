@@ -36,6 +36,9 @@ Os preços lidos no carrinho só viravam observações (ADR 0007) quando a compr
 - A observação continua imutável e só inserida (ADR 0007): mover é corrigir.
 - **Limites:**
   - ao mover para outro mercado, os outros preços da etiqueta (cartão e atacado) entram também no novo mercado, mas os do anterior não são corrigidos, porque a correção vale só para o preço principal (ADR 0017);
-  - a foto da etiqueta pelo formulário antigo, aberta pelo disparo do carrinho, ainda grava por conta própria, fora da tabela. Ela some quando o disparo passar a usar a câmera ao vivo;
   - as linhas das compras terminadas ficam no banco. São poucas, e o desfazer do "Terminei" precisa delas;
   - apagar a embalagem no meio da compra muda a chave do item, e o próximo preço dele vira outra linha.
+
+## Atualização (28/10/2026)
+
+O disparo do carrinho passou a fotografar pela câmera ao vivo, e o preço da foto segue o mesmo caminho da etiqueta lida (`RecordTripPrice`). Com isso, nenhum preço do carrinho é gravado fora da tabela.

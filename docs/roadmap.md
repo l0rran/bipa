@@ -38,7 +38,7 @@
 - [x] Tela do produto: gráfico do preço nos últimos 6 meses (protótipo "Produto com embalagens")
 - [x] Ordem dos corredores aprendida por mercado, a partir da ordem em que a pessoa bipa e marca (ADR 0014)
 - [x] Preços da compra guardados com ela: sobrevivem ao fechamento do carrinho, esperam o mercado e vão junto quando ele muda (ADR 0020)
-- [ ] Uma câmera só: o disparo e o teclado usam a câmera ao vivo e a folha "Conferir e salvar", aposentando o formulário "Bipar preço" e o leitor antigo
+- [x] Uma câmera só: o disparo e o teclado usam a câmera ao vivo e a folha "Conferir e salvar", aposentando o formulário "Bipar preço" e o leitor antigo
 - [ ] Quantidade na compra: "1 de 3" na lista e na bandeja, e o que faltou continua na lista
 - [ ] Itens de sempre pelo ritmo de consumo (hoje são os produtos com "ter sempre")
 - [x] Fechar o ciclo: o que é bipado em "Comprei" sai da lista e entra no estoque (o "Terminei" do modo compra já faz isso com o que foi marcado)
@@ -59,7 +59,6 @@ Primeira abertura e em casa:
 - [ ] AB3: a linha deslizada em "Usei um" fica no lugar, com o anel já coral, enquanto o aviso está na tela, e só depois vai para "Acabando"
 - [ ] AB5: primeira carga que configura: folha "Arrumar o que entrou" com local e "ter sempre", ou o local sugerido pela categoria
 - [ ] AB6: botão "Mais do item" no editor da linha, para o local, "Tirar de casa" e "Ver produto" sem passar pelo chip do "ter sempre"
-- [ ] AB7: na câmera em "Etiqueta", o produto que espera a etiqueta oferece "Guardar em casa" (quem bipou em casa pelo botão amarelo)
 
 Lista e compra:
 
@@ -71,13 +70,9 @@ Lista e compra:
 
 Câmera e modo carrinho:
 
-- [ ] D2: uma câmera só (o item acima)
 - [ ] D3: o granel escolhido entra na bandeja sem preço, com o preço por kg como estimativa, e marca a lista
-- [ ] D4: a mesma etiqueta relida não vai para o próximo produto bipado
-- [ ] D5: os avisos de espera viram botão: "aponte para a etiqueta ›" abre "Conferir e salvar", e "bipe o produto ›" abre a escolha pelo nome lido
 - [ ] D6: trocar o produto lembrado para um código da balança
 - [ ] D7: em "Comprei" e "Usei", o Desfazer no aviso do visor quando a lista não muda, sem repetir o fato num snackbar
-- [ ] D7: a folha "Conferir e salvar" mostra o mercado, tocável para trocar
 
 Preços, mercados e produto:
 
@@ -96,7 +91,7 @@ Consistência e acessibilidade:
 - [ ] H5: as linhas de "Nos mercados" e da comparação abrem o mercado, e os alfinetes do mapa levam à linha
 - [ ] A barra de navegação encolhe ao rolar, como no design system
 - [ ] Movimento reduzido respeitado em todas as animações (barras da comparação e stepper)
-- [ ] Revisar no protótipo: "Modo carrinho: granel sem código", "Menu do bipar" com "Guardar em casa", "Mercados" com a idade dos preços e a pergunta "Levar os preços?"
+- [ ] Revisar no protótipo: "Modo carrinho: granel sem código", "Menu do bipar" com "Guardar em casa", "Mercados" com a idade dos preços e a pergunta "Levar os preços?", o mercado na "Confirmação" e o aviso tocável em "Modo carrinho: preço esperando"
 
 ## Fase 2: base comunitária
 

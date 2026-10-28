@@ -49,6 +49,9 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - Pôr ou tirar da lista pela linha do Início avisa o que mudou, com Desfazer.
 - Telas que não carregam oferecem "Tentar de novo".
 - Ações que apagam ou descartam se confirmam no botão neutro, com verbo e objeto ("Apagar mercado").
+- Uma câmera só: o disparo do carrinho fotografa pela câmera ao vivo, "Registrar preço" na tela do produto abre a câmera em "Etiqueta" com o produto já escolhido, e o leitor de código do cadastro também usa a câmera ao vivo. Saem o formulário "Bipar preço", o leitor antigo e os pacotes `image_picker` e `mobile_scanner`.
+- Os avisos de espera são botões: o preço que espera o produto abre a escolha pelo nome lido, e na câmera o produto que espera a etiqueta oferece "Digitar preço" e "Guardar em casa".
+- A folha "Conferir e salvar" mostra o mercado do preço, e tocar nele troca.
 
 ### Corrigido
 - Leitura da etiqueta: centavos sobrescritos lidos à parte, milhar ("1.299,90"), preço seguido de KG ou UN, parcelas confundidas com o preço, dígitos espaçados pelo OCR e rótulos como "LEVE 3 PAGUE 2" tomados pelo nome do produto.
@@ -60,6 +63,7 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - A alça da bandeja segue a direção do arrasto, e o preço estimado tem um sinal só (a etiqueta vazada).
 - Compra sem lista mostra "8 no carrinho" em vez de "0 de 0 itens".
 - "a menos que no Padaria Real" virou "a menos que em Padaria Real".
+- A mesma etiqueta lida de novo, logo depois de dar o preço a um produto, não vai mais para o próximo produto bipado.
 
 ## [0.1.0] - 2026-10-27
 
