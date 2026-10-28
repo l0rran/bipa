@@ -1,5 +1,6 @@
 import 'package:bipa/core/catalog/product_kind.dart';
 import 'package:bipa/core/money/money.dart';
+import 'package:bipa/features/shopping_list/domain/aisle_order.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_sections.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -27,6 +28,23 @@ void main() {
 
     expect(sections.map((s) => s.aisle), [Aisle.produce, Aisle.grocery, Aisle.cleaning]);
     expect(sections[1].entries.map((e) => e.name), ['Café Pilão 500 g', 'Arroz 5 kg']);
+  });
+
+  test('no mercado da compra, as seções seguem a ordem aprendida nele', () {
+    final at = DateTime(2026, 10, 20, 10);
+    final order = AisleOrder.empty.learn([
+      (aisle: Aisle.cleaning, at: at),
+      (aisle: Aisle.grocery, at: at.add(const Duration(minutes: 5))),
+      (aisle: Aisle.produce, at: at.add(const Duration(minutes: 10))),
+    ]);
+
+    final sections = shoppingListSections([
+      entry('Café Pilão 500 g'),
+      entry('Detergente Ypê', minute: 1),
+      entry('Tomate italiano', minute: 2),
+    ], order: order);
+
+    expect(sections.map((s) => s.aisle), [Aisle.cleaning, Aisle.grocery, Aisle.produce]);
   });
 
   test('em cada seção, o que falta vem antes do que já foi comprado', () {

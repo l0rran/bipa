@@ -3,8 +3,8 @@ import 'package:bipa/core/catalog/text_fold.dart';
 /// Seções do mercado, na ordem em que costumam aparecer num percurso: a lista
 /// de compras agrupa os itens por elas.
 ///
-/// É uma ordem genérica. A ordem real dos corredores de cada mercado será
-/// aprendida a partir do que a pessoa bipa (roadmap da fase 1).
+/// É a ordem genérica. A de cada mercado é aprendida com as compras feitas
+/// nele (ADR 0014, `AisleOrder`).
 enum Aisle { produce, bakery, meat, dairy, grocery, sweets, frozen, drinks, cleaning, hygiene, pet, other }
 
 /// Tipo de produto, deduzido do nome. Dá o ícone do produto sem foto e a

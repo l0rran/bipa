@@ -1,5 +1,6 @@
 import 'package:bipa/core/catalog/product_kind.dart';
 import 'package:bipa/core/money/money.dart';
+import 'package:bipa/features/shopping_list/domain/aisle_order.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:meta/meta.dart';
 
@@ -17,15 +18,20 @@ final class ShoppingListSection {
   int get total => entries.length;
 }
 
-/// Agrupa a lista pelas seções do mercado, na ordem do percurso ([Aisle]).
-List<ShoppingListSection> shoppingListSections(Iterable<ShoppingListEntry> entries) {
+/// Agrupa a lista pelas seções do mercado, na ordem do percurso: a
+/// aprendida no mercado da compra ([order], ADR 0014) ou a genérica de
+/// [Aisle].
+List<ShoppingListSection> shoppingListSections(
+  Iterable<ShoppingListEntry> entries, {
+  AisleOrder order = AisleOrder.empty,
+}) {
   final byAisle = <Aisle, List<ShoppingListEntry>>{};
   for (final entry in entries) {
     byAisle.putIfAbsent(ProductKind.of(entry.name).aisle, () => []).add(entry);
   }
   return [
-    for (final aisle in Aisle.values)
-      if (byAisle[aisle] case final group?) ShoppingListSection(aisle: aisle, entries: _shoppingOrder(group)),
+    for (final aisle in order.sort(byAisle.keys))
+      ShoppingListSection(aisle: aisle, entries: _shoppingOrder(byAisle[aisle]!)),
   ];
 }
 
