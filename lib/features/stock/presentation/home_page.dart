@@ -57,6 +57,10 @@ class _HomePageState extends ConsumerState<HomePage> {
   /// Só uma linha fica aberta por vez.
   String? _expandedProductId;
 
+  /// As linhas que acabaram de receber "Usei um" e ficam em "Em casa"
+  /// enquanto o aviso está na tela (AB3).
+  final _settling = <String>{};
+
   /// O bipar da busca encontra: abre o produto do código (ou a folha
   /// "Embalagem nova", se ele for novo), como a busca por texto.
   Future<void> _findByBarcode() async {
@@ -91,7 +95,15 @@ class _HomePageState extends ConsumerState<HomePage> {
       return;
     }
     if (change == null || !mounted) return;
-    showHomeChangeSnackBar(messenger, l10n: l10n, record: record, product: product, change: change);
+    // A linha fica no lugar, já com o anel do que está acabando, enquanto o
+    // aviso está na tela; só depois vai para "Acabando" (AB3).
+    setState(() => _settling.add(product.id));
+    final notice = showHomeChangeSnackBar(messenger, l10n: l10n, record: record, product: product, change: change);
+    unawaited(
+      notice.closed.then((_) {
+        if (mounted) setState(() => _settling.remove(product.id));
+      }),
+    );
   }
 
   /// Põe o produto na lista ou o tira de lá. Com [notify] (o gesto e o
@@ -171,8 +183,10 @@ class _HomePageState extends ConsumerState<HomePage> {
           final visible = _visible(entries);
           // Acabou primeiro, depois o que está mais perto de acabar.
           // A linha aberta fica em "Em casa" enquanto é editada, mesmo que caia
-          // abaixo do "ter sempre": assim o editor não some debaixo do dedo.
-          bool inShelf(StockEntry e) => e.item.isLow && e.product.id != _expandedProductId;
+          // abaixo do "ter sempre": assim o editor não some debaixo do dedo. A
+          // que acabou de receber "Usei um" também, enquanto o aviso aparece.
+          bool inShelf(StockEntry e) =>
+              e.item.isLow && e.product.id != _expandedProductId && !_settling.contains(e.product.id);
           final low = visible.where(inShelf).toList()
             ..sort((a, b) => a.item.fillFraction.compareTo(b.item.fillFraction));
           final atHome = visible.where((e) => !inShelf(e)).toList();
