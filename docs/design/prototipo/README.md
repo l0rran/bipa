@@ -9,7 +9,7 @@ Cada tela tem uma imagem (390 px de largura, em 2x) e o HTML de origem em [`font
 | Tela | Imagem | No app |
 | --- | --- | --- |
 | **Início**: busca com bipar, a lista (miniaturas, total estimado e "Ir às compras"), locais como categorias, carrossel de insights, prateleira de "Acabando" e lista "Em casa" com o medidor de nível. | [Main.png](telas/Main.png) | Feita, sem os insights |
-| **Menu do bipar**: o toque longo no botão de bipar abre Modo carrinho, Dar baixa em casa e Ler cupom fiscal. | [MenuBipar.png](telas/MenuBipar.png) | Feita, sem "Ler cupom fiscal" |
+| **Menu do bipar**: o toque longo no botão de bipar abre Modo carrinho, Guardar em casa, Dar baixa em casa e Ler cupom fiscal. | [MenuBipar.png](telas/MenuBipar.png) | Feita, sem "Ler cupom fiscal". "Guardar em casa" aguarda revisão |
 | **Captura**: a câmera abre direto, com o mercado no topo, a moldura de leitura, o seletor Etiqueta · Código · Cupom, o disparo, "digitar o preço" e o modo carrinho. | [Captura.png](telas/Captura.png) | Feita: a câmera lê ao vivo, como o carrinho, e ainda não tem o modo Cupom; o disparo fotografa a etiqueta no formulário antigo |
 | **Confirmação**: folha para conferir e salvar, com o produto, o preço em destaque, o lápis para corrigir, "Mais barato aqui" e "Também comprei", que soma ao estoque. | [Confirmacao.png](telas/Confirmacao.png) | Feita |
 | **Modo carrinho**: leitura contínua, com a bandeja do que você vai levar, o total e "Terminei". | [ModoCarrinho.png](telas/ModoCarrinho.png) | Feita |

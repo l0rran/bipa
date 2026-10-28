@@ -1154,5 +1154,9 @@
         "type": "int"
       }
     }
+  },
+  "scanMenuBought": "Guardar em casa",
+  "@scanMenuBought": {
+    "description": "Item do menu do bipar: abre a câmera que soma em casa cada código e tira da lista (modo \"Comprei\")."
   }
 }

@@ -82,7 +82,8 @@ class HomeShell extends ConsumerWidget {
     );
   }
 
-  /// Segurar o bipar: o modo carrinho ou dar baixa em casa.
+  /// Segurar o bipar: o modo carrinho, guardar em casa o que chegou ou dar
+  /// baixa em casa.
   static Future<void> _openScanMenu(BuildContext context, WidgetRef ref, {required bool shopping}) async {
     final l10n = AppLocalizations.of(context);
     final choice = await showScanMenu<_ScanAction>(
@@ -95,6 +96,7 @@ class HomeShell extends ConsumerWidget {
           label: l10n.scanMenuCart,
           hint: l10n.scanMenuCartHint,
         ),
+        (value: _ScanAction.bought, icon: Icons.add_home_outlined, label: l10n.scanMenuBought, hint: null),
         (value: _ScanAction.used, icon: Icons.home_outlined, label: l10n.scanMenuUsed, hint: null),
       ],
     );
@@ -104,6 +106,8 @@ class HomeShell extends ConsumerWidget {
         await context.push(Routes.cartMode);
       case _ScanAction.cart:
         await startShopping(context, ref);
+      case _ScanAction.bought:
+        await context.push(Routes.cameraBought);
       case _ScanAction.used:
         await context.push(Routes.cameraUsed);
       case null:
@@ -119,4 +123,4 @@ class HomeShell extends ConsumerWidget {
 }
 
 /// As opções do menu do bipar.
-enum _ScanAction { cart, used }
+enum _ScanAction { cart, bought, used }
