@@ -11,6 +11,9 @@ final class GeolocatorLocationService implements LocationService {
 
   final Duration timeLimit;
 
+  /// No Android, o `checkPermission` pode responder "negado" mesmo depois de
+  /// uma negação de vez (o "de vez" só vem do pedido). Aí o app explica o
+  /// motivo uma vez a mais e o `requestAccess` volta bloqueado, sem diálogo.
   @override
   Future<PermissionAccess> access() async => _toAccess(await Geolocator.checkPermission());
 

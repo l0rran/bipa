@@ -73,6 +73,7 @@ class MainActivity : FlutterActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode != REQUEST_NOTIFICATIONS) return
         val granted = grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED
+        rememberIfDenied()
         pendingPermission?.success(null)
         pendingPermission = null
         // A notificação pode aparecer agora: o Dart manda o conteúdo de novo.
@@ -81,19 +82,31 @@ class MainActivity : FlutterActivity() {
 
     /**
      * "granted", "askable" ou "blocked" (os nomes de PermissionAccess no Dart).
-     * O Android não diz se a pessoa negou de vez: depois de um pedido, se ele
-     * não oferece mais explicar o motivo, o sistema não pergunta mais.
+     *
+     * O Android não diz se a pessoa negou de vez. Depois de uma negação, ele
+     * oferece explicar o motivo; se deixa de oferecer sem a permissão ter
+     * vindo, é porque não pergunta mais. Fechar o diálogo sem escolher não
+     * conta como negação, então ainda dá para perguntar.
      */
     private fun notificationAccess(): String {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             return if (NotificationManagerCompat.from(this).areNotificationsEnabled()) "granted" else "blocked"
         }
         val permission = Manifest.permission.POST_NOTIFICATIONS
+        rememberIfDenied()
         return when {
             ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED -> "granted"
             ActivityCompat.shouldShowRequestPermissionRationale(this, permission) -> "askable"
-            permissionPrefs().getBoolean(KEY_NOTIFICATIONS_ASKED, false) -> "blocked"
+            permissionPrefs().getBoolean(KEY_NOTIFICATIONS_DENIED, false) -> "blocked"
             else -> "askable"
+        }
+    }
+
+    /** Guarda que a pessoa já negou uma vez: é o que o motivo oferecido indica. */
+    private fun rememberIfDenied() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.POST_NOTIFICATIONS)) {
+            permissionPrefs().edit().putBoolean(KEY_NOTIFICATIONS_DENIED, true).apply()
         }
     }
 
@@ -107,7 +120,6 @@ class MainActivity : FlutterActivity() {
             return
         }
         pendingPermission = result
-        permissionPrefs().edit().putBoolean(KEY_NOTIFICATIONS_ASKED, true).apply()
         ActivityCompat.requestPermissions(this, arrayOf(permission), REQUEST_NOTIFICATIONS)
     }
 
@@ -123,6 +135,6 @@ class MainActivity : FlutterActivity() {
     private companion object {
         const val REQUEST_NOTIFICATIONS = 7002
         const val PERMISSION_PREFS = "bipa_permissions"
-        const val KEY_NOTIFICATIONS_ASKED = "notifications_asked"
+        const val KEY_NOTIFICATIONS_DENIED = "notifications_denied"
     }
 }
