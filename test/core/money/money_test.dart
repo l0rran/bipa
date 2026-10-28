@@ -46,6 +46,7 @@ void main() {
 
     expect(a + b, const Money.cents(1799));
     expect(b - a, const Money.cents(201));
+    expect(a * 3, const Money.cents(2397));
     expect(a < b, isTrue);
     expect(b > a, isTrue);
     expect(a.compareTo(b), lessThan(0));

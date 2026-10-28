@@ -52,6 +52,10 @@ final class Money implements Comparable<Money> {
 
   Money operator -(Money other) => Money.cents(cents - other.cents);
 
+  /// O valor de [count] unidades: 3 × R$ 4,99 = R$ 14,97. Sem arredondar,
+  /// porque a conta é em centavos inteiros.
+  Money operator *(int count) => Money.cents(cents * count);
+
   bool operator <(Money other) => cents < other.cents;
 
   bool operator <=(Money other) => cents <= other.cents;

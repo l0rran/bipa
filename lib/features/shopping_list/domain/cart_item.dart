@@ -53,7 +53,7 @@ final class CartItem {
   /// O que o item soma ao total: o preço vezes a quantidade, se vai levar.
   Money? get subtotal {
     final price = this.price;
-    return take && price != null ? Money.cents(price.cents * quantity) : null;
+    return take && price != null ? price * quantity : null;
   }
 
   @override
