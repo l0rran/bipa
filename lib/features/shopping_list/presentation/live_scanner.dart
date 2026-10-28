@@ -116,6 +116,28 @@ final class LiveScanner extends ChangeNotifier {
     }
   });
 
+  /// O disparo: fotografa o que está na frente, em alta resolução, para ler a
+  /// etiqueta que a leitura ao vivo deixou passar. A leitura para durante a
+  /// foto (nem toda câmera fotografa enquanto entrega quadros) e volta em
+  /// seguida. Devolve o caminho do arquivo, ou `null` com a câmera fechada.
+  Future<String?> takePicture() async {
+    String? path;
+    await _enqueue(() async {
+      final controller = _controller;
+      if (controller == null || _disposed) return;
+      if (controller.value.isStreamingImages) await controller.stopImageStream();
+      try {
+        path = (await controller.takePicture()).path;
+      } finally {
+        if (_controller == controller && !_disposed) {
+          _interpreter.restart(DateTime.now());
+          await controller.startImageStream((image) => _onImage(controller, image));
+        }
+      }
+    });
+    return path;
+  }
+
   Future<void> toggleTorch() => _enqueue(() async {
     final controller = _controller;
     if (controller == null) return;

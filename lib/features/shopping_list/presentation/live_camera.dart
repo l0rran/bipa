@@ -230,6 +230,17 @@ class LiveCameraState extends ConsumerState<LiveCamera> with WidgetsBindingObser
   /// A lanterna falha se a câmera não abriu (sem permissão, por exemplo).
   Future<void> toggleTorch() => _command(_live.toggleTorch);
 
+  /// A foto do disparo, sem fechar a câmera: o caminho do arquivo, ou `null`
+  /// se ela não abriu ou a foto falhou (o erro vai para o relatório).
+  Future<String?> takePicture() async {
+    try {
+      return await _live.takePicture();
+    } on Exception catch (error, stack) {
+      _report(error, stack);
+      return null;
+    }
+  }
+
   /// Comandos da câmera que podem falhar sem derrubar a tela: o erro vai para
   /// o relatório e o leitor segue como está.
   Future<void> _command(Future<void> Function() command) async {

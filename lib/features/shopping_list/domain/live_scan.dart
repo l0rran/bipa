@@ -55,6 +55,26 @@ final class TagPriceRead extends LiveScanEvent {
     this.perKilo = false,
   });
 
+  /// A etiqueta lida numa foto (o disparo), no formato da leitura ao vivo,
+  /// para seguir o mesmo caminho. Como ao vivo, o preço é o de varejo; uma
+  /// etiqueta com vários preços e nenhum de varejo lido não serve, porque
+  /// na dúvida nada é escolhido. `null` sem preço.
+  static TagPriceRead? fromPhoto(PriceTagReading reading) {
+    final retail = reading.offers.where((offer) => offer.condition is AnyCustomer).firstOrNull;
+    final price = retail?.price ?? (reading.offers.length <= 1 ? reading.price : null);
+    if (price == null) return null;
+    return TagPriceRead(
+      price: price,
+      barcode: reading.barcode,
+      nameHint: reading.productNameHint,
+      otherOffers: [
+        for (final offer in reading.offers)
+          if (offer.condition is! AnyCustomer) offer,
+      ],
+      perKilo: reading.perKilo,
+    );
+  }
+
   final Money price;
   final String? barcode;
 

@@ -239,4 +239,46 @@ void main() {
 
     expect(events, [const TagPriceRead(price: Money.cents(2790), nameHint: 'Arroz Branco Tio Joao 5kg')]);
   });
+
+  group('etiqueta fotografada no disparo', () {
+    test('vira a mesma leitura do ao vivo, com o varejo como preço', () {
+      const reading = PriceTagReading(
+        price: Money.cents(1899),
+        barcode: '7891000100103',
+        productNameHint: 'CAFE PILAO 500G',
+        offers: [
+          PriceOffer(price: Money.cents(1899)),
+          PriceOffer(price: Money.cents(1799), condition: LoyaltyMembers()),
+        ],
+      );
+
+      expect(
+        TagPriceRead.fromPhoto(reading),
+        const TagPriceRead(
+          price: Money.cents(1899),
+          barcode: '7891000100103',
+          nameHint: 'CAFE PILAO 500G',
+          otherOffers: [PriceOffer(price: Money.cents(1799), condition: LoyaltyMembers())],
+        ),
+      );
+    });
+
+    test('sem preço, ou com vários e nenhum de varejo, não serve', () {
+      expect(TagPriceRead.fromPhoto(PriceTagReading.empty), isNull);
+      const onlyConditions = PriceTagReading(
+        price: Money.cents(1799),
+        offers: [
+          PriceOffer(price: Money.cents(1799), condition: LoyaltyMembers()),
+          PriceOffer(price: Money.cents(1699), condition: Wholesale(minimumQuantity: 3)),
+        ],
+      );
+      expect(TagPriceRead.fromPhoto(onlyConditions), isNull);
+    });
+
+    test('um preço só, mesmo sem condição lida, serve', () {
+      const reading = PriceTagReading(price: Money.cents(899), offers: [PriceOffer(price: Money.cents(899))], perKilo: true);
+
+      expect(TagPriceRead.fromPhoto(reading), const TagPriceRead(price: Money.cents(899), perKilo: true));
+    });
+  });
 }
