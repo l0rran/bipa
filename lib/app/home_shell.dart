@@ -18,36 +18,74 @@ import 'package:go_router/go_router.dart';
 /// Durante uma compra, a barra da compra fica acima da navegação em todas as
 /// abas, menos na Lista, que já mostra o mesmo progresso. "Continuar" abre o
 /// modo carrinho.
-class HomeShell extends ConsumerWidget {
+///
+/// Rolando o conteúdo de qualquer aba para baixo, a barra encolhe; para cima,
+/// no topo ou ao trocar de aba, ela volta ao normal.
+class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({required this.navigationShell, super.key});
 
   final StatefulNavigationShell navigationShell;
 
+  @override
+  ConsumerState<HomeShell> createState() => _HomeShellState();
+}
+
+class _HomeShellState extends ConsumerState<HomeShell> {
   // A ordem segue os ramos do StatefulShellRoute em router.dart.
   static const _listBranch = 3;
 
+  final _compact = ScanNavBarCompactController();
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void didUpdateWidget(HomeShell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // A aba mudou por fora da barra (um link, por exemplo): a barra volta.
+    if (widget.navigationShell.currentIndex != oldWidget.navigationShell.currentIndex) _compact.expand();
+  }
+
+  @override
+  void dispose() {
+    _compact.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final trip = ref.watch(shoppingTripSummaryProvider);
     final marketName = ref.watch(activeTripMarketNameProvider);
+    final navigationShell = widget.navigationShell;
 
-    void goBranch(int index) => navigationShell.goBranch(
-      index,
-      // Tocar na aba atual volta para o início dela.
-      initialLocation: index == navigationShell.currentIndex,
-    );
+    void goBranch(int index) {
+      _compact.expand();
+      navigationShell.goBranch(
+        index,
+        // Tocar na aba atual volta para o início dela.
+        initialLocation: index == navigationShell.currentIndex,
+      );
+    }
 
     return Scaffold(
       // O conteúdo passa por trás das barras; as telas usam o
-      // MediaQuery.padding.bottom para deixar espaço embaixo.
+      // MediaQuery.padding.bottom para deixar espaço embaixo. A barra ocupa
+      // sempre a altura da normal, então o conteúdo não fica escondido atrás
+      // dela em nenhum dos dois tamanhos.
       extendBody: true,
-      body: navigationShell,
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (trip case final summary? when navigationShell.currentIndex != _listBranch)
-            Padding(
+      // A rolagem de todas as abas passa por aqui, sem mexer em cada tela.
+      body: NotificationListener<ScrollMetricsNotification>(
+        onNotification: _compact.onScrollMetricsNotification,
+        child: NotificationListener<ScrollNotification>(
+          onNotification: _compact.onScrollNotification,
+          child: navigationShell,
+        ),
+      ),
+      bottomNavigationBar: ValueListenableBuilder(
+        valueListenable: _compact,
+        builder: (context, compact, _) => ScanNavBar(
+          compact: compact,
+          // A barra da compra desce junto quando a navegação encolhe.
+          above: switch (trip) {
+            final summary? when navigationShell.currentIndex != _listBranch => Padding(
               padding: const EdgeInsets.fromLTRB(BipaSpacing.s3, 0, BipaSpacing.s3, BipaSpacing.s2),
               child: ShoppingBar(
                 title: _title(l10n, summary),
@@ -63,26 +101,30 @@ class HomeShell extends ConsumerWidget {
                 onTap: () => context.push(Routes.cartMode),
               ),
             ),
-          ScanNavBar(
-            selectedIndex: navigationShell.currentIndex,
-            onSelected: goBranch,
-            // Durante a compra, bipar é o modo carrinho; fora dela, a câmera.
-            onScan: () => context.push(trip == null ? Routes.camera : Routes.cartMode),
-            scanLabel: l10n.navScan,
-            onScanLongPress: () => _openScanMenu(context, ref, shopping: trip != null),
-            scanLongPressLabel: l10n.navScanMore,
-            destinations: [
-              ScanNavDestination(icon: Icons.home_outlined, selectedIcon: Icons.home_rounded, label: l10n.navHome),
-              ScanNavDestination(icon: Icons.sell_outlined, selectedIcon: Icons.sell_rounded, label: l10n.navProducts),
-              ScanNavDestination(icon: Icons.place_outlined, selectedIcon: Icons.place_rounded, label: l10n.navMarkets),
-              ScanNavDestination(
-                icon: Icons.checklist_outlined,
-                selectedIcon: Icons.checklist_rounded,
-                label: l10n.navList,
-              ),
-            ],
-          ),
-        ],
+            _ => null,
+          },
+          selectedIndex: navigationShell.currentIndex,
+          onSelected: goBranch,
+          // Durante a compra, bipar é o modo carrinho; fora dela, a câmera.
+          onScan: () => context.push(trip == null ? Routes.camera : Routes.cartMode),
+          scanLabel: l10n.navScan,
+          onScanLongPress: () {
+            // O "×" do menu fica no lugar do botão da barra normal.
+            _compact.expand();
+            _openScanMenu(context, ref, shopping: trip != null);
+          },
+          scanLongPressLabel: l10n.navScanMore,
+          destinations: [
+            ScanNavDestination(icon: Icons.home_outlined, selectedIcon: Icons.home_rounded, label: l10n.navHome),
+            ScanNavDestination(icon: Icons.sell_outlined, selectedIcon: Icons.sell_rounded, label: l10n.navProducts),
+            ScanNavDestination(icon: Icons.place_outlined, selectedIcon: Icons.place_rounded, label: l10n.navMarkets),
+            ScanNavDestination(
+              icon: Icons.checklist_outlined,
+              selectedIcon: Icons.checklist_rounded,
+              label: l10n.navList,
+            ),
+          ],
+        ),
       ),
     );
   }
