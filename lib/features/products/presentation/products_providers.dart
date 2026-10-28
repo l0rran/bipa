@@ -1,8 +1,10 @@
 import 'package:bipa/core/database/database_provider.dart';
+import 'package:bipa/core/di/core_providers.dart';
 import 'package:bipa/features/products/data/drift_product_repository.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/product_repository.dart';
+import 'package:bipa/features/products/domain/register_package.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final productRepositoryProvider = Provider<ProductRepository>(
@@ -33,4 +35,12 @@ final productProvider = StreamProvider.autoDispose.family<Product?, String>(
 /// As embalagens do produto, das mais novas para as mais antigas.
 final productPackagesProvider = StreamProvider.autoDispose.family<List<ProductPackage>, String>(
   (ref, productId) => ref.watch(productRepositoryProvider).watchPackages(productId),
+);
+
+final registerPackageProvider = Provider<RegisterPackage>(
+  (ref) => RegisterPackage(
+    products: ref.watch(productRepositoryProvider),
+    ids: ref.watch(idGeneratorProvider),
+    clock: ref.watch(clockProvider),
+  ),
 );
