@@ -68,7 +68,6 @@
     "description": "Unidade das quantidades do estoque (embalagens)."
   },
   "stockSettings": "Ajustar item",
-  "listComingSoon": "A lista de compras chega na próxima versão.\nPor enquanto, o que está acabando aparece na Casa.",
   "placePantry": "Despensa",
   "placeFridge": "Geladeira",
   "placeFreezer": "Freezer",
@@ -104,5 +103,94 @@
   "captureChoosePrice": "A etiqueta tem mais de um preço. Toque no que você paga.",
   "@captureChoosePrice": {
     "description": "A foto trouxe vários preços sem dizer qual é o de varejo, e o campo ficou em branco."
-  }
+  },
+  "listTitle": "Lista",
+  "listAddHint": "Adicionar item",
+  "listAdd": "Adicionar",
+  "@listAdd": {
+    "description": "Botão que põe na lista o que foi escrito."
+  },
+  "listUsual": "De sempre",
+  "@listUsual": {
+    "description": "Produtos com \"ter sempre\": um toque põe na lista."
+  },
+  "listInStore": "No mercado",
+  "@listInStore": {
+    "description": "A lista, agrupada pelas seções do mercado."
+  },
+  "listRemoveChecked": "Tirar comprados",
+  "listEmpty": "Sua lista está vazia.\nToque nos itens de sempre ou escreva o que falta.",
+  "listItemRemoved": "{name} saiu da lista",
+  "@listItemRemoved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listProgress": "{done} de {total}",
+  "@listProgress": {
+    "description": "Itens comprados de quantos há na lista.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "listEstimate": "≈ {value}",
+  "@listEstimate": {
+    "description": "Valor estimado pelos últimos preços registrados.",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "listItems": "{count, plural, =1{item} other{itens}}",
+  "@listItems": {
+    "description": "A palavra depois do número de itens na prévia da lista.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listPreviewSemantics": "{count, plural, =1{Lista de compras: 1 item} other{Lista de compras: {count} itens}}",
+  "@listPreviewSemantics": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listAbout": "cerca de {value}",
+  "@listAbout": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "listOpen": "Abrir a lista",
+  "@listOpen": {
+    "description": "Ação da prévia da lista na Casa. Vira \"Ir às compras\" quando houver o modo compra."
+  },
+  "listAddToList": "Pôr na lista",
+  "listRemoveFromList": "Tirar da lista",
+  "listOnList": "Na lista",
+  "aisleProduce": "Hortifrúti",
+  "aisleBakery": "Padaria",
+  "aisleMeat": "Carnes e peixes",
+  "aisleDairy": "Frios e laticínios",
+  "aisleGrocery": "Mercearia",
+  "aisleSweets": "Doces e biscoitos",
+  "aisleFrozen": "Congelados",
+  "aisleDrinks": "Bebidas",
+  "aisleCleaning": "Limpeza",
+  "aisleHygiene": "Higiene",
+  "aislePet": "Pet",
+  "aisleOther": "Outros"
 }

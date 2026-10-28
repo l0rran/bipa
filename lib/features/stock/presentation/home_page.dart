@@ -10,6 +10,7 @@ import 'package:bipa/core/design_system/components/product_category_icon.dart';
 import 'package:bipa/core/design_system/components/product_thumb.dart';
 import 'package:bipa/core/design_system/components/quantity_stepper.dart';
 import 'package:bipa/core/design_system/components/section_header.dart';
+import 'package:bipa/core/design_system/components/shopping_list.dart';
 import 'package:bipa/core/design_system/components/stock_list.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
@@ -18,6 +19,9 @@ import 'package:bipa/core/widgets/empty_state.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/presentation/product_photos.dart';
 import 'package:bipa/features/products/presentation/scan_product.dart';
+import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
+import 'package:bipa/features/shopping_list/domain/shopping_list_sections.dart';
+import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:bipa/features/stock/domain/stock_item.dart';
 import 'package:bipa/features/stock/domain/stock_location.dart';
 import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
@@ -90,6 +94,12 @@ class _HomePageState extends ConsumerState<HomePage> {
       );
   }
 
+  /// Põe o produto na lista ou o tira de lá.
+  Future<void> _toggleList(Product product, {required bool onList}) {
+    final list = ref.read(shoppingListRepositoryProvider);
+    return onList ? list.removeProduct(product.id) : list.addProduct(productId: product.id, name: product.name);
+  }
+
   List<StockEntry> _visible(List<StockEntry> entries) {
     final query = _query.trim().toLowerCase();
     return [
@@ -105,6 +115,9 @@ class _HomePageState extends ConsumerState<HomePage> {
     final l10n = AppLocalizations.of(context);
     final stock = ref.watch(stockProvider);
     final photos = ref.watch(productPhotosDirectoryProvider).value;
+    final onList = ref.watch(productsOnListProvider);
+    final listEntries = ref.watch(shoppingListProvider).value ?? const <ShoppingListEntry>[];
+    final listSummary = ref.watch(shoppingListSummaryProvider);
 
     return Scaffold(
       body: AsyncValueView(
@@ -149,6 +162,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                           onScan: _addByBarcode,
                           scanLabel: l10n.searchScan,
                         ),
+                        if (listSummary.remaining > 0) ...[
+                          const SizedBox(height: BipaSpacing.s4),
+                          _ListPreview(entries: listEntries, summary: listSummary, photos: photos),
+                        ],
                       ],
                     ),
                   ),
@@ -183,12 +200,17 @@ class _HomePageState extends ConsumerState<HomePage> {
                       separatorBuilder: (_, _) => const SizedBox(width: BipaSpacing.s3),
                       itemBuilder: (context, index) {
                         final entry = low[index];
+                        final isOnList = onList.contains(entry.product.id);
                         return ProductCard(
                           name: entry.product.name,
                           image: _ProductArt(product: entry.product, photo: productPhotoFile(entry.product, photos)),
                           gauge: entry.item.gauge(l10n, size: 36),
                           onTap: () => context.push(Routes.productDetail(entry.product.id)),
                           onLongPress: () => showStockItemSheet(context, entry),
+                          onList: isOnList,
+                          onToggleList: () => _toggleList(entry.product, onList: isOnList),
+                          addLabel: l10n.listAddToList,
+                          removeLabel: l10n.listRemoveFromList,
                         );
                       },
                     ),
@@ -207,6 +229,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                             entry: entry,
                             photo: productPhotoFile(entry.product, photos),
                             expanded: _expandedProductId == entry.product.id,
+                            onList: onList.contains(entry.product.id),
+                            onToggleList: () =>
+                                _toggleList(entry.product, onList: onList.contains(entry.product.id)),
                             onTap: () => setState(() {
                               final id = entry.product.id;
                               _expandedProductId = _expandedProductId == id ? null : id;
@@ -286,6 +311,8 @@ class _HomeStockRow extends StatelessWidget {
     required this.entry,
     required this.photo,
     required this.expanded,
+    required this.onList,
+    required this.onToggleList,
     required this.onTap,
     required this.onAdjust,
   });
@@ -293,6 +320,8 @@ class _HomeStockRow extends StatelessWidget {
   final StockEntry entry;
   final File? photo;
   final bool expanded;
+  final bool onList;
+  final VoidCallback onToggleList;
   final VoidCallback onTap;
   final _Adjust onAdjust;
 
@@ -304,7 +333,12 @@ class _HomeStockRow extends StatelessWidget {
 
     return StockRow(
       id: product.id,
-      thumb: ProductThumb(photo: photo, fallbackIcon: productCategoryIcon(product.name), dimmed: item.isOut),
+      thumb: ProductThumb(
+        photo: photo,
+        fallbackIcon: productCategoryIcon(product.name),
+        dimmed: item.isOut,
+        badgeLabel: onList ? l10n.listOnList : null,
+      ),
       name: product.name,
       gauge: item.gauge(l10n),
       expanded: expanded,
@@ -316,6 +350,11 @@ class _HomeStockRow extends StatelessWidget {
               icon: Icons.remove_rounded,
               onTriggered: () => onAdjust(-1, undoable: true),
             ),
+      swipeRight: StockSwipeAction(
+        label: onList ? l10n.listRemoveFromList : l10n.listAddToList,
+        icon: onList ? Icons.playlist_remove_rounded : Icons.playlist_add_rounded,
+        onTriggered: onToggleList,
+      ),
       editor: StockRowEditor(
         stepper: QuantityStepper(
           value: item.quantityLabel,
@@ -333,5 +372,53 @@ class _HomeStockRow extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// A lista na Casa: quantos itens faltam, o total estimado e as miniaturas.
+/// Enquanto não há o modo compra, a ação abre a aba da lista.
+class _ListPreview extends StatelessWidget {
+  const _ListPreview({required this.entries, required this.summary, required this.photos});
+
+  final List<ShoppingListEntry> entries;
+  final ShoppingListSummary summary;
+  final Directory? photos;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final missing = entries.where((e) => !e.item.isChecked).toList();
+    final estimate = summary.estimate?.format();
+
+    return ListPreviewCard(
+      count: summary.remaining,
+      countLabel: l10n.listItems(summary.remaining),
+      estimate: estimate == null ? null : l10n.listEstimate(estimate),
+      thumbs: [for (final entry in missing.take(3)) _ListThumb(entry: entry, photos: photos)],
+      extraCount: missing.length > 3 ? missing.length - 3 : 0,
+      actionLabel: l10n.listOpen,
+      actionIcon: Icons.checklist_rounded,
+      onTap: () => context.go(Routes.shoppingList),
+      semanticLabel: [
+        l10n.listPreviewSemantics(summary.remaining),
+        if (estimate != null) l10n.listAbout(estimate),
+      ].join(', '),
+    );
+  }
+}
+
+class _ListThumb extends StatelessWidget {
+  const _ListThumb({required this.entry, required this.photos});
+
+  final ShoppingListEntry entry;
+  final Directory? photos;
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = Center(child: Icon(productCategoryIcon(entry.name), size: 20, color: context.colors.ink));
+    final product = entry.product;
+    final file = product == null ? null : productPhotoFile(product, photos);
+    if (file == null) return icon;
+    return Image.file(file, fit: BoxFit.cover, gaplessPlayback: true, errorBuilder: (_, _, _) => icon);
   }
 }
