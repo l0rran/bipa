@@ -64,6 +64,11 @@ final listCostPerMarketProvider = Provider.autoDispose<List<MarketListCost>>((re
     missing,
     ref.watch(shoppingListHistoryProvider).value ?? const [],
     packages: {for (final package in packages) package.id: package},
+    // "3× Leite" custa três leites em cada mercado, como no total da lista.
+    quantities: {
+      for (final entry in entries)
+        if (entry.item.productId case final productId? when !entry.item.isChecked) productId: entry.item.quantity,
+    },
   );
 });
 

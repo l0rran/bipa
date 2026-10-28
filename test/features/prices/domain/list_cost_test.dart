@@ -97,6 +97,52 @@ void main() {
     expect(costs.map((c) => c.marketId), ['vila']);
   });
 
+  test('a quantidade da lista multiplica o preço de cada produto', () {
+    final costs = listCostPerMarket(
+      {'leite', 'cafe'},
+      [_price('vila', 'leite', 499), _price('vila', 'cafe', 1899)],
+      quantities: {'leite': 3},
+    );
+
+    expect(costs.single.total, const Money.cents(499 * 3 + 1899));
+  });
+
+  test('com a embalagem de referência dada, os outros preços são convertidos para ela', () {
+    final packages = {
+      'arroz-5': ProductPackage(
+        id: 'arroz-5',
+        productId: 'arroz',
+        size: 5,
+        unit: MeasureUnit.kilogram,
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+      ),
+      'arroz-1': ProductPackage(
+        id: 'arroz-1',
+        productId: 'arroz',
+        size: 1,
+        unit: MeasureUnit.kilogram,
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+      ),
+    };
+    final history = [
+      _price('vila', 'arroz', 2500, package: 'arroz-5'),
+      // O mais recente é o de 1 kg, mas o carrinho levou o de 5 kg.
+      _price('centro', 'arroz', 600, day: 9, package: 'arroz-1'),
+    ];
+
+    final prices = referencePricesPerMarket(
+      {'arroz'},
+      history,
+      packages: packages,
+      references: {'arroz': 'arroz-5'},
+    );
+
+    expect(prices['vila']?.byProduct, {'arroz': const Money.cents(2500)});
+    expect(prices['centro']?.byProduct, {'arroz': const Money.cents(3000)});
+  });
+
   test('os preços de cada produto em cada mercado, com o nome do mercado', () {
     final prices = referencePricesPerMarket({'arroz', 'cafe'}, [
       _price('vila', 'arroz', 2790),

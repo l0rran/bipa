@@ -45,7 +45,8 @@ final class MarketListCost {
 /// A lista (os [productIds] que faltam comprar) somada em cada mercado com
 /// preço de pelo menos um deles: o preço mais recente de cada produto ali,
 /// sem condição na frente (ADR 0011), na embalagem de referência
-/// ([referencePricesPerMarket]).
+/// ([referencePricesPerMarket]), vezes a quantidade de cada um na lista
+/// ([quantities]; 1 quando não informada).
 ///
 /// Vêm primeiro os mercados com preço de mais produtos e, entre eles, o mais
 /// barato: um mercado com metade da lista não parece o mais barato só por
@@ -54,6 +55,7 @@ List<MarketListCost> listCostPerMarket(
   Set<String> productIds,
   Iterable<PriceHistoryEntry> history, {
   Map<String, ProductPackage> packages = const {},
+  Map<String, int> quantities = const {},
 }) {
   final perMarket = referencePricesPerMarket(productIds, history, packages: packages);
   return [
@@ -61,7 +63,10 @@ List<MarketListCost> listCostPerMarket(
       MarketListCost(
         marketId: marketId,
         marketName: marketName,
-        total: byProduct.values.fold(Money.zero, (sum, price) => sum + price),
+        total: byProduct.entries.fold(
+          Money.zero,
+          (sum, entry) => sum + entry.value * (quantities[entry.key] ?? 1),
+        ),
         priced: byProduct.length,
         items: productIds.length,
       ),
@@ -85,10 +90,14 @@ typedef MarketPrices = ({String marketName, Map<String, Money> byProduct});
 /// e o preço de outra embalagem vale o preço por kg dela vezes o tamanho da
 /// de referência. Sem tamanho para converter, o mercado fica sem preço
 /// daquele produto.
+///
+/// Com [references], a embalagem de referência de um produto é a dada (a
+/// que foi para o carrinho, por exemplo), não a do preço mais recente.
 Map<String, MarketPrices> referencePricesPerMarket(
   Set<String> productIds,
   Iterable<PriceHistoryEntry> history, {
   Map<String, ProductPackage> packages = const {},
+  Map<String, String?> references = const {},
 }) {
   if (productIds.isEmpty) return const {};
   final historyByProduct = <String, List<PriceHistoryEntry>>{};
@@ -100,9 +109,12 @@ Map<String, MarketPrices> referencePricesPerMarket(
   final prices = <String, Map<String, Money>>{};
   final names = <String, String>{};
   for (final MapEntry(key: productId, value: entries) in historyByProduct.entries) {
-    final reference = entries.reduce((a, b) => b.observation.observedAt.isAfter(a.observation.observedAt) ? b : a);
+    final latestAnywhere = entries.reduce((a, b) => b.observation.observedAt.isAfter(a.observation.observedAt) ? b : a);
+    final referenceId = references.containsKey(productId)
+        ? references[productId]
+        : latestAnywhere.observation.packageId;
     for (final latest in latestPricePerMarket(entries)) {
-      final price = _inReferencePackage(latest.observation, reference.observation.packageId, packages);
+      final price = _inReferencePackage(latest.observation, referenceId, packages);
       if (price == null) continue;
       final marketId = latest.observation.marketId;
       prices.putIfAbsent(marketId, () => {})[productId] = price;
