@@ -51,9 +51,18 @@ final class LiveScanner extends ChangeNotifier {
   var _disposed = false;
   Future<void> _queue = Future.value();
 
+  var _analysisPaused = false;
+
   /// Com a análise pausada, a prévia continua, mas nenhum quadro é lido:
-  /// enquanto um diálogo está por cima, por exemplo.
-  var analysisPaused = false;
+  /// enquanto um diálogo está por cima, por exemplo. Ao voltar, a leitura
+  /// recomeça como ao abrir a câmera: o produto que ficou na frente (o que
+  /// acabou de ser cadastrado, por exemplo) não soma outra unidade.
+  bool get analysisPaused => _analysisPaused;
+
+  set analysisPaused(bool paused) {
+    if (_analysisPaused && !paused) _interpreter.restart(DateTime.now());
+    _analysisPaused = paused;
+  }
 
   /// A câmera aberta, para a prévia; `null` enquanto está parada.
   CameraController? get controller => _controller;
@@ -135,7 +144,7 @@ final class LiveScanner extends ChangeNotifier {
   }
 
   void _onImage(CameraController controller, CameraImage image) {
-    if (_inFlight != null || analysisPaused || _disposed || _controller != controller) return;
+    if (_inFlight != null || _analysisPaused || _disposed || _controller != controller) return;
     final region = viewfinder();
     if (region == null) return;
     final frame = cameraFrameToInputImage(
@@ -161,7 +170,7 @@ final class LiveScanner extends ChangeNotifier {
   Future<void> _analyze(CameraController controller, InputImage image, PixelRect crop) async {
     try {
       final reading = await _analyzer.analyze(image, at: DateTime.now(), crop: crop);
-      if (_disposed || analysisPaused || _controller != controller) return;
+      if (_disposed || _analysisPaused || _controller != controller) return;
       final events = _interpreter.add(reading);
       if (events.isNotEmpty) onEvents(events);
     } on Object catch (error, stack) {

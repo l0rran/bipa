@@ -235,17 +235,19 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
     );
     if (created == null || !mounted) return;
     try {
-      // O preço da etiqueta desse código esperou o cadastro, que leva tempo.
-      await _addToCart(created.product, created.package, afterRegistration: true);
+      // O preço da etiqueta desse código esperou o cadastro, que leva tempo:
+      // vale o que foi mostrado na folha.
+      await _addToCart(created.product, created.package, registeredWith: fromTag);
     } on Exception catch (error, stack) {
       _report(error, stack);
     }
   }
 
   /// Põe a embalagem no carrinho e marca o produto na lista. O preço é o da
-  /// etiqueta lida há pouco, se ela esperava por esta embalagem; senão, o
+  /// etiqueta lida há pouco, se ela esperava por esta embalagem (ou o
+  /// [registeredWith], a etiqueta que a folha de cadastro mostrou); senão, o
   /// último dela no mercado da compra.
-  Future<void> _addToCart(Product product, ProductPackage package, {bool afterRegistration = false}) async {
+  Future<void> _addToCart(Product product, ProductPackage package, {TagPriceRead? registeredWith}) async {
     final trip = ref.read(activeTripProvider).value;
     if (trip == null) return;
     final cart = ref.read(cartRepositoryProvider);
@@ -254,11 +256,14 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
     final register = ref.read(registerPriceObservationProvider);
 
     final pending = _pending;
-    final fromTag = pending != null && _pendingFits(pending, package.barcode, afterRegistration: afterRegistration)
-        ? pending.read
-        : null;
+    final barcode = package.barcode;
+    final fromTag =
+        registeredWith ??
+        (pending != null && barcode != null && _router.fits(pending, barcode: barcode, now: DateTime.now())
+            ? pending.read
+            : null);
     // Consumido na hora: outro bipe durante a gravação não leva o mesmo preço.
-    if (fromTag != null) _pending = null;
+    if (fromTag != null && pending?.read == fromTag) _pending = null;
     final marketId = trip.marketId;
     final expected = fromTag != null || marketId == null
         ? null
@@ -278,12 +283,6 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
       _showNotice((price: fromTag.price, detail: CartEntry.nameOf(product, package), waiting: false), key: key);
     }
   }
-
-  /// O preço que espera vale para esta embalagem? Depois de um cadastro, o
-  /// prazo não conta: a folha costuma demorar mais que ele.
-  bool _pendingFits(PendingTagPrice pending, String? barcode, {required bool afterRegistration}) =>
-      barcode != null &&
-      _router.fits(pending, barcode: barcode, now: afterRegistration ? pending.readAt : DateTime.now());
 
   /// Uma etiqueta lida ao vivo: o preço vai para o item certo ou espera o
   /// próximo produto (ADR 0012).
@@ -377,9 +376,18 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
   Future<void> _setTake(CartEntry entry, {required bool take}) async {
     final cart = ref.read(cartRepositoryProvider);
     final list = ref.read(shoppingListRepositoryProvider);
+    // Outra embalagem do mesmo produto que vai no carrinho mantém o produto
+    // marcado na lista.
+    final otherTaken = (ref.read(activeCartProvider).value ?? const <CartEntry>[]).any(
+      (other) => other.item.id != entry.item.id && other.product.id == entry.product.id && other.item.take,
+    );
     try {
       await cart.setTake(entry.item.id, take: take);
-      await (take ? list.checkProduct(entry.product.id) : list.uncheckProduct(entry.product.id));
+      if (take) {
+        await list.checkProduct(entry.product.id);
+      } else if (!otherTaken) {
+        await list.uncheckProduct(entry.product.id);
+      }
     } on Exception catch (error, stack) {
       _report(error, stack);
     }
