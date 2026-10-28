@@ -18,8 +18,13 @@ void main() {
   });
 
   test('a embalagem nova entra no produto que já existe', () async {
-    products.products['arroz'] =
-        Product(id: 'arroz', name: 'Arroz branco', unit: MeasureUnit.kilogram, createdAt: now, updatedAt: now);
+    products.products['arroz'] = Product(
+      id: 'arroz',
+      name: 'Arroz branco',
+      unit: MeasureUnit.kilogram,
+      createdAt: now,
+      updatedAt: now,
+    );
 
     final (product, package) = await register(
       const NewPackageInput(
@@ -32,12 +37,10 @@ void main() {
     );
 
     expect(product.id, 'arroz');
-    expect((package.productId, package.barcode, package.brand, package.label), (
-      'arroz',
-      '7896006711155',
-      'Tio João',
-      'Tio João · 5 kg',
-    ));
+    expect(
+      (package.productId, package.barcode, package.brand, package.label),
+      ('arroz', '7896006711155', 'Tio João', 'Tio João · 5 kg'),
+    );
     expect(products.products, hasLength(1));
   });
 
@@ -54,8 +57,13 @@ void main() {
   });
 
   test('um código que já é de outra embalagem não cria nada', () async {
-    products.products['arroz'] =
-        Product(id: 'arroz', name: 'Arroz', unit: MeasureUnit.kilogram, createdAt: now, updatedAt: now);
+    products.products['arroz'] = Product(
+      id: 'arroz',
+      name: 'Arroz',
+      unit: MeasureUnit.kilogram,
+      createdAt: now,
+      updatedAt: now,
+    );
     products.packages['tio-joao'] = ProductPackage(
       id: 'tio-joao',
       productId: 'arroz',

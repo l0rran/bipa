@@ -14,8 +14,11 @@ PriceTagReading _tag(int cents, {List<PriceOffer> extra = const []}) {
 }
 
 /// Um quadro [ms] milissegundos depois do início.
-LiveFrame _frame(int ms, {List<String> codes = const [], PriceTagReading tag = PriceTagReading.empty}) =>
-    LiveFrame(at: _start.add(Duration(milliseconds: ms)), barcodes: codes, tag: tag);
+LiveFrame _frame(int ms, {List<String> codes = const [], PriceTagReading tag = PriceTagReading.empty}) => LiveFrame(
+  at: _start.add(Duration(milliseconds: ms)),
+  barcodes: codes,
+  tag: tag,
+);
 
 /// Quadros a cada 300 ms, de [from] até [to].
 List<LiveFrame> _frames(int from, int to, {List<String> codes = const [], PriceTagReading? tag}) => [
@@ -122,7 +125,9 @@ void main() {
       expect(_run(LiveScanInterpreter(), _frames(0, 900, tag: loyaltyOnly)), isEmpty);
 
       final events = _run(LiveScanInterpreter(), _frames(0, 600, tag: _tag(2790, extra: const [loyalty])));
-      expect(events, [const TagPriceRead(price: Money.cents(2790), otherOffers: [loyalty])]);
+      expect(events, [
+        const TagPriceRead(price: Money.cents(2790), otherOffers: [loyalty]),
+      ]);
     });
 
     test('etiqueta sem preço escolhido (vários do mesmo tamanho) não vale', () {
@@ -178,9 +183,17 @@ void main() {
 
     test('o código de uma etiqueta volta a bipar depois de um tempo sem a etiqueta', () {
       final scan = LiveScanInterpreter();
-      _run(scan, [_frame(0, codes: [_rice], tag: _tag(2790))]);
+      _run(scan, [
+        _frame(0, codes: [_rice], tag: _tag(2790)),
+      ]);
 
-      expect(_run(scan, [_frame(500, codes: [_rice]), _frame(800, codes: [_rice])]), isEmpty);
+      expect(
+        _run(scan, [
+          _frame(500, codes: [_rice]),
+          _frame(800, codes: [_rice]),
+        ]),
+        isEmpty,
+      );
       expect(_run(scan, _frames(2500, 3100, codes: [_rice])), [const ProductScanned(_rice)]);
     });
   });

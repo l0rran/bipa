@@ -34,10 +34,7 @@ final class MlKitLiveFrameAnalyzer implements LiveFrameAnalyzer {
       double distance(Barcode barcode) => (barcode.boundingBox.center - center).distanceSquared;
       inFrame.sort((a, b) => distance(a).compareTo(distance(b)));
     }
-    final codes = [
-      for (final barcode in inFrame)
-        ?barcode.rawValue,
-    ];
+    final codes = [for (final barcode in inFrame) ?barcode.rawValue];
     final lines = [
       for (final block in text.blocks)
         for (final line in block.lines)

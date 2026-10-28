@@ -19,9 +19,9 @@ void main() {
   setUp(() async {
     db = createTestDatabase();
     repository = DriftStockRepository(db, ids: SequentialIdGenerator(), clock: () => now);
-    await DriftProductRepository(db).save(
-      Product(id: 'arroz', name: 'Arroz', unit: MeasureUnit.kilogram, createdAt: now, updatedAt: now),
-    );
+    await DriftProductRepository(
+      db,
+    ).save(Product(id: 'arroz', name: 'Arroz', unit: MeasureUnit.kilogram, createdAt: now, updatedAt: now));
   });
 
   tearDown(() => db.close());
@@ -179,9 +179,9 @@ void main() {
     });
 
     test('a soma dos lotes acompanha a quantidade, inclusive sem embalagem', () async {
-      await DriftProductRepository(db).save(
-        Product(id: 'banana', name: 'Banana', unit: MeasureUnit.unit, createdAt: now, updatedAt: now),
-      );
+      await DriftProductRepository(
+        db,
+      ).save(Product(id: 'banana', name: 'Banana', unit: MeasureUnit.unit, createdAt: now, updatedAt: now));
       await stock.adjust(productId: 'banana', delta: 6, reason: StockMovementReason.purchase);
       await stock.adjust(productId: 'banana', delta: -2, reason: StockMovementReason.consumption);
 

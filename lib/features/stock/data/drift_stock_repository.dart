@@ -13,9 +13,7 @@ import 'package:bipa/features/stock/domain/stock_repository.dart';
 import 'package:drift/drift.dart';
 
 final class DriftStockRepository implements StockRepository {
-  const DriftStockRepository(this._db, {required IdGenerator ids, required Clock clock})
-    : _ids = ids,
-      _clock = clock;
+  const DriftStockRepository(this._db, {required IdGenerator ids, required Clock clock}) : _ids = ids, _clock = clock;
 
   final AppDatabase _db;
   final IdGenerator _ids;
@@ -26,17 +24,13 @@ final class DriftStockRepository implements StockRepository {
     final items = _db.stockItems;
     final products = _db.products;
 
-    final query = _db.select(items).join([
-      innerJoin(products, products.id.equalsExp(items.productId)),
-    ])..orderBy([OrderingTerm.asc(products.name.lower())]);
+    final query = _db.select(items).join([innerJoin(products, products.id.equalsExp(items.productId))])
+      ..orderBy([OrderingTerm.asc(products.name.lower())]);
 
     return query.watch().map(
       (rows) => [
         for (final row in rows)
-          StockEntry(
-            item: row.readTable(items).toEntity(),
-            product: row.readTable(products).toEntity(),
-          ),
+          StockEntry(item: row.readTable(items).toEntity(), product: row.readTable(products).toEntity()),
       ],
     );
   }
@@ -59,19 +53,18 @@ final class DriftStockRepository implements StockRepository {
       final quantity = StockItem.nextQuantity(previous, delta);
 
       if (current == null) {
-        await _db.into(_db.stockItems).insert(
-          StockItemsCompanion.insert(
-            productId: productId,
-            quantity: quantity,
-            location: StockLocation.pantry,
-            updatedAt: now,
-          ),
-        );
+        await _db
+            .into(_db.stockItems)
+            .insert(
+              StockItemsCompanion.insert(
+                productId: productId,
+                quantity: quantity,
+                location: StockLocation.pantry,
+                updatedAt: now,
+              ),
+            );
       } else {
-        await _updateItem(
-          productId,
-          StockItemsCompanion(quantity: Value(quantity), updatedAt: Value(now)),
-        );
+        await _updateItem(productId, StockItemsCompanion(quantity: Value(quantity), updatedAt: Value(now)));
       }
 
       // Registra o que de fato mudou (a quantidade não fica negativa).
@@ -141,9 +134,17 @@ final class DriftStockRepository implements StockRepository {
   Future<StockLotDelta> _addLot(String productId, String? packageId, double amount, DateTime now) async {
     final target = packageId ?? await _newestPackageId(productId);
     final id = _ids.newId();
-    await _db.into(_db.stockLots).insert(
-      StockLotsCompanion.insert(id: id, productId: productId, packageId: Value(target), quantity: amount, since: now),
-    );
+    await _db
+        .into(_db.stockLots)
+        .insert(
+          StockLotsCompanion.insert(
+            id: id,
+            productId: productId,
+            packageId: Value(target),
+            quantity: amount,
+            since: now,
+          ),
+        );
     return StockLotDelta(lotId: id, packageId: target, since: now, delta: amount);
   }
 
@@ -170,30 +171,35 @@ final class DriftStockRepository implements StockRepository {
     }
     // A embalagem pode ter sido apagada nesse meio-tempo.
     final packageId = lot.packageId;
-    final packageExists = packageId != null &&
+    final packageExists =
+        packageId != null &&
         await (_db.select(_db.productPackages)..where((t) => t.id.equals(packageId))).getSingleOrNull() != null;
-    await _db.into(_db.stockLots).insert(
-      StockLotsCompanion.insert(
-        id: lot.lotId,
-        productId: productId,
-        packageId: Value(packageExists ? packageId : null),
-        quantity: -lot.delta,
-        since: lot.since,
-      ),
-    );
+    await _db
+        .into(_db.stockLots)
+        .insert(
+          StockLotsCompanion.insert(
+            id: lot.lotId,
+            productId: productId,
+            packageId: Value(packageExists ? packageId : null),
+            quantity: -lot.delta,
+            since: lot.since,
+          ),
+        );
   }
 
   Future<void> _setLotQuantity(String lotId, double quantity) async {
     if (quantity <= _epsilon) {
       await (_db.delete(_db.stockLots)..where((t) => t.id.equals(lotId))).go();
     } else {
-      await (_db.update(_db.stockLots)..where((t) => t.id.equals(lotId)))
-          .write(StockLotsCompanion(quantity: Value(quantity)));
+      await (_db.update(
+        _db.stockLots,
+      )..where((t) => t.id.equals(lotId))).write(StockLotsCompanion(quantity: Value(quantity)));
     }
   }
 
-  Future<void> _recordMovement(String productId, double delta, StockMovementReason reason, DateTime now) =>
-      _db.into(_db.stockMovements).insert(
+  Future<void> _recordMovement(String productId, double delta, StockMovementReason reason, DateTime now) => _db
+      .into(_db.stockMovements)
+      .insert(
         StockMovementsCompanion.insert(
           id: _ids.newId(),
           productId: productId,
@@ -204,11 +210,12 @@ final class DriftStockRepository implements StockRepository {
       );
 
   Future<String?> _newestPackageId(String productId) async {
-    final newest = await (_db.select(_db.productPackages)
-          ..where((t) => t.productId.equals(productId))
-          ..orderBy([(t) => OrderingTerm.desc(t.createdAt), (t) => OrderingTerm.asc(t.id)])
-          ..limit(1))
-        .getSingleOrNull();
+    final newest =
+        await (_db.select(_db.productPackages)
+              ..where((t) => t.productId.equals(productId))
+              ..orderBy([(t) => OrderingTerm.desc(t.createdAt), (t) => OrderingTerm.asc(t.id)])
+              ..limit(1))
+            .getSingleOrNull();
     return newest?.id;
   }
 
@@ -236,14 +243,16 @@ final class DriftStockRepository implements StockRepository {
       final now = _clock();
       final exists = await _selectItem(productId).getSingleOrNull() != null;
       if (!exists) {
-        await _db.into(_db.stockItems).insert(
-          StockItemsCompanion.insert(
-            productId: productId,
-            quantity: 0,
-            location: StockLocation.pantry,
-            updatedAt: now,
-          ),
-        );
+        await _db
+            .into(_db.stockItems)
+            .insert(
+              StockItemsCompanion.insert(
+                productId: productId,
+                quantity: 0,
+                location: StockLocation.pantry,
+                updatedAt: now,
+              ),
+            );
       }
       await _updateItem(productId, changes.copyWith(updatedAt: Value(now)));
     });
@@ -253,8 +262,7 @@ final class DriftStockRepository implements StockRepository {
       _db.select(_db.stockItems)..where((t) => t.productId.equals(productId));
 
   Future<void> _updateItem(String productId, StockItemsCompanion changes) async {
-    await (_db.update(_db.stockItems)..where((t) => t.productId.equals(productId)))
-        .write(changes);
+    await (_db.update(_db.stockItems)..where((t) => t.productId.equals(productId))).write(changes);
   }
 }
 
@@ -269,14 +277,8 @@ extension StockItemRowMapper on StockItemRow {
 }
 
 extension StockLotRowMapper on StockLotRow {
-  StockLot toEntity({ProductPackage? package}) => StockLot(
-    id: id,
-    productId: productId,
-    packageId: packageId,
-    package: package,
-    quantity: quantity,
-    since: since,
-  );
+  StockLot toEntity({ProductPackage? package}) =>
+      StockLot(id: id, productId: productId, packageId: packageId, package: package, quantity: quantity, since: since);
 }
 
 const _epsilon = 1e-9;

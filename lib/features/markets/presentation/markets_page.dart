@@ -149,10 +149,7 @@ class _MarketsPageState extends ConsumerState<MarketsPage> {
                   ),
                 ],
                 const SizedBox(height: BipaSpacing.s6),
-                SectionHeader(
-                  title: here == null ? l10n.marketsYours : l10n.marketsNearby,
-                  count: visible.length,
-                ),
+                SectionHeader(title: here == null ? l10n.marketsYours : l10n.marketsNearby, count: visible.length),
                 const SizedBox(height: BipaSpacing.s2),
                 PriceRowList(
                   rows: [
@@ -214,7 +211,9 @@ class _NoLocation extends StatelessWidget {
       children: [
         Icon(Icons.location_off_outlined, size: 18, color: colors.inkMuted),
         const SizedBox(width: BipaSpacing.s2),
-        Expanded(child: Text(message, style: BipaText.body.copyWith(fontSize: 13, color: colors.inkMuted))),
+        Expanded(
+          child: Text(message, style: BipaText.body.copyWith(fontSize: 13, color: colors.inkMuted)),
+        ),
         TextButton(onPressed: onRetry, child: Text(retryLabel)),
       ],
     );

@@ -20,8 +20,7 @@ final class InMemoryProductRepository implements ProductRepository {
   final packages = <String, ProductPackage>{};
 
   @override
-  Stream<List<Product>> watchAll({String query = ''}) =>
-      Stream.value(products.values.toList());
+  Stream<List<Product>> watchAll({String query = ''}) => Stream.value(products.values.toList());
 
   @override
   Stream<Product?> watchById(String id) => Stream.value(products[id]);
@@ -41,12 +40,16 @@ final class InMemoryProductRepository implements ProductRepository {
   }
 
   @override
-  Stream<List<ProductPackage>> watchPackages(String productId) =>
-      Stream.value([for (final p in packages.values) if (p.productId == productId) p]);
+  Stream<List<ProductPackage>> watchPackages(String productId) => Stream.value([
+    for (final p in packages.values)
+      if (p.productId == productId) p,
+  ]);
 
   @override
-  Stream<List<ProductPackage>> watchPackagesOfProducts(Set<String> productIds) =>
-      Stream.value([for (final p in packages.values) if (productIds.contains(p.productId)) p]);
+  Stream<List<ProductPackage>> watchPackagesOfProducts(Set<String> productIds) => Stream.value([
+    for (final p in packages.values)
+      if (productIds.contains(p.productId)) p,
+  ]);
 
   @override
   Future<ProductPackage?> findPackageById(String id) async => packages[id];
@@ -111,10 +114,12 @@ final class InMemoryPriceRepository implements PriceRepository {
 
   @override
   Stream<List<MarketPrice>> watchLatestInMarket(String marketId) {
-    final sorted = withoutSuperseded(observations, (o) => o)
-        .where((o) => o.marketId == marketId && o.condition is AnyCustomer)
-        .toList()
-      ..sort((a, b) => b.observedAt.compareTo(a.observedAt));
+    final sorted =
+        withoutSuperseded(
+            observations,
+            (o) => o,
+          ).where((o) => o.marketId == marketId && o.condition is AnyCustomer).toList()
+          ..sort((a, b) => b.observedAt.compareTo(a.observedAt));
     final latest = <(String, String?), MarketPrice>{};
     for (final o in sorted) {
       latest.putIfAbsent((o.productId, o.packageId), () => MarketPrice(observation: o, productName: o.productId));

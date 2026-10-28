@@ -56,13 +56,13 @@ class ProductThumb extends StatelessWidget {
         children: [
           Positioned.fill(
             child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: colors.surfaceSunken,
-                borderRadius: BorderRadius.circular(radius),
-              ),
+              decoration: BoxDecoration(color: colors.surfaceSunken, borderRadius: BorderRadius.circular(radius)),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(radius),
-                child: Opacity(opacity: dimmed ? 0.45 : 1, child: Center(child: content)),
+                child: Opacity(
+                  opacity: dimmed ? 0.45 : 1,
+                  child: Center(child: content),
+                ),
               ),
             ),
           ),

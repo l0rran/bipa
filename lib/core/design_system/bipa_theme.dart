@@ -125,10 +125,7 @@ abstract final class BipaTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: colors.surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(BipaRadius.md),
-          borderSide: BorderSide.none,
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(BipaRadius.md), borderSide: BorderSide.none),
         hintStyle: BipaText.body.copyWith(color: colors.inkMuted),
         floatingLabelStyle: BipaText.body.copyWith(color: colors.ink),
         focusedBorder: OutlineInputBorder(

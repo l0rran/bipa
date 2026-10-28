@@ -20,17 +20,13 @@ final class DriftShoppingListRepository implements ShoppingListRepository {
     final items = _db.shoppingListItems;
     final products = _db.products;
 
-    final query = _db.select(items).join([
-      leftOuterJoin(products, products.id.equalsExp(items.productId)),
-    ])..orderBy([OrderingTerm.asc(items.addedAt)]);
+    final query = _db.select(items).join([leftOuterJoin(products, products.id.equalsExp(items.productId))])
+      ..orderBy([OrderingTerm.asc(items.addedAt)]);
 
     return query.watch().map(
       (rows) => [
         for (final row in rows)
-          ShoppingListEntry(
-            item: row.readTable(items).toEntity(),
-            product: row.readTableOrNull(products)?.toEntity(),
-          ),
+          ShoppingListEntry(item: row.readTable(items).toEntity(), product: row.readTableOrNull(products)?.toEntity()),
       ],
     );
   }
@@ -39,10 +35,11 @@ final class DriftShoppingListRepository implements ShoppingListRepository {
   Future<void> addProduct({required String productId, required String name, int quantity = 1}) {
     final count = _atLeastOne(quantity);
     return _db.transaction(() async {
-      final existing = await (_db.select(_db.shoppingListItems)
-            ..where((t) => t.productId.equals(productId))
-            ..limit(1))
-          .getSingleOrNull();
+      final existing =
+          await (_db.select(_db.shoppingListItems)
+                ..where((t) => t.productId.equals(productId))
+                ..limit(1))
+              .getSingleOrNull();
       if (existing == null) {
         await _insert(name: name, productId: productId, quantity: count);
       } else if (existing.checkedAt != null) {
@@ -83,15 +80,16 @@ final class DriftShoppingListRepository implements ShoppingListRepository {
 
   @override
   Future<void> checkProduct(String productId) async {
-    await (_db.update(_db.shoppingListItems)
-          ..where((t) => t.productId.equals(productId) & t.checkedAt.isNull()))
-        .write(ShoppingListItemsCompanion(checkedAt: Value(_clock())));
+    await (_db.update(_db.shoppingListItems)..where((t) => t.productId.equals(productId) & t.checkedAt.isNull())).write(
+      ShoppingListItemsCompanion(checkedAt: Value(_clock())),
+    );
   }
 
   @override
   Future<void> uncheckProduct(String productId) async {
-    await (_db.update(_db.shoppingListItems)..where((t) => t.productId.equals(productId)))
-        .write(const ShoppingListItemsCompanion(checkedAt: Value(null)));
+    await (_db.update(
+      _db.shoppingListItems,
+    )..where((t) => t.productId.equals(productId))).write(const ShoppingListItemsCompanion(checkedAt: Value(null)));
   }
 
   @override
@@ -114,34 +112,39 @@ final class DriftShoppingListRepository implements ShoppingListRepository {
     // O produto pode ter voltado à lista antes do "Desfazer": não duplica.
     final productId = item.productId;
     if (productId != null) {
-      final back = await (_db.select(_db.shoppingListItems)
-            ..where((t) => t.productId.equals(productId))
-            ..limit(1))
-          .getSingleOrNull();
+      final back =
+          await (_db.select(_db.shoppingListItems)
+                ..where((t) => t.productId.equals(productId))
+                ..limit(1))
+              .getSingleOrNull();
       if (back != null) return;
     }
-    await _db.into(_db.shoppingListItems).insertOnConflictUpdate(
-      ShoppingListItemsCompanion.insert(
-        id: item.id,
-        productId: Value(item.productId),
-        name: item.name,
-        addedAt: item.addedAt,
-        checkedAt: Value(item.checkedAt),
-        quantity: Value(item.quantity),
-      ),
-    );
+    await _db
+        .into(_db.shoppingListItems)
+        .insertOnConflictUpdate(
+          ShoppingListItemsCompanion.insert(
+            id: item.id,
+            productId: Value(item.productId),
+            name: item.name,
+            addedAt: item.addedAt,
+            checkedAt: Value(item.checkedAt),
+            quantity: Value(item.quantity),
+          ),
+        );
   });
 
   Future<void> _insert({required String name, String? productId, int quantity = 1}) async {
-    await _db.into(_db.shoppingListItems).insert(
-      ShoppingListItemsCompanion.insert(
-        id: _ids.newId(),
-        productId: Value(productId),
-        name: name,
-        addedAt: _clock(),
-        quantity: Value(quantity),
-      ),
-    );
+    await _db
+        .into(_db.shoppingListItems)
+        .insert(
+          ShoppingListItemsCompanion.insert(
+            id: _ids.newId(),
+            productId: Value(productId),
+            name: name,
+            addedAt: _clock(),
+            quantity: Value(quantity),
+          ),
+        );
   }
 
   Future<void> _write(String itemId, ShoppingListItemsCompanion changes) async {

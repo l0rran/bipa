@@ -60,8 +60,14 @@ void main() {
       marketId: 'vila',
       prices: {
         'vila': (marketName: 'Vila', byProduct: {'cafe': const Money.cents(1899), 'arroz': const Money.cents(2790)}),
-        'centro': (marketName: 'Centro', byProduct: {'cafe': const Money.cents(2099), 'arroz': const Money.cents(2890)}),
-        'bairro': (marketName: 'Bairro', byProduct: {'cafe': const Money.cents(2199), 'arroz': const Money.cents(2990)}),
+        'centro': (
+          marketName: 'Centro',
+          byProduct: {'cafe': const Money.cents(2099), 'arroz': const Money.cents(2890)},
+        ),
+        'bairro': (
+          marketName: 'Bairro',
+          byProduct: {'cafe': const Money.cents(2199), 'arroz': const Money.cents(2990)},
+        ),
         // Sem preço do arroz: não entra na comparação.
         'longe': (marketName: 'Longe', byProduct: {'cafe': const Money.cents(999)}),
       },

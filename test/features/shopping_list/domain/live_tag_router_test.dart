@@ -36,10 +36,7 @@ void main() {
   test('item bipado há muito tempo não recebe o preço: ele espera o próximo produto', () {
     final cart = [_inCart('rice', secondsAgo: 45)];
 
-    expect(
-      _router.route(_read, cart: cart, now: _now),
-      WaitForProduct(PendingTagPrice(read: _read, readAt: _now)),
-    );
+    expect(_router.route(_read, cart: cart, now: _now), WaitForProduct(PendingTagPrice(read: _read, readAt: _now)));
   });
 
   test('a etiqueta do lado não sobrescreve um preço já firmado', () {

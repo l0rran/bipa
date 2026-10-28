@@ -23,7 +23,9 @@ class SaveBadge extends StatelessWidget {
           children: [
             Icon(Icons.trending_down_rounded, size: 18, color: colors.positiveText),
             const SizedBox(width: BipaSpacing.s2),
-            Flexible(child: Text(label, style: BipaText.label.copyWith(color: colors.positiveText))),
+            Flexible(
+              child: Text(label, style: BipaText.label.copyWith(color: colors.positiveText)),
+            ),
           ],
         ),
       ),

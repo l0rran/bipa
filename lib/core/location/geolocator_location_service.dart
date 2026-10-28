@@ -43,19 +43,14 @@ final class GeolocatorLocationService implements LocationService {
 
     try {
       final position = await Geolocator.getCurrentPosition(
-        locationSettings: LocationSettings(
-          accuracy: LocationAccuracy.high,
-          timeLimit: timeLimit,
-        ),
+        locationSettings: LocationSettings(accuracy: LocationAccuracy.high, timeLimit: timeLimit),
       );
       return LocationFound(_toPoint(position));
     } on TimeoutException {
       // Dentro de prédios o GPS pode demorar: a última posição conhecida
       // costuma bastar para identificar o mercado.
       final last = await Geolocator.getLastKnownPosition();
-      return last == null
-          ? const LocationUnavailable(LocationFailure.timeout)
-          : LocationFound(_toPoint(last));
+      return last == null ? const LocationUnavailable(LocationFailure.timeout) : LocationFound(_toPoint(last));
     } on Exception {
       return const LocationUnavailable(LocationFailure.unknown);
     }
@@ -67,6 +62,5 @@ final class GeolocatorLocationService implements LocationService {
     LocationPermission.denied || LocationPermission.unableToDetermine => PermissionAccess.askable,
   };
 
-  static GeoPoint _toPoint(Position position) =>
-      GeoPoint(latitude: position.latitude, longitude: position.longitude);
+  static GeoPoint _toPoint(Position position) => GeoPoint(latitude: position.latitude, longitude: position.longitude);
 }

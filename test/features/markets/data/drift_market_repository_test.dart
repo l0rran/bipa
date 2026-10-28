@@ -31,9 +31,9 @@ void main() {
   tearDown(() => db.close());
 
   test('apagar o mercado leva os preços e a ordem das seções; as compras ficam sem mercado', () async {
-    await DriftProductRepository(db).save(
-      Product(id: 'arroz', name: 'Arroz', unit: MeasureUnit.kilogram, createdAt: now, updatedAt: now),
-    );
+    await DriftProductRepository(
+      db,
+    ).save(Product(id: 'arroz', name: 'Arroz', unit: MeasureUnit.kilogram, createdAt: now, updatedAt: now));
     await DriftPriceRepository(db).add(
       PriceObservation(
         id: 'preco',
@@ -45,10 +45,9 @@ void main() {
         createdAt: now,
       ),
     );
-    await DriftAisleOrderRepository(db).save(
-      'vila',
-      const AisleOrder({Aisle.dairy: LearnedAisle(position: 0.2, samples: 1)}),
-    );
+    await DriftAisleOrderRepository(
+      db,
+    ).save('vila', const AisleOrder({Aisle.dairy: LearnedAisle(position: 0.2, samples: 1)}));
     final trips = DriftShoppingTripRepository(db, ids: SequentialIdGenerator(), clock: () => now);
     final trip = await trips.start(marketId: 'vila');
 

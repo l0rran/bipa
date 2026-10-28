@@ -11,8 +11,7 @@ final class LearnedAisle {
   final int samples;
 
   @override
-  bool operator ==(Object other) =>
-      other is LearnedAisle && other.position == position && other.samples == samples;
+  bool operator ==(Object other) => other is LearnedAisle && other.position == position && other.samples == samples;
 
   @override
   int get hashCode => Object.hash(position, samples);

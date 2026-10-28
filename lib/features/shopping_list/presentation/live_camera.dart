@@ -24,14 +24,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// [LiveCameraState] (por uma `GlobalKey`) para pausar a leitura enquanto
 /// algo está por cima.
 class LiveCamera extends ConsumerStatefulWidget {
-  const LiveCamera({
-    required this.onEvent,
-    required this.topBar,
-    this.bottom,
-    this.notice,
-    this.hint,
-    super.key,
-  });
+  const LiveCamera({required this.onEvent, required this.topBar, this.bottom, this.notice, this.hint, super.key});
 
   final Future<void> Function(LiveScanEvent event) onEvent;
   final Widget Function(LiveCameraState camera) topBar;
@@ -256,7 +249,8 @@ class LiveCameraState extends ConsumerState<LiveCamera> with WidgetsBindingObser
     final colors = context.colors;
     final controller = _live.controller;
     final previewSize = controller?.value.previewSize;
-    final below = widget.notice ??
+    final below =
+        widget.notice ??
         switch ((_denied, widget.hint)) {
           (true, _) => Text(
             l10n.cartCameraDenied,

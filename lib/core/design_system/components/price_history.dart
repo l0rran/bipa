@@ -12,12 +12,7 @@ import 'package:flutter/material.dart';
 /// O design system não conhece preços: a tela entrega os pontos já
 /// normalizados, com x e y de 0 a 1 (y = 1 é o preço mais alto).
 class PriceHistoryChart extends StatelessWidget {
-  const PriceHistoryChart({
-    required this.points,
-    required this.axisLabels,
-    required this.semanticsLabel,
-    super.key,
-  });
+  const PriceHistoryChart({required this.points, required this.axisLabels, required this.semanticsLabel, super.key});
 
   /// Do mais antigo para o mais recente; o último ganha o ponto.
   final List<Offset> points;
@@ -47,7 +42,9 @@ class PriceHistoryChart extends StatelessWidget {
             children: [
               SizedBox(
                 height: _height,
-                child: CustomPaint(painter: _HistoryPainter(points: points, colors: colors)),
+                child: CustomPaint(
+                  painter: _HistoryPainter(points: points, colors: colors),
+                ),
               ),
               const SizedBox(height: BipaSpacing.s2),
               // Cada rótulo no seu lugar; nas pontas, encostado na borda.

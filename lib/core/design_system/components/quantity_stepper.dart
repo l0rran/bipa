@@ -66,16 +66,10 @@ class QuantityStepper extends StatelessWidget {
                   child: Text(
                     value,
                     key: ValueKey(value),
-                    style: BipaText.number.copyWith(
-                      fontSize: 20,
-                      color: highlighted ? colors.alertText : colors.ink,
-                    ),
+                    style: BipaText.number.copyWith(fontSize: 20, color: highlighted ? colors.alertText : colors.ink),
                   ),
                 ),
-                Text(
-                  unit.toUpperCase(),
-                  style: BipaText.caption.copyWith(fontSize: 10, color: colors.inkMuted),
-                ),
+                Text(unit.toUpperCase(), style: BipaText.caption.copyWith(fontSize: 10, color: colors.inkMuted)),
               ],
             ),
           ),
@@ -143,10 +137,7 @@ class _RepeatButtonState extends State<_RepeatButton> {
               child: Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(
-                  color: enabled ? colors.surface : Colors.transparent,
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: enabled ? colors.surface : Colors.transparent, shape: BoxShape.circle),
                 child: Icon(widget.icon, size: 20, color: colors.ink),
               ),
             ),

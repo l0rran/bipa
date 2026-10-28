@@ -229,7 +229,9 @@ class _ConfirmPriceSheetState extends ConsumerState<ConfirmPriceSheet> {
               Flexible(
                 child: PriceTagHero(
                   price: _price,
-                  unitLine: widget.reading.perKilo ? l10n.productUnitPriceOnly(MeasureUnit.kilogram.symbol) : unitPrice?.format(),
+                  unitLine: widget.reading.perKilo
+                      ? l10n.productUnitPriceOnly(MeasureUnit.kilogram.symbol)
+                      : unitPrice?.format(),
                 ),
               ),
               const SizedBox(width: BipaSpacing.s3),
@@ -286,10 +288,7 @@ class _ConfirmPriceSheetState extends ConsumerState<ConfirmPriceSheet> {
               ),
             ),
           ],
-          if (error != null) ...[
-            const SizedBox(height: BipaSpacing.s3),
-            ErrorLine(error),
-          ],
+          if (error != null) ...[const SizedBox(height: BipaSpacing.s3), ErrorLine(error)],
           const SizedBox(height: BipaSpacing.s4),
           FilledButton(
             style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),

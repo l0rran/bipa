@@ -420,7 +420,10 @@ class _ScanViewfinderState extends State<ScanViewfinder> with SingleTickerProvid
       child: Stack(
         children: [
           for (final corner in _corners)
-            Align(alignment: corner, child: _Corner(alignment: corner, color: cornerColor)),
+            Align(
+              alignment: corner,
+              child: _Corner(alignment: corner, color: cornerColor),
+            ),
           if (!locked)
             AnimatedBuilder(
               animation: _sweep,
@@ -573,14 +576,7 @@ class CameraGlassChip extends StatelessWidget {
 /// ou o que falta fazer. O leitor de tela anuncia a mudança. Só é tocável com
 /// [onTap] (protótipo "Modo carrinho: granel sem código").
 class LiveReadChip extends StatelessWidget {
-  const LiveReadChip({
-    required this.icon,
-    required this.detail,
-    this.price,
-    this.countdown,
-    this.onTap,
-    super.key,
-  });
+  const LiveReadChip({required this.icon, required this.detail, this.price, this.countdown, this.onTap, super.key});
 
   final IconData icon;
 
@@ -629,7 +625,10 @@ class LiveReadChip extends StatelessWidget {
                   Icon(icon, size: 18, color: colors.onCamera),
                 const SizedBox(width: BipaSpacing.s2),
                 if (price case final price?) ...[
-                  Text(price, style: BipaText.number.copyWith(fontSize: 16, height: 20 / 16, color: colors.onCamera)),
+                  Text(
+                    price,
+                    style: BipaText.number.copyWith(fontSize: 16, height: 20 / 16, color: colors.onCamera),
+                  ),
                   const SizedBox(width: BipaSpacing.s2),
                 ],
                 Flexible(

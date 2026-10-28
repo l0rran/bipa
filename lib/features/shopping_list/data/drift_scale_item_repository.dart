@@ -9,9 +9,9 @@ final class DriftScaleItemRepository implements ScaleItemRepository {
 
   @override
   Future<String?> productIdFor(String marketId, String itemKey) async {
-    final row = await (_db.select(_db.scaleItems)
-          ..where((t) => t.marketId.equals(marketId) & t.itemKey.equals(itemKey)))
-        .getSingleOrNull();
+    final row = await (_db.select(
+      _db.scaleItems,
+    )..where((t) => t.marketId.equals(marketId) & t.itemKey.equals(itemKey))).getSingleOrNull();
     return row?.productId;
   }
 

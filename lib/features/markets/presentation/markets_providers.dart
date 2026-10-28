@@ -11,13 +11,9 @@ final marketRepositoryProvider = Provider<MarketRepository>(
   (ref) => DriftMarketRepository(ref.watch(appDatabaseProvider)),
 );
 
-final locationServiceProvider = Provider<LocationService>(
-  (ref) => const GeolocatorLocationService(),
-);
+final locationServiceProvider = Provider<LocationService>((ref) => const GeolocatorLocationService());
 
-final nearestMarketFinderProvider = Provider<NearestMarketFinder>(
-  (ref) => const NearestMarketFinder(),
-);
+final nearestMarketFinderProvider = Provider<NearestMarketFinder>((ref) => const NearestMarketFinder());
 
 final marketsProvider = StreamProvider.autoDispose<List<Market>>(
   (ref) => ref.watch(marketRepositoryProvider).watchAll(),

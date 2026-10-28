@@ -114,10 +114,7 @@ class StockRow extends StatelessWidget {
               (_, null) => DismissDirection.endToStart,
               _ => DismissDirection.horizontal,
             },
-            dismissThresholds: const {
-              DismissDirection.startToEnd: 0.3,
-              DismissDirection.endToStart: 0.3,
-            },
+            dismissThresholds: const {DismissDirection.startToEnd: 0.3, DismissDirection.endToStart: 0.3},
             // A linha nunca some: o gesto só dispara a ação e volta com mola.
             confirmDismiss: (direction) async {
               (direction == DismissDirection.endToStart ? left : right)?.onTriggered();

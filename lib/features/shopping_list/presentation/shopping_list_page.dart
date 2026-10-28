@@ -235,7 +235,10 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
         data: (all) {
           // Os dispensados que o banco já apagou não precisam mais ser escondidos.
           _dismissed.removeWhere((id) => !all.any((e) => e.item.id == id));
-          final entries = [for (final e in all) if (!_dismissed.contains(e.item.id)) e];
+          final entries = [
+            for (final e in all)
+              if (!_dismissed.contains(e.item.id)) e,
+          ];
           final sections = shoppingListSections(entries, order: aisleOrder);
           return CustomScrollView(
             slivers: [
@@ -250,10 +253,7 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                           Expanded(
                             child: Semantics(
                               header: true,
-                              child: Text(
-                                l10n.listTitle,
-                                style: BipaText.headline.copyWith(color: context.colors.ink),
-                              ),
+                              child: Text(l10n.listTitle, style: BipaText.headline.copyWith(color: context.colors.ink)),
                             ),
                           ),
                           const SizedBox(width: BipaSpacing.s3),

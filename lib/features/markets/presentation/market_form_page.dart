@@ -183,9 +183,7 @@ class _LocationCard extends StatelessWidget {
             Text(l10n.marketLocation, style: theme.textTheme.titleMedium),
             const SizedBox(height: 4),
             Text(
-              point == null
-                  ? l10n.marketLocationMissing
-                  : l10n.marketLocationSaved,
+              point == null ? l10n.marketLocationMissing : l10n.marketLocationSaved,
               style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 12),
@@ -195,15 +193,11 @@ class _LocationCard extends StatelessWidget {
                 FilledButton.tonalIcon(
                   onPressed: locating ? null : onUseCurrent,
                   icon: locating
-                      ? const SizedBox.square(
-                          dimension: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
+                      ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
                       : const Icon(Icons.my_location),
                   label: Text(l10n.marketUseLocation),
                 ),
-                if (point != null)
-                  TextButton(onPressed: onClear, child: Text(l10n.marketRemoveLocation)),
+                if (point != null) TextButton(onPressed: onClear, child: Text(l10n.marketRemoveLocation)),
               ],
             ),
           ],

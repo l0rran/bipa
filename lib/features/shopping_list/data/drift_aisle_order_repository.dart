@@ -32,7 +32,6 @@ final class DriftAisleOrderRepository implements AisleOrderRepository {
     );
   });
 
-  static AisleOrder _toOrder(List<MarketAisleRow> rows) => AisleOrder({
-    for (final row in rows) row.aisle: LearnedAisle(position: row.position, samples: row.samples),
-  });
+  static AisleOrder _toOrder(List<MarketAisleRow> rows) =>
+      AisleOrder({for (final row in rows) row.aisle: LearnedAisle(position: row.position, samples: row.samples)});
 }

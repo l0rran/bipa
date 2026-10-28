@@ -7,24 +7,13 @@ void main() {
   final now = DateTime(2026);
   const user = GeoPoint(latitude: -23.5500, longitude: -46.6300);
 
-  Market market(String name, {GeoPoint? location}) => Market(
-    id: name,
-    name: name,
-    location: location,
-    createdAt: now,
-    updatedAt: now,
-  );
+  Market market(String name, {GeoPoint? location}) =>
+      Market(id: name, name: name, location: location, createdAt: now, updatedAt: now);
 
   // ~111 m ao norte do usuário.
-  final pertinho = market(
-    'Pertinho',
-    location: const GeoPoint(latitude: -23.5490, longitude: -46.6300),
-  );
+  final pertinho = market('Pertinho', location: const GeoPoint(latitude: -23.5490, longitude: -46.6300));
   // ~1,1 km ao norte do usuário.
-  final longe = market(
-    'Longe',
-    location: const GeoPoint(latitude: -23.5400, longitude: -46.6300),
-  );
+  final longe = market('Longe', location: const GeoPoint(latitude: -23.5400, longitude: -46.6300));
   final semLocalizacao = market('Atacadão');
 
   const finder = NearestMarketFinder();

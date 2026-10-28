@@ -87,11 +87,8 @@ class MarketMap extends StatelessWidget {
 
   /// A ponta do alfinete (o canto girado 45°, a meia diagonal do centro)
   /// fica no lugar do mercado.
-  static Widget _positioned(Offset at, Widget pin) => Positioned(
-    left: at.dx - _pinSize / 2,
-    top: at.dy - _pinSize / 2 - _pinSize * math.sqrt1_2,
-    child: pin,
-  );
+  static Widget _positioned(Offset at, Widget pin) =>
+      Positioned(left: at.dx - _pinSize / 2, top: at.dy - _pinSize / 2 - _pinSize * math.sqrt1_2, child: pin);
 }
 
 class _Me extends StatelessWidget {
@@ -142,7 +139,9 @@ class _Pin extends StatelessWidget {
           color: pin.here ? colors.place : colors.surface,
           borderRadius: shape,
           border: pin.best ? Border.all(color: colors.positiveText, width: 3) : null,
-          boxShadow: [BoxShadow(color: colors.scrim.withValues(alpha: 0.18), blurRadius: 8, offset: const Offset(0, 2))],
+          boxShadow: [
+            BoxShadow(color: colors.scrim.withValues(alpha: 0.18), blurRadius: 8, offset: const Offset(0, 2)),
+          ],
         ),
         child: Transform.rotate(
           angle: math.pi / 4,

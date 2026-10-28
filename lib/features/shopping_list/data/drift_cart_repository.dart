@@ -7,9 +7,7 @@ import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:drift/drift.dart';
 
 final class DriftCartRepository implements CartRepository {
-  const DriftCartRepository(this._db, {required IdGenerator ids, required Clock clock})
-    : _ids = ids,
-      _clock = clock;
+  const DriftCartRepository(this._db, {required IdGenerator ids, required Clock clock}) : _ids = ids, _clock = clock;
 
   final AppDatabase _db;
   final IdGenerator _ids;
@@ -21,12 +19,13 @@ final class DriftCartRepository implements CartRepository {
     final products = _db.products;
     final packages = _db.productPackages;
 
-    final query = _db.select(items).join([
-      innerJoin(products, products.id.equalsExp(items.productId)),
-      leftOuterJoin(packages, packages.id.equalsExp(items.packageId)),
-    ])
-      ..where(items.tripId.equals(tripId))
-      ..orderBy([OrderingTerm.desc(items.addedAt), OrderingTerm.asc(items.id)]);
+    final query =
+        _db.select(items).join([
+            innerJoin(products, products.id.equalsExp(items.productId)),
+            leftOuterJoin(packages, packages.id.equalsExp(items.packageId)),
+          ])
+          ..where(items.tripId.equals(tripId))
+          ..orderBy([OrderingTerm.desc(items.addedAt), OrderingTerm.asc(items.id)]);
 
     return query.watch().map(
       (rows) => [
@@ -41,28 +40,24 @@ final class DriftCartRepository implements CartRepository {
   }
 
   @override
-  Future<void> addProduct(
-    String tripId,
-    String productId, {
-    String? packageId,
-    Money? price,
-    bool estimated = false,
-  }) {
+  Future<void> addProduct(String tripId, String productId, {String? packageId, Money? price, bool estimated = false}) {
     return _db.transaction(() async {
       final existing = await _selectItem(tripId, productId, packageId).getSingleOrNull();
       final now = _clock();
       if (existing == null) {
-        await _db.into(_db.cartItems).insert(
-          CartItemsCompanion.insert(
-            id: _ids.newId(),
-            tripId: tripId,
-            productId: productId,
-            packageId: Value(packageId),
-            priceCents: Value(price?.cents),
-            priceEstimated: Value(price != null && estimated),
-            addedAt: now,
-          ),
-        );
+        await _db
+            .into(_db.cartItems)
+            .insert(
+              CartItemsCompanion.insert(
+                id: _ids.newId(),
+                tripId: tripId,
+                productId: productId,
+                packageId: Value(packageId),
+                priceCents: Value(price?.cents),
+                priceEstimated: Value(price != null && estimated),
+                addedAt: now,
+              ),
+            );
       } else {
         // Uma estimativa não apaga o preço lido ou digitado nesta compra.
         final keepPrice = price == null || (estimated && existing.priceCents != null && !existing.priceEstimated);
@@ -93,18 +88,23 @@ final class DriftCartRepository implements CartRepository {
     return _db.transaction(() async {
       final existing = await _selectItem(tripId, productId, packageId).getSingleOrNull();
       if (existing == null) {
-        await _db.into(_db.cartItems).insert(
-          CartItemsCompanion.insert(
-            id: _ids.newId(),
-            tripId: tripId,
-            productId: productId,
-            packageId: Value(packageId),
-            priceCents: Value(price.cents),
-            addedAt: _clock(),
-          ),
-        );
+        await _db
+            .into(_db.cartItems)
+            .insert(
+              CartItemsCompanion.insert(
+                id: _ids.newId(),
+                tripId: tripId,
+                productId: productId,
+                packageId: Value(packageId),
+                priceCents: Value(price.cents),
+                addedAt: _clock(),
+              ),
+            );
       } else {
-        await _write(existing.id, CartItemsCompanion(priceCents: Value(price.cents), priceEstimated: const Value(false)));
+        await _write(
+          existing.id,
+          CartItemsCompanion(priceCents: Value(price.cents), priceEstimated: const Value(false)),
+        );
       }
     });
   }
@@ -114,19 +114,19 @@ final class DriftCartRepository implements CartRepository {
 
   @override
   Future<void> setTakeForProduct(String tripId, String productId, {required bool take}) async {
-    await (_db.update(_db.cartItems)..where((t) => t.tripId.equals(tripId) & t.productId.equals(productId)))
-        .write(CartItemsCompanion(take: Value(take)));
+    await (_db.update(_db.cartItems)..where((t) => t.tripId.equals(tripId) & t.productId.equals(productId))).write(
+      CartItemsCompanion(take: Value(take)),
+    );
   }
 
   /// O item da embalagem, ou o do produto sem embalagem.
   SimpleSelectStatement<$CartItemsTable, CartItemRow> _selectItem(String tripId, String productId, String? packageId) =>
-      _db.select(_db.cartItems)
-        ..where(
-          (t) =>
-              t.tripId.equals(tripId) &
-              t.productId.equals(productId) &
-              (packageId == null ? t.packageId.isNull() : t.packageId.equals(packageId)),
-        );
+      _db.select(_db.cartItems)..where(
+        (t) =>
+            t.tripId.equals(tripId) &
+            t.productId.equals(productId) &
+            (packageId == null ? t.packageId.isNull() : t.packageId.equals(packageId)),
+      );
 
   Future<void> _write(String itemId, CartItemsCompanion changes) async {
     await (_db.update(_db.cartItems)..where((t) => t.id.equals(itemId))).write(changes);

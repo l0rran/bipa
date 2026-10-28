@@ -91,10 +91,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         SnackBar(
           content: Text(message),
           duration: const Duration(seconds: 4),
-          action: SnackBarAction(
-            label: l10n.undo,
-            onPressed: () => repository.revert(change),
-          ),
+          action: SnackBarAction(label: l10n.undo, onPressed: () => repository.revert(change)),
         ),
       );
   }
@@ -129,7 +126,6 @@ class _HomePageState extends ConsumerState<HomePage> {
       body: AsyncValueView(
         value: stock,
         data: (entries) {
-
           final visible = _visible(entries);
           // Acabou primeiro, depois o que está mais perto de acabar.
           // A linha aberta fica em "Em casa" enquanto é editada, mesmo que caia
@@ -253,8 +249,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                             photo: productPhotoFile(entry.product, photos),
                             expanded: _expandedProductId == entry.product.id,
                             onList: onList.contains(entry.product.id),
-                            onToggleList: () =>
-                                _toggleList(entry.product, onList: onList.contains(entry.product.id)),
+                            onToggleList: () => _toggleList(entry.product, onList: onList.contains(entry.product.id)),
                             onTap: () => setState(() {
                               final id = entry.product.id;
                               _expandedProductId = _expandedProductId == id ? null : id;

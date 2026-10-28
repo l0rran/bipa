@@ -83,10 +83,8 @@ final listPackagesProvider = StreamProvider.autoDispose<List<ProductPackage>>((r
 /// O preço de cada produto na lista: exato quando já foi visto no mercado
 /// da lista, estimado pelos outros mercados quando não.
 final shoppingListItemPricesProvider = Provider.autoDispose<Map<String, ListPrice>>(
-  (ref) => listPrices(
-    ref.watch(shoppingListHistoryProvider).value ?? const [],
-    marketId: ref.watch(listMarketIdProvider),
-  ),
+  (ref) =>
+      listPrices(ref.watch(shoppingListHistoryProvider).value ?? const [], marketId: ref.watch(listMarketIdProvider)),
 );
 
 /// O resumo da lista. O total soma os mesmos preços que as linhas mostram.
@@ -179,9 +177,7 @@ final marketAisleOrderProvider = StreamProvider.autoDispose.family<AisleOrder, S
 /// genérica.
 final listAisleOrderProvider = StreamProvider.autoDispose<AisleOrder>((ref) {
   final marketId = ref.watch(listMarketIdProvider);
-  return marketId == null
-      ? Stream.value(AisleOrder.empty)
-      : ref.watch(aisleOrderRepositoryProvider).watch(marketId);
+  return marketId == null ? Stream.value(AisleOrder.empty) : ref.watch(aisleOrderRepositoryProvider).watch(marketId);
 });
 
 /// As etiquetas da balança no carrinho (ADR 0018).
@@ -196,10 +192,7 @@ final scaleItemsProvider = Provider<ScaleItems>(
 
 /// "Pôr na lista" com o que falta para o "ter sempre".
 final putProductOnListProvider = Provider<PutProductOnList>(
-  (ref) => PutProductOnList(
-    list: ref.watch(shoppingListRepositoryProvider),
-    stock: ref.watch(stockRepositoryProvider),
-  ),
+  (ref) => PutProductOnList(list: ref.watch(shoppingListRepositoryProvider), stock: ref.watch(stockRepositoryProvider)),
 );
 
 final reviewShoppingTripProvider = Provider<ReviewShoppingTrip>(

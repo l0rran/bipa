@@ -82,8 +82,7 @@ final class StockChange {
   bool get isEmpty => lots.isEmpty;
 
   @override
-  bool operator ==(Object other) =>
-      other is StockChange && other.productId == productId && _sameLots(other.lots, lots);
+  bool operator ==(Object other) => other is StockChange && other.productId == productId && _sameLots(other.lots, lots);
 
   @override
   int get hashCode => Object.hash(productId, Object.hashAll(lots));
@@ -101,17 +100,18 @@ final class StockChange {
 /// de [packageId] (quando informada), depois do que está em casa há mais
 /// tempo. Tira no máximo o que há.
 List<({StockLot lot, double taken})> takeFromLots(List<StockLot> lots, double amount, {String? packageId}) {
-  final ordered = [
-    for (final lot in lots)
-      if (lot.quantity > 0) lot,
-  ]..sort((a, b) {
-      if (packageId != null) {
-        final preferred = (b.packageId == packageId ? 1 : 0) - (a.packageId == packageId ? 1 : 0);
-        if (preferred != 0) return preferred;
-      }
-      final bySince = a.since.compareTo(b.since);
-      return bySince != 0 ? bySince : a.id.compareTo(b.id);
-    });
+  final ordered =
+      [
+        for (final lot in lots)
+          if (lot.quantity > 0) lot,
+      ]..sort((a, b) {
+        if (packageId != null) {
+          final preferred = (b.packageId == packageId ? 1 : 0) - (a.packageId == packageId ? 1 : 0);
+          if (preferred != 0) return preferred;
+        }
+        final bySince = a.since.compareTo(b.since);
+        return bySince != 0 ? bySince : a.id.compareTo(b.id);
+      });
   final plan = <({StockLot lot, double taken})>[];
   var remaining = amount;
   for (final lot in ordered) {

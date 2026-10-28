@@ -77,7 +77,9 @@ class ScanNavBar extends StatelessWidget {
               child: DecoratedBox(
                 decoration: ShapeDecoration(
                   shape: const StadiumBorder(),
-                  shadows: [BoxShadow(color: colors.ink.withValues(alpha: 0.12), blurRadius: 24, offset: const Offset(0, 8))],
+                  shadows: [
+                    BoxShadow(color: colors.ink.withValues(alpha: 0.12), blurRadius: 24, offset: const Offset(0, 8)),
+                  ],
                 ),
                 child: ClipPath(
                   clipper: const ShapeBorderClipper(shape: StadiumBorder()),

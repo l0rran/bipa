@@ -101,9 +101,7 @@ final class LiveTagRouter {
     if (barcode != null) return WaitForProduct(PendingTagPrice(read: read, readAt: now, barcode: barcode));
 
     final newest = cart.firstOrNull;
-    if (newest != null &&
-        !settled.contains(newest.item.id) &&
-        now.difference(newest.item.addedAt) <= recent) {
+    if (newest != null && !settled.contains(newest.item.id) && now.difference(newest.item.addedAt) <= recent) {
       return PriceCartItem(newest);
     }
     return WaitForProduct(PendingTagPrice(read: read, readAt: now));

@@ -42,23 +42,13 @@ Future<ProductChoice?> pickProduct(
   return showModalBottomSheet<ProductChoice>(
     context: context,
     isScrollControlled: true,
-    builder: (_) => ProductPickerSheet(
-      initialQuery: initialQuery,
-      allowCreate: allowCreate,
-      excludeId: excludeId,
-      title: title,
-    ),
+    builder: (_) =>
+        ProductPickerSheet(initialQuery: initialQuery, allowCreate: allowCreate, excludeId: excludeId, title: title),
   );
 }
 
 class ProductPickerSheet extends ConsumerStatefulWidget {
-  const ProductPickerSheet({
-    this.initialQuery = '',
-    this.allowCreate = true,
-    this.excludeId,
-    this.title,
-    super.key,
-  });
+  const ProductPickerSheet({this.initialQuery = '', this.allowCreate = true, this.excludeId, this.title, super.key});
 
   final String initialQuery;
   final bool allowCreate;

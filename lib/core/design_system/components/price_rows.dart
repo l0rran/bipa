@@ -106,7 +106,9 @@ class _PriceRow extends StatelessWidget {
                         Icon(icon, size: 14, color: metaColor),
                         const SizedBox(width: BipaSpacing.s1),
                       ],
-                      Flexible(child: Text(meta, style: BipaText.body.copyWith(fontSize: 13, color: metaColor))),
+                      Flexible(
+                        child: Text(meta, style: BipaText.body.copyWith(fontSize: 13, color: metaColor)),
+                      ),
                     ],
                   ),
               ],

@@ -9,11 +9,7 @@ typedef ScanMenuItem<T> = ({T value, IconData icon, String label, String? hint})
 /// O menu do bipar (protótipo "Menu do bipar"): segurar o botão de bipar
 /// abre pílulas empilhadas acima dele, sobre a tela escurecida, e o botão
 /// vira um "×". Devolve o valor escolhido, ou `null` ao fechar.
-Future<T?> showScanMenu<T>(
-  BuildContext context, {
-  required List<ScanMenuItem<T>> items,
-  required String closeLabel,
-}) {
+Future<T?> showScanMenu<T>(BuildContext context, {required List<ScanMenuItem<T>> items, required String closeLabel}) {
   final colors = context.colors;
   return showGeneralDialog<T>(
     context: context,

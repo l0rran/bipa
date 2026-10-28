@@ -17,9 +17,7 @@ String marketMeta(
   if (isHere) return l10n.marketsHere;
   final distance = item.distanceMeters;
   // Em dias do calendário, como a idade do preço na tela do produto.
-  final days = latestPrice == null
-      ? null
-      : DateUtils.dateOnly(now).difference(DateUtils.dateOnly(latestPrice)).inDays;
+  final days = latestPrice == null ? null : DateUtils.dateOnly(now).difference(DateUtils.dateOnly(latestPrice)).inDays;
   return l10n.joinMeta([
     if (distance != null) Formatters.distance(distance),
     if (days != null) l10n.marketsPriceAge(days),

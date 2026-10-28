@@ -84,9 +84,9 @@ bool _isNumber(String word) => RegExp(r'^[0-9]').hasMatch(word);
 /// O último tamanho do nome: "5KG", "500 G", "1,5L", "12 UN". Devolve também
 /// as palavras que formavam o tamanho, para tirar da marca.
 (double?, MeasureUnit?, Set<String>) _size(String folded) {
-  final matches = RegExp(r'(\d+(?:[.,]\d+)?)\s?(kg|kgs|g|gr|grs|ml|l|lt|lts|litros?|un|und|unid|unidades?)\b')
-      .allMatches(folded)
-      .toList();
+  final matches = RegExp(
+    r'(\d+(?:[.,]\d+)?)\s?(kg|kgs|g|gr|grs|ml|l|lt|lts|litros?|un|und|unid|unidades?)\b',
+  ).allMatches(folded).toList();
   if (matches.isEmpty) return (null, null, const {});
   final last = matches.last;
   final size = double.tryParse(last.group(1)!.replaceAll(',', '.'));
@@ -104,8 +104,49 @@ String _capitalize(String word) => word.isEmpty ? word : word[0].toUpperCase() +
 
 /// Palavras que descrevem o produto, não a marca.
 const _descriptors = {
-  'de', 'da', 'do', 'com', 'sem', 'e', 'tipo', 'tp', 'pct', 'pacote', 'cx', 'caixa', 'lata', 'garrafa',
-  'branco', 'branca', 'integral', 'parboilizado', 'tradicional', 'extra', 'forte', 'suave', 'refinado', 'refinada',
-  'cristal', 'carioca', 'preto', 'uht', 'desnatado', 'semidesnatado', 'light', 'zero', 'original', 'classico',
-  'especial', 'premium', 'novo', 'nova', 'po', 'liquido', 'em', 'graos', 'moido', 'torrado', 'vacuo',
+  'de',
+  'da',
+  'do',
+  'com',
+  'sem',
+  'e',
+  'tipo',
+  'tp',
+  'pct',
+  'pacote',
+  'cx',
+  'caixa',
+  'lata',
+  'garrafa',
+  'branco',
+  'branca',
+  'integral',
+  'parboilizado',
+  'tradicional',
+  'extra',
+  'forte',
+  'suave',
+  'refinado',
+  'refinada',
+  'cristal',
+  'carioca',
+  'preto',
+  'uht',
+  'desnatado',
+  'semidesnatado',
+  'light',
+  'zero',
+  'original',
+  'classico',
+  'especial',
+  'premium',
+  'novo',
+  'nova',
+  'po',
+  'liquido',
+  'em',
+  'graos',
+  'moido',
+  'torrado',
+  'vacuo',
 };

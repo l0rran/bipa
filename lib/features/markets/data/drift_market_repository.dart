@@ -13,12 +13,10 @@ final class DriftMarketRepository implements MarketRepository {
       _db.select(_db.markets)..orderBy([(t) => OrderingTerm.asc(t.name.lower())]);
 
   @override
-  Stream<List<Market>> watchAll() =>
-      _orderedByName().watch().map((rows) => [for (final row in rows) row.toEntity()]);
+  Stream<List<Market>> watchAll() => _orderedByName().watch().map((rows) => [for (final row in rows) row.toEntity()]);
 
   @override
-  Future<List<Market>> all() async =>
-      [for (final row in await _orderedByName().get()) row.toEntity()];
+  Future<List<Market>> all() async => [for (final row in await _orderedByName().get()) row.toEntity()];
 
   @override
   Future<Market?> findById(String id) async {
@@ -28,19 +26,21 @@ final class DriftMarketRepository implements MarketRepository {
 
   @override
   Future<void> save(Market market) async {
-    await _db.into(_db.markets).insertOnConflictUpdate(
-      MarketsCompanion.insert(
-        id: market.id,
-        name: market.name,
-        address: Value(market.address),
-        latitude: Value(market.location?.latitude),
-        longitude: Value(market.location?.longitude),
-        createdAt: market.createdAt,
-        updatedAt: market.updatedAt,
-        // Toda alteração marca o mercado como pendente de sincronização.
-        syncedAt: const Value(null),
-      ),
-    );
+    await _db
+        .into(_db.markets)
+        .insertOnConflictUpdate(
+          MarketsCompanion.insert(
+            id: market.id,
+            name: market.name,
+            address: Value(market.address),
+            latitude: Value(market.location?.latitude),
+            longitude: Value(market.location?.longitude),
+            createdAt: market.createdAt,
+            updatedAt: market.updatedAt,
+            // Toda alteração marca o mercado como pendente de sincronização.
+            syncedAt: const Value(null),
+          ),
+        );
   }
 
   @override

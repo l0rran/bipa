@@ -9,14 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 final _now = DateTime(2026, 10, 28, 18);
 
-ProductPackage _package(String id, double? size, {MeasureUnit unit = MeasureUnit.kilogram}) => ProductPackage(
-  id: id,
-  productId: 'arroz',
-  size: size,
-  unit: unit,
-  createdAt: _now,
-  updatedAt: _now,
-);
+ProductPackage _package(String id, double? size, {MeasureUnit unit = MeasureUnit.kilogram}) =>
+    ProductPackage(id: id, productId: 'arroz', size: size, unit: unit, createdAt: _now, updatedAt: _now);
 
 var _seq = 0;
 

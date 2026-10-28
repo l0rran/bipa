@@ -214,14 +214,8 @@ class _ProductView extends ConsumerWidget {
                         value: () => context.push(Routes.capturePriceFor(product.id)),
                         child: Text(l10n.productRegisterPrice),
                       ),
-                      PopupMenuItem(
-                        value: () => _merge(context, ref),
-                        child: Text(l10n.productMerge),
-                      ),
-                      PopupMenuItem(
-                        value: () => _delete(context, ref),
-                        child: Text(l10n.productDelete),
-                      ),
+                      PopupMenuItem(value: () => _merge(context, ref), child: Text(l10n.productMerge)),
+                      PopupMenuItem(value: () => _delete(context, ref), child: Text(l10n.productDelete)),
                     ],
                   ),
                 ],
@@ -241,10 +235,7 @@ class _ProductView extends ConsumerWidget {
                 textAlign: TextAlign.center,
                 style: BipaText.headline.copyWith(fontSize: 24, color: colors.ink),
               ),
-              if (best != null) ...[
-                const SizedBox(height: BipaSpacing.s3),
-                Center(child: _BestPrice(best: best)),
-              ],
+              if (best != null) ...[const SizedBox(height: BipaSpacing.s3), Center(child: _BestPrice(best: best))],
               if (packageRows.isNotEmpty) ...[
                 const SizedBox(height: BipaSpacing.s6),
                 SectionHeader(title: l10n.productPackages, count: packages.length),
@@ -302,7 +293,9 @@ class _ProductView extends ConsumerWidget {
               _AtHomeCard(
                 stock: stock,
                 onTap: () => showStockItemSheet(context, product, fromProduct: true),
-                amount: amount == null ? null : l10n.measureAmount(Formatters.quantity(amount.amount), amount.unit.symbol),
+                amount: amount == null
+                    ? null
+                    : l10n.measureAmount(Formatters.quantity(amount.amount), amount.unit.symbol),
                 onIncrement: () => _adjust(ref, 1),
                 onDecrement: (stock?.item.quantity ?? 0) > 0 ? () => _adjust(ref, -1) : null,
               ),
@@ -459,7 +452,9 @@ class _AtHomeCard extends StatelessWidget {
                       children: [
                         Flexible(
                           child: Text(
-                            l10n.productTargetCount(target == null ? l10n.stockTargetNone : Formatters.quantity(target)),
+                            l10n.productTargetCount(
+                              target == null ? l10n.stockTargetNone : Formatters.quantity(target),
+                            ),
                             style: BipaText.body.copyWith(color: colors.inkMuted),
                           ),
                         ),

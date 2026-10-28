@@ -147,10 +147,7 @@ class _MarketView extends ConsumerWidget {
                         value: () => context.push(Routes.editMarket(market.id)),
                         child: Text(l10n.marketEdit),
                       ),
-                      PopupMenuItem(
-                        value: () => _delete(context, ref),
-                        child: Text(l10n.marketDelete),
-                      ),
+                      PopupMenuItem(value: () => _delete(context, ref), child: Text(l10n.marketDelete)),
                     ],
                   ),
                 ],
@@ -287,7 +284,9 @@ class _AisleSteps extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: BipaSpacing.s3),
-                    Expanded(child: Text(label, style: BipaText.bodyLarge.copyWith(color: colors.ink))),
+                    Expanded(
+                      child: Text(label, style: BipaText.bodyLarge.copyWith(color: colors.ink)),
+                    ),
                   ],
                 ),
               ),

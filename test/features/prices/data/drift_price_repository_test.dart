@@ -26,9 +26,9 @@ void main() {
     markets = DriftMarketRepository(db);
 
     final created = DateTime(2026);
-    await DriftProductRepository(db).save(
-      Product(id: 'leite', name: 'Leite', unit: MeasureUnit.liter, createdAt: created, updatedAt: created),
-    );
+    await DriftProductRepository(
+      db,
+    ).save(Product(id: 'leite', name: 'Leite', unit: MeasureUnit.liter, createdAt: created, updatedAt: created));
     await markets.save(
       Market(
         id: 'm1',

@@ -88,8 +88,7 @@ final class StockEntry {
   final Product product;
 
   @override
-  bool operator ==(Object other) =>
-      other is StockEntry && other.item == item && other.product == product;
+  bool operator ==(Object other) => other is StockEntry && other.item == item && other.product == product;
 
   @override
   int get hashCode => Object.hash(item, product);

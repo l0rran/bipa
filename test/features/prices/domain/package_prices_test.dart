@@ -48,11 +48,7 @@ void main() {
 
     final prices = latestPricePerPackage(history, packages);
 
-    expect(prices.map((p) => (p.package?.id, p.price.cents)), [
-      ('camil', 4990),
-      ('tio-joao', 2790),
-      ('granel', 600),
-    ]);
+    expect(prices.map((p) => (p.package?.id, p.price.cents)), [('camil', 4990), ('tio-joao', 2790), ('granel', 600)]);
     expect(prices.first.unitPrice?.price, const Money.cents(499));
   });
 

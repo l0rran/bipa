@@ -295,7 +295,11 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     if (!mounted) return;
     _lockFrame();
     if (fromTag != null) {
-      _showNotice((price: fromTag.price.format(), detail: CartEntry.nameOf(product, package), waiting: false), key: key);
+      _showNotice((
+        price: fromTag.price.format(),
+        detail: CartEntry.nameOf(product, package),
+        waiting: false,
+      ), key: key);
     }
   }
 
@@ -352,7 +356,11 @@ class _CartModePageState extends ConsumerState<CartModePage> {
         case WaitForProduct(:final pending):
           _pending = pending;
           unawaited(HapticFeedback.selectionClick());
-          _showNotice((price: read.price.format(), detail: l10n.cartLiveWaiting, waiting: true), duration: _router.waitFor);
+          _showNotice((
+            price: read.price.format(),
+            detail: l10n.cartLiveWaiting,
+            waiting: true,
+          ), duration: _router.waitFor);
       }
     } on Exception catch (error, stack) {
       _report(error, stack);
@@ -651,9 +659,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
             for (final entry in cart)
               ScanTrayItem(
                 key: ValueKey(entry.item.id),
-                name: entry.item.quantity > 1
-                    ? l10n.cartQuantity(entry.item.quantity, entry.name)
-                    : entry.name,
+                name: entry.item.quantity > 1 ? l10n.cartQuantity(entry.item.quantity, entry.name) : entry.name,
                 price: switch (entry.item.price) {
                   final price? when entry.item.priceEstimated => l10n.priceEstimate(price.format()),
                   final price? => price.format(),

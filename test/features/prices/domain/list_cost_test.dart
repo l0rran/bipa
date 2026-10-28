@@ -33,35 +33,37 @@ PriceHistoryEntry _price(
 
 void main() {
   test('soma a lista em cada mercado com o preço mais recente, do mais barato ao mais caro', () {
-    final costs = listCostPerMarket({'arroz', 'cafe'}, [
-      _price('vila', 'arroz', 2790),
-      _price('vila', 'cafe', 1899),
-      _price('centro', 'arroz', 2990, day: 1),
-      _price('centro', 'arroz', 2590, day: 5),
-      _price('centro', 'cafe', 1999),
-      _price('centro', 'leite', 479), // fora da lista
-    ]);
+    final costs = listCostPerMarket(
+      {'arroz', 'cafe'},
+      [
+        _price('vila', 'arroz', 2790),
+        _price('vila', 'cafe', 1899),
+        _price('centro', 'arroz', 2990, day: 1),
+        _price('centro', 'arroz', 2590, day: 5),
+        _price('centro', 'cafe', 1999),
+        _price('centro', 'leite', 479), // fora da lista
+      ],
+    );
 
     expect(costs.map((c) => (c.marketId, c.total.cents)), [('centro', 4589), ('vila', 4689)]);
     expect(costs.every((c) => !c.isPartial), isTrue);
   });
 
   test('um mercado com menos preços vem depois, mesmo que some menos', () {
-    final costs = listCostPerMarket({'arroz', 'cafe'}, [
-      _price('vila', 'arroz', 2790),
-      _price('vila', 'cafe', 1899),
-      _price('bairro', 'arroz', 2490),
-    ]);
+    final costs = listCostPerMarket(
+      {'arroz', 'cafe'},
+      [_price('vila', 'arroz', 2790), _price('vila', 'cafe', 1899), _price('bairro', 'arroz', 2490)],
+    );
 
     expect(costs.map((c) => c.marketId), ['vila', 'bairro']);
     expect((costs.last.priced, costs.last.items, costs.last.isPartial), (1, 2, true));
   });
 
   test('o preço com cartão só vale quando não há preço de varejo', () {
-    final costs = listCostPerMarket({'arroz'}, [
-      _price('vila', 'arroz', 2790),
-      _price('vila', 'arroz', 2490, condition: const LoyaltyMembers()),
-    ]);
+    final costs = listCostPerMarket(
+      {'arroz'},
+      [_price('vila', 'arroz', 2790), _price('vila', 'arroz', 2490, condition: const LoyaltyMembers())],
+    );
 
     expect(costs.single.total.cents, 2790);
   });
@@ -89,10 +91,10 @@ void main() {
   });
 
   test('sem tamanho para converter, o mercado fica sem preço do produto', () {
-    final costs = listCostPerMarket({'arroz'}, [
-      _price('vila', 'arroz', 2790, package: 'a', day: 5),
-      _price('centro', 'arroz', 4990, package: 'b', day: 1),
-    ]);
+    final costs = listCostPerMarket(
+      {'arroz'},
+      [_price('vila', 'arroz', 2790, package: 'a', day: 5), _price('centro', 'arroz', 4990, package: 'b', day: 1)],
+    );
 
     expect(costs.map((c) => c.marketId), ['vila']);
   });
@@ -132,23 +134,17 @@ void main() {
       _price('centro', 'arroz', 600, day: 9, package: 'arroz-1'),
     ];
 
-    final prices = referencePricesPerMarket(
-      {'arroz'},
-      history,
-      packages: packages,
-      references: {'arroz': 'arroz-5'},
-    );
+    final prices = referencePricesPerMarket({'arroz'}, history, packages: packages, references: {'arroz': 'arroz-5'});
 
     expect(prices['vila']?.byProduct, {'arroz': const Money.cents(2500)});
     expect(prices['centro']?.byProduct, {'arroz': const Money.cents(3000)});
   });
 
   test('os preços de cada produto em cada mercado, com o nome do mercado', () {
-    final prices = referencePricesPerMarket({'arroz', 'cafe'}, [
-      _price('vila', 'arroz', 2790),
-      _price('vila', 'cafe', 1899),
-      _price('centro', 'arroz', 2590),
-    ]);
+    final prices = referencePricesPerMarket(
+      {'arroz', 'cafe'},
+      [_price('vila', 'arroz', 2790), _price('vila', 'cafe', 1899), _price('centro', 'arroz', 2590)],
+    );
 
     // Mapas dentro de um record não se comparam por conteúdo: um campo de cada vez.
     expect(prices['vila']?.marketName, 'vila');

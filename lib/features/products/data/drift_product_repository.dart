@@ -141,7 +141,9 @@ final class DriftProductRepository implements ProductRepository {
         'quantity = quantity + (SELECT SUM(other.quantity) $sameTripWithoutPackage), '
         'price_cents = COALESCE(price_cents, (SELECT MAX(other.price_cents) $sameTripWithoutPackage)) '
         'WHERE product_id = ? AND package_id IS NULL AND EXISTS (SELECT 1 $sameTripWithoutPackage)',
-        variables: [for (final id in [fromId, fromId, intoId, fromId]) Variable.withString(id)],
+        variables: [
+          for (final id in [fromId, fromId, intoId, fromId]) Variable.withString(id),
+        ],
         updates: {_db.cartItems},
       );
       await _db.customUpdate(

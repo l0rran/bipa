@@ -217,9 +217,7 @@ void main() {
 
     final entries = await cart.watchTrip(trip.id).first;
 
-    expect(entries.map((e) => (e.product.id, e.item.quantity, e.item.price)), [
-      ('cafe', 2, const Money.cents(1699)),
-    ]);
+    expect(entries.map((e) => (e.product.id, e.item.quantity, e.item.price)), [('cafe', 2, const Money.cents(1699))]);
   });
 
   test('desmarcar na lista deixa o item do carrinho de fora', () async {

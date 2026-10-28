@@ -163,8 +163,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
     return trimmed.isEmpty ? null : trimmed;
   }
 
-  static double? _parseSize(String value) =>
-      double.tryParse(value.trim().replaceAll(',', '.'));
+  static double? _parseSize(String value) => double.tryParse(value.trim().replaceAll(',', '.'));
 
   @override
   Widget build(BuildContext context) {
@@ -237,7 +236,10 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                           expandedInsets: EdgeInsets.zero,
                           dropdownMenuEntries: [
                             for (final unit in MeasureUnit.values)
-                              DropdownMenuEntry(value: unit, label: l10n.measureUnitOption(unit.localizedLabel(l10n), unit.symbol)),
+                              DropdownMenuEntry(
+                                value: unit,
+                                label: l10n.measureUnitOption(unit.localizedLabel(l10n), unit.symbol),
+                              ),
                           ],
                           onSelected: (unit) {
                             if (unit != null) setState(() => _unit = unit);

@@ -96,9 +96,7 @@ final class PriceHistoryEntry {
 
   @override
   bool operator ==(Object other) =>
-      other is PriceHistoryEntry &&
-      other.observation == observation &&
-      other.marketName == marketName;
+      other is PriceHistoryEntry && other.observation == observation && other.marketName == marketName;
 
   @override
   int get hashCode => Object.hash(observation, marketName);
@@ -107,9 +105,7 @@ final class PriceHistoryEntry {
 /// Tira do histórico as observações corrigidas por outra (ADR 0017). A
 /// correção fica no lugar da leitura errada.
 List<T> withoutSuperseded<T>(Iterable<T> items, PriceObservation Function(T item) observationOf) {
-  final superseded = {
-    for (final item in items) ?observationOf(item).supersedes,
-  };
+  final superseded = {for (final item in items) ?observationOf(item).supersedes};
   return [
     for (final item in items)
       if (!superseded.contains(observationOf(item).id)) item,

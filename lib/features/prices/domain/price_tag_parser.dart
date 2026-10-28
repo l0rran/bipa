@@ -38,10 +38,7 @@ final class PriceTagParser {
 
   static final _date = RegExp(r'\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}');
 
-  static final _quantitySuffix = RegExp(
-    r'^\s?(kg|g|gr|ml|l|lt|un|und)\b',
-    caseSensitive: false,
-  );
+  static final _quantitySuffix = RegExp(r'^\s?(kg|g|gr|ml|l|lt|un|und)\b', caseSensitive: false);
 
   static final _currencyBefore = RegExp(r'R\$\s*$');
 
@@ -53,7 +50,7 @@ final class PriceTagParser {
   /// Número de 3 ou 4 dígitos logo depois de um preço: "13,89 1535".
   static final _missingSeparator = RegExp(r'^\s+(\d{1,2})(\d{2})(?![\d.,])');
 
-  static final _integerEnd =RegExp(r'(?<![\d,.])\d{1,4}$');
+  static final _integerEnd = RegExp(r'(?<![\d,.])\d{1,4}$');
   static final _centsFragment = RegExp(r'^[,.]?\s?(\d{2})$');
 
   static final _unitPriceMarker = RegExp(
@@ -68,20 +65,11 @@ final class PriceTagParser {
   static final _perKiloAfter = RegExp(r'^\s?(o\s+)?/?\s?(kg|quilo)\b', caseSensitive: false);
 
   /// A linha inteira fala do preço por quilo: "PREÇO POR KG", "R$ 5,58/kg".
-  static final _perKiloMarker = RegExp(
-    r'/\s?kg\b|\bp/\s?kg\b|\bpor\s+(kg|quilo)\b',
-    caseSensitive: false,
-  );
+  static final _perKiloMarker = RegExp(r'/\s?kg\b|\bp/\s?kg\b|\bpor\s+(kg|quilo)\b', caseSensitive: false);
 
-  static final _regularMarker = RegExp(
-    r'\b(de|normal|antes|era)\b[\s:]*(r\$)?\s*$',
-    caseSensitive: false,
-  );
+  static final _regularMarker = RegExp(r'\b(de|normal|antes|era)\b[\s:]*(r\$)?\s*$', caseSensitive: false);
 
-  static final _promoMarker = RegExp(
-    r'\b(por|oferta|promo[cçÇ][aãÃ]o)\b[\s:]*(r\$)?\s*$',
-    caseSensitive: false,
-  );
+  static final _promoMarker = RegExp(r'\b(por|oferta|promo[cçÇ][aãÃ]o)\b[\s:]*(r\$)?\s*$', caseSensitive: false);
 
   /// Rótulos que ocupam uma linha só: "POR", "DE R$", "OFERTA".
   static final _promoLabel = RegExp(r'^(por|oferta|promo[cçÇ][aãÃ]o)[\s:]*(r\$)?$', caseSensitive: false);
@@ -127,13 +115,7 @@ final class PriceTagParser {
   PriceTagReading parse(List<OcrLine> lines, {Iterable<String> barcodes = const []}) {
     final ordered = _mergeCentsFragments([
       for (final line in lines)
-        OcrLine(
-          text: _normalize(line.text),
-          top: line.top,
-          height: line.height,
-          left: line.left,
-          width: line.width,
-        ),
+        OcrLine(text: _normalize(line.text), top: line.top, height: line.height, left: line.left, width: line.width),
     ])..sort((a, b) => a.top.compareTo(b.top));
     final texts = [for (final line in ordered) line.text.replaceAll(_date, ' ').trim()];
 
@@ -160,8 +142,7 @@ final class PriceTagParser {
     final offers = _isUnlabeledMultiPrice(pool) ? const <PriceOffer>[] : _offers(pool);
     final main = offers.firstOrNull;
     final perKilo =
-        main != null &&
-        pool.any((c) => c.perKilo && c.money == main.price && c.condition == main.condition);
+        main != null && pool.any((c) => c.perKilo && c.money == main.price && c.condition == main.condition);
 
     return PriceTagReading(
       price: main?.price,
@@ -249,9 +230,7 @@ final class PriceTagParser {
   _Candidate _choosePrice(List<_Candidate> pool) {
     final promotional = pool.where((c) => c.role == _Role.promotional).toList();
     final notRegular = pool.where((c) => c.role != _Role.regular).toList();
-    final eligible = promotional.isNotEmpty
-        ? promotional
-        : (notRegular.isNotEmpty ? notRegular : pool);
+    final eligible = promotional.isNotEmpty ? promotional : (notRegular.isNotEmpty ? notRegular : pool);
     // Em caso de empate na altura, mantém o primeiro (mais acima na etiqueta).
     return eligible.reduce((best, c) => c.height > best.height ? c : best);
   }
@@ -353,12 +332,7 @@ final class PriceTagParser {
   static double _verticalGap(OcrLine a, OcrLine b) =>
       math.max(0.0, math.max(a.top, b.top) - math.min(a.bottom, b.bottom));
 
-  Iterable<_Candidate> _findPrices(
-    String text,
-    double height, [
-    _Labels labels = _Labels.none,
-    OcrLine? line,
-  ]) sync* {
+  Iterable<_Candidate> _findPrices(String text, double height, [_Labels labels = _Labels.none, OcrLine? line]) sync* {
     var foundDecimal = false;
     for (final match in _decimalPrice.allMatches(text)) {
       final prefix = text.substring(0, match.start);
@@ -442,8 +416,7 @@ final class PriceTagParser {
   String? _productNameHint(List<OcrLine> lines) {
     for (final line in lines) {
       final text = line.text;
-      final isLabel =
-          _nonNameMarker.hasMatch(text) || _wholesaleMarker.hasMatch(text) || _loyaltyMarker.hasMatch(text);
+      final isLabel = _nonNameMarker.hasMatch(text) || _wholesaleMarker.hasMatch(text) || _loyaltyMarker.hasMatch(text);
       if (isLabel || _findPrices(text, 0).isNotEmpty) continue;
 
       final letters = _letter.allMatches(text).length;

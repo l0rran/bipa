@@ -31,7 +31,10 @@ class SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s1),
       child: Row(
         children: [
-          Semantics(header: true, child: Text(title, style: BipaText.title.copyWith(color: colors.ink))),
+          Semantics(
+            header: true,
+            child: Text(title, style: BipaText.title.copyWith(color: colors.ink)),
+          ),
           if (count != null) ...[
             const SizedBox(width: BipaSpacing.s2),
             Container(
@@ -45,16 +48,12 @@ class SectionHeader extends StatelessWidget {
               ),
               child: Text(
                 '$count',
-                style: BipaText.label.copyWith(
-                  fontSize: 13,
-                  color: alert ? colors.alertText : colors.ink,
-                ),
+                style: BipaText.label.copyWith(fontSize: 13, color: alert ? colors.alertText : colors.ink),
               ),
             ),
           ],
           const Spacer(),
-          if (actionLabel != null && onAction != null)
-            TextButton(onPressed: onAction, child: Text(actionLabel)),
+          if (actionLabel != null && onAction != null) TextButton(onPressed: onAction, child: Text(actionLabel)),
         ],
       ),
     );

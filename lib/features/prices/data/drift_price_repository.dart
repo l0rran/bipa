@@ -43,9 +43,8 @@ final class DriftPriceRepository implements PriceRepository {
       _watchHistoryWhere((prices) => prices.productId.equals(productId));
 
   @override
-  Stream<List<PriceHistoryEntry>> watchHistoryOfProducts(Set<String> productIds) => productIds.isEmpty
-      ? Stream.value(const [])
-      : _watchHistoryWhere((prices) => prices.productId.isIn(productIds));
+  Stream<List<PriceHistoryEntry>> watchHistoryOfProducts(Set<String> productIds) =>
+      productIds.isEmpty ? Stream.value(const []) : _watchHistoryWhere((prices) => prices.productId.isIn(productIds));
 
   @override
   Stream<Map<String, DateTime>> watchLatestPerMarket() {
@@ -54,12 +53,7 @@ final class DriftPriceRepository implements PriceRepository {
     final query = _db.selectOnly(prices)
       ..addColumns([prices.marketId, latest])
       ..groupBy([prices.marketId]);
-    return query.watch().map(
-      (rows) => {
-        for (final row in rows)
-          row.read(prices.marketId)!: ?row.read(latest),
-      },
-    );
+    return query.watch().map((rows) => {for (final row in rows) row.read(prices.marketId)!: ?row.read(latest)});
   }
 
   @override
@@ -68,12 +62,13 @@ final class DriftPriceRepository implements PriceRepository {
     final products = _db.products;
     final packages = _db.productPackages;
 
-    final query = _db.select(prices).join([
-      innerJoin(products, products.id.equalsExp(prices.productId)),
-      leftOuterJoin(packages, packages.id.equalsExp(prices.packageId)),
-    ])
-      ..where(prices.marketId.equals(marketId) & prices.conditionKind.equalsValue(PriceConditionKind.anyCustomer))
-      ..orderBy([OrderingTerm.desc(prices.observedAt), OrderingTerm.desc(prices.createdAt)]);
+    final query =
+        _db.select(prices).join([
+            innerJoin(products, products.id.equalsExp(prices.productId)),
+            leftOuterJoin(packages, packages.id.equalsExp(prices.packageId)),
+          ])
+          ..where(prices.marketId.equals(marketId) & prices.conditionKind.equalsValue(PriceConditionKind.anyCustomer))
+          ..orderBy([OrderingTerm.desc(prices.observedAt), OrderingTerm.desc(prices.createdAt)]);
 
     return query.watch().map((rows) {
       // Uma leitura corrigida não conta (ADR 0017); a correção está no mesmo
@@ -97,29 +92,19 @@ final class DriftPriceRepository implements PriceRepository {
     });
   }
 
-  Stream<List<PriceHistoryEntry>> _watchHistoryWhere(
-    Expression<bool> Function($PriceObservationsTable prices) filter,
-  ) {
+  Stream<List<PriceHistoryEntry>> _watchHistoryWhere(Expression<bool> Function($PriceObservationsTable prices) filter) {
     final prices = _db.priceObservations;
     final markets = _db.markets;
 
-    final query = _db.select(prices).join([
-      innerJoin(markets, markets.id.equalsExp(prices.marketId)),
-    ])
+    final query = _db.select(prices).join([innerJoin(markets, markets.id.equalsExp(prices.marketId))])
       ..where(filter(prices))
       ..orderBy([OrderingTerm.desc(prices.observedAt)]);
 
     return query.watch().map(
-      (rows) => withoutSuperseded(
-        [
-          for (final row in rows)
-            PriceHistoryEntry(
-              observation: row.readTable(prices).toEntity(),
-              marketName: row.readTable(markets).name,
-            ),
-        ],
-        (entry) => entry.observation,
-      ),
+      (rows) => withoutSuperseded([
+        for (final row in rows)
+          PriceHistoryEntry(observation: row.readTable(prices).toEntity(), marketName: row.readTable(markets).name),
+      ], (entry) => entry.observation),
     );
   }
 }

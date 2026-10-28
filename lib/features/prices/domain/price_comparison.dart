@@ -19,8 +19,7 @@ List<PriceHistoryEntry> latestPricePerMarket(Iterable<PriceHistoryEntry> history
     }
   }
   final latest = {...latestConditional, ...latestAnyCustomer};
-  return latest.values.toList()
-    ..sort((a, b) => a.observation.price.compareTo(b.observation.price));
+  return latest.values.toList()..sort((a, b) => a.observation.price.compareTo(b.observation.price));
 }
 
 /// A mais recente vence. Preços da mesma etiqueta têm o mesmo horário: aí vale
@@ -65,10 +64,6 @@ Map<String, List<PriceHistoryEntry>> _byProduct(Iterable<PriceHistoryEntry> hist
 /// 10 kg não diz quanto custa o de 5 kg.
 Money? latestPriceAt(Iterable<PriceHistoryEntry> history, String marketId, {String? packageId}) =>
     latestPricePerMarket([
-          for (final entry in history)
-            if (packageId == null || entry.observation.packageId == packageId) entry,
-        ])
-        .where((entry) => entry.observation.marketId == marketId)
-        .firstOrNull
-        ?.observation
-        .price;
+      for (final entry in history)
+        if (packageId == null || entry.observation.packageId == packageId) entry,
+    ]).where((entry) => entry.observation.marketId == marketId).firstOrNull?.observation.price;

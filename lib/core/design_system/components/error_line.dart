@@ -21,7 +21,9 @@ class ErrorLine extends StatelessWidget {
         children: [
           Icon(Icons.error_outline_rounded, size: 20, color: colors.alertText),
           const SizedBox(width: BipaSpacing.s2),
-          Expanded(child: Text(message, style: BipaText.label.copyWith(color: colors.alertText))),
+          Expanded(
+            child: Text(message, style: BipaText.label.copyWith(color: colors.alertText)),
+          ),
         ],
       ),
     );

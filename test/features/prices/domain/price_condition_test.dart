@@ -3,12 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('reconstrói cada condição a partir das colunas do banco', () {
-    for (final condition in const [
-      AnyCustomer(),
-      LoyaltyMembers(),
-      Wholesale(minimumQuantity: 6),
-      Wholesale(),
-    ]) {
+    for (final condition in const [AnyCustomer(), LoyaltyMembers(), Wholesale(minimumQuantity: 6), Wholesale()]) {
       final minimum = condition is Wholesale ? condition.minimumQuantity : null;
       expect(PriceCondition.from(condition.kind, minimumQuantity: minimum), condition);
     }

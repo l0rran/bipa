@@ -36,13 +36,7 @@ import 'package:image_picker/image_picker.dart';
 /// 2. A foto da etiqueta preenche preço, código de barras e nome.
 /// 3. O usuário confere e salva; "Salvar e bipar outro" agiliza a sequência.
 class CapturePricePage extends ConsumerStatefulWidget {
-  const CapturePricePage({
-    this.productId,
-    this.packageId,
-    this.fromCart = false,
-    this.photoFirst = false,
-    super.key,
-  });
+  const CapturePricePage({this.productId, this.packageId, this.fromCart = false, this.photoFirst = false, super.key});
 
   /// Quando informado, registra o preço deste produto (vindo da tela dele).
   final String? productId;
@@ -166,11 +160,7 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
   Future<void> _photographTag(PriceTagReader reader) async {
     final XFile? photo;
     try {
-      photo = await ImagePicker().pickImage(
-        source: ImageSource.camera,
-        maxWidth: 2048,
-        imageQuality: 90,
-      );
+      photo = await ImagePicker().pickImage(source: ImageSource.camera, maxWidth: 2048, imageQuality: 90);
     } on Exception {
       if (mounted) context.showMessage(AppLocalizations.of(context).captureCameraFailed);
       return;
@@ -271,23 +261,25 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
     final list = ref.read(shoppingListRepositoryProvider);
     final cart = ref.read(cartRepositoryProvider);
     try {
-      final observation = await ref.read(registerPriceObservationProvider).call(
-        RegisterPriceInput(
-          marketId: market.id,
-          price: price,
-          regularPrice: Money.tryParse(_regularPrice.text),
-          condition: _mainCondition,
-          otherOffers: [
-            for (final offer in _otherOffers)
-              if (_selectedOffers.contains(offer)) offer,
-          ],
-          source: _source,
-          productId: _product?.id,
-          packageId: _package?.id,
-          barcode: barcode.isEmpty ? null : barcode,
-          newProductName: _name.text,
-        ),
-      );
+      final observation = await ref
+          .read(registerPriceObservationProvider)
+          .call(
+            RegisterPriceInput(
+              marketId: market.id,
+              price: price,
+              regularPrice: Money.tryParse(_regularPrice.text),
+              condition: _mainCondition,
+              otherOffers: [
+                for (final offer in _otherOffers)
+                  if (_selectedOffers.contains(offer)) offer,
+              ],
+              source: _source,
+              productId: _product?.id,
+              packageId: _package?.id,
+              barcode: barcode.isEmpty ? null : barcode,
+              newProductName: _name.text,
+            ),
+          );
       // Vindo do modo carrinho, o produto vai para o carrinho com o preço
       // lido (sem somar unidade, se ele já foi bipado) e é marcado na lista.
       // O preço já foi salvo: uma falha aqui não pode parecer falha ao salvar.
@@ -394,11 +386,7 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
               onTap: _chooseMarket,
             ),
             const SizedBox(height: 16),
-            _TagPhotoCard(
-              photoPath: _photoPath,
-              reading: _reading,
-              onCapture: () => _photographTag(reader),
-            ),
+            _TagPhotoCard(photoPath: _photoPath, reading: _reading, onCapture: () => _photographTag(reader)),
             if (otherValues.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(l10n.captureOtherValues, style: theme.textTheme.bodySmall),
@@ -440,10 +428,7 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
                 TextFormField(
                   controller: _name,
                   textCapitalization: TextCapitalization.sentences,
-                  decoration: InputDecoration(
-                    labelText: l10n.captureProductName,
-                    helperText: l10n.captureNewProduct,
-                  ),
+                  decoration: InputDecoration(labelText: l10n.captureProductName, helperText: l10n.captureNewProduct),
                   validator: (value) => (value == null || value.trim().isEmpty) ? l10n.productNameMissing : null,
                 ),
             ],
@@ -527,12 +512,7 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
 }
 
 class _MarketSelector extends StatelessWidget {
-  const _MarketSelector({
-    required this.market,
-    required this.detected,
-    required this.detecting,
-    required this.onTap,
-  });
+  const _MarketSelector({required this.market, required this.detected, required this.detecting, required this.onTap});
 
   final Market? market;
   final bool detected;

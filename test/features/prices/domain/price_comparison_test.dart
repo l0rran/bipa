@@ -5,24 +5,20 @@ import 'package:bipa/features/prices/domain/price_observation.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-PriceHistoryEntry entry(
-  String market,
-  int cents,
-  DateTime at, {
-  PriceCondition condition = const AnyCustomer(),
-}) => PriceHistoryEntry(
-  marketName: market,
-  observation: PriceObservation(
-    id: '$market-$cents-$condition',
-    productId: 'leite',
-    marketId: market,
-    price: Money.cents(cents),
-    source: PriceSource.manual,
-    condition: condition,
-    observedAt: at,
-    createdAt: at,
-  ),
-);
+PriceHistoryEntry entry(String market, int cents, DateTime at, {PriceCondition condition = const AnyCustomer()}) =>
+    PriceHistoryEntry(
+      marketName: market,
+      observation: PriceObservation(
+        id: '$market-$cents-$condition',
+        productId: 'leite',
+        marketId: market,
+        price: Money.cents(cents),
+        source: PriceSource.manual,
+        condition: condition,
+        observedAt: at,
+        createdAt: at,
+      ),
+    );
 
 void main() {
   test('mantém só o preço mais recente de cada mercado, do mais barato ao mais caro', () {
@@ -35,11 +31,7 @@ void main() {
 
     final latest = latestPricePerMarket(history);
 
-    expect(latest.map((e) => (e.marketName, e.observation.price.cents)), [
-      ('C', 450),
-      ('B', 600),
-      ('A', 650),
-    ]);
+    expect(latest.map((e) => (e.marketName, e.observation.price.cents)), [('C', 450), ('B', 600), ('A', 650)]);
   });
 
   test('compara pelo preço sem condição, mesmo que o de cartão seja mais recente', () {
@@ -58,10 +50,7 @@ void main() {
 
   test('sem preço de varejo, o mercado entra com o preço condicional', () {
     final at = DateTime(2026, 10, 27);
-    final history = [
-      entry('Assaí', 179, at, condition: const LoyaltyMembers()),
-      entry('Bairro', 229, at),
-    ];
+    final history = [entry('Assaí', 179, at, condition: const LoyaltyMembers()), entry('Bairro', 229, at)];
 
     expect(latestPricePerMarket(history).map((e) => e.marketName), ['Assaí', 'Bairro']);
   });

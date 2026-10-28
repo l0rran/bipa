@@ -2,13 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Estado vazio padrão: ícone, mensagem e uma ação opcional.
 class EmptyState extends StatelessWidget {
-  const EmptyState({
-    required this.icon,
-    required this.message,
-    this.actionLabel,
-    this.onAction,
-    super.key,
-  });
+  const EmptyState({required this.icon, required this.message, this.actionLabel, this.onAction, super.key});
 
   final IconData icon;
   final String message;
@@ -30,9 +24,7 @@ class EmptyState extends StatelessWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+              style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
             if (label != null && onAction != null) ...[
               const SizedBox(height: 24),

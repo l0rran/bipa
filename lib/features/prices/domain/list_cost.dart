@@ -63,10 +63,7 @@ List<MarketListCost> listCostPerMarket(
       MarketListCost(
         marketId: marketId,
         marketName: marketName,
-        total: byProduct.entries.fold(
-          Money.zero,
-          (sum, entry) => sum + entry.value * (quantities[entry.key] ?? 1),
-        ),
+        total: byProduct.entries.fold(Money.zero, (sum, entry) => sum + entry.value * (quantities[entry.key] ?? 1)),
         priced: byProduct.length,
         items: productIds.length,
       ),
@@ -129,11 +126,7 @@ Map<String, MarketPrices> referencePricesPerMarket(
 
 /// O preço de [observation] na embalagem de referência: o próprio, se for
 /// ela; senão, o preço por kg vezes o tamanho dela, se der para converter.
-Money? _inReferencePackage(
-  PriceObservation observation,
-  String? referenceId,
-  Map<String, ProductPackage> packages,
-) {
+Money? _inReferencePackage(PriceObservation observation, String? referenceId, Map<String, ProductPackage> packages) {
   if (observation.packageId == referenceId) return observation.price;
   final reference = packages[referenceId];
   final size = reference?.sizeInBaseUnit;

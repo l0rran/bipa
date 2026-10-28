@@ -7,21 +7,14 @@ import 'package:flutter_test/flutter_test.dart';
 /// Monta as linhas de uma etiqueta de cima para baixo.
 /// Cada item é (texto, altura da fonte).
 List<OcrLine> tag(List<(String, double)> lines) => [
-  for (final (index, (text, height)) in lines.indexed)
-    OcrLine(text: text, top: index * 40.0, height: height),
+  for (final (index, (text, height)) in lines.indexed) OcrLine(text: text, top: index * 40.0, height: height),
 ];
 
 void main() {
   const parser = PriceTagParser();
 
   test('etiqueta simples: preço, nome e código impresso', () {
-    final reading = parser.parse(
-      tag([
-        ('LEITE COND MOCA 395G', 20),
-        ('R\$ 7,99', 80),
-        ('7891000100103', 12),
-      ]),
-    );
+    final reading = parser.parse(tag([('LEITE COND MOCA 395G', 20), ('R\$ 7,99', 80), ('7891000100103', 12)]));
 
     expect(reading.price, const Money.cents(799));
     expect(reading.regularPrice, isNull);
@@ -31,13 +24,7 @@ void main() {
   });
 
   test('ignora o preço por quilo quando há preço da embalagem', () {
-    final reading = parser.parse(
-      tag([
-        ('ARROZ TIO JOAO 5KG', 20),
-        ('R\$ 27,90', 60),
-        ('PREÇO POR KG R\$ 5,58', 12),
-      ]),
-    );
+    final reading = parser.parse(tag([('ARROZ TIO JOAO 5KG', 20), ('R\$ 27,90', 60), ('PREÇO POR KG R\$ 5,58', 12)]));
 
     expect(reading.price, const Money.cents(2790));
     expect(reading.candidates, [const Money.cents(2790)]);
@@ -45,25 +32,14 @@ void main() {
   });
 
   test('usa o preço por quilo em produtos a granel', () {
-    final reading = parser.parse(
-      tag([
-        ('ALCATRA BOVINA', 20),
-        ('R\$ 39,90 /KG', 60),
-      ]),
-    );
+    final reading = parser.parse(tag([('ALCATRA BOVINA', 20), ('R\$ 39,90 /KG', 60)]));
 
     expect(reading.price, const Money.cents(3990));
     expect(reading.perKilo, isTrue);
   });
 
   test('identifica promoção "de/por"', () {
-    final reading = parser.parse(
-      tag([
-        ('SABAO EM PO OMO 1,6KG', 20),
-        ('DE R\$ 32,90', 16),
-        ('POR R\$ 24,90', 50),
-      ]),
-    );
+    final reading = parser.parse(tag([('SABAO EM PO OMO 1,6KG', 20), ('DE R\$ 32,90', 16), ('POR R\$ 24,90', 50)]));
 
     expect(reading.price, const Money.cents(2490));
     expect(reading.regularPrice, const Money.cents(3290));
@@ -72,49 +48,27 @@ void main() {
   });
 
   test('lê centavos impressos separados', () {
-    final reading = parser.parse(
-      tag([
-        ('CAFE PILAO 500G', 20),
-        ('R\$ 18 99', 70),
-      ]),
-    );
+    final reading = parser.parse(tag([('CAFE PILAO 500G', 20), ('R\$ 18 99', 70)]));
 
     expect(reading.price, const Money.cents(1899));
   });
 
   test('sem marcadores, escolhe o valor com a maior fonte', () {
-    final reading = parser.parse(
-      tag([
-        ('BISCOITO RECHEADO', 18),
-        ('3,99', 20),
-        ('4,49', 70),
-      ]),
-    );
+    final reading = parser.parse(tag([('BISCOITO RECHEADO', 18), ('3,99', 20), ('4,49', 70)]));
 
     expect(reading.price, const Money.cents(449));
     expect(reading.candidates, [const Money.cents(399), const Money.cents(449)]);
   });
 
   test('datas não são confundidas com preços', () {
-    final reading = parser.parse(
-      tag([
-        ('BANANA PRATA', 20),
-        ('VALIDO ATE 31.10.26', 12),
-        ('R\$ 5,49', 60),
-      ]),
-    );
+    final reading = parser.parse(tag([('BANANA PRATA', 20), ('VALIDO ATE 31.10.26', 12), ('R\$ 5,49', 60)]));
 
     expect(reading.candidates, [const Money.cents(549)]);
     expect(reading.productNameHint, 'Banana Prata');
   });
 
   test('volumes e pesos não são confundidos com preços', () {
-    final reading = parser.parse(
-      tag([
-        ('AGUA MINERAL 1,50L', 20),
-        ('R\$ 2,79', 60),
-      ]),
-    );
+    final reading = parser.parse(tag([('AGUA MINERAL 1,50L', 20), ('R\$ 2,79', 60)]));
 
     expect(reading.candidates, [const Money.cents(279)]);
     expect(reading.productNameHint, 'Agua Mineral 1,50l');
@@ -126,10 +80,7 @@ void main() {
   });
 
   test('prefere o código lido pelo scanner e descarta códigos inválidos', () {
-    final reading = parser.parse(
-      tag([('R\$ 2,00', 50), ('7891000100103', 12)]),
-      barcodes: ['123', '7891910000197'],
-    );
+    final reading = parser.parse(tag([('R\$ 2,00', 50), ('7891000100103', 12)]), barcodes: ['123', '7891910000197']);
 
     expect(reading.barcode, '7891910000197');
   });
@@ -165,11 +116,7 @@ void main() {
 
   test('lê milhar e ignora o valor da parcela', () {
     final reading = parser.parse(
-      tag([
-        ('GELADEIRA FROST FREE 375L', 20),
-        ('R\$ 1.299,90', 70),
-        ('OU 10X DE R\$ 129,99 SEM JUROS', 16),
-      ]),
+      tag([('GELADEIRA FROST FREE 375L', 20), ('R\$ 1.299,90', 70), ('OU 10X DE R\$ 129,99 SEM JUROS', 16)]),
     );
 
     expect(reading.price, const Money.cents(129990));
@@ -213,12 +160,7 @@ void main() {
 
   test('o nome ignora rótulos da etiqueta e lixo do OCR', () {
     final reading = parser.parse(
-      tag([
-        ('LEVE 3 PAGUE 2', 30),
-        ('oooooooooooo', 20),
-        ('CAFE PILAO 500G', 20),
-        ('R\$ 18,99', 70),
-      ]),
+      tag([('LEVE 3 PAGUE 2', 30), ('oooooooooooo', 20), ('CAFE PILAO 500G', 20), ('R\$ 18,99', 70)]),
     );
 
     expect(reading.productNameHint, 'Cafe Pilao 500g');
@@ -227,11 +169,7 @@ void main() {
   group('preços com condição (ADR 0011)', () {
     test('atacado na mesma linha do preço', () {
       final reading = parser.parse(
-        tag([
-          ('CAFE PILAO 500G', 20),
-          ('R\$ 5,49', 60),
-          ('ATACADO A PARTIR DE 6 UN R\$ 4,99', 50),
-        ]),
+        tag([('CAFE PILAO 500G', 20), ('R\$ 5,49', 60), ('ATACADO A PARTIR DE 6 UN R\$ 4,99', 50)]),
       );
 
       expect(reading.price, const Money.cents(549));
@@ -243,12 +181,7 @@ void main() {
 
     test('preço clube vira oferta para membros, não promoção', () {
       final reading = parser.parse(
-        tag([
-          ('FEIJAO KICALDO 1KG', 20),
-          ('R\$ 8,49', 40),
-          ('PREÇO CLUBE', 20),
-          ('R\$ 7,22', 80),
-        ]),
+        tag([('FEIJAO KICALDO 1KG', 20), ('R\$ 8,49', 40), ('PREÇO CLUBE', 20), ('R\$ 7,22', 80)]),
       );
 
       expect(reading.price, const Money.cents(849));
@@ -261,12 +194,7 @@ void main() {
 
     test('"de R\$" solto vira o preço normal da oferta principal', () {
       final reading = parser.parse(
-        tag([
-          ('CAFE PILAO 500G', 20),
-          ('DE R\$ 9,99', 30),
-          ('NO APP', 20),
-          ('R\$ 7,99', 80),
-        ]),
+        tag([('CAFE PILAO 500G', 20), ('DE R\$ 9,99', 30), ('NO APP', 20), ('R\$ 7,99', 80)]),
       );
 
       expect(reading.offers, const [
@@ -276,13 +204,7 @@ void main() {
     });
 
     test('preços pequenos do bloco de informações não viram ofertas', () {
-      final reading = parser.parse(
-        tag([
-          ('DET LIQ MINUANO 500ML', 20),
-          ('R\$ 1,79', 60),
-          ('Atacado 3,58', 10),
-        ]),
-      );
+      final reading = parser.parse(tag([('DET LIQ MINUANO 500ML', 20), ('R\$ 1,79', 60), ('Atacado 3,58', 10)]));
 
       expect(reading.offers, const [PriceOffer(price: Money.cents(179))]);
       expect(reading.candidates, [const Money.cents(179), const Money.cents(358)]);
@@ -373,9 +295,7 @@ void main() {
         OcrLine(text: '5,99', left: 75, top: 70, width: 75, height: 30),
       ]);
 
-      expect(reading.offers, const [
-        PriceOffer(price: Money.cents(599), condition: AnyCustomer()),
-      ]);
+      expect(reading.offers, const [PriceOffer(price: Money.cents(599), condition: AnyCustomer())]);
       expect(reading.price, const Money.cents(599));
       expect(reading.productNameHint, 'Batata Palha Yoki Extra Fina 100g Trad');
     });
@@ -389,9 +309,7 @@ void main() {
         OcrLine(text: '24,89', left: 230, top: 120, width: 130, height: 40),
       ]);
 
-      expect(reading.offers, const [
-        PriceOffer(price: Money.cents(2489), condition: AnyCustomer()),
-      ]);
+      expect(reading.offers, const [PriceOffer(price: Money.cents(2489), condition: AnyCustomer())]);
       expect(reading.price, const Money.cents(2489));
       expect(reading.productNameHint, 'Lava Roupa Liq');
     });
@@ -403,9 +321,7 @@ void main() {
         OcrLine(text: '59,90', left: 80, top: 145, width: 105, height: 34),
       ]);
 
-      expect(reading.offers, const [
-        PriceOffer(price: Money.cents(5990), condition: AnyCustomer()),
-      ]);
+      expect(reading.offers, const [PriceOffer(price: Money.cents(5990), condition: AnyCustomer())]);
       expect(reading.price, const Money.cents(5990));
       expect(reading.productNameHint, 'Fralda Huggies Max Prot');
     });
@@ -446,9 +362,7 @@ void main() {
         OcrLine(text: '5,99', left: 365, top: 70, width: 59, height: 19),
       ]);
 
-      expect(reading.offers, const [
-        PriceOffer(price: Money.cents(599), condition: AnyCustomer()),
-      ]);
+      expect(reading.offers, const [PriceOffer(price: Money.cents(599), condition: AnyCustomer())]);
     });
 
     test('número longe do valor do preço não é um preço sem vírgula', () {

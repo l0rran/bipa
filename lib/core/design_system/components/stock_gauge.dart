@@ -111,6 +111,5 @@ class _GaugePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_GaugePainter old) =>
-      old.fraction != fraction || old.state != state || old.colors != colors;
+  bool shouldRepaint(_GaugePainter old) => old.fraction != fraction || old.state != state || old.colors != colors;
 }

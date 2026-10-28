@@ -11,14 +11,7 @@ import 'package:meta/meta.dart';
 /// O que a pessoa confirmou ao bipar um código novo (ADR 0013).
 @immutable
 final class NewPackageInput {
-  const NewPackageInput({
-    required this.unit,
-    this.barcode,
-    this.productId,
-    this.newProductName,
-    this.brand,
-    this.size,
-  });
+  const NewPackageInput({required this.unit, this.barcode, this.productId, this.newProductName, this.brand, this.size});
 
   final String? barcode;
 

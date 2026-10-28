@@ -49,7 +49,9 @@ class ListPreviewCard extends StatelessWidget {
     final circles = [
       for (final thumb in thumbs.take(3)) thumb,
       if (extraCount > 0)
-        Center(child: Text('+$extraCount', style: BipaText.label.copyWith(fontSize: 13, color: colors.ink))),
+        Center(
+          child: Text('+$extraCount', style: BipaText.label.copyWith(fontSize: 13, color: colors.ink)),
+        ),
     ];
 
     // excludeSemantics descarta a ação do InkWell: ela vai no próprio Semantics.
@@ -165,7 +167,10 @@ class ShoppingProgress extends StatelessWidget {
         Row(
           children: [
             if (leading != null) Expanded(child: Text(leading, style: small)) else const Spacer(),
-            Text(label, style: small.copyWith(color: colors.ink, fontFeatures: const [FontFeature.tabularFigures()])),
+            Text(
+              label,
+              style: small.copyWith(color: colors.ink, fontFeatures: const [FontFeature.tabularFigures()]),
+            ),
           ],
         ),
         const SizedBox(height: 6),
@@ -322,7 +327,9 @@ class ShoppingSectionCard extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(BipaSpacing.s4, 10, BipaSpacing.s4, BipaSpacing.s1),
               child: Row(
                 children: [
-                  Expanded(child: Semantics(header: true, child: Text(title, style: style))),
+                  Expanded(
+                    child: Semantics(header: true, child: Text(title, style: style)),
+                  ),
                   Text(progress, style: style.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
                 ],
               ),

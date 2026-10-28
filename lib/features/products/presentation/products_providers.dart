@@ -13,9 +13,7 @@ final productRepositoryProvider = Provider<ProductRepository>(
 );
 
 /// Texto digitado na busca da lista de produtos.
-final productSearchQueryProvider = NotifierProvider<ProductSearchQuery, String>(
-  ProductSearchQuery.new,
-);
+final productSearchQueryProvider = NotifierProvider<ProductSearchQuery, String>(ProductSearchQuery.new);
 
 class ProductSearchQuery extends Notifier<String> {
   @override

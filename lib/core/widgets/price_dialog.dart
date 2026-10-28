@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 
 /// Pergunta um preço, com o campo já preenchido com [initial]. Devolve o
 /// preço digitado (maior que zero), ou `null` em "Cancelar".
-Future<Money?> showPriceDialog(BuildContext context, {required String title, Money? initial}) =>
-    showDialog<Money>(context: context, builder: (_) => _PriceDialog(title: title, initial: initial));
+Future<Money?> showPriceDialog(BuildContext context, {required String title, Money? initial}) => showDialog<Money>(
+  context: context,
+  builder: (_) => _PriceDialog(title: title, initial: initial),
+);
 
 /// O diálogo de digitar o preço, dono do próprio campo: o controller só é
 /// descartado quando o diálogo sai da árvore, depois da animação.

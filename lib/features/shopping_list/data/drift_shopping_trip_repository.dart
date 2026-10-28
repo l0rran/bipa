@@ -30,9 +30,9 @@ final class DriftShoppingTripRepository implements ShoppingTripRepository {
     if (current != null) return current.toEntity();
 
     final trip = ShoppingTrip(id: _ids.newId(), marketId: marketId, startedAt: _clock());
-    await _db.into(_db.shoppingTrips).insert(
-      ShoppingTripsCompanion.insert(id: trip.id, marketId: Value(marketId), startedAt: trip.startedAt),
-    );
+    await _db
+        .into(_db.shoppingTrips)
+        .insert(ShoppingTripsCompanion.insert(id: trip.id, marketId: Value(marketId), startedAt: trip.startedAt));
     return trip;
   });
 

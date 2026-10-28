@@ -24,8 +24,7 @@ final class GeoPoint {
     final deltaLng = _toRadians(other.longitude - longitude);
 
     final a =
-        math.pow(math.sin(deltaLat / 2), 2) +
-        math.cos(lat1) * math.cos(lat2) * math.pow(math.sin(deltaLng / 2), 2);
+        math.pow(math.sin(deltaLat / 2), 2) + math.cos(lat1) * math.cos(lat2) * math.pow(math.sin(deltaLng / 2), 2);
     final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
     return _earthRadiusMeters * c;
   }
@@ -44,8 +43,7 @@ final class GeoPoint {
   static double _toRadians(double degrees) => degrees * math.pi / 180;
 
   @override
-  bool operator ==(Object other) =>
-      other is GeoPoint && other.latitude == latitude && other.longitude == longitude;
+  bool operator ==(Object other) => other is GeoPoint && other.latitude == latitude && other.longitude == longitude;
 
   @override
   int get hashCode => Object.hash(latitude, longitude);

@@ -76,15 +76,12 @@ class Markets extends Table {
 @TableIndex(name: 'price_observations_package', columns: {#packageId})
 class PriceObservations extends Table {
   TextColumn get id => text()();
-  TextColumn get productId =>
-      text().references(Products, #id, onDelete: KeyAction.cascade)();
-  TextColumn get marketId =>
-      text().references(Markets, #id, onDelete: KeyAction.cascade)();
+  TextColumn get productId => text().references(Products, #id, onDelete: KeyAction.cascade)();
+  TextColumn get marketId => text().references(Markets, #id, onDelete: KeyAction.cascade)();
 
   /// A embalagem que tinha esse preço (esquema v7). Nula em preços de produto
   /// sem embalagem, como os a granel.
-  TextColumn get packageId =>
-      text().nullable().references(ProductPackages, #id, onDelete: KeyAction.setNull)();
+  TextColumn get packageId => text().nullable().references(ProductPackages, #id, onDelete: KeyAction.setNull)();
   IntColumn get priceCents => integer()();
   IntColumn get regularPriceCents => integer().nullable()();
 
@@ -128,8 +125,7 @@ class StockLots extends Table {
 /// Estado atual do estoque: um registro por produto.
 @DataClassName('StockItemRow')
 class StockItems extends Table {
-  TextColumn get productId =>
-      text().references(Products, #id, onDelete: KeyAction.cascade)();
+  TextColumn get productId => text().references(Products, #id, onDelete: KeyAction.cascade)();
   RealColumn get quantity => real()();
   RealColumn get minimumQuantity => real().nullable()();
   TextColumn get location => textEnum<StockLocation>()();
@@ -143,8 +139,7 @@ class StockItems extends Table {
 @DataClassName('StockMovementRow')
 class StockMovements extends Table {
   TextColumn get id => text()();
-  TextColumn get productId =>
-      text().references(Products, #id, onDelete: KeyAction.cascade)();
+  TextColumn get productId => text().references(Products, #id, onDelete: KeyAction.cascade)();
   RealColumn get delta => real()();
   TextColumn get reason => textEnum<StockMovementReason>()();
   DateTimeColumn get occurredAt => dateTime()();

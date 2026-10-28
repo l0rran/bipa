@@ -79,13 +79,7 @@ void main() {
     await current
         .into(current.products)
         .insert(
-          ProductsCompanion.insert(
-            id: 'cafe',
-            name: 'Café',
-            unit: MeasureUnit.gram,
-            createdAt: at,
-            updatedAt: at,
-          ),
+          ProductsCompanion.insert(id: 'cafe', name: 'Café', unit: MeasureUnit.gram, createdAt: at, updatedAt: at),
         );
     await current.into(current.shoppingTrips).insert(ShoppingTripsCompanion.insert(id: 'compra', startedAt: at));
     await current
@@ -101,7 +95,9 @@ void main() {
         );
     await current
         .into(current.shoppingListItems)
-        .insert(ShoppingListItemsCompanion.insert(id: 'cafe', productId: const Value('cafe'), name: 'Café', addedAt: at));
+        .insert(
+          ShoppingListItemsCompanion.insert(id: 'cafe', productId: const Value('cafe'), name: 'Café', addedAt: at),
+        );
     await current.close();
 
     final migrated = reopenAt(8, after(8));
@@ -117,7 +113,9 @@ void main() {
     final current = AppDatabase(NativeDatabase(file));
     await current
         .into(current.products)
-        .insert(ProductsCompanion.insert(id: 'cafe', name: 'Café', unit: MeasureUnit.gram, createdAt: at, updatedAt: at));
+        .insert(
+          ProductsCompanion.insert(id: 'cafe', name: 'Café', unit: MeasureUnit.gram, createdAt: at, updatedAt: at),
+        );
     await current
         .into(current.markets)
         .insert(MarketsCompanion.insert(id: 'vila', name: 'Vila', createdAt: at, updatedAt: at));

@@ -31,8 +31,14 @@ class PriceTagHero extends StatelessWidget {
             Text.rich(
               TextSpan(
                 children: [
-                  TextSpan(text: Money.symbol, style: BipaText.title.copyWith(color: colors.onPrice)),
-                  TextSpan(text: price.formatDecimal(), style: BipaText.priceHero.copyWith(color: colors.onPrice)),
+                  TextSpan(
+                    text: Money.symbol,
+                    style: BipaText.title.copyWith(color: colors.onPrice),
+                  ),
+                  TextSpan(
+                    text: price.formatDecimal(),
+                    style: BipaText.priceHero.copyWith(color: colors.onPrice),
+                  ),
                 ],
               ),
             ),

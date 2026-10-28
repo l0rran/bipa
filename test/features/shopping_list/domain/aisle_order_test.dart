@@ -6,10 +6,7 @@ AislePick _pick(Aisle aisle, int minute) => (aisle: aisle, at: DateTime(2026, 10
 
 void main() {
   test('sem compras, vale a ordem genérica, com "Outros" no fim', () {
-    expect(
-      AisleOrder.empty.sort([Aisle.other, Aisle.dairy, Aisle.produce]),
-      [Aisle.produce, Aisle.dairy, Aisle.other],
-    );
+    expect(AisleOrder.empty.sort([Aisle.other, Aisle.dairy, Aisle.produce]), [Aisle.produce, Aisle.dairy, Aisle.other]);
   });
 
   test('uma compra põe as seções visitadas na ordem em que foram percorridas', () {
@@ -20,10 +17,13 @@ void main() {
       _pick(Aisle.dairy, 4),
     ]);
 
-    expect(
-      order.sort([Aisle.produce, Aisle.dairy, Aisle.grocery, Aisle.drinks, Aisle.other]),
-      [Aisle.grocery, Aisle.produce, Aisle.dairy, Aisle.drinks, Aisle.other],
-    );
+    expect(order.sort([Aisle.produce, Aisle.dairy, Aisle.grocery, Aisle.drinks, Aisle.other]), [
+      Aisle.grocery,
+      Aisle.produce,
+      Aisle.dairy,
+      Aisle.drinks,
+      Aisle.other,
+    ]);
     expect(order.learned[Aisle.grocery], const LearnedAisle(position: 0, samples: 1));
   });
 

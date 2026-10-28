@@ -158,8 +158,7 @@ class StockItemSheet extends ConsumerWidget {
             const SizedBox(height: BipaSpacing.s4),
             Row(
               children: [
-                if (entry != null)
-                  TextButton(onPressed: () => _remove(context, ref), child: Text(l10n.stockRemove)),
+                if (entry != null) TextButton(onPressed: () => _remove(context, ref), child: Text(l10n.stockRemove)),
                 const Spacer(),
                 if (!fromProduct)
                   TextButton(

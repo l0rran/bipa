@@ -128,11 +128,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
   Future<T?> _withScannerPaused<T>(Future<T?> Function() action) =>
       _cameraKey.currentState?.withScannerPaused(action) ?? action();
 
-  void _showNotice(
-    _Notice notice, {
-    TagPriceRead? granel,
-    Duration duration = const Duration(milliseconds: 2500),
-  }) {
+  void _showNotice(_Notice notice, {TagPriceRead? granel, Duration duration = const Duration(milliseconds: 2500)}) {
     if (!mounted) return;
     setState(() {
       _notice = notice;
@@ -245,10 +241,12 @@ class _CameraPageState extends ConsumerState<CameraPage> {
           await _confirm(product, package, pending.read);
         } else {
           _pendingProduct = (product: product, package: package, at: DateTime.now());
-          _showNotice(
-            (icon: Icons.sell_outlined, value: null, detail: l10n.cameraWaitingTag(product.name), waiting: true),
-            duration: _waitFor,
-          );
+          _showNotice((
+            icon: Icons.sell_outlined,
+            value: null,
+            detail: l10n.cameraWaitingTag(product.name),
+            waiting: true,
+          ), duration: _waitFor);
         }
     }
   }
@@ -289,10 +287,12 @@ class _CameraPageState extends ConsumerState<CameraPage> {
     }
     _pendingTag = (read: read, at: DateTime.now());
     unawaited(HapticFeedback.selectionClick());
-    _showNotice(
-      (icon: Icons.qr_code_scanner_rounded, value: read.price.format(), detail: l10n.cartLiveWaiting, waiting: true),
-      duration: _waitFor,
-    );
+    _showNotice((
+      icon: Icons.qr_code_scanner_rounded,
+      value: read.price.format(),
+      detail: l10n.cartLiveWaiting,
+      waiting: true,
+    ), duration: _waitFor);
   }
 
   Future<void> _confirm(Product product, ProductPackage? package, TagPriceRead read) async {
@@ -341,7 +341,12 @@ class _CameraPageState extends ConsumerState<CameraPage> {
     final current = (await repository.findByProduct(product.id))?.quantity ?? 0;
     final applied = StockItem.nextQuantity(current, delta.toDouble()) - current;
     if (applied == 0) {
-      _showNotice((icon: Icons.remove_rounded, value: null, detail: l10n.cameraNotAtHome(product.name), waiting: false));
+      _showNotice((
+        icon: Icons.remove_rounded,
+        value: null,
+        detail: l10n.cameraNotAtHome(product.name),
+        waiting: false,
+      ));
       return;
     }
     final change = await repository.adjust(

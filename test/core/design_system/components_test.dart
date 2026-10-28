@@ -15,7 +15,10 @@ import 'package:bipa/core/design_system/components/stock_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Widget _app(Widget child) => MaterialApp(theme: BipaTheme.light, home: Scaffold(body: Center(child: child)));
+Widget _app(Widget child) => MaterialApp(
+  theme: BipaTheme.light,
+  home: Scaffold(body: Center(child: child)),
+);
 
 void main() {
   testWidgets('o medidor mostra o número e diz o estado ao leitor de tela', (tester) async {
@@ -241,7 +244,9 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(tester.getSize(find.byType(ShoppingBar)).height, greaterThan(60));
 
-    await tester.pumpWidget(large(QuickTile(icon: Icons.coffee_outlined, label: 'Café', selected: false, onTap: () {})));
+    await tester.pumpWidget(
+      large(QuickTile(icon: Icons.coffee_outlined, label: 'Café', selected: false, onTap: () {})),
+    );
     expect(tester.takeException(), isNull);
     expect(tester.getSize(find.byType(QuickTile)).height, greaterThan(76));
 
@@ -334,7 +339,12 @@ void main() {
           width: 320,
           child: PriceHistoryChart(
             points: [Offset(0, 1), Offset(0.5, 0.4), Offset(1, 0)],
-            axisLabels: [(label: 'mai', at: 0), (label: 'jul', at: 0.4), (label: 'set', at: 0.8), (label: 'hoje', at: 1)],
+            axisLabels: [
+              (label: 'mai', at: 0),
+              (label: 'jul', at: 0.4),
+              (label: 'set', at: 0.8),
+              (label: 'hoje', at: 1),
+            ],
             semanticsLabel: r'Preço do kg nos últimos 6 meses, de R$ 5,90 a R$ 4,99',
           ),
         ),
@@ -487,7 +497,9 @@ void main() {
   testWidgets('o aviso da câmera tocável mostra a seta e responde no toque', (tester) async {
     var taps = 0;
     await tester.pumpWidget(
-      _app(LiveReadChip(icon: Icons.sell_outlined, price: r'R$ 8,99/kg', detail: 'Tomate italiano?', onTap: () => taps++)),
+      _app(
+        LiveReadChip(icon: Icons.sell_outlined, price: r'R$ 8,99/kg', detail: 'Tomate italiano?', onTap: () => taps++),
+      ),
     );
 
     expect(find.byIcon(Icons.chevron_right_rounded), findsOneWidget);

@@ -272,10 +272,7 @@ class _NewPackageSheetState extends ConsumerState<NewPackageSheet> {
                 child: PriceTagHero(price: price, unitLine: unitPrice?.format()),
               ),
             ],
-            if (_error case final error?) ...[
-              const SizedBox(height: BipaSpacing.s3),
-              ErrorLine(error),
-            ],
+            if (_error case final error?) ...[const SizedBox(height: BipaSpacing.s3), ErrorLine(error)],
             const SizedBox(height: BipaSpacing.s4),
             FilledButton(
               // Sem produto, "Salvar" diz o que falta e abre a escolha, em vez

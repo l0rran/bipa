@@ -41,10 +41,7 @@ class MarketPickerSheet extends ConsumerWidget {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: Text(
-                AppLocalizations.of(context).marketPickTitle,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              child: Text(AppLocalizations.of(context).marketPickTitle, style: Theme.of(context).textTheme.titleMedium),
             ),
             for (final item in ranked)
               MarketTile(

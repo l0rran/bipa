@@ -17,25 +17,17 @@ final class UnitPrice {
   /// Calcula o preço por unidade base de uma embalagem.
   ///
   /// Retorna `null` quando o tamanho da embalagem não é conhecido.
-  static UnitPrice? of({
-    required Money price,
-    required double? packageSize,
-    required MeasureUnit unit,
-  }) {
+  static UnitPrice? of({required Money price, required double? packageSize, required MeasureUnit unit}) {
     if (packageSize == null || packageSize <= 0) return null;
     final quantityInBaseUnit = packageSize * unit.toBaseFactor;
-    return UnitPrice(
-      price: Money.cents((price.cents / quantityInBaseUnit).round()),
-      unit: unit.baseUnit,
-    );
+    return UnitPrice(price: Money.cents((price.cents / quantityInBaseUnit).round()), unit: unit.baseUnit);
   }
 
   /// Ex.: `R$ 20,23/kg`.
   String format() => '${price.format()}/${unit.symbol}';
 
   @override
-  bool operator ==(Object other) =>
-      other is UnitPrice && other.price == price && other.unit == unit;
+  bool operator ==(Object other) => other is UnitPrice && other.price == price && other.unit == unit;
 
   @override
   int get hashCode => Object.hash(price, unit);

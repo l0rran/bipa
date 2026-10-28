@@ -4,14 +4,8 @@ import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:drift/drift.dart';
 
 extension ProductRowMapper on ProductRow {
-  Product toEntity() => Product(
-    id: id,
-    name: name,
-    unit: unit,
-    photoPath: photoPath,
-    createdAt: createdAt,
-    updatedAt: updatedAt,
-  );
+  Product toEntity() =>
+      Product(id: id, name: name, unit: unit, photoPath: photoPath, createdAt: createdAt, updatedAt: updatedAt);
 }
 
 extension ProductCompanionMapper on Product {

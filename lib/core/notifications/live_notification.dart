@@ -182,8 +182,7 @@ final class MethodChannelLiveNotifications implements LiveNotifications {
   /// O limite é só uma garantia: se a resposta se perder (a Activity foi
   /// recriada no meio), a compra segue sem a notificação.
   @override
-  Future<void> requestPermission() =>
-      _call('requestPermission').timeout(const Duration(minutes: 2), onTimeout: () {});
+  Future<void> requestPermission() => _call('requestPermission').timeout(const Duration(minutes: 2), onTimeout: () {});
 
   @override
   Future<LiveAction?> takeLaunchAction() async {

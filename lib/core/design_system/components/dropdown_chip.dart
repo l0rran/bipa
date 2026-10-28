@@ -7,13 +7,7 @@ import 'package:flutter/material.dart';
 /// Chip que abre uma escolha (Chip do design system, com a seta): o mercado
 /// da lista, por exemplo. Para o chip sobre a câmera, veja `CameraGlassChip`.
 class DropdownChip extends StatelessWidget {
-  const DropdownChip({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.semanticsLabel,
-    super.key,
-  });
+  const DropdownChip({required this.icon, required this.label, required this.onTap, this.semanticsLabel, super.key});
 
   final IconData icon;
   final String label;

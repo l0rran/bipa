@@ -37,11 +37,7 @@ class PlaceFilter<T> extends StatelessWidget {
         separatorBuilder: (_, _) => const SizedBox(width: BipaSpacing.s3),
         itemBuilder: (context, index) {
           final option = options[index];
-          return _PlaceTile(
-            option: option,
-            selected: option.value == selected,
-            onTap: () => onSelected(option.value),
-          );
+          return _PlaceTile(option: option, selected: option.value == selected, onTap: () => onSelected(option.value));
         },
       ),
     );
@@ -103,7 +99,10 @@ class _PlaceTile<T> extends StatelessWidget {
                           shape: StadiumBorder(side: BorderSide(color: colors.ground, width: 2)),
                           color: colors.surfaceSunken,
                         ),
-                        child: Text('${option.count}', style: BipaText.caption.copyWith(fontSize: 11, color: colors.ink)),
+                        child: Text(
+                          '${option.count}',
+                          style: BipaText.caption.copyWith(fontSize: 11, color: colors.ink),
+                        ),
                       ),
                     ),
                   ],

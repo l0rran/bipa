@@ -67,12 +67,7 @@ abstract final class BipaText {
   );
 
   /// Texto corrido e descrições.
-  static const body = TextStyle(
-    fontFamily: BipaFonts.body,
-    fontSize: 15,
-    height: 22 / 15,
-    fontWeight: FontWeight.w400,
-  );
+  static const body = TextStyle(fontFamily: BipaFonts.body, fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w400);
 
   /// Botões, abas e chips.
   static const label = TextStyle(
