@@ -221,7 +221,7 @@
       }
     }
   },
-  "tripSemantics": "Compra em andamento: {done} de {total}. Continuar na lista",
+  "tripSemantics": "Compra em andamento: {done} de {total}. Continuar no carrinho",
   "@tripSemantics": {
     "placeholders": {
       "done": {
