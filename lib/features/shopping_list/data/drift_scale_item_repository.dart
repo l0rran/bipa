@@ -1,5 +1,6 @@
 import 'package:bipa/core/database/app_database.dart';
 import 'package:bipa/features/shopping_list/domain/scale_items.dart';
+import 'package:drift/drift.dart';
 
 final class DriftScaleItemRepository implements ScaleItemRepository {
   const DriftScaleItemRepository(this._db);
