@@ -30,6 +30,13 @@ void main() {
     expect(item(3).isLow, isFalse);
   });
 
+  test('toBuy sugere o que falta para o ter sempre, pelo menos 1', () {
+    expect(item(1, target: 4).toBuy, 3);
+    expect(item(1.5, target: 4).toBuy, 3);
+    expect(item(4, target: 4).toBuy, 1);
+    expect(item(0).toBuy, 1);
+  });
+
   test('fillFraction mostra quanto do ter sempre está em casa', () {
     expect(item(2, target: 4).fillFraction, 0.5);
     expect(item(5, target: 4).fillFraction, 1);

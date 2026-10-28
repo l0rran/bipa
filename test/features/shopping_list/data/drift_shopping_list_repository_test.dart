@@ -52,6 +52,34 @@ void main() {
     expect(entries.single.item.isChecked, isFalse);
   });
 
+  test('guarda a quantidade, que volta com o desfazer e nunca fica abaixo de 1', () async {
+    await list.addProduct(productId: 'cafe', name: 'Café', quantity: 3);
+    final item = (await list.watchAll().first).single.item;
+    expect(item.quantity, 3);
+
+    // Pôr de novo o que ainda falta não muda a quantidade.
+    await list.addProduct(productId: 'cafe', name: 'Café');
+    expect((await list.watchAll().first).single.item.quantity, 3);
+
+    await list.setQuantity(item.id, 0);
+    expect((await list.watchAll().first).single.item.quantity, 1);
+
+    await list.remove(item.id);
+    await list.restore(item);
+    expect((await list.watchAll().first).single.item.quantity, 3);
+  });
+
+  test('comprado e posto de novo, vale a quantidade nova', () async {
+    await list.addProduct(productId: 'cafe', name: 'Café', quantity: 3);
+    final id = (await list.watchAll().first).single.item.id;
+    await list.setChecked(id, checked: true);
+
+    await list.addProduct(productId: 'cafe', name: 'Café', quantity: 2);
+
+    final item = (await list.watchAll().first).single.item;
+    expect((item.isChecked, item.quantity), (false, 2));
+  });
+
   test('remove, desfaz e tira os comprados', () async {
     await list.addProduct(productId: 'cafe', name: 'Café');
     tick();

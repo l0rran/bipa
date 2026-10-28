@@ -36,16 +36,18 @@ final class DriftShoppingListRepository implements ShoppingListRepository {
   }
 
   @override
-  Future<void> addProduct({required String productId, required String name}) {
+  Future<void> addProduct({required String productId, required String name, int quantity = 1}) {
+    final count = _atLeastOne(quantity);
     return _db.transaction(() async {
       final existing = await (_db.select(_db.shoppingListItems)
             ..where((t) => t.productId.equals(productId))
             ..limit(1))
           .getSingleOrNull();
       if (existing == null) {
-        await _insert(name: name, productId: productId);
+        await _insert(name: name, productId: productId, quantity: count);
       } else if (existing.checkedAt != null) {
-        await _write(existing.id, const ShoppingListItemsCompanion(checkedAt: Value(null)));
+        // Comprado e posto de novo: é outra compra, com a quantidade nova.
+        await _write(existing.id, ShoppingListItemsCompanion(checkedAt: const Value(null), quantity: Value(count)));
       }
     });
   }
@@ -72,6 +74,12 @@ final class DriftShoppingListRepository implements ShoppingListRepository {
   @override
   Future<void> setChecked(String itemId, {required bool checked}) =>
       _write(itemId, ShoppingListItemsCompanion(checkedAt: Value(checked ? _clock() : null)));
+
+  @override
+  Future<void> setQuantity(String itemId, int quantity) =>
+      _write(itemId, ShoppingListItemsCompanion(quantity: Value(_atLeastOne(quantity))));
+
+  static int _atLeastOne(int quantity) => quantity < 1 ? 1 : quantity;
 
   @override
   Future<void> checkProduct(String productId) async {
@@ -119,17 +127,19 @@ final class DriftShoppingListRepository implements ShoppingListRepository {
         name: item.name,
         addedAt: item.addedAt,
         checkedAt: Value(item.checkedAt),
+        quantity: Value(item.quantity),
       ),
     );
   });
 
-  Future<void> _insert({required String name, String? productId}) async {
+  Future<void> _insert({required String name, String? productId, int quantity = 1}) async {
     await _db.into(_db.shoppingListItems).insert(
       ShoppingListItemsCompanion.insert(
         id: _ids.newId(),
         productId: Value(productId),
         name: name,
         addedAt: _clock(),
+        quantity: Value(quantity),
       ),
     );
   }
@@ -146,5 +156,6 @@ extension ShoppingListItemRowMapper on ShoppingListItemRow {
     name: name,
     addedAt: addedAt,
     checkedAt: checkedAt,
+    quantity: quantity,
   );
 }

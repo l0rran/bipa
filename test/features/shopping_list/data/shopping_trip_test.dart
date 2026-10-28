@@ -103,6 +103,17 @@ void main() {
     expect((await trips.watchActive().first)?.id, trip.id);
   });
 
+  test('o marcado à mão entra no estoque com a quantidade da lista', () async {
+    final trip = await trips.start();
+    await list.addProduct(productId: 'cafe', name: 'Café', quantity: 3);
+    await list.checkProduct('cafe');
+
+    final finished = (await finish(trip.id))!;
+
+    expect(finished.stocked, {'cafe': 3});
+    expect((await stock.findByProduct('cafe'))?.quantity, 3);
+  });
+
   test('cancelar a compra descarta o carrinho e não mexe no estoque nem na lista', () async {
     final trip = await trips.start();
     await list.addProduct(productId: 'cafe', name: 'Café');

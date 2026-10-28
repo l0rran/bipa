@@ -159,6 +159,9 @@ class ShoppingListItems extends Table {
   DateTimeColumn get addedAt => dateTime()();
   DateTimeColumn get checkedAt => dateTime().nullable()();
 
+  /// Quantas embalagens comprar (esquema v10).
+  IntColumn get quantity => integer().withDefault(const Constant(1))();
+
   @override
   Set<Column<Object>> get primaryKey => {id};
 }

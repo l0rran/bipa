@@ -7,15 +7,17 @@ import 'package:flutter_test/flutter_test.dart';
 
 final _start = DateTime(2026, 10, 28, 9);
 
-ShoppingListEntry entry(String name, {int minute = 0, int? checkedMinute, String? productId}) => ShoppingListEntry(
-  item: ShoppingListItem(
-    id: name,
-    productId: productId,
-    name: name,
-    addedAt: _start.add(Duration(minutes: minute)),
-    checkedAt: checkedMinute == null ? null : _start.add(Duration(minutes: checkedMinute)),
-  ),
-);
+ShoppingListEntry entry(String name, {int minute = 0, int? checkedMinute, String? productId, int quantity = 1}) =>
+    ShoppingListEntry(
+      item: ShoppingListItem(
+        id: name,
+        productId: productId,
+        name: name,
+        addedAt: _start.add(Duration(minutes: minute)),
+        checkedAt: checkedMinute == null ? null : _start.add(Duration(minutes: checkedMinute)),
+        quantity: quantity,
+      ),
+    );
 
 void main() {
   test('agrupa pelas seções do mercado, na ordem do percurso', () {
@@ -73,6 +75,15 @@ void main() {
     expect(summary, const ShoppingListSummary(done: 1, total: 4, estimate: Money.cents(1899)));
     expect(summary.remaining, 3);
     expect(summary.progress, 0.25);
+  });
+
+  test('o resumo multiplica o preço pela quantidade da lista', () {
+    final summary = ShoppingListSummary.of(
+      [entry('Leite', productId: 'leite', quantity: 3)],
+      {'leite': const Money.cents(499)},
+    );
+
+    expect(summary.estimate, const Money.cents(1497));
   });
 
   test('sem preço conhecido, não há estimativa', () {

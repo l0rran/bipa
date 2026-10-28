@@ -42,6 +42,15 @@ final class StockItem {
     return (quantity / target).clamp(0.0, 1.0);
   }
 
+  /// Quantas embalagens faltam para o "ter sempre", pelo menos 1: com 1 em
+  /// casa e "ter sempre 4", faltam 3. Sem "ter sempre", 1. É a quantidade
+  /// sugerida ao pôr o produto na lista.
+  int get toBuy {
+    final target = targetQuantity;
+    if (target == null) return 1;
+    return math.max(1, (target - quantity).ceil());
+  }
+
   /// Aplica uma variação sem permitir estoque negativo.
   static double nextQuantity(double current, double delta) => math.max(0.0, current + delta);
 

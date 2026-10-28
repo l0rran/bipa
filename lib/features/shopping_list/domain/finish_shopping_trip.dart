@@ -89,12 +89,12 @@ final class FinishShoppingTrip {
       final key = (entry.item.productId, entry.item.packageId);
       if (entry.item.take) byPackage.update(key, (q) => q + quantity, ifAbsent: () => quantity);
     }
-    // O que foi marcado à mão, sem passar pelo carrinho, entra com uma unidade.
-    // O que está no carrinho sem "levar" não entra.
+    // O que foi marcado à mão, sem passar pelo carrinho, entra com a
+    // quantidade da lista. O que está no carrinho sem "levar" não entra.
     final inCart = {for (final entry in cart) entry.item.productId};
     for (final item in bought) {
       final productId = item.productId;
-      if (productId != null && !inCart.contains(productId)) byPackage[(productId, null)] = 1;
+      if (productId != null && !inCart.contains(productId)) byPackage[(productId, null)] = item.quantity;
     }
 
     return _work.run(() async {

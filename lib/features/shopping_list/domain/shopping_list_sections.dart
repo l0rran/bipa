@@ -88,7 +88,7 @@ final class ShoppingListSummary {
         final id? => prices[id],
         null => null,
       };
-      if (price != null) estimate = (estimate ?? Money.zero) + price;
+      if (price != null) estimate = (estimate ?? Money.zero) + price * entry.item.quantity;
     }
     return ShoppingListSummary(done: done, total: total, estimate: estimate);
   }

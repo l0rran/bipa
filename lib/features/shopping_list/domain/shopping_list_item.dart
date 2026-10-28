@@ -11,6 +11,7 @@ final class ShoppingListItem {
     required this.addedAt,
     this.productId,
     this.checkedAt,
+    this.quantity = 1,
   });
 
   final String id;
@@ -25,6 +26,9 @@ final class ShoppingListItem {
   /// Quando o item foi marcado como comprado; `null` enquanto falta.
   final DateTime? checkedAt;
 
+  /// Quantas embalagens comprar (esquema v10); 1 na maioria dos itens.
+  final int quantity;
+
   bool get isChecked => checkedAt != null;
 
   @override
@@ -34,13 +38,14 @@ final class ShoppingListItem {
       other.productId == productId &&
       other.name == name &&
       other.addedAt == addedAt &&
-      other.checkedAt == checkedAt;
+      other.checkedAt == checkedAt &&
+      other.quantity == quantity;
 
   @override
-  int get hashCode => Object.hash(id, productId, name, addedAt, checkedAt);
+  int get hashCode => Object.hash(id, productId, name, addedAt, checkedAt, quantity);
 
   @override
-  String toString() => 'ShoppingListItem($name${isChecked ? ', comprado' : ''})';
+  String toString() => 'ShoppingListItem($quantity× $name${isChecked ? ', comprado' : ''})';
 }
 
 /// Item da lista com o produto, quando ele é cadastrado.
