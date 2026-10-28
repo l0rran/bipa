@@ -4,11 +4,11 @@ import 'package:bipa/core/camera/viewfinder_region.dart';
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
-import 'package:bipa/core/design_system/components/quantity_stepper.dart';
 import 'package:bipa/core/design_system/components/scan_tray.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/money/money.dart';
 import 'package:bipa/core/navigation/routes.dart';
+import 'package:bipa/core/widgets/quantity_dialog.dart';
 import 'package:bipa/features/markets/presentation/market_picker_sheet.dart';
 import 'package:bipa/features/prices/domain/price_comparison.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
@@ -492,33 +492,9 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
 
   /// Tocar no nome: quantas unidades vão.
   Future<void> _setQuantity(CartEntry entry) async {
-    final l10n = AppLocalizations.of(context);
     final cart = ref.read(cartRepositoryProvider);
-    var quantity = entry.item.quantity;
     final chosen = await _withAnalysisPaused(
-      () => showDialog<int>(
-        context: context,
-        builder: (context) => StatefulBuilder(
-          builder: (context, setState) => AlertDialog(
-            title: Text(entry.name),
-            content: Center(
-              heightFactor: 1,
-              child: QuantityStepper(
-                value: '$quantity',
-                unit: l10n.unitPackages,
-                decrementLabel: l10n.cartQuantityLess,
-                incrementLabel: l10n.cartQuantityMore,
-                onIncrement: () => setState(() => quantity++),
-                onDecrement: quantity > 1 ? () => setState(() => quantity--) : null,
-              ),
-            ),
-            actions: [
-              TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.cancel)),
-              FilledButton(onPressed: () => Navigator.of(context).pop(quantity), child: Text(l10n.save)),
-            ],
-          ),
-        ),
-      ),
+      () => showQuantityDialog(context, title: entry.name, initial: entry.item.quantity),
     );
     if (chosen == null || chosen == entry.item.quantity) return;
     try {
