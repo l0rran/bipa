@@ -62,11 +62,12 @@ void main() {
     record = RecordTripPrice(trips: trips, prices: tripPrices, register: register, work: work, clock: clock);
     setMarket = SetTripMarket(trips: trips, prices: tripPrices, register: register, work: work);
 
-    await DriftProductRepository(
-      db,
-    ).save(Product(id: 'cafe', name: 'Café', unit: MeasureUnit.unit, createdAt: now, updatedAt: now));
+    final products = DriftProductRepository(db);
+    for (final (id, name) in [('cafe', 'Café'), ('arroz', 'Arroz')]) {
+      await products.save(Product(id: id, name: name, unit: MeasureUnit.unit, createdAt: now, updatedAt: now));
+    }
     final markets = DriftMarketRepository(db);
-    for (final (id, name) in [('vila', 'Vila'), ('assai', 'Assaí')]) {
+    for (final (id, name) in [('vila', 'Vila'), ('assai', 'Assaí'), ('centro', 'Centro')]) {
       await markets.save(Market(id: id, name: name, createdAt: now, updatedAt: now));
     }
   });
@@ -147,5 +148,59 @@ void main() {
 
     expect(await readTag(trip.id, 2190), isFalse);
     expect(await observations(), isEmpty);
+  });
+
+  test('a mesma etiqueta lida errado de novo não desfaz o preço digitado', () async {
+    final trip = await trips.start(marketId: 'vila');
+    await readTag(trip.id, 2190);
+    await record(tripId: trip.id, productId: 'cafe', price: const Money.cents(2790), source: PriceSource.manual);
+    final typed = (await tripPrices.ofTrip(trip.id)).single.observationId;
+
+    expect(await readTag(trip.id, 2190), isFalse);
+    expect((await tripPrices.ofTrip(trip.id)).single.observationId, typed);
+    expect(await observations(), hasLength(2));
+  });
+
+  test('levar os preços leva só os do mercado que está sendo trocado', () async {
+    final trip = await trips.start(marketId: 'vila');
+    await readTag(trip.id, 2190);
+    // Duas lojas: o café fica na Vila, e o arroz é lido no Assaí.
+    await setMarket(trip.id, 'assai');
+    await record(tripId: trip.id, productId: 'arroz', price: const Money.cents(2790), source: PriceSource.priceTag);
+
+    expect(await setMarket.recordedPrices(trip.id), 1);
+    await setMarket(trip.id, 'centro', movePrices: true);
+
+    final saved = await observations();
+    expect(saved.map((o) => (o.$1, o.$2)), [('vila', 2190), ('assai', 2790), ('centro', 2790)]);
+    final byProduct = {for (final price in await tripPrices.ofTrip(trip.id)) price.productId: price.marketId};
+    expect(byProduct, {'cafe': 'vila', 'arroz': 'centro'});
+  });
+
+  test('escolher de novo o mesmo mercado grava o que ainda esperava por ele', () async {
+    final trip = await trips.start();
+    await readTag(trip.id, 1899);
+    // O mercado chegou por fora do caso de uso (como a localização fazia).
+    await trips.setMarket(trip.id, 'vila');
+
+    await setMarket(trip.id, 'vila');
+
+    expect(await observations(), [('vila', 1899, null)]);
+    expect(await setMarket.pendingPrices(trip.id), 0);
+  });
+
+  test('o preço por quilo do granel e o total da pesagem não se corrigem', () async {
+    final trip = await trips.start(marketId: 'vila');
+    await record(
+      tripId: trip.id,
+      productId: 'cafe',
+      price: const Money.cents(899),
+      source: PriceSource.priceTag,
+      perKilo: true,
+    );
+    await record(tripId: trip.id, productId: 'cafe', price: const Money.cents(1350), source: PriceSource.manual);
+
+    expect(await observations(), [('vila', 899, null), ('vila', 1350, null)]);
+    expect(await tripPrices.ofTrip(trip.id), hasLength(2));
   });
 }

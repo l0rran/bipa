@@ -4,7 +4,6 @@ import 'package:bipa/core/transactions/unit_of_work.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/prices/domain/price_tag.dart';
 import 'package:bipa/features/prices/domain/register_price_observation.dart';
-import 'package:bipa/features/shopping_list/domain/cart_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
 import 'package:bipa/features/shopping_list/domain/trip_price.dart';
 
@@ -34,7 +33,8 @@ final class RecordTripPrice {
   final Clock _clock;
 
   /// Devolve `false` quando nada foi gravado: a compra já não está em
-  /// andamento, ou é a mesma etiqueta lida de novo, com o mesmo preço.
+  /// andamento, é a mesma etiqueta lida de novo com o mesmo preço, ou é uma
+  /// etiqueta para um item cujo preço foi digitado neste mercado.
   Future<bool> call({
     required String tripId,
     required String productId,
@@ -42,20 +42,20 @@ final class RecordTripPrice {
     required PriceSource source,
     String? packageId,
     List<PriceOffer> otherOffers = const [],
+    bool perKilo = false,
   }) async {
     final trip = await _trips.findActive();
     if (trip == null || trip.id != tripId) return false;
     final marketId = trip.marketId;
-    final previous = await _prices.find(tripId, CartItem.keyOf(productId, packageId));
-    // A etiqueta volta à moldura a cada vez que o celular se move: repetir o
-    // preço no mesmo mercado encheria o histórico do mesmo valor.
-    final sameTag =
-        source == PriceSource.priceTag &&
-        previous != null &&
-        previous.source == PriceSource.priceTag &&
-        previous.price == price &&
-        previous.marketId == marketId;
-    if (sameTag) return false;
+    final previous = await _prices.find(tripId, TripPrice.keyOf(productId, packageId, perKilo: perKilo));
+    if (previous != null && previous.marketId == marketId && source == PriceSource.priceTag) {
+      // A etiqueta volta à moldura a cada vez que o celular se move: repetir
+      // o preço encheria o histórico do mesmo valor.
+      if (previous.source == PriceSource.priceTag && previous.price == price) return false;
+      // O preço digitado é a correção da leitura (ADR 0017): a mesma etiqueta
+      // lida errado de novo não pode desfazê-la.
+      if (previous.source == PriceSource.manual) return false;
+    }
 
     final readAt = _clock();
     return _work.run(() async {
@@ -86,6 +86,7 @@ final class RecordTripPrice {
           otherOffers: otherOffers,
           observationId: recorded?.id,
           marketId: recorded == null ? null : marketId,
+          perKilo: perKilo,
         ),
       );
       return true;

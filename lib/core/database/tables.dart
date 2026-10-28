@@ -257,10 +257,12 @@ class TripPrices extends Table {
   /// estrangeira, como `supersedesId`: a observação é só inserida.
   TextColumn get observationId => text().nullable()();
 
+  /// O preço é por quilo, do granel (ADR 0018): tem chave própria no item.
+  BoolColumn get perKilo => boolean().withDefault(const Constant(false))();
+
   /// O mercado da observação: corrigir só vale no mesmo mercado.
   TextColumn get marketId => text().nullable().references(Markets, #id, onDelete: KeyAction.setNull)();
 
   @override
   Set<Column<Object>> get primaryKey => {tripId, itemKey};
 }
-

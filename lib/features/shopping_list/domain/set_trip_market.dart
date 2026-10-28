@@ -27,23 +27,33 @@ final class SetTripMarket {
   final RegisterPriceObservation _register;
   final UnitOfWork _work;
 
-  /// Quantos preços da compra já estão gravados no mercado dela: trocar o
-  /// mercado pergunta se eles vão junto.
-  Future<int> recordedPrices(String tripId) async =>
-      (await _prices.ofTrip(tripId)).where((price) => !price.isPending).length;
+  /// Quantos preços da compra estão gravados no mercado atual dela: trocar
+  /// o mercado pergunta se eles vão junto. Os deixados num mercado anterior
+  /// (quem passou por duas lojas) ficam de fora.
+  Future<int> recordedPrices(String tripId) async {
+    final trip = await _trips.findActive();
+    if (trip == null || trip.id != tripId || trip.marketId == null) return 0;
+    return (await _prices.ofTrip(tripId)).where((price) => _isIn(price, trip.marketId)).length;
+  }
 
   /// Quantos preços da compra esperam um mercado.
   Future<int> pendingPrices(String tripId) async =>
       (await _prices.ofTrip(tripId)).where((price) => price.isPending).length;
 
+  /// Escolher de novo o mesmo mercado não muda nada, mas grava o que ainda
+  /// esperava por ele.
   Future<void> call(String tripId, String marketId, {bool movePrices = false}) async {
     final trip = await _trips.findActive();
-    if (trip == null || trip.id != tripId || trip.marketId == marketId) return;
+    if (trip == null || trip.id != tripId) return;
+    final previousMarketId = trip.marketId;
     final prices = await _prices.ofTrip(tripId);
     await _work.run(() async {
-      await _trips.setMarket(tripId, marketId);
+      if (previousMarketId != marketId) await _trips.setMarket(tripId, marketId);
       for (final price in prices) {
-        if (!price.isPending && !movePrices) continue;
+        // Só vão junto os do mercado que está sendo trocado; os deixados num
+        // anterior ficam onde estão.
+        final moves = movePrices && previousMarketId != marketId && _isIn(price, previousMarketId);
+        if (!price.isPending && !moves) continue;
         final recorded = await _register(
           RegisterPriceInput(
             marketId: marketId,
@@ -53,7 +63,7 @@ final class SetTripMarket {
             source: price.source,
             otherOffers: price.otherOffers,
             // Mover é corrigir: a do mercado anterior deixa de valer.
-            supersedes: price.observationId,
+            supersedes: moves ? price.observationId : null,
             observedAt: price.readAt,
           ),
         );
@@ -61,4 +71,6 @@ final class SetTripMarket {
       }
     });
   }
+
+  static bool _isIn(TripPrice price, String? marketId) => !price.isPending && price.marketId == marketId;
 }

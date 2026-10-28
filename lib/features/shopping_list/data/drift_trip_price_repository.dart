@@ -42,6 +42,7 @@ final class DriftTripPriceRepository implements TripPriceRepository {
             readAt: price.readAt,
             observationId: Value(price.observationId),
             marketId: Value(price.marketId),
+            perKilo: Value(price.perKilo),
           ),
         );
   }
@@ -56,5 +57,6 @@ final class DriftTripPriceRepository implements TripPriceRepository {
     otherOffers: row.otherOffers,
     observationId: row.observationId,
     marketId: row.marketId,
+    perKilo: row.perKilo,
   );
 }

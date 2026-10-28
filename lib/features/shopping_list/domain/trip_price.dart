@@ -22,6 +22,7 @@ final class TripPrice {
     this.otherOffers = const [],
     this.observationId,
     this.marketId,
+    this.perKilo = false,
   });
 
   final String tripId;
@@ -47,10 +48,22 @@ final class TripPrice {
   /// compra tem um preço certo em cada uma.
   final String? marketId;
 
-  /// O item da compra, como no carrinho: a embalagem ou, sem ela, o produto.
-  String get itemKey => CartItem.keyOf(productId, packageId);
+  /// O preço é por quilo, do granel (ADR 0018): é outro preço do item, que
+  /// o total da pesagem não corrige, nem ele corrige o total.
+  final bool perKilo;
 
-  bool get isPending => observationId == null;
+  /// O item da compra, como no carrinho: a embalagem ou, sem ela, o produto;
+  /// o preço por quilo tem a chave dele.
+  String get itemKey => keyOf(productId, packageId, perKilo: perKilo);
+
+  static String keyOf(String productId, String? packageId, {bool perKilo = false}) {
+    final item = CartItem.keyOf(productId, packageId);
+    return perKilo ? '$item:kg' : item;
+  }
+
+  /// Espera um mercado: ainda sem observação, ou o mercado dela foi apagado
+  /// no meio da compra (e a observação foi junto).
+  bool get isPending => observationId == null || marketId == null;
 
   /// O mesmo preço, já gravado como [observation] no [market].
   TripPrice recordedAs(String observation, {required String market}) => TripPrice(
@@ -63,6 +76,7 @@ final class TripPrice {
     otherOffers: otherOffers,
     observationId: observation,
     marketId: market,
+    perKilo: perKilo,
   );
 
   @override
@@ -76,6 +90,7 @@ final class TripPrice {
       other.readAt == readAt &&
       other.observationId == observationId &&
       other.marketId == marketId &&
+      other.perKilo == perKilo &&
       _sameOffers(other.otherOffers, otherOffers);
 
   @override
@@ -88,6 +103,7 @@ final class TripPrice {
     readAt,
     observationId,
     marketId,
+    perKilo,
     Object.hashAll(otherOffers),
   );
 
