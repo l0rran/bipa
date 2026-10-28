@@ -7,7 +7,8 @@ plugins {
 
 android {
     namespace = "dev.l0rran.bipa"
-    compileSdk = flutter.compileSdkVersion
+    // A notificação ao vivo usa as APIs do Android 16 (36) via androidx.core.
+    compileSdk = maxOf(flutter.compileSdkVersion, 36)
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -44,4 +45,9 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // NotificationCompat.ProgressStyle, setRequestPromotedOngoing e setShortCriticalText (Live Updates).
+    implementation("androidx.core:core-ktx:1.17.0")
 }
