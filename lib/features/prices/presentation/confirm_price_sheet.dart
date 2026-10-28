@@ -20,7 +20,8 @@ import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/presentation/product_picker_sheet.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
-import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
+import 'package:bipa/features/shopping_list/presentation/home_change_snack_bar.dart';
+import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:bipa/features/stock/presentation/stock_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -102,7 +103,8 @@ class _ConfirmPriceSheetState extends ConsumerState<ConfirmPriceSheet> {
   Future<void> _save() async {
     final l10n = AppLocalizations.of(context);
     final register = ref.read(registerPriceObservationProvider);
-    final stock = ref.read(stockRepositoryProvider);
+    final record = ref.read(recordAtHomeProvider);
+    final messenger = ScaffoldMessenger.of(context);
     setState(() {
       _saving = true;
       _error = null;
@@ -126,13 +128,10 @@ class _ConfirmPriceSheetState extends ConsumerState<ConfirmPriceSheet> {
           otherOffers: _source == PriceSource.priceTag ? widget.reading.otherOffers : const [],
         ),
       );
-      if (_alsoBought) {
-        await stock.adjust(
-          productId: _product.id,
-          packageId: packageId,
-          delta: 1,
-          reason: StockMovementReason.purchase,
-        );
+      // Como o "Comprei" da câmera: sai da lista, com "Desfazer".
+      final bought = _alsoBought ? await record.bought(_product, packageId: packageId) : null;
+      if (bought != null) {
+        showHomeChangeSnackBar(messenger, l10n: l10n, record: record, product: _product, change: bought);
       }
       if (mounted) Navigator.of(context).pop(true);
     } on Exception {
