@@ -37,15 +37,32 @@ bool _isPreferred(PriceObservation candidate, PriceObservation current) {
 /// Preço de referência de cada produto do histórico: o menor entre os preços
 /// mais recentes de cada mercado, com o preço sem condição na frente.
 /// É o que a lista de compras usa para estimar o total.
-Map<String, Money> referencePrices(Iterable<PriceHistoryEntry> history) {
+Map<String, Money> referencePrices(Iterable<PriceHistoryEntry> history) => {
+  for (final MapEntry(key: productId, value: entries) in _byProduct(history).entries)
+    productId: latestPricePerMarket(entries).first.observation.price,
+};
+
+/// O preço de um item da lista: o do mercado da compra, quando o produto já
+/// foi visto lá ([exact]), ou o de referência dos outros mercados, que é só
+/// uma estimativa.
+typedef ListPrice = ({Money price, bool exact});
+
+/// O preço de cada produto do histórico para a lista de compras. Com
+/// [marketId], o preço daquele mercado vale mais que o de referência.
+Map<String, ListPrice> listPrices(Iterable<PriceHistoryEntry> history, {String? marketId}) => {
+  for (final MapEntry(key: productId, value: entries) in _byProduct(history).entries)
+    productId: switch (marketId == null ? null : latestPriceAt(entries, marketId)) {
+      final here? => (price: here, exact: true),
+      null => (price: latestPricePerMarket(entries).first.observation.price, exact: false),
+    },
+};
+
+Map<String, List<PriceHistoryEntry>> _byProduct(Iterable<PriceHistoryEntry> history) {
   final byProduct = <String, List<PriceHistoryEntry>>{};
   for (final entry in history) {
     byProduct.putIfAbsent(entry.observation.productId, () => []).add(entry);
   }
-  return {
-    for (final MapEntry(key: productId, value: entries) in byProduct.entries)
-      productId: latestPricePerMarket(entries).first.observation.price,
-  };
+  return byProduct;
 }
 
 /// O preço mais recente do produto num mercado (o sem condição na frente),

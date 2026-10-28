@@ -72,6 +72,15 @@ final listPackagesProvider = StreamProvider.autoDispose<List<ProductPackage>>((r
   yield* products.watchPackagesOfProducts({for (final entry in entries) ?entry.item.productId});
 });
 
+/// O preço de cada produto na lista: exato quando já foi visto no mercado
+/// da lista, estimado pelos outros mercados quando não.
+final shoppingListItemPricesProvider = Provider.autoDispose<Map<String, ListPrice>>(
+  (ref) => listPrices(
+    ref.watch(shoppingListHistoryProvider).value ?? const [],
+    marketId: ref.watch(listMarketIdProvider),
+  ),
+);
+
 /// Preço de referência dos produtos da lista, para estimar o total.
 final shoppingListPricesProvider = Provider.autoDispose<AsyncValue<Map<String, Money>>>(
   (ref) => ref.watch(shoppingListHistoryProvider).whenData(referencePrices),

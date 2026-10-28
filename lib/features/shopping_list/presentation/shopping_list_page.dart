@@ -6,7 +6,6 @@ import 'package:bipa/core/design_system/components/product_category_icon.dart';
 import 'package:bipa/core/design_system/components/section_header.dart';
 import 'package:bipa/core/design_system/components/shopping_list.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
-import 'package:bipa/core/money/money.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
 import 'package:bipa/features/markets/presentation/market_picker_sheet.dart';
@@ -206,7 +205,7 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
     final trip = ref.watch(activeTripProvider).value;
     final tripSummary = ref.watch(shoppingTripSummaryProvider);
     final photos = ref.watch(productPhotosDirectoryProvider).value;
-    final prices = ref.watch(shoppingListPricesProvider).value ?? const <String, Money>{};
+    final itemPrices = ref.watch(shoppingListItemPricesProvider);
     final summary = ref.watch(shoppingListSummaryProvider);
     final onList = ref.watch(productsOnListProvider);
     final usual = _usualProducts(ref.watch(stockProvider).value ?? const []);
@@ -406,9 +405,11 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                                 child: ShoppingListRow(
                                   name: entry.name,
                                   checked: entry.item.isChecked,
-                                  price: switch (entry.item.productId) {
-                                    final id? when prices[id] != null => l10n.listEstimate(prices[id]!.formatDecimal()),
-                                    _ => null,
+                                  // "≈" só quando o preço vem de outro mercado.
+                                  price: switch (itemPrices[entry.item.productId]) {
+                                    (:final price, exact: true) => price.formatDecimal(),
+                                    (:final price, exact: false) => l10n.listEstimate(price.formatDecimal()),
+                                    null => null,
                                   },
                                   onChanged: (checked) => _setChecked(entry, checked: checked),
                                 ),

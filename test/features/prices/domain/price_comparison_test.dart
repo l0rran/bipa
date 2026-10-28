@@ -97,6 +97,15 @@ void main() {
     expect(latestPriceAt(history, 'C'), isNull);
   });
 
+  test('na lista, o preço do mercado da compra é exato; o dos outros, estimado', () {
+    final at = DateTime(2026, 10, 27);
+    final history = [entry('A', 650, at), entry('B', 520, at)];
+
+    expect(listPrices(history, marketId: 'A'), {'leite': (price: const Money.cents(650), exact: true)});
+    expect(listPrices(history, marketId: 'C'), {'leite': (price: const Money.cents(520), exact: false)});
+    expect(listPrices(history), {'leite': (price: const Money.cents(520), exact: false)});
+  });
+
   test('histórico vazio resulta em lista vazia', () {
     expect(latestPricePerMarket(const []), isEmpty);
   });
