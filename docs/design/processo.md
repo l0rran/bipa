@@ -107,6 +107,16 @@ Quem cadastrou o mesmo produto uma vez por marca precisa de um jeito de juntar o
 | **Grocy** (juntar tarefas) | Item no menu "mais" da lista; a API diz qual fica e qual sai (`merge/{manter}/{remover}`) | **"Juntar com…" no menu** da tela do produto, com o produto atual saindo | — |
 | **Readysell** (juntar produtos no ERP) | Digita-se o código do produto que fica; o histórico dos dois é mantido; não há desfazer | **O histórico vai junto**: preços, estoque, lista e carrinho passam para o que fica | A confirmação diz em uma frase o que passa e que o outro deixa de existir |
 
+### Motivo das permissões (outubro de 2026)
+
+O "Ir às compras" pedia a localização e as notificações seguidas, sem dizer por quê, e a tela de Mercados pedia a localização só por abrir.
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **Android Developers** ([pedir permissões em tempo de execução](https://developer.android.com/training/permissions/requesting)) | Pedir no momento em que o recurso é usado, explicar o motivo antes do pedido do sistema e seguir funcionando quando a pessoa nega | **Uma linha de motivo antes do pedido**, só quando o sistema ainda vai perguntar; "Agora não" segue sem a permissão | Um diálogo só para as duas permissões da compra, e todos os pedidos antes de abrir a câmera, para nenhum atropelar o outro. Em Mercados, o motivo é uma linha na própria tela, com "Usar localização" |
+
+A câmera não ganhou diálogo: ela só abre quando a pessoa toca para bipar, e a dica "Aponte para o código ou a etiqueta" já aparece atrás do pedido do sistema.
+
 ## Fontes
 
 - [Menor Preço Brasil (Olhar Digital)](https://olhardigital.com.br/2025/08/03/dicas-e-tutoriais/quer-economizar-na-farmacia-e-supermercado-conheca-o-app-menor-preco-brasil/)

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:bipa/core/permissions/permission_access.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -116,7 +117,11 @@ abstract interface class LiveNotifications {
   /// Tira a notificação: a compra terminou.
   Future<void> cancel();
 
-  /// Pede a permissão de notificações (Android 13+), se ainda não foi dada.
+  /// Se o app pode mostrar notificações (Android 13+ pede permissão).
+  Future<PermissionAccess> access();
+
+  /// Pede a permissão de notificações, se ainda não foi dada, e espera a
+  /// resposta: assim o pedido seguinte (o da câmera) não atropela este.
   Future<void> requestPermission();
 
   /// O botão que abriu o app, se foi a notificação que o abriu; lido uma vez.
@@ -162,7 +167,23 @@ final class MethodChannelLiveNotifications implements LiveNotifications {
   Future<void> cancel() => _call('cancel');
 
   @override
-  Future<void> requestPermission() => _call('requestPermission');
+  Future<PermissionAccess> access() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return PermissionAccess.granted;
+    try {
+      final name = await _channel.invokeMethod<String>('notificationAccess');
+      return PermissionAccess.values.where((a) => a.name == name).firstOrNull ?? PermissionAccess.granted;
+    } on PlatformException {
+      return PermissionAccess.granted;
+    } on MissingPluginException {
+      return PermissionAccess.granted;
+    }
+  }
+
+  /// O limite é só uma garantia: se a resposta se perder (a Activity foi
+  /// recriada no meio), a compra segue sem a notificação.
+  @override
+  Future<void> requestPermission() =>
+      _call('requestPermission').timeout(const Duration(minutes: 2), onTimeout: () {});
 
   @override
   Future<LiveAction?> takeLaunchAction() async {

@@ -117,7 +117,9 @@ class _CapturePricePageState extends ConsumerState<CapturePricePage> {
   }
 
   Future<void> _detectMarket() async {
-    final location = await ref.read(locationServiceProvider).currentLocation();
+    // Abrir a tela não pede a localização: sem ela, o mercado é escolhido no
+    // chip.
+    final location = await ref.read(locationServiceProvider).currentLocation(request: false);
     Market? detected;
     if (location is LocationFound) {
       final markets = await ref.read(marketRepositoryProvider).all();

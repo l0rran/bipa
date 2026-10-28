@@ -790,5 +790,24 @@
   "@marketGoShoppingHere": {
     "description": "Botão da tela do mercado que começa a compra já nesse mercado."
   },
-  "marketNotFound": "Mercado não encontrado."
+  "marketNotFound": "Mercado não encontrado.",
+  "permissionNotNow": "Agora não",
+  "@permissionNotNow": {
+    "description": "Recusa a explicação de uma permissão: o sistema não chega a perguntar."
+  },
+  "permissionContinue": "Continuar",
+  "@permissionContinue": {
+    "description": "Aceita a explicação de uma permissão e abre o pedido do sistema."
+  },
+  "permissionShoppingBoth": "Para saber em que mercado você está e mostrar a compra na tela de bloqueio, o Bipa vai pedir a localização e as notificações.",
+  "@permissionShoppingBoth": {
+    "description": "Motivo das permissões pedidas no \"Ir às compras\"."
+  },
+  "permissionShoppingLocation": "Para saber em que mercado você está e guardar os preços no lugar certo, o Bipa vai pedir a localização.",
+  "permissionShoppingNotifications": "Para mostrar a compra na tela de bloqueio, o Bipa vai pedir para enviar notificações.",
+  "marketsLocationReason": "Com a localização, os mercados aparecem do mais perto ao mais longe.",
+  "@marketsLocationReason": {
+    "description": "Linha em Mercados quando a localização ainda não foi permitida; o botão ao lado pede a permissão."
+  },
+  "locationAllow": "Usar localização"
 }

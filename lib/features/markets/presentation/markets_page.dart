@@ -105,11 +105,19 @@ class _MarketsPageState extends ConsumerState<MarketsPage> {
                 BipaSearchBar(hint: l10n.marketsSearch, onChanged: (value) => setState(() => _query = value)),
                 if (location case AsyncData(value: LocationUnavailable(:final failure))) ...[
                   const SizedBox(height: BipaSpacing.s3),
-                  _NoLocation(
-                    message: l10n.marketsNoLocation(failure.localizedLabel(l10n)),
-                    retryLabel: l10n.retry,
-                    onRetry: () => ref.invalidate(currentLocationProvider),
-                  ),
+                  // Ainda sem permissão: a linha é o motivo, e o botão pede.
+                  if (failure == LocationFailure.permissionDenied)
+                    _NoLocation(
+                      message: l10n.marketsLocationReason,
+                      retryLabel: l10n.locationAllow,
+                      onRetry: _allowLocation,
+                    )
+                  else
+                    _NoLocation(
+                      message: l10n.marketsNoLocation(failure.localizedLabel(l10n)),
+                      retryLabel: l10n.retry,
+                      onRetry: () => ref.invalidate(currentLocationProvider),
+                    ),
                 ],
                 if (here != null && onMap.isNotEmpty) ...[
                   const SizedBox(height: BipaSpacing.s6),
@@ -161,6 +169,11 @@ class _MarketsPageState extends ConsumerState<MarketsPage> {
         },
       ),
     );
+  }
+
+  Future<void> _allowLocation() async {
+    await ref.read(locationServiceProvider).requestAccess();
+    if (mounted) ref.invalidate(currentLocationProvider);
   }
 
   static int _highest(List<MarketListCost> costs) =>

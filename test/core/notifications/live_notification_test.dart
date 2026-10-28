@@ -1,4 +1,5 @@
 import 'package:bipa/core/notifications/live_notification.dart';
+import 'package:bipa/core/permissions/permission_access.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -12,7 +13,11 @@ void main() {
     calls = [];
     messenger.setMockMethodCallHandler(channel, (call) async {
       calls.add(call);
-      return call.method == 'takeLaunchAction' ? 'finish' : null;
+      return switch (call.method) {
+        'takeLaunchAction' => 'finish',
+        'notificationAccess' => 'askable',
+        _ => null,
+      };
     });
   });
 
@@ -55,6 +60,10 @@ void main() {
     );
 
     expect(await next, LiveAction.scan);
+  });
+
+  test('diz se o app pode notificar', () async {
+    expect(await MethodChannelLiveNotifications(channel).access(), PermissionAccess.askable);
   });
 
   test('conteúdos iguais são iguais, para não atualizar à toa', () {

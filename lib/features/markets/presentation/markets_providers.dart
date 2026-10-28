@@ -24,8 +24,10 @@ final marketsProvider = StreamProvider.autoDispose<List<Market>>(
 );
 
 /// Posição atual do usuário. Use `ref.invalidate` para buscar de novo.
+/// A posição atual, sem mostrar o pedido de permissão: abrir Mercados não
+/// pergunta nada; a linha "Usar localização" explica e pede.
 final currentLocationProvider = FutureProvider.autoDispose<LocationResult>(
-  (ref) => ref.watch(locationServiceProvider).currentLocation(),
+  (ref) => ref.watch(locationServiceProvider).currentLocation(request: false),
 );
 
 /// Mercados ordenados pela distância até o usuário (ou por nome, se a

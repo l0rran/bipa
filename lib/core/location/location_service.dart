@@ -1,4 +1,5 @@
 import 'package:bipa/core/location/geo_point.dart';
+import 'package:bipa/core/permissions/permission_access.dart';
 
 /// Resultado de uma tentativa de obter a localização do aparelho.
 sealed class LocationResult {
@@ -22,5 +23,14 @@ enum LocationFailure { serviceDisabled, permissionDenied, permissionDeniedForeve
 
 /// Obtém a posição atual do aparelho. O GPS funciona sem internet.
 abstract interface class LocationService {
-  Future<LocationResult> currentLocation();
+  /// Se o app já pode usar a localização, sem perguntar nada.
+  Future<PermissionAccess> access();
+
+  /// Mostra o pedido do sistema, se ele ainda pergunta. Chame depois de dizer
+  /// à pessoa para que serve.
+  Future<PermissionAccess> requestAccess();
+
+  /// A posição atual. Com [request] falso, não mostra o pedido de permissão:
+  /// sem ela, devolve [LocationFailure.permissionDenied].
+  Future<LocationResult> currentLocation({bool request = true});
 }
