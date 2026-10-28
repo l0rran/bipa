@@ -44,6 +44,12 @@ final class DriftShoppingTripRepository implements ShoppingTripRepository {
   Future<void> finish(String tripId) => _write(tripId, ShoppingTripsCompanion(finishedAt: Value(_clock())));
 
   @override
+  Future<void> cancel(String tripId) async {
+    // O carrinho sai junto (chave estrangeira em cascata).
+    await (_db.delete(_db.shoppingTrips)..where((t) => t.id.equals(tripId))).go();
+  }
+
+  @override
   Future<void> reopen(String tripId) => _db.transaction(() async {
     final other = await _active().getSingleOrNull();
     if (other != null && other.id != tripId) return;

@@ -103,6 +103,20 @@ void main() {
     expect((await trips.watchActive().first)?.id, trip.id);
   });
 
+  test('cancelar a compra descarta o carrinho e não mexe no estoque nem na lista', () async {
+    final trip = await trips.start();
+    await list.addProduct(productId: 'cafe', name: 'Café');
+    await cart.addProduct(trip.id, 'cafe');
+    await list.checkProduct('cafe');
+
+    await trips.cancel(trip.id);
+
+    expect(await trips.watchActive().first, isNull);
+    expect(await cart.watchTrip(trip.id).first, isEmpty);
+    expect(await stock.findByProduct('cafe'), isNull);
+    expect((await list.watchAll().first).single.item.isChecked, isTrue);
+  });
+
   test('um segundo "Terminei" não mexe no estoque de novo', () async {
     final trip = await trips.start();
     await list.addProduct(productId: 'cafe', name: 'Café');

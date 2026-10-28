@@ -64,7 +64,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/produto/:id',
         builder: (_, state) => ProductDetailPage(productId: state.pathParameters['id']!),
       ),
-      GoRoute(path: Routes.newMarket, builder: (_, _) => const MarketFormPage()),
+      GoRoute(
+        path: Routes.newMarket,
+        builder: (_, state) => MarketFormPage(here: state.uri.queryParameters['aqui'] == '1'),
+      ),
       GoRoute(
         path: '/mercado/:id/editar',
         builder: (_, state) => MarketFormPage(marketId: state.pathParameters['id']),

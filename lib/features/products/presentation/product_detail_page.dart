@@ -112,6 +112,7 @@ class _ProductView extends ConsumerWidget {
     unawaited(GoRouter.of(context).pushReplacement<void>(Routes.productDetail(into.id)));
     try {
       await repository.merge(fromId: product.id, intoId: into.id);
+      messenger.showSnackBar(SnackBar(content: Text(l10n.productMerged(product.name, into.name))));
     } on Exception {
       messenger.showSnackBar(SnackBar(content: Text(l10n.productMergeFailed)));
     }

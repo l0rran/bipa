@@ -57,7 +57,8 @@ class HomeShell extends ConsumerWidget {
           ScanNavBar(
             selectedIndex: navigationShell.currentIndex,
             onSelected: goBranch,
-            onScan: () => context.push(Routes.capturePrice),
+            // Durante a compra, bipar é o modo carrinho; fora dela, a captura.
+            onScan: () => context.push(trip == null ? Routes.capturePrice : Routes.cartMode),
             scanLabel: l10n.navScan,
             destinations: [
               ScanNavDestination(icon: Icons.home_outlined, selectedIcon: Icons.home_rounded, label: l10n.navHome),

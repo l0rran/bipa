@@ -13,6 +13,10 @@ abstract final class Routes {
   static const newProduct = '/produto/novo';
   static const newMarket = '/mercado/novo';
 
+  /// O cadastro feito dentro do mercado (na escolha do mercado da compra):
+  /// a localização atual é a dele.
+  static const newMarketHere = '$newMarket?aqui=1';
+
   static String capturePriceFor(String productId) => '$capturePrice?produto=$productId';
 
   /// A foto da etiqueta aberta pelo modo carrinho.

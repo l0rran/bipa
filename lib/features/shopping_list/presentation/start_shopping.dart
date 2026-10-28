@@ -9,7 +9,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// "Ir às compras": começa a compra, abre a lista e, se a localização
+/// "Ir às compras": começa a compra, abre o modo carrinho (com a lista por
+/// baixo) e, se a localização
 /// permitir, descobre em qual mercado a pessoa está. O mercado escolhido no
 /// chip da lista vale mais que a localização.
 Future<void> startShopping(BuildContext context, WidgetRef ref) async {
@@ -24,7 +25,11 @@ Future<void> startShopping(BuildContext context, WidgetRef ref) async {
 
   final trip = await trips.start(marketId: chosen);
   chosenMarket.clear();
-  if (context.mounted) context.go(Routes.shoppingList);
+  // A Lista fica por baixo: voltar do carrinho cai nela.
+  if (context.mounted) {
+    context.go(Routes.shoppingList);
+    unawaited(context.push<void>(Routes.cartMode));
+  }
   try {
     if (trip.marketId != null) return;
     final position = await location.currentLocation();

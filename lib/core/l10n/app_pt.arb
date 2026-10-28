@@ -267,15 +267,6 @@
       }
     }
   },
-  "cartUnknown": "Código {code} não cadastrado",
-  "@cartUnknown": {
-    "placeholders": {
-      "code": {
-        "type": "String"
-      }
-    }
-  },
-  "cartRegister": "Cadastrar",
   "cartChooseMarket": "Escolha o mercado",
   "liveShopping": "Compra em andamento",
   "@liveShopping": {
@@ -543,18 +534,7 @@
   "marketNameMissing": "Informe o nome do mercado",
   "marketAddress": "Endereço ou referência",
   "marketLocation": "Localização",
-  "marketLocationMissing": "Sem localização. Com ela, o app reconhece quando você está neste mercado.",
-  "marketCoordinates": "Lat {latitude}, Lng {longitude}",
-  "@marketCoordinates": {
-    "placeholders": {
-      "latitude": {
-        "type": "String"
-      },
-      "longitude": {
-        "type": "String"
-      }
-    }
-  },
+  "marketLocationMissing": "Sem localização. Toque em \"Usar minha localização\" quando estiver no mercado: assim o app reconhece quando você está nele.",
   "marketUseLocation": "Usar minha localização",
   "marketRemoveLocation": "Remover",
   "marketPickTitle": "Em qual mercado você está?",
@@ -629,14 +609,7 @@
   "capturePhotoAgain": "Tirar outra foto",
   "loading": "Carregando…",
   "captureKnownProduct": "Produto já cadastrado",
-  "loadFailed": "Algo deu errado ao carregar os dados.\n{error}",
-  "@loadFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
+  "loadFailed": "Não deu para carregar os dados. Tente de novo em instantes.",
   "marketsSearch": "Buscar mercado",
   "marketsMapLabel": "{count, plural, =1{Mapa com 1 mercado perto de você} other{Mapa com {count} mercados perto de você}}",
   "@marketsMapLabel": {
@@ -685,6 +658,37 @@
         "type": "String"
       },
       "product": {
+        "type": "String"
+      }
+    }
+  },
+  "listTripMore": "Mais opções da compra",
+  "tripCancel": "Cancelar compra",
+  "tripCancelTitle": "Cancelar a compra?",
+  "tripCancelBody": "O carrinho é descartado e nada vai para o estoque. A lista continua como está.",
+  "tripKeep": "Continuar comprando",
+  "listCheckedRemoved": "{count, plural, =1{1 item saiu da lista} other{{count} itens saíram da lista}}",
+  "@listCheckedRemoved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listEmptyFirst": "Sua lista está vazia.\nEscreva o que falta, ou bipe um produto.",
+  "@listEmptyFirst": {
+    "description": "Lista vazia quando ainda não há itens de sempre."
+  },
+  "tripFinishTitle": "Terminar a compra?",
+  "tripFinishBody": "O que está no carrinho e o que foi marcado na lista vão para o estoque.",
+  "marketLocationSaved": "Localização salva: o app reconhece quando você está neste mercado.",
+  "productMerged": "{from} agora faz parte de {into}.",
+  "@productMerged": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "into": {
         "type": "String"
       }
     }

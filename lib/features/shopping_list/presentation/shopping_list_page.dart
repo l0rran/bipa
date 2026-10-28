@@ -131,6 +131,51 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
     }
   }
 
+  /// Tira da lista o que já foi comprado, com "Desfazer".
+  Future<void> _removeChecked(List<ShoppingListEntry> entries) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final repository = ref.read(shoppingListRepositoryProvider);
+    final removed = [
+      for (final entry in entries)
+        if (entry.item.isChecked) entry.item,
+    ];
+    await repository.removeChecked();
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(l10n.listCheckedRemoved(removed.length)),
+          action: SnackBarAction(
+            label: l10n.undo,
+            onPressed: () async {
+              for (final item in removed) {
+                await repository.restore(item);
+              }
+            },
+          ),
+        ),
+      );
+  }
+
+  /// "Cancelar compra": confirma e desiste; o carrinho é descartado.
+  Future<void> _cancelTrip(ShoppingTrip trip) async {
+    final l10n = AppLocalizations.of(context);
+    final trips = ref.read(shoppingTripRepositoryProvider);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.tripCancelTitle),
+        content: Text(l10n.tripCancelBody),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.tripKeep)),
+          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.tripCancel)),
+        ],
+      ),
+    );
+    if (confirmed == true) await trips.cancel(trip.id);
+  }
+
   Future<void> _finish(ShoppingTrip trip) async {
     setState(() => _finishing = true);
     try {
@@ -222,22 +267,31 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                           leading: tripSummary.spent?.format(),
                         ),
                         const SizedBox(height: BipaSpacing.s3),
+                        // O destaque é voltar a bipar; terminar é a ação de
+                        // menos peso, para um toque errado não encerrar a compra.
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            OutlinedButton.icon(
-                              onPressed: () => context.push(Routes.cartMode),
-                              icon: const Icon(Icons.qr_code_scanner_rounded),
-                              label: Text(l10n.cartTitle),
+                            PopupMenuButton<void>(
+                              tooltip: l10n.listTripMore,
+                              itemBuilder: (_) => [
+                                PopupMenuItem(onTap: () => _cancelTrip(trip), child: Text(l10n.tripCancel)),
+                              ],
+                            ),
+                            const Spacer(),
+                            OutlinedButton(
+                              onPressed: _finishing ? null : () => _finish(trip),
+                              child: Text(l10n.tripFinish),
                             ),
                             const SizedBox(width: BipaSpacing.s2),
-                            FilledButton(
-                              onPressed: _finishing ? null : () => _finish(trip),
+                            FilledButton.icon(
+                              onPressed: () => context.push(Routes.cartMode),
                               style: FilledButton.styleFrom(
                                 backgroundColor: context.colors.ink,
                                 foregroundColor: context.colors.surface,
                               ),
-                              child: Text(l10n.tripFinish),
+                              icon: const Icon(Icons.qr_code_scanner_rounded),
+                              label: Text(l10n.cartTitle),
                             ),
                           ],
                         ),
@@ -300,7 +354,7 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                   padding: const EdgeInsets.all(BipaSpacing.s8),
                   sliver: SliverToBoxAdapter(
                     child: Text(
-                      l10n.listEmpty,
+                      usual.isEmpty ? l10n.listEmptyFirst : l10n.listEmpty,
                       textAlign: TextAlign.center,
                       style: BipaText.body.copyWith(color: context.colors.inkMuted),
                     ),
@@ -311,8 +365,10 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                   SectionHeader(
                     title: l10n.listInStore,
                     count: summary.total,
-                    actionLabel: summary.done > 0 ? l10n.listRemoveChecked : null,
-                    onAction: () => ref.read(shoppingListRepositoryProvider).removeChecked(),
+                    // Durante a compra, o marcado ainda vai para o estoque no
+                    // "Terminei": tirar da lista agora o perderia.
+                    actionLabel: summary.done > 0 && trip == null ? l10n.listRemoveChecked : null,
+                    onAction: () => _removeChecked(entries),
                   ),
                 ),
                 SliverPadding(

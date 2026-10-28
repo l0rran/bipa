@@ -70,6 +70,11 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
   /// observação a cada vez que a mesma etiqueta volta à moldura.
   final _registeredTags = <String>{};
 
+  /// Preços lidos antes de a compra ter mercado: esperam aqui e vão para o
+  /// histórico assim que o mercado for escolhido (no chip, na lista, ao
+  /// digitar um preço ou no "Terminei"). Sem isso, se perderiam.
+  final _unsavedTagPrices = <({String productId, String? packageId, TagPriceRead read})>[];
+
   _LiveNotice? _notice;
   String? _justReadKey;
   Timer? _noticeTimer;
@@ -212,15 +217,10 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
       return;
     }
     if (product != null || !mounted) return;
-    final l10n = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(l10n.cartUnknown(code)),
-          action: SnackBarAction(label: l10n.cartRegister, onPressed: () => _register(code)),
-        ),
-      );
+    // Código novo: a folha "Embalagem nova" abre direto (protótipo), com a
+    // leitura pausada por baixo. Um aviso com prazo não dá tempo com o
+    // produto na mão.
+    await _register(code);
   }
 
   Future<void> _register(String code) async {
@@ -333,8 +333,14 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
     TagPriceRead read,
   ) async {
     final marketId = trip.marketId;
-    final key = '${CartItem.keyOf(productId, packageId)}:${read.price.cents}';
-    if (marketId == null || _registeredTags.contains(key)) return;
+    final key = _tagKey(productId, packageId, read);
+    if (_registeredTags.contains(key)) return;
+    if (marketId == null) {
+      _unsavedTagPrices
+        ..removeWhere((u) => _tagKey(u.productId, u.packageId, u.read) == key)
+        ..add((productId: productId, packageId: packageId, read: read));
+      return;
+    }
     await register(
       RegisterPriceInput(
         marketId: marketId,
@@ -346,6 +352,36 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
       ),
     );
     _registeredTags.add(key);
+  }
+
+  static String _tagKey(String productId, String? packageId, TagPriceRead read) =>
+      '${CartItem.keyOf(productId, packageId)}:${read.price.cents}';
+
+  /// Grava no histórico os preços que esperavam o mercado.
+  Future<void> _saveUnsavedTagPrices(String marketId) async {
+    if (_unsavedTagPrices.isEmpty) return;
+    final register = ref.read(registerPriceObservationProvider);
+    final unsaved = [..._unsavedTagPrices];
+    _unsavedTagPrices.clear();
+    for (final (:productId, :packageId, :read) in unsaved) {
+      final key = _tagKey(productId, packageId, read);
+      if (_registeredTags.contains(key)) continue;
+      try {
+        await register(
+          RegisterPriceInput(
+            marketId: marketId,
+            productId: productId,
+            packageId: packageId,
+            price: read.price,
+            source: PriceSource.priceTag,
+            otherOffers: read.otherOffers,
+          ),
+        );
+        _registeredTags.add(key);
+      } on Exception catch (error, stack) {
+        _report(error, stack);
+      }
+    }
   }
 
   void _lockFrame() {
@@ -440,6 +476,7 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
   Future<void> _chooseMarket(ShoppingTrip trip) async {
     final market = await _withScannerPaused(() => pickMarket(context, selectedId: trip.marketId));
     if (market != null) await ref.read(shoppingTripRepositoryProvider).setMarket(trip.id, market.id);
+    // Os preços que esperavam vão pelo ouvinte do mercado da compra (build).
   }
 
   /// O disparo abre a foto da etiqueta; o preço salvo lá entra no carrinho
@@ -450,6 +487,17 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
   }
 
   Future<void> _finish(ShoppingTrip trip) async {
+    // Preços lidos sem mercado: é a última chance de guardá-los.
+    if (trip.marketId == null && _unsavedTagPrices.isNotEmpty) {
+      final trips = ref.read(shoppingTripRepositoryProvider);
+      final market = await _withScannerPaused(() => pickMarket(context));
+      if (!mounted) return;
+      if (market != null) {
+        await trips.setMarket(trip.id, market.id);
+        await _saveUnsavedTagPrices(market.id);
+        if (!mounted) return;
+      }
+    }
     setState(() => _finishing = true);
     try {
       await _withAnalysisPaused(() => finishShopping(context, ref, trip.id));
@@ -510,6 +558,12 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
     final notice = _notice;
     final controller = _live.controller;
     final previewSize = controller?.value.previewSize;
+
+    // A compra ganhou mercado (aqui, na Lista ou pela localização): os
+    // preços que esperavam vão para o histórico.
+    ref.listen(activeTripProvider.select((trip) => trip.value?.marketId), (previous, marketId) {
+      if (previous == null && marketId != null) unawaited(_saveUnsavedTagPrices(marketId));
+    });
 
     // A compra terminou (aqui ou na Lista): o carrinho fecha.
     ref.listen(activeTripProvider, (previous, next) {

@@ -45,6 +45,10 @@ abstract interface class ShoppingTripRepository {
 
   Future<void> finish(String tripId);
 
+  /// Desiste da compra: ela e o carrinho dela somem, sem mexer no estoque.
+  /// A lista fica como está.
+  Future<void> cancel(String tripId);
+
   /// Desfaz o "Terminei". Não reabre se outra compra já começou.
   Future<void> reopen(String tripId);
 

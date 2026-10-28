@@ -12,10 +12,15 @@ import 'package:go_router/go_router.dart';
 
 /// Cadastro e edição de mercado. Ao salvar, devolve o [Market] via `pop`.
 class MarketFormPage extends ConsumerStatefulWidget {
-  const MarketFormPage({this.marketId, super.key});
+  const MarketFormPage({this.marketId, this.here = false, super.key});
 
   /// Quando informado, edita o mercado existente.
   final String? marketId;
+
+  /// A pessoa está no mercado agora (cadastro feito na escolha do mercado da
+  /// compra): a localização atual entra sozinha. De casa, ela gravaria o
+  /// endereço errado.
+  final bool here;
 
   @override
   ConsumerState<MarketFormPage> createState() => _MarketFormPageState();
@@ -40,8 +45,7 @@ class _MarketFormPageState extends ConsumerState<MarketFormPage> {
     if (marketId != null) {
       _loading = true;
       _load(marketId);
-    } else {
-      // No cadastro novo, o usuário normalmente está no próprio mercado.
+    } else if (widget.here) {
       _useCurrentLocation();
     }
   }
@@ -180,7 +184,7 @@ class _LocationCard extends StatelessWidget {
             Text(
               point == null
                   ? l10n.marketLocationMissing
-                  : l10n.marketCoordinates(point.latitude.toStringAsFixed(5), point.longitude.toStringAsFixed(5)),
+                  : l10n.marketLocationSaved,
               style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 12),

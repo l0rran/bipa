@@ -24,7 +24,7 @@ class MarketPickerSheet extends ConsumerWidget {
   final String? selectedId;
 
   Future<void> _createMarket(BuildContext context) async {
-    final created = await context.push<Market>(Routes.newMarket);
+    final created = await context.push<Market>(Routes.newMarketHere);
     if (created != null && context.mounted) Navigator.of(context).pop(created);
   }
 
