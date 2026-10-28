@@ -13,7 +13,7 @@
 - [x] Novo Início: busca com bipar, locais como categorias, prateleira de Acabando e lista com medidor de nível
 - [x] Início: prévia da lista
 - [ ] Início: carrossel de insights (depende da previsão de consumo)
-- [ ] Modo compra: barra fixa acima da navegação com progresso e total, em todas as abas
+- [x] Modo compra: barra fixa acima da navegação com progresso e total, em todas as abas
 - [x] Trocar "mínimo" por "ter sempre" (`StockItem.targetQuantity`, acabando abaixo dele)
 - [ ] Fotos dos produtos (ADR 0010): miniatura com ícone da categoria pronta e `photoPath` no banco; falta tirar a foto ao bipar e buscar no Open Food Facts
 - [x] Câmera própria na captura (pacote `camera`), com leitura ao vivo em vez de foto
@@ -25,8 +25,8 @@
 ## Fase 1: MVP para uso pessoal
 
 - [ ] Importar cupom fiscal (QR Code da NFC-e) com fila offline: registra os preços e abastece o estoque, e serve de onboarding
-- [ ] Modos do bipar: "Preço" no mercado, "Comprei" e "Usei" em casa (feitos na câmera; falta a embalagem vazia pôr na lista ao dar baixa)
-- [ ] Desfazer em toda ação que muda o estoque; cada item bipado é salvo na hora
+- [x] Modos do bipar: "Preço" no mercado, "Comprei" e "Usei" em casa, com a embalagem vazia pondo na lista ao dar baixa (ADR 0019)
+- [x] Desfazer em toda ação de passagem que muda o estoque (bipes e gestos); os steppers se desfazem no próprio botão (ADR 0019); cada item bipado é salvo na hora
 - [x] Lista de compras: itens de produto ou escritos à mão, os itens de sempre (os com "ter sempre"), seções do mercado, preço esperado e total estimado; "Pôr na lista" no Início
 - [x] Modo compra: "Ir às compras" na prévia, barra da compra acima da navegação, item marcado ao registrar o preço e "Terminei", que leva o comprado ao estoque
 - [x] Notificação ao vivo da compra (Android 16, Live Updates, ADR 0015)
@@ -36,8 +36,8 @@
 - [x] Tela do produto: gráfico do preço nos últimos 6 meses (protótipo "Produto com embalagens")
 - [x] Ordem dos corredores aprendida por mercado, a partir da ordem em que a pessoa bipa e marca (ADR 0014)
 - [ ] Itens de sempre pelo ritmo de consumo (hoje são os produtos com "ter sempre")
-- [ ] Fechar o ciclo: o que é bipado em "Comprei" sai da lista e entra no estoque (o "Terminei" do modo compra já faz isso com o que foi marcado)
-- [ ] Sugestão de onde comprar a lista mais barata, comparando a lista inteira e mostrando a idade de cada preço
+- [x] Fechar o ciclo: o que é bipado em "Comprei" sai da lista e entra no estoque (o "Terminei" do modo compra já faz isso com o que foi marcado)
+- [x] Sugestão de onde comprar a lista mais barata, comparando a lista inteira e mostrando a idade de cada preço
 - [ ] Lista a partir de foto de lista de papel e por voz ("acabou o café"); widget de adicionar rápido
 - [ ] Previsão de consumo a partir do histórico do estoque
 - [ ] Onboarding (a explicação antes de pedir localização e notificação já existe)

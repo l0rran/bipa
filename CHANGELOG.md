@@ -31,6 +31,8 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - Etiquetas da balança (ADR 0018): no carrinho, o código que começa com 2 pergunta o produto uma vez por mercado e entra com o valor da pesagem, sem virar embalagem. Fora do carrinho, o leitor explica que o código é da balança. O esquema vai à versão 12.
 - Câmera do bipar, como no protótipo "Captura": o botão central abre a câmera ao vivo, com "Etiqueta" (o preço lido abre a folha de conferir e salvar, com "Mais barato aqui" e "Também comprei") e "Código" (abre o produto). O mercado fica no chip do topo e só é pedido no "Salvar". Segurar o botão abre o menu com "Modo carrinho" e "Dar baixa em casa", e o Início vazio abre a câmera somando cada código em casa. A câmera ao vivo virou um componente comum ao carrinho.
 - Granel sem código: a etiqueta de gôndola por quilo vira um aviso tocável no carrinho e na câmera, que escolhe o produto pelo nome lido e guarda o preço por kg no histórico. O leitor de etiquetas marca o preço por kg.
+- Casa e lista no mesmo gesto (ADR 0019): o "Comprei" da câmera e o "Também comprei" tiram o produto da lista (ou diminuem o que falta), e o "Usei" da câmera e o deslizar "Usei um" do Início põem na lista o que ficou abaixo do "ter sempre". O aviso diz o que mudou na lista, e o Desfazer volta estoque e lista juntos.
+- Mercados: o selo "mais barato" só aparece quando a comparação é justa (o mercado tem a lista inteira e sai mais barato que cada um dos outros nos itens que os dois têm), e cada mercado mostra a idade do preço mais antigo que entrou no total.
 - Cópias exportadas do design system e do protótipo em `docs/design/`.
 - Banco de testes do OCR em `tool/ocr_bench`, com etiquetas sintéticas e transcrições de etiquetas reais.
 
