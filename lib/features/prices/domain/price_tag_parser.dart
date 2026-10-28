@@ -1,11 +1,14 @@
+import 'dart:math' as math;
+
 import 'package:bipa/core/money/money.dart';
+import 'package:bipa/features/prices/domain/price_condition.dart';
 import 'package:bipa/features/prices/domain/price_tag.dart';
 import 'package:bipa/features/products/domain/gtin.dart';
 
 /// Interpreta o texto reconhecido por OCR em uma etiqueta de gôndola.
 ///
 /// Etiquetas costumam ter vários valores (preço normal, promocional, preço por
-/// quilo) e o OCR comete erros. As heurísticas são:
+/// quilo, atacado, cartão da loja) e o OCR comete erros. As heurísticas são:
 ///
 /// * linhas de preço por unidade de medida ("R$ 5,58/kg") são ignoradas, a
 ///   menos que sejam o único preço (produtos vendidos a granel);
@@ -15,7 +18,10 @@ import 'package:bipa/features/products/domain/gtin.dart';
 /// * centavos sobrescritos lidos como linha à parte ("R$ 18" + ",99") são
 ///   juntados ao inteiro, quando o OCR informa a posição horizontal;
 /// * marcadores "de/por" identificam preço normal e promocional;
-/// * sem marcadores, vence o valor escrito com a maior fonte.
+/// * rótulos de condição ("ATACADO", "A PARTIR DE 10 UNIDADES", "PASSAÍ
+///   CRED", "PREÇO CLUBE") valem para o preço da mesma linha ou da mesma
+///   coluna, logo acima ou abaixo (ADR 0011);
+/// * em cada condição, vence o valor escrito com a maior fonte.
 ///
 /// O resultado é sempre uma sugestão: a interface pede confirmação.
 final class PriceTagParser {
@@ -58,15 +64,29 @@ final class PriceTagParser {
   );
 
   static final _promoMarker = RegExp(
-    r'\b(por|oferta|promo[cçÇ][aãÃ]o|clube)\b[\s:]*(r\$)?\s*$',
+    r'\b(por|oferta|promo[cçÇ][aãÃ]o)\b[\s:]*(r\$)?\s*$',
     caseSensitive: false,
   );
+
+  /// Rótulos que ocupam uma linha só: "POR", "DE R$", "OFERTA".
+  static final _promoLabel = RegExp(r'^(por|oferta|promo[cçÇ][aãÃ]o)[\s:]*(r\$)?$', caseSensitive: false);
+  static final _regularLabel = RegExp(r'^(de|normal|antes|era|pre[cçÇ]o normal)[\s:]*(r\$)?$', caseSensitive: false);
+
+  static final _wholesaleMarker = RegExp(r'\batacado\b|\ba\s?partir\s+de\b|\bacima\s+de\b', caseSensitive: false);
+
+  static final _loyaltyMarker = RegExp(
+    r'\bcart[aãÃ]o\b|\bcred\b|\bclube\b|\bapp\b|\baplicativo\b|\bcliente\b|\bfidelidade\b',
+    caseSensitive: false,
+  );
+
+  /// Quantidade mínima do atacado numa linha própria: "10", "06 UN", "12 UNIDADES".
+  static final _quantityOnly = RegExp(r'^(\d{1,3})\s*(un|und|unid\w*)?\.?$', caseSensitive: false);
+  static final _number = RegExp(r'(?<![\d,.])(\d{1,3})(?![\d,.])');
 
   /// Linhas que nunca são o nome: preços, rótulos e condições da etiqueta.
   static final _nonNameMarker = RegExp(
     r'R\$|oferta|promo|pre[cçÇ]o|validade|v[aáÁ]lido'
-    r'|\bleve\s+\d|\bpague\s+\d|\bvarejo\b|\batacado\b|\bunidades?\b|\bcada\b|\ba\s?partir\s+de\b'
-    r'|\bcart[aãÃ]o\b|\bcred\b|\bclube\b|\bapp\b',
+    r'|\bleve\s+\d|\bpague\s+\d|\bvarejo\b|\bunidades?\b|\bcada\b',
     caseSensitive: false,
   );
 
@@ -76,6 +96,10 @@ final class PriceTagParser {
   static final _letter = RegExp('[A-Za-zÀ-ÿ]');
   static final _digitRun = RegExp(r'(?<!\d)\d[\d ]{6,18}\d(?!\d)');
   static final _whitespace = RegExp(r'\s+');
+
+  /// Preços impressos bem menores que o maior (bloco de informações, preço
+  /// por litro) continuam como candidatos, mas não viram ofertas.
+  static const _offerMinHeightRatio = 0.35;
 
   PriceTagReading parse(List<OcrLine> lines, {Iterable<String> barcodes = const []}) {
     final ordered = _mergeCentsFragments([
@@ -88,31 +112,65 @@ final class PriceTagParser {
           width: line.width,
         ),
     ])..sort((a, b) => a.top.compareTo(b.top));
+    final texts = [for (final line in ordered) line.text.replaceAll(_date, ' ').trim()];
+
+    final priceLines = [
+      for (var i = 0; i < ordered.length; i++)
+        if (texts[i].isNotEmpty && _findPrices(texts[i], 0).isNotEmpty) i,
+    ];
+    final labels = _labelsByPriceLine(ordered, texts, priceLines);
 
     final candidates = <_Candidate>[];
     final unitPriceCandidates = <_Candidate>[];
-    for (final line in ordered) {
-      final text = line.text.replaceAll(_date, ' ');
-      if (text.trim().isEmpty) continue;
-      final target = _unitPriceMarker.hasMatch(text) ? unitPriceCandidates : candidates;
-      target.addAll(_findPrices(text, line.height));
+    for (final i in priceLines) {
+      final target = _unitPriceMarker.hasMatch(texts[i]) ? unitPriceCandidates : candidates;
+      target.addAll(_findPrices(texts[i], ordered[i].height, labels[i] ?? _Labels.none));
     }
 
     // Produtos a granel só têm preço por quilo: nesse caso ele é o preço.
     final pool = candidates.isNotEmpty ? candidates : unitPriceCandidates;
-    final main = _choosePrice(pool);
+    final offers = _offers(pool);
+    final main = offers.firstOrNull;
 
     return PriceTagReading(
-      price: main?.money,
-      regularPrice: main == null ? null : _chooseRegularPrice(pool, main),
+      price: main?.price,
+      regularPrice: main?.regularPrice,
       barcode: _chooseBarcode(barcodes, ordered),
       productNameHint: _productNameHint(ordered),
       candidates: {for (final candidate in pool) candidate.money}.toList(growable: false),
+      offers: offers,
     );
   }
 
-  _Candidate? _choosePrice(List<_Candidate> pool) {
-    if (pool.isEmpty) return null;
+  /// Uma oferta por condição, com a sem condição primeiro.
+  List<PriceOffer> _offers(List<_Candidate> pool) {
+    if (pool.isEmpty) return const [];
+    final tallest = pool.map((c) => c.height).reduce(math.max);
+    final byCondition = <PriceCondition, List<_Candidate>>{};
+    for (final candidate in pool) {
+      final isMainSize = candidate.height >= _offerMinHeightRatio * tallest;
+      if (isMainSize || candidate.role == _Role.regular) {
+        byCondition.putIfAbsent(candidate.condition, () => []).add(candidate);
+      }
+    }
+
+    final offers = <PriceOffer>[];
+    for (final MapEntry(key: condition, value: group) in byCondition.entries) {
+      // Um "de R$" solto, sem condição, é o preço normal de outra oferta.
+      final onlyRegular = group.every((c) => c.role == _Role.regular);
+      if (onlyRegular && condition is AnyCustomer && byCondition.length > 1) continue;
+
+      final best = _choosePrice(group);
+      offers.add(PriceOffer(price: best.money, condition: condition, regularPrice: _chooseRegularPrice(group, best)));
+    }
+    return [
+      ...offers.where((o) => o.condition is AnyCustomer),
+      ...offers.where((o) => o.condition is LoyaltyMembers),
+      ...offers.where((o) => o.condition is Wholesale),
+    ];
+  }
+
+  _Candidate _choosePrice(List<_Candidate> pool) {
     final promotional = pool.where((c) => c.role == _Role.promotional).toList();
     final notRegular = pool.where((c) => c.role != _Role.regular).toList();
     final eligible = promotional.isNotEmpty
@@ -133,13 +191,99 @@ final class PriceTagParser {
     return regular;
   }
 
-  Iterable<_Candidate> _findPrices(String text, double height) sync* {
+  /// Rótulos em linhas próprias, agrupados pelo índice da linha de preço a que se referem.
+  Map<int, _Labels> _labelsByPriceLine(List<OcrLine> lines, List<String> texts, List<int> priceLines) {
+    final labels = <int, _Labels>{};
+    for (var i = 0; i < lines.length; i++) {
+      final text = texts[i];
+      if (text.isEmpty || priceLines.contains(i)) continue;
+
+      final found = _Labels(
+        wholesale: _wholesaleMarker.hasMatch(text),
+        loyalty: _loyaltyMarker.hasMatch(text),
+        promotional: _promoLabel.hasMatch(text),
+        regular: _regularLabel.hasMatch(text),
+        minimumQuantity: _wholesaleMarker.hasMatch(text)
+            ? (_quantityAfterWholesale(text) ?? _quantityNear(i, lines))
+            : null,
+      );
+      if (found.isEmpty) continue;
+
+      final target = _priceLineFor(i, lines, priceLines);
+      if (target != null) labels[target] = (labels[target] ?? _Labels.none).merge(found);
+    }
+    return labels;
+  }
+
+  /// Linha de preço a que um rótulo se refere: a mais próxima na mesma coluna
+  /// (acima ou abaixo) ou na mesma linha, à direita do rótulo.
+  /// Sem posição horizontal, é a próxima linha de preço.
+  int? _priceLineFor(int labelIndex, List<OcrLine> lines, List<int> priceLines) {
+    final label = lines[labelIndex];
+    final (labelLeft, labelRight) = (label.left, label.right);
+    if (labelLeft == null || labelRight == null) {
+      return priceLines.where((i) => i > labelIndex).firstOrNull;
+    }
+
+    int? best;
+    double? bestGap;
+    for (final i in priceLines) {
+      final price = lines[i];
+      final (priceLeft, priceRight) = (price.left, price.right);
+      if (priceLeft == null || priceRight == null) continue;
+
+      final sameColumn = math.min(labelRight, priceRight) - math.max(labelLeft, priceLeft) > 0;
+      final verticalGap = _verticalGap(label, price);
+      final sameRow = verticalGap == 0 && priceLeft - labelRight >= 0 && priceLeft - labelRight < price.height;
+      if (!sameColumn && !sameRow) continue;
+
+      final gap = sameRow ? 0.0 : verticalGap;
+      if (gap <= 1.5 * price.height && (bestGap == null || gap < bestGap)) {
+        best = i;
+        bestGap = gap;
+      }
+    }
+    return best;
+  }
+
+  /// Quantidade mínima impressa perto do rótulo, na mesma coluna:
+  /// "A PARTIR DE" / "10" / "UNIDADES".
+  int? _quantityNear(int labelIndex, List<OcrLine> lines) {
+    final label = lines[labelIndex];
+    for (var j = 0; j < lines.length; j++) {
+      final match = _quantityOnly.firstMatch(lines[j].text);
+      if (j == labelIndex || match == null) continue;
+
+      final other = lines[j];
+      final isNear = switch ((label.left, label.right, other.left, other.right)) {
+        (final l1?, final r1?, final l2?, final r2?) =>
+          math.min(r1, r2) - math.max(l1, l2) > 0 && _verticalGap(label, other) < 2 * label.height,
+        _ => j == labelIndex + 1,
+      };
+      if (isNear) return _positiveOrNull(int.parse(match[1]!));
+    }
+    return null;
+  }
+
+  static int? _quantityAfterWholesale(String text) {
+    final marker = _wholesaleMarker.firstMatch(text);
+    if (marker == null) return null;
+    final number = _number.firstMatch(text.substring(marker.end));
+    return number == null ? null : _positiveOrNull(int.parse(number[1]!));
+  }
+
+  static int? _positiveOrNull(int value) => value > 0 ? value : null;
+
+  static double _verticalGap(OcrLine a, OcrLine b) =>
+      math.max(0.0, math.max(a.top, b.top) - math.min(a.bottom, b.bottom));
+
+  Iterable<_Candidate> _findPrices(String text, double height, [_Labels labels = _Labels.none]) sync* {
     var foundDecimal = false;
     for (final match in _decimalPrice.allMatches(text)) {
       final prefix = text.substring(0, match.start);
       final isQuantity = _quantitySuffix.hasMatch(text.substring(match.end)) && !_currencyBefore.hasMatch(prefix);
       if (isQuantity || _installment.hasMatch(prefix)) continue;
-      final candidate = _toCandidate(text, match, height);
+      final candidate = _toCandidate(prefix, match, height, labels);
       if (candidate != null) {
         foundDecimal = true;
         yield candidate;
@@ -148,22 +292,34 @@ final class PriceTagParser {
     if (foundDecimal) return;
 
     for (final match in _splitCentsPrice.allMatches(text)) {
-      final candidate = _toCandidate(text, match, height);
+      final candidate = _toCandidate(text.substring(0, match.start), match, height, labels);
       if (candidate != null) yield candidate;
     }
   }
 
-  _Candidate? _toCandidate(String text, RegExpMatch match, double height) {
+  _Candidate? _toCandidate(String prefix, RegExpMatch match, double height, _Labels labels) {
     final cents = int.parse(match.group(1)!.replaceAll('.', '')) * 100 + int.parse(match.group(2)!);
     if (cents <= 0) return null;
 
-    final prefix = text.substring(0, match.start);
     final role = _promoMarker.hasMatch(prefix)
         ? _Role.promotional
         : _regularMarker.hasMatch(prefix)
         ? _Role.regular
+        : labels.promotional
+        ? _Role.promotional
+        : labels.regular
+        ? _Role.regular
         : _Role.neutral;
-    return _Candidate(Money.cents(cents), height, role);
+
+    final PriceCondition condition;
+    if (labels.wholesale || _wholesaleMarker.hasMatch(prefix)) {
+      condition = Wholesale(minimumQuantity: _quantityAfterWholesale(prefix) ?? labels.minimumQuantity);
+    } else if (labels.loyalty || _loyaltyMarker.hasMatch(prefix)) {
+      condition = const LoyaltyMembers();
+    } else {
+      condition = const AnyCustomer();
+    }
+    return _Candidate(Money.cents(cents), height, role, condition);
   }
 
   String? _chooseBarcode(Iterable<String> barcodes, List<OcrLine> lines) {
@@ -184,7 +340,9 @@ final class PriceTagParser {
   String? _productNameHint(List<OcrLine> lines) {
     for (final line in lines) {
       final text = line.text;
-      if (_nonNameMarker.hasMatch(text) || _findPrices(text, 0).isNotEmpty) continue;
+      final isLabel =
+          _nonNameMarker.hasMatch(text) || _wholesaleMarker.hasMatch(text) || _loyaltyMarker.hasMatch(text);
+      if (isLabel || _findPrices(text, 0).isNotEmpty) continue;
 
       final letters = _letter.allMatches(text).length;
       final visibleChars = text.replaceAll(' ', '').length;
@@ -195,7 +353,7 @@ final class PriceTagParser {
   }
 
   static String _normalize(String text) => text
-      .replaceAll('\u00a0', ' ')
+      .replaceAll(' ', ' ')
       .replaceAll(RegExp(r'R\s*\$'), r'R$')
       // O OCR frequentemente lê "R$" como "RS" ou "R5".
       .replaceAll(RegExp(r'\bR[S5]\s*(?=\d)'), r'R$ ')
@@ -251,9 +409,39 @@ final class PriceTagParser {
 enum _Role { neutral, promotional, regular }
 
 final class _Candidate {
-  const _Candidate(this.money, this.height, this.role);
+  const _Candidate(this.money, this.height, this.role, this.condition);
 
   final Money money;
   final double height;
   final _Role role;
+  final PriceCondition condition;
+}
+
+/// O que os rótulos em linhas próprias dizem sobre um preço.
+final class _Labels {
+  const _Labels({
+    this.wholesale = false,
+    this.loyalty = false,
+    this.promotional = false,
+    this.regular = false,
+    this.minimumQuantity,
+  });
+
+  static const none = _Labels();
+
+  final bool wholesale;
+  final bool loyalty;
+  final bool promotional;
+  final bool regular;
+  final int? minimumQuantity;
+
+  bool get isEmpty => !wholesale && !loyalty && !promotional && !regular;
+
+  _Labels merge(_Labels other) => _Labels(
+    wholesale: wholesale || other.wholesale,
+    loyalty: loyalty || other.loyalty,
+    promotional: promotional || other.promotional,
+    regular: regular || other.regular,
+    minimumQuantity: minimumQuantity ?? other.minimumQuantity,
+  );
 }

@@ -1,4 +1,5 @@
 import 'package:bipa/core/money/money.dart';
+import 'package:bipa/features/prices/domain/price_condition.dart';
 import 'package:meta/meta.dart';
 
 /// Linha de texto reconhecida por OCR em uma foto.
@@ -27,6 +28,28 @@ final class OcrLine {
   };
 }
 
+/// Um dos preços de uma etiqueta, com a sua condição (ADR 0011).
+@immutable
+final class PriceOffer {
+  const PriceOffer({required this.price, this.condition = const AnyCustomer(), this.regularPrice});
+
+  final Money price;
+  final PriceCondition condition;
+
+  /// Preço sem desconto, quando a etiqueta indica promoção ("de/por").
+  final Money? regularPrice;
+
+  @override
+  bool operator ==(Object other) =>
+      other is PriceOffer && other.price == price && other.condition == condition && other.regularPrice == regularPrice;
+
+  @override
+  int get hashCode => Object.hash(price, condition, regularPrice);
+
+  @override
+  String toString() => 'PriceOffer($price, $condition)';
+}
+
 /// Informações extraídas da foto de uma etiqueta de preço.
 @immutable
 final class PriceTagReading {
@@ -36,11 +59,13 @@ final class PriceTagReading {
     this.barcode,
     this.productNameHint,
     this.candidates = const [],
+    this.offers = const [],
   });
 
   static const empty = PriceTagReading();
 
-  /// Preço principal (o promocional, quando houver "de/por").
+  /// Preço principal: o da primeira oferta, que é a sem condição quando houver
+  /// (o promocional, quando houver "de/por").
   final Money? price;
 
   /// Preço sem desconto, quando a etiqueta indica promoção.
@@ -52,6 +77,9 @@ final class PriceTagReading {
 
   /// Todos os valores lidos, para o usuário corrigir uma escolha errada.
   final List<Money> candidates;
+
+  /// Um preço por condição (varejo, cartão, atacado), o principal primeiro.
+  final List<PriceOffer> offers;
 
   bool get isEmpty => price == null && barcode == null;
 }
