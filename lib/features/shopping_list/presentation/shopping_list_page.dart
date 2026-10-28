@@ -11,6 +11,7 @@ import 'package:bipa/core/widgets/async_value_view.dart';
 import 'package:bipa/core/widgets/quantity_dialog.dart';
 import 'package:bipa/features/markets/presentation/market_picker_sheet.dart';
 import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/products/domain/product_repository.dart';
 import 'package:bipa/features/products/presentation/product_photos.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:bipa/features/shopping_list/domain/aisle_order.dart';
@@ -83,9 +84,10 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
     final put = ref.read(putProductOnListProvider);
     final trip = ref.read(activeTripProvider).value;
     final matchList = ref.read(matchListToCartProvider);
-    final whole = await _productNamed(text);
+    final products = ref.read(productRepositoryProvider);
+    final whole = await _productNamed(products, text);
     final ListEntryText(:name, :quantity) = whole == null ? ListEntryText.parse(text) : ListEntryText(text);
-    final product = whole ?? (name == text ? null : await _productNamed(name));
+    final product = whole ?? (name == text ? null : await _productNamed(products, name));
     if (product != null) {
       await put(product, quantity: quantity);
       // Na compra, a quantidade nova acerta a marcação pelo carrinho.
@@ -98,8 +100,8 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
 
   /// O produto cadastrado com exatamente esse nome, sem diferenciar
   /// maiúsculas.
-  Future<Product?> _productNamed(String name) async {
-    final matches = await ref.read(productRepositoryProvider).watchAll(query: name).first;
+  static Future<Product?> _productNamed(ProductRepository products, String name) async {
+    final matches = await products.watchAll(query: name).first;
     return matches.where((p) => p.name.toLowerCase() == name.toLowerCase()).firstOrNull;
   }
 
