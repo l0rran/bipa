@@ -589,7 +589,15 @@ class CameraGlassChip extends StatelessWidget {
 /// ou o que falta fazer. O leitor de tela anuncia a mudança. Só é tocável com
 /// [onTap] (protótipo "Modo carrinho: granel sem código").
 class LiveReadChip extends StatelessWidget {
-  const LiveReadChip({required this.icon, required this.detail, this.price, this.countdown, this.onTap, super.key});
+  const LiveReadChip({
+    required this.icon,
+    required this.detail,
+    this.price,
+    this.countdown,
+    this.onTap,
+    this.actionLabel,
+    super.key,
+  });
 
   final IconData icon;
 
@@ -607,6 +615,10 @@ class LiveReadChip extends StatelessWidget {
   /// tem o que bipar, escolhe o produto por aqui (ADR 0018).
   final VoidCallback? onTap;
 
+  /// No lugar da seta, quando o toque não leva a outro lugar e precisa dizer
+  /// o que faz ("Desfazer").
+  final String? actionLabel;
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -615,7 +627,7 @@ class LiveReadChip extends StatelessWidget {
       liveRegion: true,
       button: onTap != null,
       onTap: onTap,
-      label: [?price, detail].join(', '),
+      label: [?price, detail, ?(onTap == null ? null : actionLabel)].join(', '),
       excludeSemantics: true,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(BipaRadius.pill),
@@ -652,10 +664,14 @@ class LiveReadChip extends StatelessWidget {
                     style: BipaText.caption.copyWith(color: colors.onCamera.withValues(alpha: 0.75)),
                   ),
                 ),
-                if (onTap != null) ...[
-                  const SizedBox(width: BipaSpacing.s1),
-                  Icon(Icons.chevron_right_rounded, size: 20, color: colors.onCamera),
-                ],
+                if (onTap != null)
+                  if (actionLabel case final action?) ...[
+                    const SizedBox(width: BipaSpacing.s3),
+                    Text(action, style: BipaText.label.copyWith(color: colors.onCamera)),
+                  ] else ...[
+                    const SizedBox(width: BipaSpacing.s1),
+                    Icon(Icons.chevron_right_rounded, size: 20, color: colors.onCamera),
+                  ],
               ],
             ),
           ),
