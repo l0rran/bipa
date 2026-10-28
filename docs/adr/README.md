@@ -23,6 +23,7 @@ Cada arquivo registra uma decisão importante: o contexto, o que foi decidido e 
 | [0017](0017-correcao-de-preco.md) | Correção de preço sem apagar a observação | Aceito |
 | [0018](0018-etiquetas-da-balanca.md) | Etiquetas da balança no carrinho | Aceito |
 | [0019](0019-casa-e-lista-no-mesmo-gesto.md) | Casa e lista no mesmo gesto, com um só "Desfazer" | Aceito |
+| [0020](0020-precos-da-compra-guardados-com-ela.md) | Preços da compra guardados com ela | Aceito |
 
 ## Modelo
 
