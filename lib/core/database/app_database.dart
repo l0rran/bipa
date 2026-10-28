@@ -81,6 +81,10 @@ class AppDatabase extends _$AppDatabase {
     await migrator.addColumn(priceObservations, priceObservations.packageId);
     await migrator.createIndex(priceObservationsPackage);
     await customStatement('UPDATE price_observations SET package_id = product_id');
+    // Produtos e preços mudaram de formato (ganharam a embalagem): voltam
+    // para a fila de sincronização (ADR 0007).
+    await customStatement('UPDATE price_observations SET synced_at = NULL');
+    await customStatement('UPDATE products SET synced_at = NULL');
     // O estoque de cada produto vira um lote da sua embalagem.
     await migrator.createTable(stockLots);
     await migrator.createIndex(stockLotsProduct);

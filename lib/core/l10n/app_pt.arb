@@ -675,5 +675,18 @@
   "locationPermissionDenied": "Permissão de localização negada.",
   "locationPermissionBlocked": "Permissão de localização bloqueada. Libere nas configurações do aparelho.",
   "locationTimeout": "Não foi possível obter a localização a tempo.",
-  "locationUnknown": "Não foi possível obter a localização."
+  "locationUnknown": "Não foi possível obter a localização.",
+  "packageProductMissing": "Escolha o produto desta embalagem.",
+  "packageSizeNotPositive": "Informe um tamanho maior que zero.",
+  "packageDuplicate": "O código {barcode} já está cadastrado para \"{product}\".",
+  "@packageDuplicate": {
+    "placeholders": {
+      "barcode": {
+        "type": "String"
+      },
+      "product": {
+        "type": "String"
+      }
+    }
+  }
 }

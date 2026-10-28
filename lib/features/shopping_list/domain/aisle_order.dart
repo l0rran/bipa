@@ -41,6 +41,10 @@ final class AisleOrder {
   /// metade do caminho, para uma compra fora do comum não bagunçar tudo.
   static const _learningRate = 0.5;
 
+  /// A menor distância entre duas seções visitadas: um quarto do espaço
+  /// entre duas seções da ordem genérica.
+  static final _minimumGap = 1 / (4 * (Aisle.values.length - 1));
+
   final Map<Aisle, LearnedAisle> learned;
 
   /// O lugar da seção no percurso: o aprendido ou o da ordem genérica.
@@ -74,7 +78,12 @@ final class AisleOrder {
         return byTime != 0 ? byTime : positionOf(a).compareTo(positionOf(b));
       });
     // Os lugares que essas seções ocupam hoje, redistribuídos na ordem vista.
+    // Lugares iguais (duas seções que trocaram de ordem e se encontraram no
+    // meio do caminho) ganham uma folga, senão o empate nunca se desfaz.
     final slots = [for (final aisle in walked) positionOf(aisle)]..sort();
+    for (var i = 1; i < slots.length; i++) {
+      if (slots[i] - slots[i - 1] < _minimumGap) slots[i] = slots[i - 1] + _minimumGap;
+    }
 
     final next = Map.of(learned);
     for (final (index, aisle) in walked.indexed) {

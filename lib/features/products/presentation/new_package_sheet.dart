@@ -11,6 +11,7 @@ import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/package_suggestion.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
+import 'package:bipa/features/products/domain/product_repository.dart';
 import 'package:bipa/features/products/domain/register_package.dart';
 import 'package:bipa/features/products/domain/unit_price.dart';
 import 'package:bipa/features/products/presentation/product_picker_sheet.dart';
@@ -129,7 +130,14 @@ class _NewPackageSheetState extends ConsumerState<NewPackageSheet> {
       );
       if (mounted) Navigator.of(context).pop((product: product, package: package));
     } on DomainException catch (error) {
-      if (mounted) setState(() => _error = error.message);
+      // As regras do domínio viram os textos do ARB.
+      final message = switch (error) {
+        MissingPackageProductException() => l10n.packageProductMissing,
+        InvalidPackageSizeException() => l10n.packageSizeNotPositive,
+        DuplicateBarcodeException(:final barcode, :final productName) => l10n.packageDuplicate(barcode, productName),
+        _ => error.message,
+      };
+      if (mounted) setState(() => _error = message);
     } on Exception {
       if (mounted) setState(() => _error = l10n.packageSaveFailed);
     } finally {

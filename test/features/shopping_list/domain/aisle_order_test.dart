@@ -39,6 +39,18 @@ void main() {
     expect(produce.position, closeTo(halfway, 1e-9));
   });
 
+  test('duas seções que trocaram de ordem e empataram voltam a se separar', () {
+    final usual = [_pick(Aisle.cleaning, 1), _pick(Aisle.produce, 2)];
+    var order = AisleOrder.empty.learn(usual);
+    // Uma compra ao contrário: as duas andam metade do caminho e se encontram.
+    order = order.learn([_pick(Aisle.produce, 1), _pick(Aisle.cleaning, 2)]);
+    expect(order.positionOf(Aisle.cleaning), closeTo(order.positionOf(Aisle.produce), 1e-9));
+
+    order = order.learn(usual);
+
+    expect(order.sort([Aisle.produce, Aisle.cleaning]), [Aisle.cleaning, Aisle.produce]);
+  });
+
   test('voltar para buscar algo esquecido não muda a ordem', () {
     final order = AisleOrder.empty.learn([
       _pick(Aisle.dairy, 1),

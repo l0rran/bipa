@@ -18,7 +18,14 @@ class MainActivity : FlutterActivity() {
     private var launchAction: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        launchAction = intent?.getStringExtra(LiveShoppingNotification.EXTRA_ACTION)
+        // Só vale o botão que acabou de ser tocado: recriada (o sistema matou
+        // o processo) ou aberta pelos Recentes, a Activity recebe o mesmo
+        // intent de antes, e o "Terminei" terminaria outra compra.
+        val fromHistory = ((intent?.flags ?: 0) and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0
+        if (savedInstanceState == null && !fromHistory) {
+            launchAction = intent?.getStringExtra(LiveShoppingNotification.EXTRA_ACTION)
+        }
+        intent?.removeExtra(LiveShoppingNotification.EXTRA_ACTION)
         super.onCreate(savedInstanceState)
     }
 
@@ -52,7 +59,10 @@ class MainActivity : FlutterActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        intent.getStringExtra(LiveShoppingNotification.EXTRA_ACTION)?.let { channel?.invokeMethod("action", it) }
+        val action = intent.getStringExtra(LiveShoppingNotification.EXTRA_ACTION)
+        intent.removeExtra(LiveShoppingNotification.EXTRA_ACTION)
+        setIntent(intent)
+        action?.let { channel?.invokeMethod("action", it) }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {

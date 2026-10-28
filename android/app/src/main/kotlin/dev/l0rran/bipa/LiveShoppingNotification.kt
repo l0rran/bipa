@@ -62,7 +62,11 @@ object LiveShoppingNotification {
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setContentIntent(openApp(context, "list"))
             .setDeleteIntent(onDismiss(context, tripId))
-        (args["chip"] as String?)?.let(builder::setShortCriticalText)
+        // setShortCriticalText e setRequestPromotedOngoing vêm do androidx.core
+        // 1.17 (Live Updates). Se o compilador não achar o primeiro, o plano B
+        // é aplicá-lo no Notification.Builder da plataforma (API 36) com
+        // Notification.Builder.recoverBuilder.
+        (args["chip"] as String?)?.let { builder.setShortCriticalText(it) }
         for (action in actions) {
             labels[action]?.let { builder.addAction(0, it, openApp(context, action)) }
         }
@@ -87,8 +91,9 @@ object LiveShoppingNotification {
 
         try {
             NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, builder.build())
-        } catch (_: SecurityException) {
+        } catch (e: SecurityException) {
             // A permissão foi retirada entre a conferência e o aviso.
+            android.util.Log.w("Bipa", "Notificação ao vivo sem permissão", e)
         }
     }
 
