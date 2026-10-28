@@ -1249,5 +1249,14 @@
         "type": "String"
       }
     }
+  },
+  "listUnpriced": "{count} sem preço",
+  "@listUnpriced": {
+    "description": "Ao lado da estimativa da prévia da lista: quantos itens que faltam não têm preço e ficaram fora dela (\"≈ R$ 84,30 · 2 sem preço\").",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

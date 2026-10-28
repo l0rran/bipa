@@ -31,8 +31,9 @@ class ListPreview extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final missing = entries.where((e) => !e.item.isChecked).toList();
     final estimate = summary.estimate?.format();
-    // A estimativa diz o que deixou de fora, como em Mercados (CE4).
-    final unpriced = estimate != null && summary.unpriced > 0 ? l10n.marketsMissingPrices(summary.unpriced) : null;
+    // A estimativa diz o que deixou de fora (CE4), curto para caber na linha.
+    final leftOut = estimate != null && summary.unpriced > 0;
+    final unpriced = leftOut ? l10n.listUnpriced(summary.unpriced) : null;
 
     return ListPreviewCard(
       count: summary.remaining,
@@ -46,7 +47,7 @@ class ListPreview extends StatelessWidget {
       semanticLabel: [
         l10n.listPreviewSemantics(summary.remaining),
         if (estimate != null) l10n.listAbout(estimate),
-        ?unpriced,
+        if (leftOut) l10n.marketsMissingPrices(summary.unpriced),
         l10n.listGoShopping,
       ].join(', '),
     );
