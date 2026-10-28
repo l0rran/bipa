@@ -297,8 +297,13 @@ class _CameraPageState extends ConsumerState<CameraPage> {
       if (scanned != null && mounted) await _confirmTag(scanned.product, scanned.package, read);
       return;
     }
-    // Granel sem código: não vem produto bipado. O aviso vira botão.
+    // Granel sem código: não vem produto bipado. Aberta pela tela de um
+    // produto, a etiqueta é dele; senão, o aviso vira botão.
     if (read.perKilo) {
+      if (_held case (:final product, package: _)?) {
+        await _confirmTag(product, null, read);
+        return;
+      }
       unawaited(HapticFeedback.selectionClick());
       _showNotice(
         (
