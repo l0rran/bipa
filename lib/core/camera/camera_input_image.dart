@@ -34,6 +34,7 @@ CameraFrame? cameraFrameToInputImage(
 
   final Uint8List bytes;
   var resolvedFormat = format;
+  var bytesPerRow = image.planes.first.bytesPerRow;
   if (Platform.isAndroid) {
     switch (format) {
       case InputImageFormat.nv21 when image.planes.length == 1:
@@ -41,6 +42,8 @@ CameraFrame? cameraFrameToInputImage(
       case InputImageFormat.yuv_420_888 || InputImageFormat.yv12 when image.planes.length == 3:
         bytes = _yuv420ToNv21(image);
         resolvedFormat = InputImageFormat.nv21;
+        // O buffer montado não tem preenchimento no fim das linhas.
+        bytesPerRow = image.width;
       default:
         return null;
     }
@@ -57,7 +60,7 @@ CameraFrame? cameraFrameToInputImage(
         size: Size(image.width.toDouble(), image.height.toDouble()),
         rotation: rotation,
         format: resolvedFormat,
-        bytesPerRow: image.planes.first.bytesPerRow,
+        bytesPerRow: bytesPerRow,
       ),
     ),
     rotationDegrees: rotationDegrees,
