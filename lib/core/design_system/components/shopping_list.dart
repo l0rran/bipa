@@ -144,13 +144,13 @@ class ListPreviewCard extends StatelessWidget {
 /// Progresso da compra: o total estimado à esquerda, "3 de 7" à direita e a
 /// barra embaixo.
 class ShoppingProgress extends StatelessWidget {
-  const ShoppingProgress({required this.label, required this.value, this.leading, super.key});
+  const ShoppingProgress({required this.label, this.value, this.leading, super.key});
 
   /// "3 de 7".
   final String label;
 
-  /// De 0 a 1.
-  final double value;
+  /// De 0 a 1; `null` (compra sem lista) tira a barra.
+  final double? value;
 
   /// Texto à esquerda, como o total estimado.
   final String? leading;
@@ -159,6 +159,7 @@ class ShoppingProgress extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final leading = this.leading;
+    final value = this.value;
     final small = BipaText.label.copyWith(fontSize: 13, fontWeight: FontWeight.w600, color: colors.inkMuted);
 
     return Column(
@@ -173,35 +174,37 @@ class ShoppingProgress extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(BipaRadius.pill),
-          child: SizedBox(
-            height: 8,
-            child: Stack(
-              children: [
-                Positioned.fill(child: ColoredBox(color: colors.surfaceSunken)),
-                TweenAnimationBuilder<double>(
-                  tween: Tween(end: value.clamp(0.0, 1.0)),
-                  duration: BipaMotion.slow,
-                  curve: BipaMotion.spring,
-                  builder: (context, fraction, _) => FractionallySizedBox(
-                    alignment: AlignmentDirectional.centerStart,
-                    heightFactor: 1,
-                    // A mola passa um pouco do alvo: o fim fica entre 0 e 1.
-                    widthFactor: fraction.clamp(0.0, 1.0),
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: colors.brand,
-                        borderRadius: BorderRadius.circular(BipaRadius.pill),
+        if (value != null) ...[
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(BipaRadius.pill),
+            child: SizedBox(
+              height: 8,
+              child: Stack(
+                children: [
+                  Positioned.fill(child: ColoredBox(color: colors.surfaceSunken)),
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(end: value.clamp(0.0, 1.0)),
+                    duration: BipaMotion.slow,
+                    curve: BipaMotion.spring,
+                    builder: (context, fraction, _) => FractionallySizedBox(
+                      alignment: AlignmentDirectional.centerStart,
+                      heightFactor: 1,
+                      // A mola passa um pouco do alvo: o fim fica entre 0 e 1.
+                      widthFactor: fraction.clamp(0.0, 1.0),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: colors.brand,
+                          borderRadius: BorderRadius.circular(BipaRadius.pill),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
+        ],
       ],
     );
   }

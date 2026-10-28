@@ -272,7 +272,7 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
                           label: tripSummary.hasList
                               ? l10n.listProgress(tripSummary.done, tripSummary.total)
                               : l10n.tripInCart(tripSummary.packages),
-                          value: tripSummary.progress,
+                          value: tripSummary.hasList ? tripSummary.progress : null,
                           leading: tripSummary.spentLabel(l10n),
                         ),
                         const SizedBox(height: BipaSpacing.s3),
