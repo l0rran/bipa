@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:bipa/core/camera/viewfinder_region.dart';
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
@@ -12,23 +13,28 @@ import 'package:bipa/features/prices/domain/price_comparison.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/prices/domain/register_price_observation.dart';
 import 'package:bipa/features/prices/presentation/prices_providers.dart';
-import 'package:bipa/features/products/domain/gtin.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/presentation/product_form_page.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:bipa/features/shopping_list/domain/cart_item.dart';
+import 'package:bipa/features/shopping_list/domain/live_scan.dart';
+import 'package:bipa/features/shopping_list/domain/live_tag_router.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
 import 'package:bipa/features/shopping_list/presentation/finish_shopping.dart';
+import 'package:bipa/features/shopping_list/presentation/live_scanner.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
 
-/// Modo carrinho (protótipo "Modo carrinho"): a câmera fica aberta e cada
-/// código lido entra na bandeja com o último preço daquele mercado. O disparo
-/// fotografa a etiqueta, e o preço lido também entra no carrinho.
+/// Modo carrinho (protótipos "Modo carrinho", "preço lido" e "preço
+/// esperando"): a câmera fica aberta e lê, dentro da moldura, os códigos de
+/// barras e as etiquetas (ADR 0012). Cada código entra na bandeja com o
+/// último preço daquele mercado; o preço lido na etiqueta vai para o item
+/// certo. O disparo continua fotografando a etiqueta, para as que a leitura
+/// ao vivo deixa de lado.
 class CartModePage extends ConsumerStatefulWidget {
   const CartModePage({super.key});
 
@@ -36,20 +42,36 @@ class CartModePage extends ConsumerStatefulWidget {
   ConsumerState<CartModePage> createState() => _CartModePageState();
 }
 
+/// O aviso sobre a câmera: o preço lido e o item que o recebeu, ou o pedido
+/// de bipar o produto.
+typedef _LiveNotice = ({Money price, String detail, bool waiting});
+
 class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBindingObserver {
-  final _scanner = MobileScannerController(
-    formats: const [BarcodeFormat.ean13, BarcodeFormat.ean8, BarcodeFormat.upcA, BarcodeFormat.upcE],
-  );
+  late final _live = LiveScanner(onEvents: _onEvents, viewfinder: _viewfinderOnScreen, onError: _reportAny);
+  final _previewKey = GlobalKey();
+  final _viewfinderKey = GlobalKey();
+  static const _router = LiveTagRouter();
 
-  /// Quando cada código foi lido pela última vez: a câmera lê o mesmo código
-  /// várias vezes por segundo, e bipar de novo só vale depois de uma pausa.
-  final _lastSeen = <String, DateTime>{};
-  static const _rescanPause = Duration(milliseconds: 2500);
+  /// O preço lido antes de bipar, esperando o próximo produto.
+  PendingTagPrice? _pending;
 
-  /// A moldura "trava" por um instante a cada item bipado.
+  /// Produtos com o preço firmado nesta compra (lido ao vivo ou digitado):
+  /// uma etiqueta sem código lida depois não os sobrescreve.
+  final _settledProducts = <String>{};
+
+  /// Preços de etiqueta já guardados no histórico, para não repetir a
+  /// observação a cada vez que a mesma etiqueta volta à moldura.
+  final _registeredTags = <String>{};
+
+  _LiveNotice? _notice;
+  String? _justReadItemId;
+  Timer? _noticeTimer;
+
+  /// A moldura "trava" por um instante a cada leitura.
   var _locked = false;
   Timer? _unlock;
   var _finishing = false;
+  var _cameraDenied = false;
 
   /// Outra tela está usando a câmera: o leitor não volta sozinho ao app
   /// voltar do fundo.
@@ -59,18 +81,18 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _live.addListener(_onLiveChanged);
+    unawaited(_startCamera());
   }
 
-  /// Com um controller próprio, o MobileScanner não acompanha o ciclo de vida
-  /// do app: a câmera para no fundo e volta ao reabrir.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (_pausedForRoute) return;
     switch (state) {
       case AppLifecycleState.resumed:
-        unawaited(_camera(_scanner.start));
+        unawaited(_startCamera());
       case AppLifecycleState.inactive || AppLifecycleState.paused || AppLifecycleState.hidden:
-        unawaited(_camera(_scanner.stop));
+        unawaited(_camera(_live.stop));
       case AppLifecycleState.detached:
         break;
     }
@@ -80,23 +102,53 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _unlock?.cancel();
-    // Sem await: o dispose do leitor é assíncrono em algumas versões do plugin.
-    _scanner.dispose();
+    _noticeTimer?.cancel();
+    _live
+      ..removeListener(_onLiveChanged)
+      ..dispose();
     super.dispose();
   }
 
-  void _onDetect(BarcodeCapture capture) {
-    final now = DateTime.now();
-    for (final barcode in capture.barcodes) {
-      final code = barcode.rawValue;
-      if (code == null || !Gtin.isValid(code)) continue;
-      final last = _lastSeen[code];
-      // A pausa se renova enquanto o código continua no visor: bipar de novo
-      // exige tirar o produto da frente da câmera.
-      _lastSeen[code] = now;
-      if (last != null && now.difference(last) < _rescanPause) return;
-      unawaited(_onCode(code));
-      return;
+  void _onLiveChanged() {
+    if (mounted) setState(() {});
+  }
+
+  /// Abre a câmera; sem permissão, a tela explica no lugar da dica.
+  Future<void> _startCamera() async {
+    try {
+      await _live.start();
+      if (mounted && _cameraDenied) setState(() => _cameraDenied = false);
+    } on CameraException catch (error, stack) {
+      if (error.code.startsWith('CameraAccessDenied')) {
+        if (mounted) setState(() => _cameraDenied = true);
+      } else {
+        _report(error, stack);
+      }
+    }
+  }
+
+  /// A moldura na tela, relativa à prévia da câmera, para o recorte.
+  ViewfinderOnScreen? _viewfinderOnScreen() {
+    final preview = _previewKey.currentContext?.findRenderObject();
+    final frame = _viewfinderKey.currentContext?.findRenderObject();
+    if (preview is! RenderBox || frame is! RenderBox || !preview.hasSize || !frame.hasSize) return null;
+    if (!preview.attached || !frame.attached) return null;
+    final origin = frame.localToGlobal(Offset.zero, ancestor: preview);
+    return (
+      viewfinder: PixelRect(origin.dx, origin.dy, frame.size.width, frame.size.height),
+      screenWidth: preview.size.width,
+      screenHeight: preview.size.height,
+    );
+  }
+
+  void _onEvents(List<LiveScanEvent> events) {
+    for (final event in events) {
+      switch (event) {
+        case ProductScanned(:final barcode):
+          unawaited(_onCode(barcode));
+        case TagPriceRead():
+          unawaited(_onTagRead(event));
+      }
     }
   }
 
@@ -104,7 +156,7 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
     final Product? product;
     try {
       product = await ref.read(productRepositoryProvider).findByBarcode(code);
-      if (product != null && mounted) await _addToCart(product);
+      if (product != null && mounted) await _addToCart(product, barcode: code);
     } on Exception catch (error, stack) {
       _report(error, stack);
       return;
@@ -127,29 +179,125 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
     final product = await _withScannerPaused(
       () => context.push<Product>(Routes.newProduct, extra: ProductFormArgs(barcode: code)),
     );
-    if (product != null && mounted) await _addToCart(product);
+    if (product == null || !mounted) return;
+    try {
+      await _addToCart(product, barcode: code);
+    } on Exception catch (error, stack) {
+      _report(error, stack);
+    }
   }
 
-  /// Põe o produto no carrinho com o último preço dele no mercado da compra,
-  /// e o marca na lista.
-  Future<void> _addToCart(Product product) async {
+  /// Põe o produto no carrinho e o marca na lista. O preço é o da etiqueta
+  /// lida há pouco, se ela esperava por este produto; senão, o último dele no
+  /// mercado da compra.
+  Future<void> _addToCart(Product product, {required String barcode}) async {
     final trip = ref.read(activeTripProvider).value;
     if (trip == null) return;
     final cart = ref.read(cartRepositoryProvider);
     final list = ref.read(shoppingListRepositoryProvider);
-    final marketId = trip.marketId;
-    final expected = marketId == null
-        ? null
-        : latestPriceAt(await ref.read(priceRepositoryProvider).watchHistory(product.id).first, marketId);
+    final prices = ref.read(priceRepositoryProvider);
 
-    await cart.addProduct(trip.id, product.id, price: expected);
+    final pending = _pending;
+    final fromTag =
+        pending != null && _router.fits(pending, productId: product.id, barcode: barcode, now: DateTime.now())
+        ? pending.read
+        : null;
+    final marketId = trip.marketId;
+    final expected = fromTag != null || marketId == null
+        ? null
+        : latestPriceAt(await prices.watchHistory(product.id).first, marketId);
+
+    await cart.addProduct(trip.id, product.id, price: fromTag?.price ?? expected);
     await list.checkProduct(product.id);
     unawaited(HapticFeedback.mediumImpact());
+    if (fromTag != null) {
+      _pending = null;
+      _settledProducts.add(product.id);
+      await _rememberTagPrice(trip, product.id, fromTag);
+    }
     if (!mounted) return;
+    _lockFrame();
+    if (fromTag != null) {
+      final item = ref.read(activeCartProvider).value?.where((e) => e.product.id == product.id).firstOrNull;
+      _showNotice((price: fromTag.price, detail: product.name, waiting: false), itemId: item?.item.id);
+    }
+  }
+
+  /// Uma etiqueta lida ao vivo: o preço vai para o item certo ou espera o
+  /// próximo produto (ADR 0012).
+  Future<void> _onTagRead(TagPriceRead read) async {
+    final trip = ref.read(activeTripProvider).value;
+    if (trip == null) return;
+    final products = ref.read(productRepositoryProvider);
+    final cartRepository = ref.read(cartRepositoryProvider);
+    final l10n = AppLocalizations.of(context);
+    try {
+      final barcode = read.barcode;
+      final tagProduct = barcode == null ? null : await products.findByBarcode(barcode);
+      if (!mounted) return;
+      final cart = ref.read(activeCartProvider).value ?? const <CartEntry>[];
+      final settled = {
+        for (final entry in cart)
+          if (_settledProducts.contains(entry.product.id)) entry.item.id,
+      };
+      final now = DateTime.now();
+      switch (_router.route(read, cart: cart, now: now, tagProductId: tagProduct?.id, settled: settled)) {
+        case PriceCartItem(:final entry):
+          await cartRepository.setPrice(entry.item.id, read.price);
+          _settledProducts.add(entry.product.id);
+          await _rememberTagPrice(trip, entry.product.id, read);
+          unawaited(HapticFeedback.lightImpact());
+          if (!mounted) return;
+          _lockFrame();
+          _showNotice((price: read.price, detail: entry.product.name, waiting: false), itemId: entry.item.id);
+        case WaitForProduct(:final pending):
+          _pending = pending;
+          unawaited(HapticFeedback.selectionClick());
+          _showNotice((price: read.price, detail: l10n.cartLiveWaiting, waiting: true), duration: _router.waitFor);
+      }
+    } on Exception catch (error, stack) {
+      _report(error, stack);
+    }
+  }
+
+  /// Guarda o preço da etiqueta no histórico do mercado da compra, com os
+  /// outros preços dela (ADR 0011). Sem mercado escolhido, fica só no
+  /// carrinho.
+  Future<void> _rememberTagPrice(ShoppingTrip trip, String productId, TagPriceRead read) async {
+    final marketId = trip.marketId;
+    if (marketId == null || !_registeredTags.add('$productId:${read.price.cents}')) return;
+    await ref.read(registerPriceObservationProvider)(
+      RegisterPriceInput(
+        marketId: marketId,
+        productId: productId,
+        price: read.price,
+        source: PriceSource.priceTag,
+        otherOffers: read.otherOffers,
+      ),
+    );
+  }
+
+  void _lockFrame() {
     setState(() => _locked = true);
     _unlock?.cancel();
     _unlock = Timer(const Duration(milliseconds: 600), () {
       if (mounted) setState(() => _locked = false);
+    });
+  }
+
+  void _showNotice(_LiveNotice notice, {String? itemId, Duration duration = const Duration(milliseconds: 2500)}) {
+    if (!mounted) return;
+    setState(() {
+      _notice = notice;
+      _justReadItemId = itemId;
+    });
+    _noticeTimer?.cancel();
+    _noticeTimer = Timer(duration, () {
+      if (!mounted) return;
+      setState(() {
+        _notice = null;
+        _justReadItemId = null;
+      });
     });
   }
 
@@ -194,6 +342,7 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
         RegisterPriceInput(marketId: marketId, productId: entry.product.id, price: price, source: PriceSource.manual),
       );
       await cart.setPrice(entry.item.id, price);
+      _settledProducts.add(entry.product.id);
     } on Exception {
       messenger.showSnackBar(SnackBar(content: Text(l10n.cartPriceFailed)));
     }
@@ -220,17 +369,17 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
   /// leitor não pode continuar lendo por baixo dela.
   Future<T?> _withScannerPaused<T>(Future<T?> Function() action) async {
     _pausedForRoute = true;
-    await _camera(_scanner.stop);
+    await _camera(_live.stop);
     try {
       return await action();
     } finally {
       _pausedForRoute = false;
-      if (mounted) await _camera(_scanner.start);
+      if (mounted) await _startCamera();
     }
   }
 
   /// A lanterna falha se a câmera não abriu (sem permissão, por exemplo).
-  Future<void> _toggleTorch() => _camera(_scanner.toggleTorch);
+  Future<void> _toggleTorch() => _camera(_live.toggleTorch);
 
   /// Comandos da câmera que podem falhar sem derrubar a tela: o erro vai para
   /// o relatório e o leitor segue como está.
@@ -242,7 +391,9 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
     }
   }
 
-  void _report(Exception error, StackTrace stack) =>
+  void _report(Exception error, StackTrace stack) => _reportAny(error, stack);
+
+  void _reportAny(Object error, StackTrace stack) =>
       FlutterError.reportError(FlutterErrorDetails(exception: error, stack: stack, library: 'shopping_list'));
 
   @override
@@ -253,6 +404,9 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
     final cart = ref.watch(activeCartProvider).value ?? const <CartEntry>[];
     final summary = ref.watch(shoppingTripSummaryProvider);
     final marketName = ref.watch(activeTripMarketNameProvider);
+    final notice = _notice;
+    final controller = _live.controller;
+    final previewSize = controller?.value.previewSize;
 
     // A compra terminou (aqui ou na Lista): o carrinho fecha.
     ref.listen(activeTripProvider, (previous, next) {
@@ -266,17 +420,59 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
       body: Stack(
         fit: StackFit.expand,
         children: [
-          MobileScanner(controller: _scanner, onDetect: _onDetect),
+          // A prévia preenche a tela (cover); o recorte de cada quadro conta
+          // com isso (viewfinderInImage).
+          SizedBox.expand(
+            key: _previewKey,
+            child: controller == null || previewSize == null || !controller.value.isInitialized
+                ? null
+                : ClipRect(
+                    child: FittedBox(
+                      fit: BoxFit.cover,
+                      child: SizedBox(
+                        width: previewSize.height,
+                        height: previewSize.width,
+                        child: CameraPreview(controller),
+                      ),
+                    ),
+                  ),
+          ),
           Align(
             alignment: const Alignment(0, -0.45),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ScanViewfinder(locked: _locked),
-                if (cart.isEmpty) ...[
-                  const SizedBox(height: BipaSpacing.s4),
-                  Text(l10n.cartHint, style: BipaText.label.copyWith(color: colors.onCamera)),
-                ],
+                // O tamanho fixo é o da moldura aberta: o recorte não muda
+                // quando ela trava.
+                SizedBox(
+                  key: _viewfinderKey,
+                  width: 260,
+                  height: 150,
+                  child: Center(child: ScanViewfinder(locked: _locked)),
+                ),
+                const SizedBox(height: BipaSpacing.s4),
+                SizedBox(
+                  height: 40,
+                  child: switch ((notice, _cameraDenied)) {
+                    ((:final price, :final detail, :final waiting)?, _) => LiveReadChip(
+                      icon: waiting ? Icons.qr_code_scanner_rounded : Icons.sell_outlined,
+                      price: price.format(),
+                      detail: detail,
+                    ),
+                    (null, true) => Center(
+                      child: Text(
+                        l10n.cartCameraDenied,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        style: BipaText.label.copyWith(color: colors.onCamera),
+                      ),
+                    ),
+                    (null, false) when cart.isEmpty => Center(
+                      child: Text(l10n.cartHint, style: BipaText.label.copyWith(color: colors.onCamera)),
+                    ),
+                    _ => null,
+                  },
+                ),
               ],
             ),
           ),
@@ -300,7 +496,7 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
                   ),
                   const SizedBox(width: BipaSpacing.s2),
                   CameraGlassButton(
-                    icon: Icons.flashlight_on_outlined,
+                    icon: _live.torchOn ? Icons.flashlight_off_outlined : Icons.flashlight_on_outlined,
                     label: l10n.cartTorch,
                     onPressed: _toggleTorch,
                   ),
@@ -323,6 +519,7 @@ class _CartModePageState extends ConsumerState<CartModePage> with WidgetsBinding
                         ? l10n.cartQuantity(entry.item.quantity, entry.product.name)
                         : entry.product.name,
                     price: entry.item.price?.format(),
+                    justRead: entry.item.id == _justReadItemId,
                     take: entry.item.take,
                     takeLabel: l10n.cartTake(entry.product.name),
                     onTakeChanged: (take) => _setTake(entry, take: take),

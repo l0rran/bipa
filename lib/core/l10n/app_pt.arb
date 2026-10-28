@@ -281,7 +281,7 @@
   "cartPhotoTag": "Fotografar a etiqueta",
   "cartClose": "Fechar",
   "cartTorch": "Lanterna",
-  "cartHint": "Aponte para o código de barras",
+  "cartHint": "Aponte para o código ou a etiqueta",
   "@cartHint": {
     "description": "Dica sob o visor, enquanto o carrinho está vazio."
   },
@@ -298,5 +298,10 @@
     }
   },
   "cancel": "Cancelar",
-  "cartPriceFailed": "Não deu para guardar o preço. Tente de novo."
+  "cartPriceFailed": "Não deu para guardar o preço. Tente de novo.",
+  "@cartLiveWaiting": {
+    "description": "Ao lado do preço lido ao vivo, quando ele espera o próximo produto bipado."
+  },
+  "cartLiveWaiting": "bipe o produto",
+  "cartCameraDenied": "Sem acesso à câmera.\nLibere nas configurações do Android."
 }
