@@ -201,6 +201,18 @@ O problema: **corrigir o local de um item novo na hora do bipe**, quando a suges
 
 **Decidido em 28/10/2026:** a primeira proposta punha o local num chip de vidro à parte, abaixo do aviso. O quadro aprovado ([CapturaCasaLocal](prototipo/telas/CapturaCasaLocal.png)) pôs o local dentro do aviso, e o app seguiu (`onDetailTap` do `LiveReadChip`). Um chip separado dizia o mesmo item duas vezes, em dois lugares.
 
+### Local que não corta no aviso (outubro de 2026)
+
+O problema: **com um nome comprido, o local é a parte do aviso que corta** (AB12). Num celular de 360 dp, "Leite condensado Moça 395 g · 1 na D…": a seta continua lá, mas o que ela troca não aparece, e o local é a razão de o texto ser um botão.
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **Material Design** ([snackbars](https://m3.material.io/components/snackbar/guidelines)) | O texto do aviso tem uma ou duas linhas; quando não cabe numa, quebra em vez de cortar, e a ação fica ao lado | Duas linhas quando a informação precisa delas (proposta B) | Duas linhas só no bipe em que o item nasce, quando há local; nos outros bipes, uma |
+| **Material Design** ([listas de duas linhas](https://m3.material.io/components/lists/guidelines)) e a `ScanTray` do Bipa (granel com `meta`) | Texto principal em cima e o de apoio embaixo, cada um na sua linha | O nome em cima, mais discreto, e o local embaixo, com a seta, que é o que se toca | O local é o texto mais forte das duas linhas, porque é ele que o botão troca |
+| **Spotify** ("Adicionado a Curtidas · Alterar", no benchmark de "Trocar o local") | O destino vem no fim do aviso | — | O destino no fim é o que corta primeiro: na proposta A ele passa para a frente |
+
+**Do nosso jeito:** duas propostas, no quadro [CapturaCasaLocalNomeLongo](prototipo/telas/CapturaCasaLocalNomeLongo.png). **A** põe o local antes do nome numa linha só ("+1 · 1 na Despensa ▾ · Leite con…"): o aviso não muda de altura, mas num celular de 360 dp o nome fica com uns 60 dp e quase some, e o nome é o que diz qual item foi. **B** usa duas linhas quando há local: o nome em cima (inteiro na maioria dos casos, cortando só no fim) e "1 na Despensa ▾" embaixo. O aviso cresce 16 dp só nesse bipe. Nas duas, o leitor de tela ouve o número, o nome, o local e "trocar o local", e o Desfazer continua um botão à parte. Recomendação: B, que não perde nenhuma das duas informações.
+
 ### Quadros do que o app já fazia (outubro de 2026)
 
 O "Desfazer" no aviso da câmera, o preço em destaque velho do produto, o editor da linha do Início e a folha "Editar embalagem" nasceram no código, a partir das análises de UX, sem quadro. Os quadros foram desenhados a partir do app: o conteúdo, a ordem e as ações são os do código, no visual do design system, e as diferenças do widget ficam na linha de cada quadro no [protótipo](prototipo/README.md). As referências são as que já estavam nas análises:

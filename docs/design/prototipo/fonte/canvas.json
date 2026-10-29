@@ -233,6 +233,13 @@
       "w": 780,
       "h": 880,
       "title": "Proposta: navegação com letra grande (A e B)"
+    },
+    "CapturaCasaLocalNomeLongo.dc.html": {
+      "x": 0,
+      "y": 5500,
+      "w": 780,
+      "h": 780,
+      "title": "Proposta: local com nome longo (A e B)"
     }
   },
   "order": [
@@ -267,7 +274,8 @@
     "MainEditor.dc.html",
     "EditarEmbalagem.dc.html",
     "Produtos.dc.html",
-    "NavLetraGrande.dc.html"
+    "NavLetraGrande.dc.html",
+    "CapturaCasaLocalNomeLongo.dc.html"
   ],
   "notes": {
     "titulo": {
@@ -288,6 +296,13 @@
       "x": 0,
       "y": 3400,
       "text": "Bipa · quadros que faltavam (aguardam revisão)",
+      "kind": "title1",
+      "maxW": 3680
+    },
+    "titulo4": {
+      "x": 0,
+      "y": 5200,
+      "text": "Bipa · lote 9: propostas (aguardam revisão)",
       "kind": "title1",
       "maxW": 3680
     }
