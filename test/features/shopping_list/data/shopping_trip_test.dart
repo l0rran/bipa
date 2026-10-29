@@ -514,4 +514,23 @@ void main() {
 
     expect(await trips.watchLastMarketId().first, 'centro');
   });
+
+  test('"alguma compra terminada" só vale depois do "Terminei" e volta atrás ao reabrir', () async {
+    expect(await trips.watchAnyFinished().first, isFalse);
+
+    final trip = await trips.start();
+    expect(await trips.watchAnyFinished().first, isFalse);
+
+    await trips.finish(trip.id);
+    expect(await trips.watchAnyFinished().first, isTrue);
+
+    await trips.reopen(trip.id);
+    expect(await trips.watchAnyFinished().first, isFalse);
+  });
+
+  test('uma compra cancelada não conta como terminada', () async {
+    final trip = await trips.start();
+    await trips.cancel(trip.id);
+    expect(await trips.watchAnyFinished().first, isFalse);
+  });
 }

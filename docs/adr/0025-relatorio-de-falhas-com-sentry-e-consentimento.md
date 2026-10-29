@@ -20,7 +20,7 @@ Havia três caminhos:
 - **Sentry**, com o pacote `sentry_flutter`. O filtro em Dart é o que decide: o que não passar por ele não sai do aparelho.
 - **Desligado por padrão, só com consentimento (opt-in).** O Sentry só é iniciado quando há DSN no build **e** a pessoa aceitou. Sem resposta ou com "não", nada é iniciado, nenhum dado é coletado, nenhuma conexão é aberta.
 - **O consentimento fica no aparelho**, num arquivo pequeno na pasta de suporte do app (`crash_reporting_consent`), lido antes do `runApp`. É uma preferência do aparelho, não um dado do domínio: não entra no banco nem muda o esquema. Tem três estados: nunca perguntado, aceito e recusado. A interface usa o primeiro para saber se ainda precisa perguntar.
-- **Ligar e desligar valem na hora.** Aceitar grava a resposta e inicia o Sentry; recusar (ou revogar) fecha o Sentry e grava a resposta. O provider `crashReportingConsentProvider` e o caso de uso `SetCrashReportingConsent` em `lib/core/crash_reporting/` já fazem isso, prontos para a tela.
+- **Ligar e desligar valem na hora.** Aceitar grava a resposta e inicia o Sentry; recusar (ou revogar) fecha o Sentry e grava a resposta. O provider `crashReportingConsentProvider` e o caso de uso `SetCrashReportingConsent` em `lib/core/crash_reporting/` já fazem isso, e são o que o cartão do Início e o interruptor dos Ajustes chamam.
 - **O DSN fica fora do repositório.** Ele entra no build por `--dart-define=SENTRY_DSN=...` e é lido com `String.fromEnvironment`. Build sem DSN (o de desenvolvimento, o dos testes, o de quem clona o repositório) nunca inicia o Sentry, mesmo com consentimento, e a interface não deve oferecer a pergunta (`crashReportingAvailableProvider` diz se há DSN).
 
 ### O que é enviado
@@ -41,14 +41,16 @@ Havia três caminhos:
 
 A limpeza é uma função pura (`scrubEvent` e `scrubBreadcrumb`, em `crash_report_scrubber.dart`), com testes que montam eventos com nome de produto, coordenadas e mensagens com texto de quem usa.
 
-### Onde a pergunta deve aparecer (proposta para o protótipo)
+### Onde a pergunta aparece
 
-O visual é aprovado no protótipo antes de ser implementado, então a pergunta ainda não existe no app. A proposta, para virar quadro:
+O quadro foi aprovado em 28/10/2026 (`InicioRelatorioFalhas` e `Ajustes`, no [protótipo](../design/prototipo/README.md)) e está no app:
 
 - **Não na primeira abertura.** A pessoa ainda não sabe o que o app faz, e uma pergunta de privacidade antes de bipar o primeiro item quebra o "calma por padrão".
-- **Uma vez, depois da primeira compra terminada:** um cartão no Início, abaixo do resumo, com o porquê em uma frase ("Se o Bipa travar, mandar um relatório sem seus produtos, preços nem lugares?") e dois botões de mesmo peso, "Mandar" e "Não mandar". Fechar o cartão sem escolher conta como "não" e ele não volta. Nada fica pré-marcado.
-- **Sempre revogável numa tela de Ajustes** (ou "Sobre o Bipa"), que ainda não existe: um interruptor "Relatório de falhas", com um link para o que é enviado. É o único lugar para mudar de ideia, nos dois sentidos.
-- Em build sem DSN, nem o cartão nem o interruptor aparecem.
+- **Uma vez, depois da primeira compra terminada** (`CrashReportingAskCard`, no Início). O cartão fica entre os locais e as listas, neutro, sem cor de destaque, com o porquê em uma frase ("Se o Bipa travar, mandar um relatório?", e o que vai e o que fica) e dois botões do mesmo peso, "Mandar" e "Não mandar". Fechar com o × conta como "não", e o cartão não volta. Nada vem pré-marcado.
+  - Aparece só quando as três condições valem: o build tem DSN (`crashReportingAvailableProvider`), a resposta ainda é `unasked` e alguma compra já tem fim registrado (`ShoppingTripRepository.watchAnyFinished`, uma consulta sobre `finishedAt`; não mudou o esquema). Compra cancelada some e compra reaberta volta a estar em andamento, então nenhuma das duas conta.
+  - Se gravar a resposta falhar, o cartão sai até a próxima abertura em vez de ficar preso na tela.
+- **Sempre revogável nos Ajustes** (`SettingsPage`, rota `/ajustes`), aberta pela engrenagem ao lado de "Sua casa". O interruptor "Relatório de falhas" (ligado é aceito, desligado é recusado) liga e desliga o Sentry na hora e é o único lugar para mudar de ideia, nos dois sentidos. Embaixo dele ficam abertos o que vai e o que nunca vai, sem link para outra página: é a explicação que a LGPD pede, num lugar só. "Sobre o Bipa" mostra a versão, lida com o `package_info_plus` (que já vinha com o `sentry_flutter` e passou a ser dependência direta).
+- **Em build sem DSN, nem o cartão nem o interruptor aparecem:** a seção "Privacidade" some e a tela fica só com a versão.
 
 ### LGPD
 
@@ -63,5 +65,5 @@ O visual é aprovado no protótipo antes de ser implementado, então a pergunta 
 - Mensagens de exceção ficam pobres de propósito: muitas falhas vão chegar só com o tipo e a pilha. Quando isso não bastar, o caminho é uma exceção do app com mensagem escrita no código (sem interpolar dados), não afrouxar o filtro.
 - **Falhas nativas** (Kotlin, Java e NDK, como as dos plugins de câmera e do ML Kit) são tratadas pelo SDK do Android e **não passam pelo filtro em Dart**. Elas recebem o `sendDefaultPii: false`, o escopo já limpo (sem usuário, com os rastros já filtrados) e os rastros nativos automáticos desligados. O texto da notificação ao vivo (ADR 0015) só iria junto se aparecesse na mensagem de uma exceção nativa. A limpeza do servidor cobre esse caso.
 - Erros que o app já captura e transforma em mensagem na tela não são enviados: só falhas não tratadas. Mandar também os capturados é outra decisão.
-- Sem a pergunta na interface, ninguém consegue ligar o relatório: até o quadro ser aprovado e a tela feita, o app continua sem enviar nada, mesmo num build com DSN.
+- Sem DSN no build, ninguém consegue ligar o relatório: nem o cartão nem o interruptor aparecem, e o app não envia nada. Com DSN, só envia depois de um "Mandar" ou do interruptor ligado.
 - Para criar o projeto: no Sentry, um projeto Flutter; o DSN vai no build de publicação com `flutter build appbundle --dart-define=SENTRY_DSN=<dsn>`. Para subir os símbolos do código ofuscado, o `sentry_dart_plugin` pode entrar depois.

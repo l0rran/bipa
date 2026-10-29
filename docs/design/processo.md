@@ -287,7 +287,7 @@ Recomendação: A, que segue a regra de texto na navegação e não cria variant
 
 ### Pergunta do relatório de falhas (outubro de 2026)
 
-O problema: **pedir o consentimento do relatório de falhas sem quebrar a calma, com a recusa tão fácil quanto o aceite e um lugar para mudar de ideia** ([ADR 0025](../adr/0025-relatorio-de-falhas-com-sentry-e-consentimento.md)). O app ainda não tem tela de Ajustes.
+O problema: **pedir o consentimento do relatório de falhas sem quebrar a calma, com a recusa tão fácil quanto o aceite e um lugar para mudar de ideia** ([ADR 0025](../adr/0025-relatorio-de-falhas-com-sentry-e-consentimento.md)). 
 
 | Referência | Como resolve | O que levamos | O que fazemos diferente |
 | --- | --- | --- | --- |

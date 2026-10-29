@@ -8,6 +8,7 @@ import 'package:bipa/features/products/presentation/product_detail_page.dart';
 import 'package:bipa/features/products/presentation/product_form_page.dart';
 import 'package:bipa/features/products/presentation/products_page.dart';
 import 'package:bipa/features/products/presentation/scan_code_page.dart';
+import 'package:bipa/features/settings/presentation/settings_page.dart';
 import 'package:bipa/features/shopping_list/presentation/cart_mode_page.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_page.dart';
 import 'package:bipa/features/stock/presentation/home_page.dart';
@@ -40,6 +41,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Telas em tela cheia, sobre as abas.
       GoRoute(path: Routes.scanner, builder: (_, _) => const ScanCodePage()),
       GoRoute(path: Routes.cartMode, builder: (_, _) => const CartModePage()),
+      GoRoute(path: Routes.settings, builder: (_, _) => const SettingsPage()),
       GoRoute(
         path: Routes.camera,
         builder: (_, state) => CameraPage(

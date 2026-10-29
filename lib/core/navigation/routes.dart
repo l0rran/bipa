@@ -13,6 +13,9 @@ abstract final class Routes {
   /// A câmera do botão de bipar (protótipo "Captura").
   static const camera = '/camera';
   static const cartMode = '/carrinho';
+
+  /// Os Ajustes, abertos pela engrenagem do Início (ADR 0025).
+  static const settings = '/ajustes';
   static const newProduct = '/produto/novo';
   static const newMarket = '/mercado/novo';
 

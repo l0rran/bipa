@@ -55,6 +55,11 @@ abstract interface class ShoppingTripRepository {
   /// O mercado da compra mais recente que teve mercado, ou `null`: é o
   /// mercado que a lista mostra antes de "Ir às compras".
   Stream<String?> watchLastMarketId();
+
+  /// Se alguma compra já terminou (tem fim registrado). Compra desfeita ou
+  /// cancelada não conta: ela some ou volta a estar em andamento. É o que a
+  /// pergunta do relatório de falhas espera (ADR 0025).
+  Stream<bool> watchAnyFinished();
 }
 
 /// O que a barra da compra mostra: quantos itens da lista já foram e quanto
