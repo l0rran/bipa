@@ -354,13 +354,13 @@ O problema: **o backup do celular antigo some sem a pessoa decidir** (BK1 da [an
 | **Android Developers** ([Auto Backup](https://developer.android.com/identity/data/autobackup)) | Só o backup mais recente de cada app fica guardado, e um novo apaga o anterior | **Gravar por cima é apagar**: o diálogo diz isso com o verbo "Apagar" | — |
 | **As confirmações do próprio Bipa** ("Apagar mercado", "Juntar") | Diálogo com o que some e o botão com verbo e objeto | O mesmo diálogo, com a data e os números do que some | Os botões empilhados, porque "Apagar e fazer backup" não cabe ao lado de "Cancelar" |
 
-**Do nosso jeito:** dois quadros, [AjustesBackupPendente](prototipo/telas/AjustesBackupPendente.png) e [InicioBackupPendente](prototipo/telas/InicioBackupPendente.png), e o [RestaurarBackup](prototipo/telas/RestaurarBackup.png) revisto (BK3). Aguardam revisão.
+**Do nosso jeito:** dois quadros, [AjustesBackupPendente](prototipo/telas/AjustesBackupPendente.png) e [InicioBackupPendente](prototipo/telas/InicioBackupPendente.png), e o [RestaurarBackup](prototipo/telas/RestaurarBackup.png) revisto (BK3). Aprovados pelo mantenedor e feitos no app em 29/10/2026; à pergunta da tabela, ele respondeu que o backup do outro celular espera a resposta sem prazo, com o diário pausado.
 
 - **A linha "Último backup" diz a origem e restaura.** "De outro celular", com o dia e o ano, e o toque abre a folha de confirmação com esse arquivo, sem o seletor do Android.
 - **O estado do automático é o real.** "Automático pausado até você decidir", sob "Fazer backup agora", que é onde a decisão pesa.
 - **Gravar por cima pergunta.** "Apagar o backup do outro celular?", com a data, os números e "não volta mais", e o botão neutro "Apagar e fazer backup". "Salvar uma cópia…" grava só a cópia e não toca no backup do outro celular.
 - **O cartão do Início fica até a resposta**, menor quando a casa já tem itens, com "Restaurar" passando pela folha e "Deixar de lado" no lugar de "Começar do zero". O aviso diz o que vem depois: "O próximo grava por cima."
-- **Os mesmos três números dos dois lados e a data com o ano** na confirmação, para um backup velho não parecer recente.
+- **Os mesmos três números dos dois lados e a data com o ano** na confirmação, para um backup velho não parecer recente, e, quando o arquivo é mais velho que o último preço ou compra do celular, uma linha que diz o que sai.
 
 ## Fontes
 
