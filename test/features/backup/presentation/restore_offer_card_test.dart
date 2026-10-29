@@ -4,8 +4,10 @@ import 'package:bipa/core/di/core_providers.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/features/backup/domain/backup_exception.dart';
 import 'package:bipa/features/backup/domain/backup_manifest.dart';
+import 'package:bipa/features/backup/domain/backup_ports.dart';
 import 'package:bipa/features/backup/presentation/backup_files.dart';
 import 'package:bipa/features/backup/presentation/backup_providers.dart';
+import 'package:bipa/features/backup/presentation/restore_offer_card.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
@@ -303,5 +305,77 @@ void main() {
       expect(find.text('Backup do Google'), findsNothing);
       expect(backup.lastBackupInfo?.madeHere, isTrue, reason: 'Ajustes volta a ser o de sempre');
     });
+
+    testWidgets('um backup novo feito com o aviso na tela não vira "de outro celular" (BK7)', (tester) async {
+      final storage = _SwitchingStorage();
+      final container = ProviderContainer(
+        overrides: [
+          backupStorageProvider.overrideWithValue(storage),
+          backupArchiveProvider.overrideWithValue(_SwitchingArchive(storage)),
+          backupDatabaseProvider.overrideWithValue(_UnusedDatabase()),
+        ],
+      );
+      addTearDown(container.dispose);
+      final offer = (await container.read(backupProvider.future)).restoreOffer!;
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: BipaTheme.light,
+            locale: const Locale('pt', 'BR'),
+            supportedLocales: const [Locale('pt', 'BR')],
+            localizationsDelegates: const [AppLocalizations.delegate, ...GlobalMaterialLocalizations.delegates],
+            home: Scaffold(body: PendingBackupCard(offer: offer)),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Deixar de lado'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      // Com o aviso na tela, "Apagar e fazer backup" em Ajustes grava o b2.
+      storage
+        ..latestId = 'b2'
+        ..madeHereId = 'b2';
+      await _finishToasts(tester);
+
+      final state = await container.read(backupProvider.future);
+      expect(storage.madeHereId, 'b2');
+      expect((state.lastBackup?.manifest.id, state.pending, state.restoreOffer), ('b2', false, null));
+    });
   });
+}
+
+/// O `ultimo.bipa` de id [latestId], deste celular quando [madeHereId] é o
+/// mesmo. O teste troca os dois como "Apagar e fazer backup" faria.
+final class _SwitchingStorage implements BackupStorage {
+  var latestId = 'b1';
+  String? madeHereId;
+
+  @override
+  Future<LatestBackupFile?> latest() async => LatestBackupFile(path: 'ultimo.bipa', size: 1, madeHereId: madeHereId);
+
+  @override
+  Future<void> adoptLatest(String backupId) async => madeHereId = backupId;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+final class _SwitchingArchive implements BackupArchive {
+  _SwitchingArchive(this._storage);
+
+  final _SwitchingStorage _storage;
+
+  @override
+  Future<BackupManifest> readManifest(String source) async =>
+      fakeManifest(createdAt: _backupDay, id: _storage.latestId);
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+final class _UnusedDatabase implements BackupDatabase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

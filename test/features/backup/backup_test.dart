@@ -346,6 +346,20 @@ void main() {
       expect((await app.readLatest())!.manifest.id, isNot(id));
     });
 
+    test('"Deixar de lado" depois de um backup novo não adota o id antigo (BK7)', () async {
+      await arriveOnNewPhone();
+      await startUsing();
+      final offer = (await app.offer()())!;
+
+      // Com o aviso ainda na tela, "Apagar e fazer backup" em Ajustes.
+      final made = (await app.create()(replacePending: true))!;
+      await app.offer().dismiss(offer);
+
+      final latest = (await app.readLatest())!;
+      expect((latest.manifest.id, latest.madeHere), (made.manifest.id, true));
+      expect(await app.offer()(), isNull);
+    });
+
     test('"Começar do zero" tira a oferta; o arquivo continua restaurável até o próximo diário', () async {
       await arriveOnNewPhone();
       final offer = (await app.offer()())!;

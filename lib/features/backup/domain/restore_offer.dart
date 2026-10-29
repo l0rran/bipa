@@ -32,5 +32,14 @@ final class RestoreOffer {
   /// "Começar do zero" ou "Deixar de lado": a oferta some e o arquivo passa
   /// a ser deste aparelho. O backup diário volta e, no próximo, grava por
   /// cima dele.
-  Future<void> dismiss(BackupInfo offer) => _storage.adoptLatest(offer.manifest.id);
+  ///
+  /// Só se o `ultimo.bipa` ainda é o de [offer]: enquanto o aviso com o
+  /// "Desfazer" estava na tela, a pessoa pode ter gravado um backup novo
+  /// ("Apagar e fazer backup"), e adotar o id antigo faria o backup deste
+  /// aparelho parecer de outro (BK7).
+  Future<void> dismiss(BackupInfo offer) async {
+    final latest = await ReadLatestBackup(storage: _storage, archive: _archive)();
+    if (latest == null || latest.manifest.id != offer.manifest.id) return;
+    await _storage.adoptLatest(offer.manifest.id);
+  }
 }

@@ -190,6 +190,21 @@ void main() {
       expect(state.lastBackup?.manifest.id, id);
     });
 
+    test(
+      '"Apagar e fazer backup" com o aviso de "Deixar de lado" na tela: o backup novo é deste celular (BK7)',
+      () async {
+        await arriveFromOtherPhone();
+
+        final hidden = controller().hideRestoreOffer()!;
+        final made = (await controller().createBackup(replacePending: true))!;
+        await controller().dismissRestoreOffer(hidden);
+
+        final state = container.read(backupProvider).value!;
+        expect(state.lastBackup?.manifest.id, made.manifest.id);
+        expect((state.pending, state.restoreOffer), (false, null));
+      },
+    );
+
     test('"Fazer backup agora" só grava por cima com a confirmação', () async {
       final id = await arriveFromOtherPhone();
 
