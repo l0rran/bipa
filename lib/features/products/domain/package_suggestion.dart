@@ -1,15 +1,25 @@
+import 'package:bipa/core/catalog/product_kind.dart';
 import 'package:bipa/core/catalog/text_fold.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
+import 'package:bipa/features/products/domain/package_origin.dart';
 import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/products/domain/product_catalog.dart';
 import 'package:bipa/features/products/domain/product_search.dart';
 import 'package:meta/meta.dart';
 
-/// O que o nome lido na etiqueta sugere para uma embalagem nova (ADR 0013):
-/// de que produto ela é, a marca e o tamanho. É só uma sugestão: a pessoa
-/// confere antes de salvar.
+/// O que o nome lido na etiqueta, ou o catálogo pronto, sugere para uma
+/// embalagem nova (ADR 0013 e 0024): de que produto ela é, a marca e o
+/// tamanho. É só uma sugestão: a pessoa confere antes de salvar.
 @immutable
 final class PackageSuggestion {
-  const PackageSuggestion({this.product, this.newProductName, this.brand, this.size, this.unit});
+  const PackageSuggestion({
+    this.product,
+    this.newProductName,
+    this.brand,
+    this.size,
+    this.unit,
+    this.origin = PackageOrigin.person,
+  });
 
   static const empty = PackageSuggestion();
 
@@ -21,6 +31,10 @@ final class PackageSuggestion {
   final String? brand;
   final double? size;
   final MeasureUnit? unit;
+
+  /// De onde veio a sugestão: da etiqueta (a pessoa) ou do catálogo. A
+  /// embalagem salva leva essa origem (ADR 0023, lacuna C1).
+  final PackageOrigin origin;
 
   /// A partir de [nameHint] ("ARROZ BRANCO TIO JOAO 5KG"), escolhe entre
   /// [products] o que tem todas as palavras do nome na etiqueta (o mais
@@ -36,16 +50,7 @@ final class PackageSuggestion {
     if (words.isEmpty) return empty;
 
     final (size, unit, sizeWords) = _size(folded);
-    Product? match;
-    var matchWords = const <String>{};
-    for (final product in products) {
-      final productWords = _words(foldText(product.name)).where((w) => !_isNumber(w)).toSet();
-      if (productWords.isEmpty || !words.toSet().containsAll(productWords)) continue;
-      if (productWords.length > matchWords.length) {
-        match = product;
-        matchWords = productWords;
-      }
-    }
+    final (match, matchWords) = _productIn(words, products);
 
     final nameWords = match == null ? {words.first} : matchWords;
     bool isBrand(String word) =>
@@ -60,6 +65,37 @@ final class PackageSuggestion {
     );
   }
 
+  /// A embalagem do catálogo pronto (ADR 0024) já traz marca, tamanho e
+  /// unidade; falta dizer de que produto da pessoa ela é (ADR 0013).
+  ///
+  /// O produto é o que tem todas as palavras do nome no nome do catálogo,
+  /// como em [PackageSuggestion.from] ("Arroz branco" para "Arroz Branco
+  /// Tipo 1 Tio João"); num empate, o do mesmo tipo que a categoria do
+  /// catálogo. Sem nenhum, sugere um produto novo com o nome do catálogo sem
+  /// a marca, o tamanho e as palavras da embalagem ([productNameFromLabel]).
+  /// Sem tamanho no catálogo, ele vem da quantidade em texto ("5 kg") ou do
+  /// fim do nome.
+  factory PackageSuggestion.fromCatalog(CatalogPackage package, {required List<Product> products}) {
+    final brand = _catalogBrand(package.brand);
+    final words = _words(foldText(package.name));
+    final (match, _) = _productIn(words, products, kind: package.kind);
+
+    var (size, unit) = (package.size, package.unit);
+    if (size == null || unit == null) {
+      // Vale o último tamanho do texto: o da quantidade, se houver.
+      final (parsedSize, parsedUnit, _) = _size(foldText('${package.name} ${package.quantity ?? ''}'));
+      if (parsedSize != null && parsedUnit != null) (size, unit) = (parsedSize, parsedUnit);
+    }
+    return PackageSuggestion(
+      product: match,
+      newProductName: match == null ? _catalogProductName(package.name, brand: brand) : null,
+      brand: brand,
+      size: unit == null ? null : size,
+      unit: unit,
+      origin: package.source,
+    );
+  }
+
   @override
   bool operator ==(Object other) =>
       other is PackageSuggestion &&
@@ -67,13 +103,61 @@ final class PackageSuggestion {
       other.newProductName == newProductName &&
       other.brand == brand &&
       other.size == size &&
-      other.unit == unit;
+      other.unit == unit &&
+      other.origin == origin;
 
   @override
-  int get hashCode => Object.hash(product, newProductName, brand, size, unit);
+  int get hashCode => Object.hash(product, newProductName, brand, size, unit, origin);
 
   @override
-  String toString() => 'PackageSuggestion(${product?.name ?? newProductName}, $brand, $size ${unit?.symbol})';
+  String toString() =>
+      'PackageSuggestion(${product?.name ?? newProductName}, $brand, $size ${unit?.symbol}, ${origin.name})';
+}
+
+/// Entre [products], o que tem todas as palavras do nome em [words], e essas
+/// palavras. Vence o mais específico (mais palavras); num empate, o do tipo
+/// [kind], quando dado, e senão o primeiro.
+(Product?, Set<String>) _productIn(List<String> words, List<Product> products, {ProductKind? kind}) {
+  final available = words.toSet();
+  Product? match;
+  var matchWords = const <String>{};
+  for (final product in products) {
+    final productWords = _words(foldText(product.name)).where((w) => !_isNumber(w)).toSet();
+    if (productWords.isEmpty || !available.containsAll(productWords)) continue;
+    final better =
+        productWords.length > matchWords.length ||
+        (kind != null &&
+            productWords.length == matchWords.length &&
+            ProductKind.of(product.name) == kind &&
+            ProductKind.of(match!.name) != kind);
+    if (better) (match, matchWords) = (product, productWords);
+  }
+  return (match, matchWords);
+}
+
+/// A marca do catálogo, que pode vir com várias separadas por vírgula
+/// ("Tio João, Josapar") ou em caixa alta ("TIO JOÃO"): fica a primeira, e
+/// a caixa alta vira só a inicial maiúscula.
+String? _catalogBrand(String? brand) {
+  final first = brand?.split(',').first.trim() ?? '';
+  if (first.isEmpty) return null;
+  final shouting = first == first.toUpperCase() && first != first.toLowerCase();
+  if (!shouting) return first;
+  return first.toLowerCase().split(' ').map(_capitalize).join(' ');
+}
+
+/// O nome do produto novo sugerido pelo nome do catálogo: sem a marca, e
+/// com o recorte das etiquetas ([productNameFromLabel]). Se só sobra a marca
+/// ("Nescau"), ela é o nome.
+String _catalogProductName(String name, {required String? brand}) {
+  final brandWords = brand == null ? const <String>{} : _words(foldText(brand)).toSet();
+  final tokens = _tokens(name);
+  final withoutBrand = [
+    for (final token in tokens)
+      if (!brandWords.contains(token.word)) token.text,
+  ].join(' ');
+  final cut = productNameFromLabel(withoutBrand);
+  return cut.isNotEmpty ? cut : productNameFromLabel(name);
 }
 
 final _wordPattern = RegExp('[a-z0-9]+(?:[.,][0-9]+)?');

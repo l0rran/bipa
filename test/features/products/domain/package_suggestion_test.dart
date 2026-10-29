@@ -1,6 +1,9 @@
+import 'package:bipa/core/catalog/product_kind.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
+import 'package:bipa/features/products/domain/package_origin.dart';
 import 'package:bipa/features/products/domain/package_suggestion.dart';
 import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/products/domain/product_catalog.dart';
 import 'package:bipa/features/products/domain/product_search.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -246,6 +249,106 @@ void main() {
     test('o recorte que já acha produtos, ou o produto de nome inteiro na etiqueta, não mudam', () {
       expect(query('LIMAO TAHITI KG', ['Limão tahiti']), 'Limão tahiti');
       expect(query('LIMAO TAHITI KG', ['Limão']), 'Limão');
+    });
+  });
+
+  group('do catálogo pronto (ADR 0024)', () {
+    const rice = CatalogPackage(
+      barcode: '7893500020110',
+      name: 'Arroz Branco Tipo 1 Tio João',
+      brand: 'Tio João',
+      size: 5,
+      unit: MeasureUnit.kilogram,
+      kind: ProductKind.grains,
+      source: PackageOrigin.openFoodFacts,
+    );
+
+    test('o produto da pessoa vem pelo nome, e marca, tamanho e origem vêm do catálogo', () {
+      final products = [_product('Arroz'), _product('Arroz branco'), _product('Feijão')];
+
+      expect(
+        PackageSuggestion.fromCatalog(rice, products: products),
+        PackageSuggestion(
+          product: products[1],
+          brand: 'Tio João',
+          size: 5,
+          unit: MeasureUnit.kilogram,
+          origin: PackageOrigin.openFoodFacts,
+        ),
+      );
+    });
+
+    test('sem produto parecido, sugere o nome do catálogo sem marca, tamanho e embalagem', () {
+      final suggestion = PackageSuggestion.fromCatalog(rice, products: [_product('Feijão')]);
+
+      expect((suggestion.product, suggestion.newProductName), (null, 'Arroz branco'));
+    });
+
+    test('num empate pelo nome, fica o produto do tipo da categoria do catálogo', () {
+      // "Leite" e "Leite condensado" têm todas as palavras no nome, mas só
+      // um deles é doce.
+      const condensed = CatalogPackage(
+        barcode: '7891000100103',
+        name: 'Leite Condensado Moça',
+        kind: ProductKind.sweets,
+        source: PackageOrigin.openFoodFacts,
+      );
+      final products = [_product('Leite moça'), _product('Leite condensado')];
+
+      expect(PackageSuggestion.fromCatalog(condensed, products: products).product?.name, 'Leite condensado');
+    });
+
+    test('a marca em caixa alta ou com várias vira uma só, com a inicial maiúscula', () {
+      const shouting = CatalogPackage(
+        barcode: '7896005800010',
+        name: 'CAFE TORRADO E MOIDO PILAO',
+        brand: 'PILÃO, JDE',
+        source: PackageOrigin.openFoodFacts,
+      );
+
+      final suggestion = PackageSuggestion.fromCatalog(shouting, products: const []);
+
+      expect((suggestion.brand, suggestion.newProductName), ('Pilão', 'Café torrado e moído'));
+    });
+
+    test('sem tamanho no catálogo, ele vem da quantidade em texto, ou do nome', () {
+      const byQuantity = CatalogPackage(
+        barcode: '1',
+        name: 'Detergente Ypê 500ml',
+        quantity: '5 l',
+        source: PackageOrigin.openProductsFacts,
+      );
+      const byName = CatalogPackage(
+        barcode: '2',
+        name: 'Detergente Ypê 500ml',
+        source: PackageOrigin.openProductsFacts,
+      );
+      const none = CatalogPackage(barcode: '3', name: 'Detergente Ypê', source: PackageOrigin.openProductsFacts);
+
+      PackageSuggestion of(CatalogPackage package) => PackageSuggestion.fromCatalog(package, products: const []);
+      expect((of(byQuantity).size, of(byQuantity).unit), (5, MeasureUnit.liter));
+      expect((of(byName).size, of(byName).unit), (500, MeasureUnit.milliliter));
+      expect((of(none).size, of(none).unit, of(none).origin), (null, null, PackageOrigin.openProductsFacts));
+    });
+
+    test('se só sobra a marca, ela é o nome do produto novo', () {
+      const nescau = CatalogPackage(
+        barcode: '7891000053508',
+        name: 'Nescau',
+        brand: 'Nestlé',
+        size: 400,
+        unit: MeasureUnit.gram,
+        source: PackageOrigin.openFoodFacts,
+      );
+      const onlyBrand = CatalogPackage(
+        barcode: '1',
+        name: 'Camil',
+        brand: 'Camil',
+        source: PackageOrigin.openFoodFacts,
+      );
+
+      expect(PackageSuggestion.fromCatalog(nescau, products: const []).newProductName, 'Nescau');
+      expect(PackageSuggestion.fromCatalog(onlyBrand, products: const []).newProductName, 'Camil');
     });
   });
 }

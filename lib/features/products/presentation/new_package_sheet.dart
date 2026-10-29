@@ -16,6 +16,7 @@ import 'package:bipa/core/money/money.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/package_suggestion.dart';
 import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/products/domain/product_catalog.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/register_package.dart';
 import 'package:bipa/features/products/domain/unit_price.dart';
@@ -29,9 +30,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 typedef NewPackage = ({Product product, ProductPackage package});
 
 /// Folha "Embalagem nova" (protótipo "Bipar: embalagem nova"): ao bipar um
-/// código desconhecido, sugere o produto pelo nome lido na etiqueta
-/// ([nameHint]) e preenche marca e tamanho, para conferir (ADR 0013).
-/// [price], quando conhecido, aparece na etiqueta com o preço por kg.
+/// código que não é de nenhuma embalagem da pessoa, sugere o produto e
+/// preenche marca e tamanho, para conferir (ADR 0013).
+///
+/// O código é procurado antes no catálogo pronto (ADR 0024): achado, a
+/// folha vem preenchida com o que ele sabe, e a embalagem nasce marcada
+/// como vinda dele. Senão, a sugestão sai do nome lido na etiqueta
+/// ([nameHint]), como sem catálogo. [price], quando conhecido, aparece na
+/// etiqueta com o preço por kg.
 Future<NewPackage?> showNewPackageSheet(
   BuildContext context,
   WidgetRef ref, {
@@ -40,6 +46,7 @@ Future<NewPackage?> showNewPackageSheet(
   Money? price,
 }) async {
   final products = await ref.read(productRepositoryProvider).watchAll().first;
+  final fromCatalog = await _findInCatalog(ref, barcode);
   if (!context.mounted) return null;
   return showModalBottomSheet<NewPackage>(
     context: context,
@@ -47,11 +54,24 @@ Future<NewPackage?> showNewPackageSheet(
     builder: (_) => BipaSheetToasts(
       child: NewPackageSheet(
         barcode: barcode,
-        suggestion: PackageSuggestion.from(nameHint, products: products),
+        suggestion: fromCatalog == null
+            ? PackageSuggestion.from(nameHint, products: products)
+            : PackageSuggestion.fromCatalog(fromCatalog, products: products),
         price: price,
       ),
     ),
   );
+}
+
+/// O código no catálogo pronto. Uma falha dele não impede o cadastro: a
+/// folha abre como sem catálogo.
+Future<CatalogPackage?> _findInCatalog(WidgetRef ref, String barcode) async {
+  try {
+    return await ref.read(productCatalogProvider).find(barcode);
+  } on Exception catch (error) {
+    debugPrint('Catálogo pronto: $error');
+    return null;
+  }
 }
 
 class NewPackageSheet extends ConsumerStatefulWidget {
@@ -139,6 +159,7 @@ class _NewPackageSheetState extends ConsumerState<NewPackageSheet> {
           brand: _brand.text,
           size: size,
           unit: _unit,
+          origin: widget.suggestion.origin,
         ),
       );
       if (mounted) Navigator.of(context).pop((product: product, package: package));
