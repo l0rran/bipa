@@ -1,6 +1,10 @@
-# Ícone do app: propostas
+# Ícone do app
 
-Quatro direções para o mantenedor escolher vendo. Nenhuma está no app ainda: a escolhida entra depois em `android/`, e a aprovação vem antes.
+> **Decisão (28/10/2026): escolhida a proposta 1 · Etiqueta** (etiqueta amarela com o furo e um "b" escuro, sobre fundo ink). Ela já é o ícone do app em `android/` (adaptativo, com camada monocromática) e o ícone da barra de status da notificação da compra, e passou a ser o símbolo do design system (`design-system/logos/bipa-symbol.svg`). O design system publicado no claude.ai **ainda precisa receber a mesma mudança**. As outras três ficam abaixo só como registro.
+
+## Propostas
+
+Quatro direções que o mantenedor viu para escolher.
 
 ![As quatro propostas em 48 px](comparacao.png)
 
@@ -41,6 +45,12 @@ Cada prancha mostra as camadas na grade de 108 dp (com a área visível e a zona
 A **4 · Etiqueta inteira**: mantém a linguagem do símbolo aprovado (bloco amarelo, barras em ink) e troca o laser genérico pelo furo da etiqueta, que é só do Bipa; tem um acento só e um monocromático limpo. Se o mantenedor quiser mais distinção em 48 px, a alternativa é a **1 · Etiqueta**, sabendo que ela pede um logo novo.
 
 Escolher a 4 (ou a 1) muda também o símbolo do design system (`logos/bipa-symbol.svg`), que deve ser aprovado lá antes de o ícone entrar no app.
+
+## Como o ícone entra no app
+
+- `android/app/src/main/res/drawable/ic_launcher_background.xml`, `ic_launcher_foreground.xml` e `ic_launcher_monochrome.xml` são os três SVGs de `1-etiqueta/` como VectorDrawable (mesma grade de 108 dp; o desenho fica dentro dos 66 dp da zona segura). `mipmap-anydpi-v26/ic_launcher.xml` e `ic_launcher_round.xml` juntam as três camadas.
+- `mipmap-mdpi` a `mipmap-xxxhdpi` têm `ic_launcher.png` e `ic_launcher_round.png` para o Android anterior ao 8, gerados do mesmo desenho por [`tool/icone/gerar_png.js`](../../../tool/icone/gerar_png.js).
+- Se o desenho mudar, mude os SVGs de `1-etiqueta/`, os três XMLs (os `pathData` são os mesmos `d` dos SVGs) e rode o gerador de PNG.
 
 ## Como regenerar as imagens
 
