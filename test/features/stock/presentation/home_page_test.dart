@@ -86,4 +86,54 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 1));
   });
+
+  testWidgets('o aviso do "Usei um" com Desfazer some sozinho depois de 4 s', (tester) async {
+    final AppDatabase db = createTestDatabase();
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        clockProvider.overrideWithValue(() => _now),
+        idGeneratorProvider.overrideWithValue(SequentialIdGenerator()),
+      ],
+    );
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox());
+      container.dispose();
+      await tester.runAsync(db.close);
+    });
+    await tester.runAsync(() async {
+      await container
+          .read(productRepositoryProvider)
+          .save(
+            Product(id: 'leite', name: 'Leite integral', unit: MeasureUnit.liter, createdAt: _now, updatedAt: _now),
+          );
+      await container
+          .read(stockRepositoryProvider)
+          .adjust(productId: 'leite', delta: 2, reason: StockMovementReason.purchase);
+    });
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: BipaTheme.light,
+          locale: const Locale('pt', 'BR'),
+          supportedLocales: const [Locale('pt', 'BR')],
+          localizationsDelegates: const [AppLocalizations.delegate, ...GlobalMaterialLocalizations.delegates],
+          home: const Scaffold(body: HomePage()),
+        ),
+      ),
+    );
+    await _settle(tester);
+
+    await tester.drag(find.text('Leite integral').first, const Offset(-400, 0));
+    await _settle(tester);
+
+    expect(find.text('Usei um: Leite integral'), findsOneWidget);
+    expect(find.text('Desfazer'), findsOneWidget);
+    // No Flutter 3.47 um SnackBar com ação ficaria até alguém tocar.
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('Usei um: Leite integral'), findsNothing);
+  });
 }

@@ -2,6 +2,7 @@ import 'package:bipa/core/catalog/product_kind.dart';
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/bipa_toast.dart';
 import 'package:bipa/core/design_system/components/price_rows.dart';
 import 'package:bipa/core/design_system/components/product_category_icon.dart';
 import 'package:bipa/core/design_system/components/section_header.dart';
@@ -82,7 +83,7 @@ class _MarketView extends ConsumerWidget {
     try {
       await repository.delete(market.id);
     } on Exception {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.marketDeleteFailed)));
+      showBipaToast(messenger, l10n.marketDeleteFailed);
     }
   }
 

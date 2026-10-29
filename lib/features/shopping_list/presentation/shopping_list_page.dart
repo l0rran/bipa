@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/bipa_toast.dart';
 import 'package:bipa/core/design_system/components/dropdown_chip.dart';
 import 'package:bipa/core/design_system/components/product_category_icon.dart';
 import 'package:bipa/core/design_system/components/section_header.dart';
@@ -135,21 +138,15 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
     await repository.remove(entry.item.id);
     if (!mounted) return;
     final l10n = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(l10n.listItemRemoved(entry.name)),
-          duration: const Duration(seconds: 4),
-          action: SnackBarAction(
-            label: l10n.undo,
-            onPressed: () {
-              if (mounted) setState(() => _dismissed.remove(entry.item.id));
-              repository.restore(entry.item);
-            },
-          ),
-        ),
-      );
+    showBipaToast(
+      ScaffoldMessenger.of(context),
+      l10n.listItemRemoved(entry.name),
+      actionLabel: l10n.undo,
+      onAction: () {
+        if (mounted) setState(() => _dismissed.remove(entry.item.id));
+        repository.restore(entry.item);
+      },
+    );
   }
 
   /// Durante a compra, troca o mercado dela, com os preços (ADR 0020); fora,
@@ -176,21 +173,18 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
         if (entry.item.isChecked) entry.item,
     ];
     await repository.removeChecked();
-    messenger
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(l10n.listCheckedRemoved(removed.length)),
-          action: SnackBarAction(
-            label: l10n.undo,
-            onPressed: () async {
-              for (final item in removed) {
-                await repository.restore(item);
-              }
-            },
-          ),
-        ),
-      );
+    Future<void> restore() async {
+      for (final item in removed) {
+        await repository.restore(item);
+      }
+    }
+
+    showBipaToast(
+      messenger,
+      l10n.listCheckedRemoved(removed.length),
+      actionLabel: l10n.undo,
+      onAction: () => unawaited(restore()),
+    );
   }
 
   Future<void> _finish(ShoppingTrip trip) async {

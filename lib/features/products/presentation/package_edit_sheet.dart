@@ -1,6 +1,7 @@
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/bipa_toast.dart';
 import 'package:bipa/core/di/core_providers.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
@@ -76,7 +77,7 @@ class _PackageEditSheetState extends ConsumerState<PackageEditSheet> {
       );
       navigator.pop();
     } on Exception {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.packageSaveFailed)));
+      showBipaToast(messenger, l10n.packageSaveFailed);
       if (mounted) setState(() => _saving = false);
     }
   }

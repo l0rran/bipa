@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:bipa/core/design_system/components/bipa_toast.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/features/markets/presentation/market_picker_sheet.dart';
 import 'package:bipa/features/shopping_list/presentation/cancel_shopping.dart';
@@ -43,25 +46,23 @@ Future<void> finishShopping(BuildContext context, WidgetRef ref, String tripId) 
     }
     final finished = await finish(tripId);
     if (finished == null) return;
-    messenger
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(l10n.tripFinished(finished.stocked.values.fold(0, (sum, count) => sum + count))),
-          duration: const Duration(seconds: 6),
-          action: SnackBarAction(
-            label: l10n.undo,
-            onPressed: () async {
-              try {
-                await finish.undo(finished);
-              } on Exception {
-                messenger.showSnackBar(SnackBar(content: Text(l10n.tripFinishFailed)));
-              }
-            },
-          ),
-        ),
-      );
+    Future<void> undo() async {
+      try {
+        await finish.undo(finished);
+      } on Exception {
+        showBipaToast(messenger, l10n.tripFinishFailed);
+      }
+    }
+
+    showBipaToast(
+      messenger,
+      l10n.tripFinished(finished.stocked.values.fold(0, (sum, count) => sum + count)),
+      actionLabel: l10n.undo,
+      onAction: () => unawaited(undo()),
+      // A compra inteira volta com o Desfazer: um pouco mais de tempo.
+      duration: const Duration(seconds: 6),
+    );
   } on Exception {
-    messenger.showSnackBar(SnackBar(content: Text(l10n.tripFinishFailed)));
+    showBipaToast(messenger, l10n.tripFinishFailed);
   }
 }

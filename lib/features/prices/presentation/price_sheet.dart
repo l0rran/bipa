@@ -1,6 +1,7 @@
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/bipa_toast.dart';
 import 'package:bipa/core/design_system/components/price_tag.dart';
 import 'package:bipa/core/di/core_providers.dart';
 import 'package:bipa/core/formatting/calendar_days.dart';
@@ -78,9 +79,9 @@ class _PriceSheetState extends ConsumerState<PriceSheet> {
         ),
       );
       navigator.pop();
-      messenger.showSnackBar(SnackBar(content: Text(l10n.priceCorrected)));
+      showBipaToast(messenger, l10n.priceCorrected);
     } on Exception {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.priceCorrectFailed)));
+      showBipaToast(messenger, l10n.priceCorrectFailed);
       if (mounted) setState(() => _saving = false);
     }
   }
