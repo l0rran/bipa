@@ -18,7 +18,7 @@ class ScanNavDestination {
 /// Barra de navegação de vidro, flutuante, com o botão de bipar no centro em
 /// amarelo. Os destinos se dividem metade de cada lado do botão.
 ///
-/// Compacta ([compact]), a barra encolhe de 72 para 52 px, os rótulos somem e
+/// Compacta ([compact]), a barra encolhe de 68 para 52 px, os rótulos somem e
 /// o botão de bipar diminui de 64 para 56 px, como no iOS 26: o conteúdo
 /// ganha espaço enquanto se rola para baixo. O espaço que a barra ocupa no
 /// layout não muda, para as telas não se reorganizarem a cada rolagem; só o
@@ -59,15 +59,26 @@ class ScanNavBar extends StatelessWidget {
   /// a barra encolhe, para não sobrar um vão entre os dois.
   final Widget? above;
 
-  static const _barHeight = 72.0;
+  // As medidas vêm do `.bipa-nav` e do `.bipa-scan` do design system.
+  static const _barHeight = 68.0;
   static const _compactBarHeight = 52.0;
   static const _scanSize = 64.0;
   static const _compactScanSize = 56.0;
-  // O quanto o botão de bipar passa da borda de cima da pílula. Compacto, ele
-  // sobe um pouco menos, na proporção do `.is-compact .bipa-scan` do design
-  // system (de 18 para 16 px lá; de 22 para 20 aqui).
-  static const _scanLift = 22.0;
-  static const _compactScanLift = 20.0;
+
+  // O quanto o botão de bipar passa da borda de cima da pílula. No CSS ele tem
+  // `margin-top: -40px` numa caixa de 64 px centrada na pílula de 68, o que
+  // deixa 18 px para fora; compacto, são 56 px com `margin-top: -28px` numa
+  // pílula de 52, ou seja, 16 px.
+  static const _scanLift = 18.0;
+  static const _compactScanLift = 16.0;
+
+  // O desfoque do vidro (`backdrop-filter: blur(18px)`).
+  static const _blur = 18.0;
+
+  // A coluna do meio, onde o botão de bipar fica. O design system reserva 84 px
+  // e 8 de folga nas bordas; aqui são 76 e nenhuma folga, para cada rótulo
+  // ganhar 6 dp a mais de largura (a letra grande já aperta os rótulos, H8).
+  static const _scanGap = 76.0;
 
   @override
   Widget build(BuildContext context) {
@@ -103,7 +114,7 @@ class ScanNavBar extends StatelessWidget {
     final bar = SafeArea(
       top: false,
       minimum: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-      // O botão de bipar sobe 22 px acima da pílula. A caixa inclui essa parte,
+      // O botão de bipar sobe 18 px acima da pílula. A caixa inclui essa parte,
       // porque o toque não passa dos limites do pai. A altura é sempre a da
       // barra normal: compacta, a pílula encolhe para baixo e o toque acima
       // dela vai para o conteúdo.
@@ -129,13 +140,13 @@ class ScanNavBar extends StatelessWidget {
                 child: ClipPath(
                   clipper: const ShapeBorderClipper(shape: StadiumBorder()),
                   child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                    filter: ImageFilter.blur(sigmaX: _blur, sigmaY: _blur),
                     child: ColoredBox(
                       color: colors.surfaceGlass,
                       child: Row(
                         children: [
                           for (var i = 0; i < half; i++) destination(i),
-                          const SizedBox(width: 76),
+                          const SizedBox(width: _scanGap),
                           for (var i = half; i < destinations.length; i++) destination(i),
                         ],
                       ),
@@ -187,6 +198,13 @@ class ScanNavBarCompactController extends ValueNotifier<bool> {
 
   /// Quanto é preciso rolar numa mesma direção para a barra mudar. Menos que
   /// isso é o tremor do dedo e não faz a barra piscar.
+  ///
+  /// O design system (`bundle.js`) compara 4 px com a posição do evento
+  /// anterior; aqui são 8 px acumulados desde que a direção mudou. Chega um
+  /// evento de rolagem por quadro, então 4 px por evento são uns 240 px/s: o
+  /// design system só reage a um gesto rápido, e uma rolagem lenta e
+  /// deliberada nunca encolheria a barra. Somar a distância resolve isso, e os
+  /// 8 px mantêm a imunidade ao tremor do dedo. Por isso a diferença fica.
   static const hysteresis = 8.0;
 
   /// Até aqui a barra não encolhe (os 24 px do design system).
@@ -309,7 +327,9 @@ class _Destination extends StatelessWidget {
                 child: Opacity(
                   opacity: labelFactor,
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 4),
+                    // 30 do ícone, 2 de vão e 16 do rótulo: 48 px no meio dos
+                    // 68 da barra, o indicador a 10 px do topo (como no CSS).
+                    padding: const EdgeInsets.only(top: 2),
                     child: Text(
                       destination.label,
                       maxLines: 1,

@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:bipa/app/home_shell.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/components/scan_nav_bar.dart';
@@ -77,6 +79,14 @@ Widget _app(_Tabs tabs, {bool reduceMotion = false}) {
 }
 
 bool _compact(WidgetTester tester) => tester.widget<ScanNavBar>(find.byType(ScanNavBar)).compact;
+
+/// A altura da pílula de vidro: 68 na barra normal, 52 na compacta.
+double _pillHeight(WidgetTester tester) => tester.getSize(find.byType(BackdropFilter)).height;
+
+/// Quanto o botão de bipar passa da borda de cima da pílula: 18 na barra
+/// normal (64 px, `margin-top: -40px` no CSS), 16 na compacta (56 px).
+double _scanLift(WidgetTester tester) =>
+    tester.getTopLeft(find.byType(BackdropFilter)).dy - tester.getTopLeft(find.bySemanticsLabel('Bipar')).dy;
 
 /// O lado do botão de bipar: 64 na barra normal, 56 na compacta.
 double _scanSize(WidgetTester tester) => tester.getSize(find.bySemanticsLabel('Bipar')).width;
@@ -247,11 +257,34 @@ void main() {
     await tester.pumpAndSettle();
     final shellContext = tester.element(find.byKey(ValueKey(_paths.first)));
     final normal = MediaQuery.paddingOf(shellContext).bottom;
-    // 72 da pílula, 22 do botão que sobe e 12 de margem.
-    expect(normal, greaterThanOrEqualTo(72 + 22 + 12));
+    // 68 da pílula, 18 do botão que sobe e 12 de margem.
+    expect(normal, greaterThanOrEqualTo(68 + 18 + 12));
 
     await _scrollTo(tester, tabs, 300);
     expect(_compact(tester), isTrue);
     expect(MediaQuery.paddingOf(shellContext).bottom, normal);
+  });
+
+  testWidgets('as medidas da barra seguem o design system', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(_app(tabs, reduceMotion: true));
+    await tester.pumpAndSettle();
+    expect(_pillHeight(tester), 68);
+    expect(_scanSize(tester), 64);
+    expect(_scanLift(tester), 18);
+
+    await _scrollTo(tester, tabs, 300);
+    expect(_compact(tester), isTrue);
+    expect(_pillHeight(tester), 52);
+    expect(_scanSize(tester), 56);
+    expect(_scanLift(tester), 16);
+    semantics.dispose();
+  });
+
+  testWidgets('o vidro da barra desfoca com raio 18', (tester) async {
+    await tester.pumpWidget(_app(tabs, reduceMotion: true));
+    await tester.pumpAndSettle();
+    final glass = tester.widget<BackdropFilter>(find.byType(BackdropFilter));
+    expect(glass.filter, ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18));
   });
 }
