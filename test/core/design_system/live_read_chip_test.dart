@@ -96,4 +96,15 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(tester.getSize(find.byType(LiveReadChip)).width, lessThanOrEqualTo(360));
   });
+
+  testWidgets('o chip do modo diz o modo, sem ser um botão', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(_app(const CameraModeChip(icon: Icons.home_outlined, label: 'Dar baixa em casa')));
+
+    expect(find.text('Dar baixa em casa'), findsOneWidget);
+    expect(find.bySemanticsLabel('Dar baixa em casa'), findsOneWidget);
+    expect(find.byIcon(Icons.expand_more_rounded), findsNothing);
+    expect(find.byType(InkWell), findsNothing);
+    semantics.dispose();
+  });
 }

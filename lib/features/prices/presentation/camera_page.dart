@@ -752,13 +752,17 @@ class _CameraPageState extends ConsumerState<CameraPage> {
             Expanded(
               child: Center(
                 // O mercado só importa para o preço.
-                child: _mode == CameraMode.price
-                    ? CameraGlassChip(
-                        icon: Icons.storefront_outlined,
-                        label: _market?.name ?? l10n.cartChooseMarket,
-                        onTap: _chooseMarket,
-                      )
-                    : null,
+                // Em casa, o chip diz o modo, que o aviso esconde junto com a dica.
+                child: switch (_mode) {
+                  CameraMode.price => CameraGlassChip(
+                    icon: Icons.storefront_outlined,
+                    label: _market?.name ?? l10n.cartChooseMarket,
+                    onTap: _chooseMarket,
+                  ),
+                  CameraMode.bought => CameraModeChip(icon: Icons.add_home_outlined, label: l10n.scanMenuBought),
+                  CameraMode.used => CameraModeChip(icon: Icons.home_outlined, label: l10n.scanMenuUsed),
+                  CameraMode.find => null,
+                },
               ),
             ),
             const SizedBox(width: BipaSpacing.s2),

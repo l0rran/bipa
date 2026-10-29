@@ -687,6 +687,52 @@ class CameraGlassChip extends StatelessWidget {
   }
 }
 
+/// Chip de vidro escuro que só diz uma coisa: em que modo a câmera está
+/// ("Guardar em casa", "Dar baixa em casa"). Não é tocável, não tem seta e
+/// não usa cor de destaque; o leitor de tela lê o [label].
+class CameraModeChip extends StatelessWidget {
+  const CameraModeChip({required this.icon, required this.label, super.key});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Semantics(
+      label: label,
+      excludeSemantics: true,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(BipaRadius.pill),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+          child: Container(
+            // Pelo menos 40; com letra grande, o chip cresce em vez de cortar (H3).
+            constraints: const BoxConstraints(minHeight: 40),
+            color: colors.camera.withValues(alpha: 0.55),
+            padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s3),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 18, color: colors.onCamera),
+                const SizedBox(width: BipaSpacing.s2),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: BipaText.label.copyWith(color: colors.onCamera),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Aviso da leitura ao vivo sobre a câmera (protótipo "Modo carrinho: preço
 /// lido"): o preço da etiqueta em destaque e, ao lado, o item que o recebeu
 /// ou o que falta fazer. O leitor de tela anuncia a mudança. Só é tocável com
