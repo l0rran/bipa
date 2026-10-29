@@ -98,7 +98,7 @@ Future<ProviderContainer> _pumpProduct(WidgetTester tester, {bool withRouter = f
             ),
             GoRoute(
               path: '/produto/:id',
-              builder: (_, state) => Scaffold(body: Text('destino ${state.pathParameters['id']}')),
+              builder: (_, state) => ProductDetailPage(productId: state.pathParameters['id']!),
             ),
           ],
         )
@@ -128,6 +128,21 @@ Future<ProviderContainer> _pumpProduct(WidgetTester tester, {bool withRouter = f
   return container;
 }
 
+/// A tela de um produto que não é o "Leite integral" de origem.
+Finder _destinationPage() =>
+    find.byWidgetPredicate((widget) => widget is ProductDetailPage && widget.productId != 'integral');
+
+/// Cria "Leite em pó" no "Mover embalagem…" e confirma; o destino abre por cima.
+Future<void> _moveToNewProduct(WidgetTester tester) async {
+  await _openMenuItem(tester, 'Mover embalagem…');
+  await tester.enterText(find.byType(TextField), 'Leite em pó');
+  await _settle(tester);
+  await tester.tap(find.textContaining('Criar'));
+  await _settle(tester);
+  await tester.tap(find.widgetWithText(FilledButton, 'Mover'));
+  await _settle(tester);
+}
+
 /// Deixa o banco responder (ele roda fora do relógio falso do teste).
 Future<void> _settle(WidgetTester tester) async {
   for (var i = 0; i < 5; i++) {
@@ -135,6 +150,8 @@ Future<void> _settle(WidgetTester tester) async {
     await tester.pump(const Duration(milliseconds: 100));
   }
   await tester.pump(const Duration(milliseconds: 500));
+  // Uma tela que saiu de cena solta os streams dela num timer de duração zero.
+  await tester.pump(const Duration(milliseconds: 1));
 }
 
 /// Deixa o aviso passar sozinho (4 s) e sair de cena.
@@ -283,7 +300,7 @@ void main() {
     await _settle(tester);
 
     // O destino abre por cima; o aviso continua com um botão só, o "Desfazer".
-    expect(find.textContaining('destino '), findsOneWidget);
+    expect(_destinationPage(), findsOneWidget);
     expect(find.text('Embalagem movida para Leite em pó.'), findsOneWidget);
     expect(find.text('Desfazer'), findsOneWidget);
     final moved = await tester.runAsync(() => products.findPackageById('ninho-400'));
@@ -296,5 +313,67 @@ void main() {
     navigator.pop();
     await _settle(tester);
     expect(find.text('Leite integral ficou sem embalagem, preço e estoque.'), findsOneWidget);
+  });
+
+  testWidgets('desfazer na tela do produto criado fecha o destino e leva a embalagem de volta, sem piscar', (
+    tester,
+  ) async {
+    final container = await _pumpProduct(tester, withRouter: true);
+    final products = container.read(productRepositoryProvider);
+    await _moveToNewProduct(tester);
+    expect(_destinationPage(), findsOneWidget);
+    final newId = (await tester.runAsync(() => products.findPackageById('ninho-400')))!.productId;
+
+    await tester.tap(find.text('Desfazer'));
+    // Com o destino ainda saindo de cena, nada de "Produto não encontrado".
+    await tester.pump();
+    for (var i = 0; i < 6; i++) {
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 30)));
+      await tester.pump(const Duration(milliseconds: 50));
+      expect(find.text('Produto não encontrado'), findsNothing);
+    }
+    await _settle(tester);
+
+    expect(_destinationPage(), findsNothing);
+    expect(find.text('Produto não encontrado'), findsNothing);
+    expect(find.text('Leite integral'), findsWidgets);
+    expect((await tester.runAsync(() => products.findPackageById('ninho-400')))?.productId, 'integral');
+    expect(await tester.runAsync(() => products.findById(newId)), isNull);
+    // Quem desfez não recebe a oferta de apagar o produto de origem.
+    await _letSnackBarGo(tester);
+    expect(find.textContaining('ficou sem embalagem'), findsNothing);
+  });
+
+  testWidgets('desfazer depois de já ter voltado do destino só desfaz, sem fechar a origem', (tester) async {
+    final container = await _pumpProduct(tester, withRouter: true);
+    final products = container.read(productRepositoryProvider);
+    await _moveToNewProduct(tester);
+    // Enquanto a pessoa olha o destino, outra embalagem chega à origem: ela não
+    // fica vazia e o aviso com "Desfazer" segue na tela quando a pessoa volta.
+    await tester.runAsync(
+      () => products.savePackage(
+        ProductPackage(
+          id: 'outra',
+          productId: 'integral',
+          barcode: '7891000100202',
+          unit: MeasureUnit.unit,
+          createdAt: _now,
+          updatedAt: _now,
+        ),
+      ),
+    );
+    tester.state<NavigatorState>(find.byType(Navigator).first).pop();
+    await _settle(tester);
+    expect(_destinationPage(), findsNothing);
+    expect(find.text('Embalagem movida para Leite em pó.'), findsOneWidget);
+
+    await tester.tap(find.text('Desfazer'));
+    await _settle(tester);
+
+    expect(find.text('Produto não encontrado'), findsNothing);
+    expect(find.text('Leite integral'), findsWidgets);
+    expect((await tester.runAsync(() => products.findPackageById('ninho-400')))?.productId, 'integral');
+    await _letSnackBarGo(tester);
+    expect(find.textContaining('ficou sem embalagem'), findsNothing);
   });
 }
