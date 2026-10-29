@@ -112,7 +112,10 @@ Uma tabela é **compartilhável** quando a fase 2 pode enviá-la à base comunit
 **Com o catálogo (fase 1):**
 
 - **C1.** `product_packages`: uma coluna `origin` (`person`, `catalog`), ou o id da fonte, para a atribuição e a licença (ADR 0024).
+  - **Feita** (commit `53b741d`, esquema 15): `product_packages.origin` guarda a base de onde vieram os dados, não só "catálogo": `person`, `openFoodFacts`, `openProductsFacts` ou `openBeautyFacts` (`PackageOrigin`). Assim a tela do produto cita a base certa, e a sincronização sabe qual licença vale. As embalagens anteriores ao esquema 15 são `person`. Uma embalagem do catálogo que a pessoa corrigiu, ou moveu para outro produto, continua com a origem do catálogo: na dúvida, o dado tem licença de terceiros. O nome do valor é gravado (B4) e está no `stored_names_test.dart`.
+  - **O catálogo no app** (commits `cba4a23`, `c484a6a` e `3ba6c96`): o `ProductCatalog` (`lib/features/products/domain/product_catalog.dart`) lê o `catalogo.sqlite`, copiado do asset para `catalogo/` na pasta de suporte na primeira consulta de cada versão do app e aberto só para leitura, numa conexão à parte. Sem o asset, o catálogo é vazio. A folha "Embalagem nova" procura nele antes de sugerir pela etiqueta e vem preenchida; a tela do produto cita a fonte abaixo das embalagens. O `catalogAttributionProvider` traz o aviso de `catalog_meta` para a tela "Sobre".
 - **C2.** `products`: o tipo do produto hoje é deduzido do nome (`ProductKind.of`). O catálogo traz a categoria, e uma coluna nula `kind` guardaria a escolha quando ela não vier do nome. É opcional: o nome sugerido pelo catálogo pode bastar para a dedução.
+  - **Não feita, por ora:** a categoria do catálogo só desempata a escolha do produto da pessoa (`PackageSuggestion.fromCatalog`). O nome sugerido ("Arroz branco") continua dando o tipo pela dedução.
 
 **Antes da sincronização (fase 2), registradas agora para não se perderem:**
 
