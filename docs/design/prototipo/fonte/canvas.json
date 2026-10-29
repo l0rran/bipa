@@ -198,6 +198,27 @@
       "w": 390,
       "h": 844,
       "title": "Dar baixa em casa: aviso e snackbar"
+    },
+    "ProdutoPrecoVelho.dc.html": {
+      "x": 3290,
+      "y": 3700,
+      "w": 390,
+      "h": 1400,
+      "title": "Produto: preço em destaque velho"
+    },
+    "MainEditor.dc.html": {
+      "x": 3760,
+      "y": 3700,
+      "w": 390,
+      "h": 844,
+      "title": "Casa: editor da linha aberto"
+    },
+    "EditarEmbalagem.dc.html": {
+      "x": 4230,
+      "y": 3700,
+      "w": 390,
+      "h": 844,
+      "title": "Produto: editar embalagem"
     }
   },
   "order": [
@@ -227,7 +248,10 @@
     "CapturaCasaLocal.dc.html",
     "CapturaCasaLocalEscolha.dc.html",
     "CapturaComprei.dc.html",
-    "CapturaUsei.dc.html"
+    "CapturaUsei.dc.html",
+    "ProdutoPrecoVelho.dc.html",
+    "MainEditor.dc.html",
+    "EditarEmbalagem.dc.html"
   ],
   "notes": {
     "titulo": {

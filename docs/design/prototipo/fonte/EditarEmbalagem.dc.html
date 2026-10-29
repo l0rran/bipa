@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Produto: editar embalagem</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="styles/tokens.css">
+<link rel="stylesheet" href="ds/bipa/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600..800&amp;family=Figtree:wght@400..700&amp;family=JetBrains+Mono:wght@500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1C1B22}a:hover{color:#B00E28}
+.screen{position:relative;width:390px;height:844px;box-sizing:border-box;overflow:hidden;background:var(--ground)}
+.round-btn{display:grid;place-items:center;width:48px;height:48px;border:0;border-radius:50%;background:var(--surface);color:var(--ink)}
+.nav-wrap{position:absolute;left:12px;right:12px;bottom:16px;z-index:3}
+.section{display:flex;flex-direction:column;gap:8px}
+
+body{margin:0}
+.title{margin:0;font:800 28px/34px var(--font-display);letter-spacing:-0.01em;color:var(--ink)}
+.eyebrow{font:600 14px/20px var(--font-body);color:var(--ink-muted)}
+.section-title{margin:0;font:700 20px/26px var(--font-display);color:var(--ink)}
+
+.content{display:flex;flex-direction:column;gap:20px;padding:16px 16px 140px}
+.bar{display:flex;align-items:center;justify-content:space-between}
+.hero{display:grid;justify-items:center;gap:12px;text-align:center}
+.hero-art{display:grid;place-items:center;width:132px;height:132px;border-radius:var(--radius-lg);background:var(--surface);color:var(--ink)}
+.hero-art svg{width:68px;height:68px}
+.hero h1{margin:0;font:800 24px/30px var(--font-display);letter-spacing:-.01em;text-wrap:balance}
+.hero p{margin:0;font:500 13px/18px var(--font-mono);color:var(--ink-muted);letter-spacing:.02em}
+.best{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.stock-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 12px 12px 16px;border-radius:var(--radius-lg);background:var(--surface)}
+.stock-card strong{display:block;font:700 16px/20px var(--font-body)}
+.stock-card small{font:500 13px/18px var(--font-body);color:var(--ink-muted)}
+.foot{position:absolute;left:16px;right:16px;bottom:24px;z-index:3;display:flex;gap:12px}
+.foot .bipa-btn{flex:1;height:56px;font-size:16px}
+
+
+.head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.section-head{display:flex;align-items:center;gap:8px;padding:0 4px}
+.count{font:600 13px/18px var(--font-body);color:var(--ink-muted)}
+.enter{animation:bipa-fade-up var(--duration-slow) var(--easing-standard) both}
+
+
+.scrim{position:absolute;inset:0;z-index:4;background:var(--scrim)}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:5;display:grid;gap:16px;padding:12px 16px 28px;border-radius:28px 28px 0 0;background:var(--surface);box-shadow:var(--shadow-float);animation:bipa-in-up var(--duration-slow) var(--easing-spring) both}
+.handle{justify-self:center;width:32px;height:4px;margin-bottom:8px;border-radius:2px;background:var(--line)}
+.sheet-head{display:grid;gap:2px}
+.sheet-title{margin:0;font:800 22px/28px var(--font-display);color:var(--ink)}
+.barcode{font:500 13px/18px var(--font-mono);color:var(--ink-muted);letter-spacing:.02em}
+/* Campos como os da "Embalagem nova": rótulo em cima, caixa em surface-sunken. */
+.fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.field{display:grid;gap:6px;min-width:0;align-content:start}
+.field.wide{grid-column:1 / -1}
+.field label{font:600 13px/18px var(--font-body);color:var(--ink-muted)}
+.field small{font:500 12px/16px var(--font-body);color:var(--ink-muted);padding:0 4px}
+.box{display:flex;align-items:center;justify-content:space-between;gap:8px;height:52px;padding:0 14px;border-radius:var(--radius-md);background:var(--surface-sunken);font:600 16px/20px var(--font-body);color:var(--ink)}
+.box svg{width:18px;height:18px;flex:none;color:var(--ink-muted)}
+.sheet .bipa-btn{width:100%;height:56px;font-size:16px}
+</style>
+</helmet>
+<div class="screen bipa-root">
+  <div class="content">
+    <div class="bar">
+      <a class="round-btn" href="Main.dc.html" aria-label="Voltar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></a>
+      <button class="round-btn" type="button" aria-label="Mais opções"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18.5" cy="12" r="1.2"/></svg></button>
+    </div>
+    <div class="hero">
+      <span class="hero-art" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11h17a8.5 8.5 0 0 1-17 0z"/><path d="M8 7.5c.6-1 1.6-1.5 2.6-1.2M13 6.5c.8-.8 2-1 3-.4M10.5 4c.6-.6 1.5-.8 2.3-.4"/></svg></span>
+      <h1>Arroz branco</h1>
+      <div class="best">
+        <div class="bipa-tag bipa-tag--hero"><span class="bipa-tag__value"><small>R$</small>4,99</span><span class="bipa-tag__unit">o kg · Camil 10 kg</span></div>
+      </div>
+    </div>
+
+    <section class="section">
+      <div class="bipa-section-head"><h2>Embalagens</h2><span class="bipa-count">2</span></div>
+      <div class="bipa-mprices">
+        <div class="bipa-mprice is-best"><span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7l7-4 7 4v10l-7 4-7-4z"/><path d="M5 7l7 4 7-4M12 11v10"/></svg></span><span class="bipa-mprice__name">Camil · 10 kg<span class="bipa-mprice__age">R$ 4,99/kg</span></span><span class="bipa-mprice__value">R$ 49,90<small>menor por kg</small></span></div>
+        <div class="bipa-mprice"><span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7l7-4 7 4v10l-7 4-7-4z"/><path d="M5 7l7 4 7-4M12 11v10"/></svg></span><span class="bipa-mprice__name">Tio João · 5 kg<span class="bipa-mprice__age">R$ 5,58/kg</span></span><span class="bipa-mprice__value">R$ 27,90</span></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="bipa-section-head"><h2>Nos mercados</h2><span class="bipa-count">3</span></div>
+      <div class="bipa-mprices">
+        <div class="bipa-mprice is-best"><span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5L5.5 4h13L20 9.5M4 9.5h16M4 9.5v10h16v-10M9.5 19.5v-5h5v5"/></svg></span><span class="bipa-mprice__name">Atacarejo Vila Nova<span class="bipa-mprice__age"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg>você está aqui</span></span><span class="bipa-mprice__value">R$ 4,99/kg<small>menor preço</small></span></div>
+        <div class="bipa-mprice"><span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5L5.5 4h13L20 9.5M4 9.5h16M4 9.5v10h16v-10M9.5 19.5v-5h5v5"/></svg></span><span class="bipa-mprice__name">Mercado do Bairro<span class="bipa-mprice__age"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg>há 5 dias</span></span><span class="bipa-mprice__value">R$ 5,29/kg</span></div>
+        <div class="bipa-mprice"><span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5L5.5 4h13L20 9.5M4 9.5h16M4 9.5v10h16v-10M9.5 19.5v-5h5v5"/></svg></span><span class="bipa-mprice__name">Supermercado Central<span class="bipa-mprice__age is-old"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg>há 41 dias</span></span><span class="bipa-mprice__value">R$ 5,58/kg</span></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="bipa-section-head"><h2>Últimos 6 meses</h2></div>
+      <div class="bipa-history" role="img" aria-label="Preço do kg nos últimos 6 meses, de R$ 5,90 a R$ 4,99">
+        <svg viewBox="0 0 320 96" preserveAspectRatio="none" aria-hidden="true">
+          <polygon class="bipa-history__area" points="0,96 0,22 40,28 80,18 120,36 160,32 200,48 240,42 280,60 320,64 320,96"/>
+          <polyline class="bipa-history__line" points="0,22 40,28 80,18 120,36 160,32 200,48 240,42 280,60 320,64"/>
+          <circle class="bipa-history__dot" cx="320" cy="64" r="6"/>
+        </svg>
+        <div class="bipa-history__axis"><span>mai</span><span>jul</span><span>set</span><span>hoje</span></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="bipa-section-head"><h2>Em casa</h2></div>
+      <div class="stock-card" style="grid-template-columns: minmax(0, 1fr) auto;">
+        <span><small>Ter sempre 1</small><strong>15 kg em casa</strong></span>
+        <div class="bipa-stepper" data-value="2" data-min="2">
+          <button type="button" data-step="-1" aria-label="Usei um"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12h12"/></svg></button>
+          <span class="bipa-stepper__count"><span class="bipa-roll bipa-stepper__qty"><span>2</span></span><span class="bipa-stepper__unit">emb.</span></span>
+          <button type="button" data-step="1" aria-label="Comprei um"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="foot">
+    <a class="bipa-btn bipa-btn--neutral" href="Lista.dc.html" style="text-decoration: none;"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r="1"/><circle cx="4.8" cy="12" r="1"/><circle cx="4.8" cy="17.5" r="1"/></svg> Pôr na lista</span></a>
+  </div>
+  <div class="scrim" aria-hidden="true"></div>
+  <section class="sheet" aria-labelledby="emb-titulo">
+    <span class="handle" aria-hidden="true"></span>
+    <div class="sheet-head">
+      <h2 class="sheet-title" id="emb-titulo">Editar embalagem</h2>
+      <span class="barcode" aria-label="Código 7 8 9 6 0 0 6 7 1 1 1 5 5">7896006711155</span>
+    </div>
+    <div class="fields">
+      <div class="field wide"><label for="emb-marca">Marca</label><div class="box" id="emb-marca">Camil</div></div>
+      <div class="field"><label for="emb-tamanho">Tamanho da embalagem</label><div class="box" id="emb-tamanho">10</div><small>Ex.: 395, 1,5, 12</small></div>
+      <div class="field"><label for="emb-unidade">Unidade</label><div class="box" id="emb-unidade" role="button" aria-haspopup="listbox">Quilograma (kg)<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></div></div>
+    </div>
+    <a class="bipa-btn bipa-btn--primary" href="ProdutoEmbalagens.dc.html"><span>Salvar</span></a>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
