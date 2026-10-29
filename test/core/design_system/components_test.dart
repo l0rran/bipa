@@ -334,6 +334,44 @@ void main() {
     semantics.dispose();
   });
 
+  testWidgets('o item com segunda linha: o traço é o valor, o preço por kg fica sob o nome', (tester) async {
+    final semantics = tester.ensureSemantics();
+    var priceTaps = 0;
+    await tester.pumpWidget(
+      _app(
+        ScanTrayItem(
+          name: 'Tomate italiano',
+          meta: r'R$ 8,99/kg',
+          metaIcon: Icons.scale_outlined,
+          nameSemanticsLabel: r'Tomate italiano, R$ 8,99 o quilo, de referência; falta o valor da pesagem',
+          take: true,
+          takeLabel: 'Levar Tomate italiano',
+          onTakeChanged: (_) {},
+          priceTapLabel: 'Quanto deu o Tomate italiano?',
+          onPriceTap: () => priceTaps++,
+        ),
+      ),
+    );
+
+    // O traço é o da etiqueta; o preço por kg é a segunda linha, com a balança.
+    expect(find.text('—'), findsOneWidget);
+    expect(find.text(r'R$ 8,99/kg'), findsOneWidget);
+    expect(find.byIcon(Icons.scale_outlined), findsOneWidget);
+    // A segunda linha está sob o nome, e a etiqueta, ao lado do nome.
+    final name = tester.getTopLeft(find.text('Tomate italiano'));
+    final meta = tester.getTopLeft(find.text(r'R$ 8,99/kg'));
+    expect(meta.dy, greaterThan(name.dy));
+    expect(tester.getCenter(find.text('—')).dx, greaterThan(tester.getCenter(find.text(r'R$ 8,99/kg')).dx));
+    // O leitor de tela ouve a linha inteira, e o botão do valor pergunta.
+    expect(
+      find.bySemanticsLabel(r'Tomate italiano, R$ 8,99 o quilo, de referência; falta o valor da pesagem'),
+      findsOneWidget,
+    );
+    await tester.tap(find.bySemanticsLabel('Quanto deu o Tomate italiano?'));
+    expect(priceTaps, 1);
+    semantics.dispose();
+  });
+
   testWidgets('a alça da bandeja segue a direção do arrasto', (tester) async {
     final semantics = tester.ensureSemantics();
     var toggles = 0;

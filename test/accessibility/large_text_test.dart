@@ -480,6 +480,9 @@ void _tests() {
                         name: name,
                         price: index == 1 ? null : r'R$ 1.027,90',
                         priceEstimated: index == 2,
+                        // O granel que espera a pesagem: o preço por kg sob o nome.
+                        meta: index == 1 ? r'R$ 1.027,90/kg' : null,
+                        metaIcon: index == 1 ? Icons.scale_outlined : null,
                         take: index != 1,
                         takeLabel: 'Levar $name',
                         onTakeChanged: (_) {},
