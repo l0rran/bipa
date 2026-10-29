@@ -264,7 +264,7 @@ O problema: **os rótulos da barra cortam a partir de uns 120% num celular de 36
 
 **Do nosso jeito:** duas propostas foram ao mantenedor. A mantém a anatomia do `ScanNavBar` (bipar no meio) e aceita rótulos quase do tamanho normal, com o balão para quem precisa ler maior. B dá aos rótulos uns 35% a mais de largura, mas tira o bipar do centro da barra, que é a marca do componente.
 
-**Decidido em 28/10/2026: A até 160%, B acima.** Até 160% de letra, a barra é a de sempre, com os rótulos limitados a 130% e encolhidos por igual até caber. Acima de 160%, o bipar sai do meio e flutua acima da barra, à direita, e o menu do bipar sai dele. O balão do rótulo grande, no toque longo do destino, vale nas duas, porque em B os rótulos ainda encolhem num celular estreito. A partir de 130% ou com o TalkBack, a barra não encolhe ao rolar. O que fica aberto é B durante a compra, com a barra amarela da compra entre o bipar e a navegação (H12, em "Letra grande durante a compra", mais abaixo).
+**Decidido em 28/10/2026: A até 160%, B acima.** Até 160% de letra, a barra é a de sempre, com os rótulos limitados a 130% e encolhidos por igual até caber. Acima de 160%, o bipar sai do meio e flutua acima da barra, à direita, e o menu do bipar sai dele. O balão do rótulo grande, no toque longo do destino, vale nas duas, porque em B os rótulos ainda encolhem num celular estreito. A partir de 130% ou com o TalkBack, a barra não encolhe ao rolar. B durante a compra, com a barra amarela da compra entre o bipar e a navegação, foi decidido depois (H12, em "Letra grande durante a compra", mais abaixo).
 
 ### Letra grande durante a compra (outubro de 2026)
 
@@ -282,6 +282,8 @@ O problema: **acima de 160% de letra, durante a compra, dois botões amarelos em
 - **B, o bipar entra na barra:** o fim da barra da compra troca "Continuar" pelo glifo do bipar num círculo `ink`. O texto ganha largura ("3 de 7 itens" numa linha) e o glifo mostra onde se bipa, mas é uma variante nova da `ShoppingBar` e tira o texto de uma ação de navegação.
 
 Recomendação: A, que segue a regra de texto na navegação e não cria variante.
+
+**Decidido em 28/10/2026: A.** Feito no app: acima de 160%, durante a compra, o bipar flutuante sai e a barra da compra, com "Continuar", ganha o toque longo que abre o menu do bipar, ancorado nela. A regra está nos guias [`ScanNavBar.md`](design-system/componentes/ScanNavBar.md) e [`ShoppingBar.md`](design-system/componentes/ShoppingBar.md).
 
 ### Pergunta do relatório de falhas (outubro de 2026)
 
@@ -309,7 +311,7 @@ O problema: **o anel do bipar respira sem fim, em todas as abas** (H16). É a as
 | **WCAG 2.2.2** ([pausar, parar, esconder](https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide.html)) | Movimento automático por mais de 5 s precisa de um jeito de pausar | Movimento com começo e fim, abaixo de 5 s: dois ciclos de 2,4 s | Sem controle de pausa: o anel para sozinho |
 | **Linear e Shortcut** (calma por padrão, em [identidade-visual.md](identidade-visual.md)) | Não disputar uma atenção que não foi conquistada | O anel chama só quando a barra aparece | Continua sem fim quando a casa e a lista estão vazias, porque aí bipar é a única coisa a fazer |
 
-**Do nosso jeito:** a regra está no guia [`ScanNavBar.md`](design-system/componentes/ScanNavBar.md), como proposta que aguarda revisão: dois ciclos quando a barra aparece, sem fim só com a casa e a lista vazias, parado durante a compra e com movimento reduzido. Muda o design system primeiro e o código depois.
+**Do nosso jeito:** dois ciclos quando a barra aparece, sem fim só com a casa e a lista vazias, parado durante a compra e com movimento reduzido. **Decidido em 28/10/2026**, e a regra está no guia [`ScanNavBar.md`](design-system/componentes/ScanNavBar.md) e no app. O design system publicado no claude.ai ainda tem o anel `infinite` e precisa da mesma mudança.
 
 ## Fontes
 

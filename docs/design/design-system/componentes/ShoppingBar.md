@@ -21,6 +21,7 @@ A compra em andamento. Enquanto você está no mercado, a barra fica fixa acima 
 - Aparece quando a pessoa toca em "Ir às compras" ou começa a bipar num mercado, e some ao terminar a compra.
 - Fica entre o conteúdo e a navegação, e o conteúdo ganha espaço embaixo para não ficar escondido.
 - O total é real (o que foi bipado), sem "≈".
+- **Com a letra acima de 160%**, a barra fica no lugar do bipar flutuante do `ScanNavBar`, que sai (H12, decidido em 28/10/2026): tocar continua a compra, como sempre, e segurar abre o menu do bipar, ancorado na barra. O desenho não muda; o leitor de tela anuncia o toque longo. Até 160%, a barra não tem toque longo.
 
 ## Movimento
 
