@@ -341,6 +341,8 @@ O problema: **não perder a casa e os preços ao trocar ou perder o celular, sem
 - **Desfazer no aviso.** O banco de antes fica de reserva (passo 4), e o aviso "Backup de 12/10 restaurado" traz o Desfazer por 10 s, o tempo longo do [`BipFeedback`](design-system/componentes/BipFeedback.md) para ação que mexe em muitos registros.
 - **Celular novo:** com o banco vazio e um `ultimo.bipa` trazido pelo Android, o Início oferece restaurar num cartão, sem restaurar sozinho. Enquanto a pessoa não responde, o backup automático não grava por cima dele.
 
+Aprovados e implementados em 29/10/2026, com as decisões do mantenedor registradas no [README do protótipo](prototipo/README.md): o nome "Backup", os números deste celular na confirmação, "Substituir pelo backup", o cartão "Backup encontrado" e o aviso quando o backup passa dos 25 MB do backup do Google.
+
 ## Fontes
 
 - [Menor Preço Brasil (Olhar Digital)](https://olhardigital.com.br/2025/08/03/dicas-e-tutoriais/quer-economizar-na-farmacia-e-supermercado-conheca-o-app-menor-preco-brasil/)
