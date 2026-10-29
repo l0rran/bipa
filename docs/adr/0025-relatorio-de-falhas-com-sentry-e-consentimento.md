@@ -26,7 +26,7 @@ Havia três caminhos:
 ### O que é enviado
 
 - O tipo da exceção (`StateError`, `SqliteException`...) e a pilha de chamadas, que apontam o arquivo e a linha do código do app.
-- A mensagem da exceção só para os erros do Dart cuja mensagem é escrita pela própria linguagem, sem dado de quem usa: `TypeError` ("type 'Null' is not a subtype of type 'String'"), `RangeError` e `IndexError` (índices), `ConcurrentModificationError`, `StackOverflowError`, `OutOfMemoryError`, `UnimplementedError`, `LateInitializationError`.
+- A mensagem da exceção só para os erros do Dart cuja mensagem é escrita pela própria linguagem, sem dado de quem usa: `TypeError` ("type 'Null' is not a subtype of type 'String'"), `RangeError` e `IndexError` (índices), `ConcurrentModificationError`, `StackOverflowError`, `OutOfMemoryError` e `LateInitializationError`.
 - Versão do app, do Android e do Flutter, modelo do aparelho, idioma e fuso horário: o que o SDK põe por padrão para reproduzir o erro.
 - Rastros (breadcrumbs) do ciclo de vida do app (abriu, foi para o fundo, girou a tela), que não carregam texto da interface.
 

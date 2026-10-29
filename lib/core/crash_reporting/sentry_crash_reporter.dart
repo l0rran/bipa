@@ -1,3 +1,4 @@
+import 'package:bipa/core/crash_reporting/crash_report_scrubber.dart';
 import 'package:bipa/core/crash_reporting/crash_reporting.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -42,11 +43,13 @@ final class SentryCrashReporter implements CrashReporter {
   Future<void> _enqueue(Future<void> Function() operation) => _queue = _queue.then((_) => operation());
 
   /// As opções do Sentry: nada de dado pessoal, nada de captura de tela,
-  /// de toques ou de desempenho; só a falha.
+  /// de toques ou de desempenho; só a falha, e limpa pelo filtro.
   @visibleForTesting
   static void configure(SentryFlutterOptions options, String dsn) {
     options
       ..dsn = dsn
+      ..beforeSend = ((event, hint) => scrubEvent(event))
+      ..beforeBreadcrumb = ((breadcrumb, hint) => scrubBreadcrumb(breadcrumb))
       ..sendDefaultPii = false
       ..attachScreenshot = false
       ..attachViewHierarchy = false
