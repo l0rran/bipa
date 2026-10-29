@@ -27,6 +27,9 @@ abstract final class Routes {
     queryParameters: {'modo': 'etiqueta', 'produto': productId, 'embalagem': ?packageId},
   ).toString();
 
+  /// A câmera em "Código": o produto bipado abre (a busca da aba Produtos).
+  static const cameraFind = '$camera?modo=codigo';
+
   /// A câmera somando em casa cada código ("Comprei", o Início vazio).
   static const cameraBought = '$camera?modo=comprei';
 

@@ -102,6 +102,16 @@ void main() {
     expect(await repository.watchPackages('frutas').first, hasLength(2));
   });
 
+  test('watchAll ordena como o alfabeto, sem mandar o acento para depois do "z"', () async {
+    await repository.save(product('1', 'Arroz branco'));
+    await repository.save(product('2', 'Açúcar refinado'));
+    await repository.save(product('3', 'Água'));
+    await repository.save(product('4', 'Zucchini'));
+
+    final all = await repository.watchAll().first;
+    expect(all.map((p) => p.name), ['Açúcar refinado', 'Água', 'Arroz branco', 'Zucchini']);
+  });
+
   test('watchAll ordena por nome e filtra por nome, marca ou código da embalagem', () async {
     await repository.save(product('1', 'feijão'));
     await repository.save(product('2', 'Arroz'));

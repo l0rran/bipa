@@ -391,6 +391,12 @@ void _tests() {
     testWidgets('Produtos', (tester) async {
       await _pumpScreen(tester, const ProductsPage());
       expect(find.textContaining('Leite integral'), findsWidgets);
+      // O café, de nome comprido, tem duas embalagens: a linha traz a conta,
+      // o preço por kg e o que ele mede, e o cadastro fecha a lista.
+      expect(find.textContaining('Café torrado'), findsWidgets);
+      expect(find.text('2 embalagens'), findsOneWidget);
+      expect(find.text('o kg'), findsWidgets);
+      expect(find.text('Cadastrar produto'), findsOneWidget);
     });
 
     testWidgets('folha "Fim da compra"', (tester) async {

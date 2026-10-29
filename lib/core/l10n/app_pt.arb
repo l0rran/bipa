@@ -528,12 +528,33 @@
   "marketPickTitle": "Em qual mercado você está?",
   "marketPickNew": "Cadastrar novo mercado",
   "retry": "Tentar de novo",
-  "productsScan": "Buscar pelo código de barras",
   "productsNew": "Novo produto",
-  "productsSearch": "Buscar por nome, marca ou código",
+  "productsAdd": "Cadastrar produto",
+  "productsSearch": "Buscar produto",
   "productsEmpty": "Nenhum produto ainda.\nBipe um código de barras para começar.",
   "productsNoMatch": "Nenhum produto encontrado.",
-  "scannerTitle": "Ler código de barras",
+  "productsPackagesCount": "{count, plural, =1{1 embalagem} other{{count} embalagens}}",
+  "@productsPackagesCount": {
+    "description": "Linha do produto na lista de Produtos quando ele tem mais de uma embalagem: o preço ao lado é o por kg.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "productsLoose": "a granel",
+  "@productsLoose": {
+    "description": "Linha do produto sem embalagem na lista de Produtos (vendido por quilo, como o tomate)."
+  },
+  "productsPerUnit": "{unit, select, kilogram{o kg} liter{o litro} other{a unidade}}",
+  "@productsPerUnit": {
+    "description": "O que o preço da linha mede quando é por unidade base: \"R$ 4,99 o kg\". O valor é o nome da unidade no código.",
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
   "scannerHint": "Aponte a câmera para o código de barras do produto",
   "productSaveFailed": "Não deu para salvar o produto. Tente de novo.",
   "productEditTitle": "Editar produto",

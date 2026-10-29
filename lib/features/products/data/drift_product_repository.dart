@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:bipa/core/catalog/text_fold.dart';
 import 'package:bipa/core/database/app_database.dart';
 import 'package:bipa/core/id/id_generator.dart';
 import 'package:bipa/core/time/clock.dart';
@@ -49,7 +50,14 @@ final class DriftProductRepository implements ProductRepository {
       select.where((t) => t.name.like(pattern) | t.id.isInQuery(byPackage));
     }
 
-    return select.watch().map((rows) => [for (final row in rows) row.toEntity()]);
+    // O SQLite ordena os acentos depois do "z" ("Açúcar" depois de "Arroz");
+    // a ordem de quem lê é a do alfabeto, sem ligar para acento.
+    return select.watch().map((rows) => [for (final row in rows) row.toEntity()]..sort(_byName));
+  }
+
+  static int _byName(Product a, Product b) {
+    final byFolded = foldText(a.name).compareTo(foldText(b.name));
+    return byFolded != 0 ? byFolded : a.id.compareTo(b.id);
   }
 
   @override

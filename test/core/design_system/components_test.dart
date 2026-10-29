@@ -6,6 +6,7 @@ import 'package:bipa/core/design_system/components/list_cost_compare.dart';
 import 'package:bipa/core/design_system/components/market_map.dart';
 import 'package:bipa/core/design_system/components/place_filter.dart';
 import 'package:bipa/core/design_system/components/price_history.dart';
+import 'package:bipa/core/design_system/components/price_rows.dart';
 import 'package:bipa/core/design_system/components/quantity_stepper.dart';
 import 'package:bipa/core/design_system/components/scan_menu.dart';
 import 'package:bipa/core/design_system/components/scan_tray.dart';
@@ -451,6 +452,39 @@ void main() {
     expect(find.byIcon(Icons.storefront_rounded), findsNWidgets(3));
     expect(tester.takeException(), isNull);
     semantics.dispose();
+  });
+
+  testWidgets('a linha de preço mostra o que o valor mede embaixo dele e abre ao toque', (tester) async {
+    var opened = 0;
+    await tester.pumpWidget(
+      _app(
+        SizedBox(
+          width: 358,
+          child: PriceRowList(
+            rows: [
+              PriceRowData(
+                icon: Icons.rice_bowl_outlined,
+                title: 'Arroz branco',
+                meta: '2 embalagens',
+                value: r'R$ 4,99',
+                valueNote: 'o kg',
+                onTap: () => opened++,
+              ),
+              const PriceRowData(icon: Icons.shelves, title: 'Sabão em pó', meta: 'Omo · 1,6 kg'),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(r'R$ 4,99'), findsOneWidget);
+    expect(find.text('o kg'), findsOneWidget);
+    // A linha sem valor não desenha nota nenhuma.
+    expect(find.text('Sabão em pó'), findsOneWidget);
+
+    await tester.tap(find.text('Arroz branco'));
+    expect(opened, 1);
   });
 
   testWidgets('a comparação marca só o primeiro como mais barato e mostra a ressalva', (tester) async {

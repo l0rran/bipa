@@ -1,101 +1,121 @@
+import 'package:bipa/core/design_system/bipa_metrics.dart';
+import 'package:bipa/core/design_system/bipa_theme.dart';
+import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/bipa_search_bar.dart';
+import 'package:bipa/core/design_system/components/price_rows.dart';
+import 'package:bipa/core/design_system/components/product_category_icon.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
 import 'package:bipa/core/widgets/empty_state.dart';
-import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/products/domain/measure_unit.dart';
+import 'package:bipa/features/products/presentation/product_rows_providers.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
-import 'package:bipa/features/products/presentation/scan_product.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// Lista de produtos cadastrados, com busca por nome, marca ou código.
+/// Produtos (protótipo "Produtos"): a busca com o bipar dentro e os produtos
+/// em ordem alfabética num cartão, cada um com o ícone da categoria, a
+/// embalagem (ou quantas são) e o preço. Segue a tela de Mercados.
+///
+/// A busca acha por nome, marca ou código de barras. "Cadastrar produto" fecha
+/// a lista; o que antes ficava nos botões da barra (bipar, novo) está na busca
+/// e nesta linha.
 class ProductsPage extends ConsumerWidget {
   const ProductsPage({super.key});
 
-  Future<void> _scan(BuildContext context, WidgetRef ref) async {
-    final scanned = await scanAndResolvePackage(context, ref);
-    if (scanned != null && context.mounted) {
-      await context.push(Routes.productDetail(scanned.product.id));
-    }
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final products = ref.watch(productsProvider);
-    final query = ref.watch(productSearchQueryProvider);
     final l10n = AppLocalizations.of(context);
+    final rows = ref.watch(productRowsProvider);
+    final searching = ref.watch(productSearchQueryProvider).trim().isNotEmpty;
+
+    final addRow = PriceRowData(
+      icon: Icons.add_rounded,
+      title: l10n.productsAdd,
+      onTap: () => context.push(Routes.newProduct),
+    );
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.navProducts),
-        actions: [
-          IconButton(
-            tooltip: l10n.productsScan,
-            icon: const Icon(Icons.qr_code_scanner),
-            onPressed: () => _scan(context, ref),
+      body: ListView(
+        padding: EdgeInsets.fromLTRB(
+          BipaSpacing.s4,
+          MediaQuery.paddingOf(context).top + BipaSpacing.s6,
+          BipaSpacing.s4,
+          // Espaço para as barras flutuantes (navegação e compra).
+          MediaQuery.paddingOf(context).bottom + BipaSpacing.s8,
+        ),
+        children: [
+          Semantics(
+            header: true,
+            child: Text(l10n.navProducts, style: BipaText.headline.copyWith(color: context.colors.ink)),
           ),
-          IconButton(
-            tooltip: l10n.productsNew,
-            icon: const Icon(Icons.add),
-            onPressed: () => context.push(Routes.newProduct),
+          const SizedBox(height: BipaSpacing.s4),
+          // O título e a busca ficam fora do carregamento: digitar refaz a
+          // lista, e o campo não pode sumir debaixo do dedo.
+          BipaSearchBar(
+            hint: l10n.productsSearch,
+            onChanged: ref.read(productSearchQueryProvider.notifier).change,
+            onScan: () => context.push(Routes.cameraFind),
+            scanLabel: l10n.searchScan,
+          ),
+          const SizedBox(height: BipaSpacing.s6),
+          AsyncValueView(
+            value: rows,
+            onRetry: () => ref.invalidate(productsProvider),
+            data: (items) {
+              if (items.isEmpty && !searching) {
+                // Sem nenhum produto: o convite fica embaixo da busca, que
+                // já leva à câmera.
+                return EmptyState(
+                  icon: Icons.inventory_2_outlined,
+                  message: l10n.productsEmpty,
+                  actionLabel: l10n.productsAdd,
+                  onAction: () => context.push(Routes.newProduct),
+                );
+              }
+              return Column(
+                children: [
+                  if (items.isEmpty)
+                    // A busca não achou: o cadastro continua à mão, e uma
+                    // linha sozinha diria pouco sobre o porquê.
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: BipaSpacing.s4),
+                      child: Text(
+                        l10n.productsNoMatch,
+                        textAlign: TextAlign.center,
+                        style: BipaText.body.copyWith(color: context.colors.inkMuted),
+                      ),
+                    ),
+                  PriceRowList(rows: [for (final row in items) _row(context, l10n, row), addRow]),
+                ],
+              );
+            },
           ),
         ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(64),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: SearchBar(
-              hintText: l10n.productsSearch,
-              leading: const Icon(Icons.search),
-              elevation: const WidgetStatePropertyAll(0),
-              onChanged: ref.read(productSearchQueryProvider.notifier).change,
-            ),
-          ),
-        ),
-      ),
-      body: AsyncValueView(
-        value: products,
-        onRetry: () => ref.invalidate(productsProvider),
-        data: (items) {
-          if (items.isEmpty) {
-            return query.isEmpty
-                ? EmptyState(
-                    icon: Icons.inventory_2_outlined,
-                    message: l10n.productsEmpty,
-                    actionLabel: l10n.scannerTitle,
-                    onAction: () => _scan(context, ref),
-                  )
-                : EmptyState(icon: Icons.search_off, message: l10n.productsNoMatch);
-          }
-          return ListView.separated(
-            // Espaço para as barras flutuantes (navegação e compra).
-            padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom + 16),
-            itemCount: items.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
-            itemBuilder: (context, index) => _ProductTile(product: items[index]),
-          );
-        },
       ),
     );
   }
-}
 
-class _ProductTile extends ConsumerWidget {
-  const _ProductTile({required this.product});
-
-  final Product product;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // A embalagem mais recente resume o produto: marca e tamanho.
-    final subtitle = ref.watch(productPackagesProvider(product.id)).value?.firstOrNull?.label;
-    return ListTile(
-      leading: const CircleAvatar(child: Icon(Icons.shopping_basket_outlined)),
-      title: Text(product.name),
-      subtitle: subtitle == null ? null : Text(subtitle),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: () => context.push(Routes.productDetail(product.id)),
+  static PriceRowData _row(BuildContext context, AppLocalizations l10n, ProductRow row) {
+    final price = row.price;
+    final perUnit = price?.perUnit;
+    return PriceRowData(
+      icon: productCategoryIcon(row.product.name),
+      title: row.product.name,
+      meta: _meta(l10n, row),
+      value: price?.price.format(),
+      valueNote: perUnit == null ? null : l10n.productsPerUnit(perUnit.name),
+      onTap: () => context.push(Routes.productDetail(row.product.id)),
     );
   }
+
+  /// A embalagem quando há uma ("União · 1 kg"), quantas são quando há
+  /// várias, e "a granel" para o que se vende por quilo sem embalagem.
+  static String? _meta(AppLocalizations l10n, ProductRow row) => switch (row.packages) {
+    [] => row.product.unit == MeasureUnit.kilogram ? l10n.productsLoose : null,
+    [final only] => only.label,
+    final many => l10n.productsPackagesCount(many.length),
+  };
 }
