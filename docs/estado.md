@@ -41,7 +41,11 @@ Achados "prováveis" das revisões que ficaram como estão, por serem raros ou p
 
 Os detalhes de cada código estão nas análises de UX (em `ux/`) e no [roadmap](roadmap.md).
 
-1. **Achados do lote 10:** G6 (alto: o recorte da etiqueta mistura variedades do granel) e G7, H17 e H18 (antes do primeiro build com DSN), G8. Depois, com quadro ou regra antes: AB14 e H19.
+1. **Lote 11, interrompido em 29/10 a pedido do mantenedor:** três agentes começaram e foram parados no meio. O trabalho parcial de cada um está num commit `wip:` numa branch própria, fora de `main`, **não revisado e talvez sem compilar**:
+   - `refs/heads/worktree-agent-adef0b77079ea79ca`: G6 (alto: o recorte da etiqueta mistura variedades do granel) e G7 (busca do Início);
+   - `refs/heads/worktree-agent-a3da908b52c2e90a4`: H17 e H18 (texto e posição do cartão do relatório de falhas; antes do primeiro build com DSN);
+   - `refs/heads/worktree-agent-aebd54aa797f584d2`: G8 (Desfazer de mover que volta à origem).
+   Para retomar: ler o diff de cada branch contra `main`, terminar ou refazer, rodar format, analyze e test, e juntar. Depois, com quadro ou regra antes: AB14 e H19.
 2. **Levar ao claude.ai** as mudanças de 28/10 nas cópias do protótipo e do design system.
 4. **Maiores:** o backup e a restauração (B5), o catálogo pronto (script e cobertura), a migração para o Kotlin embutido e o teste no aparelho (acima).
 
