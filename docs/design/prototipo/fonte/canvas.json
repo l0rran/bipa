@@ -289,6 +289,13 @@
       "w": 1160,
       "h": 970,
       "title": "Proposta: restaurar um backup (pronto e erros)"
+    },
+    "InicioBackupEncontrado.dc.html": {
+      "x": 2950,
+      "y": 7200,
+      "w": 390,
+      "h": 844,
+      "title": "Proposta: Casa no celular novo, backup encontrado"
     }
   },
   "order": [
@@ -331,7 +338,8 @@
     "Ajustes.dc.html",
     "AjustesBackup.dc.html",
     "RestaurarBackup.dc.html",
-    "RestaurarBackupResultado.dc.html"
+    "RestaurarBackupResultado.dc.html",
+    "InicioBackupEncontrado.dc.html"
   ],
   "notes": {
     "titulo": {
