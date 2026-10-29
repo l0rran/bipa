@@ -160,6 +160,11 @@ final lastMarketIdProvider = StreamProvider.autoDispose<String?>(
   (ref) => ref.watch(shoppingTripRepositoryProvider).watchLastMarketId(),
 );
 
+/// Se alguma compra já terminou.
+final hasFinishedTripProvider = StreamProvider.autoDispose<bool>(
+  (ref) => ref.watch(shoppingTripRepositoryProvider).watchAnyFinished(),
+);
+
 /// O mercado da lista: o da compra em andamento; fora dela, o escolhido no
 /// chip ou, sem escolha, o da última compra.
 final listMarketIdProvider = Provider.autoDispose<String?>((ref) {

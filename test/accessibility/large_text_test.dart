@@ -364,6 +364,23 @@ void _tests() {
       expect(find.textContaining('Café torrado'), findsWidgets);
     });
 
+    testWidgets('Início com a pergunta do relatório de falhas', (tester) async {
+      // Compra terminada, build com DSN e nenhuma resposta: o cartão aparece.
+      await _pumpScreen(
+        tester,
+        const HomePage(),
+        prepare: (container) async {
+          final trips = container.read(shoppingTripRepositoryProvider);
+          await trips.finish((await trips.start()).id);
+        },
+        overrides: [crashReporterProvider.overrideWithValue(FakeCrashReporter())],
+      );
+      expect(find.text('Se o Bipa travar, mandar um relatório?'), findsOneWidget);
+      expect(find.text('Mandar'), findsOneWidget);
+      expect(find.text('Não mandar'), findsOneWidget);
+      expect(find.textContaining('Leite integral'), findsWidgets);
+    });
+
     testWidgets('Início com a linha do estoque aberta', (tester) async {
       await _pumpScreen(tester, const HomePage());
       await tester.tap(find.textContaining('Leite integral').first);

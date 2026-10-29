@@ -22,6 +22,7 @@ import 'package:bipa/core/widgets/empty_state.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/presentation/product_photos.dart';
 import 'package:bipa/features/products/presentation/scan_product.dart';
+import 'package:bipa/features/settings/presentation/crash_reporting_ask_card.dart';
 import 'package:bipa/features/shopping_list/domain/record_at_home.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/presentation/home_change_snack_bar.dart';
@@ -304,6 +305,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ),
                   ),
                 ),
+              // A pergunta do relatório de falhas: aparece só uma vez (ADR 0025).
+              const SliverPadding(
+                padding: EdgeInsets.symmetric(horizontal: BipaSpacing.s4),
+                sliver: SliverToBoxAdapter(child: CrashReportingAskCard()),
+              ),
               if (entries.isNotEmpty && visible.isEmpty)
                 SliverPadding(
                   padding: const EdgeInsets.all(BipaSpacing.s8),

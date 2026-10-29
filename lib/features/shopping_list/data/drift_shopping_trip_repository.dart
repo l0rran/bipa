@@ -65,6 +65,14 @@ final class DriftShoppingTripRepository implements ShoppingTripRepository {
     return query.watchSingleOrNull().map((row) => row?.marketId);
   }
 
+  @override
+  Stream<bool> watchAnyFinished() {
+    final query = _db.select(_db.shoppingTrips)
+      ..where((t) => t.finishedAt.isNotNull())
+      ..limit(1);
+    return query.watch().map((rows) => rows.isNotEmpty);
+  }
+
   Future<void> _write(String tripId, ShoppingTripsCompanion changes) async {
     await (_db.update(_db.shoppingTrips)..where((t) => t.id.equals(tripId))).write(changes);
   }

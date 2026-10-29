@@ -8,6 +8,15 @@
     "description": "Rótulo acessível do botão central de bipar."
   },
   "homeTitle": "Sua casa",
+  "crashAskEyebrow": "Relatório de falhas",
+  "crashAskTitle": "Se o Bipa travar, mandar um relatório?",
+  "crashAskWhy": "Vai só o tipo do erro e o modelo do celular. Seus produtos, preços e lugares ficam aqui. Dá para mudar em Ajustes.",
+  "crashAskSend": "Mandar",
+  "crashAskDecline": "Não mandar",
+  "crashAskDismiss": "Fechar sem mandar",
+  "@crashAskDismiss": {
+    "description": "Rótulo acessível do × do cartão do relatório de falhas: fechar conta como não mandar."
+  },
   "settingsTitle": "Ajustes",
   "@settingsTitle": {
     "description": "Título da tela de Ajustes e rótulo acessível da engrenagem do Início."
