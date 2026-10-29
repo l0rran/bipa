@@ -8,6 +8,7 @@ import 'package:bipa/features/products/domain/moved_package.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/product_repository.dart';
+import 'package:bipa/features/products/domain/product_search.dart';
 
 /// IDs previsíveis para asserções: `id-1`, `id-2`...
 final class SequentialIdGenerator implements IdGenerator {
@@ -22,7 +23,18 @@ final class InMemoryProductRepository implements ProductRepository {
   final packages = <String, ProductPackage>{};
 
   @override
-  Stream<List<Product>> watchAll({String query = ''}) => Stream.value(products.values.toList());
+  Stream<List<Product>> watchAll({String query = ''}) => Stream.value([
+    for (final product in products.values)
+      if (matchesProductSearch(
+        query,
+        name: product.name,
+        brands: [
+          for (final package in packages.values)
+            if (package.productId == product.id && package.brand != null) package.brand!,
+        ],
+      ))
+        product,
+  ]);
 
   @override
   Stream<Product?> watchById(String id) => Stream.value(products[id]);

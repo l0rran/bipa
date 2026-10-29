@@ -133,6 +133,33 @@ void main() {
     expect(byName.map((p) => p.id), ['2']);
   });
 
+  test('watchAll busca sem acento nem caixa, palavra por palavra', () async {
+    await repository.save(product('1', 'Feijão carioca'));
+    await repository.save(product('2', 'Açúcar refinado'));
+    await repository.save(product('3', 'Feijão preto'));
+    await repository.savePackage(package('a', '2', brand: 'União'));
+
+    expect((await repository.watchAll(query: 'acucar').first).map((p) => p.id), ['2']);
+    expect((await repository.watchAll(query: 'FEIJAO CARIOCA').first).map((p) => p.id), ['1']);
+    expect((await repository.watchAll(query: 'carioca feijao').first).map((p) => p.id), ['1']);
+    expect((await repository.watchAll(query: 'feijao').first).map((p) => p.id), ['1', '3']);
+    expect((await repository.watchAll(query: 'uniao acucar').first).map((p) => p.id), ['2']);
+    expect(await repository.watchAll(query: 'feijao arroz').first, isEmpty);
+  });
+
+  test('watchAll com busca acompanha uma embalagem que ganha marca', () async {
+    await repository.save(product('1', 'Arroz'));
+    final seen = <List<String>>[];
+    final subscription = repository.watchAll(query: 'camil').listen((list) => seen.add([for (final p in list) p.id]));
+    addTearDown(subscription.cancel);
+    await pumpEventQueue();
+    await repository.savePackage(package('a', '1', brand: 'Camil'));
+    await pumpEventQueue();
+
+    expect(seen.first, isEmpty);
+    expect(seen.last, ['1']);
+  });
+
   test('juntar leva embalagens, preços, estoque e lista para o outro produto', () async {
     await repository.save(product('tio', 'Arroz Tio João'));
     await repository.save(product('arroz', 'Arroz branco'));

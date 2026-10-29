@@ -7,7 +7,8 @@ import 'package:bipa/features/products/domain/product_package.dart';
 /// Acesso aos produtos e às suas embalagens (ADR 0013).
 abstract interface class ProductRepository {
   /// Produtos ordenados por nome, filtrados pelo nome do produto ou pela
-  /// marca ou código de uma das suas embalagens.
+  /// marca ou código de uma das suas embalagens. A busca ignora acento e
+  /// caixa e casa palavra por palavra (`matchesProductSearch`).
   Stream<List<Product>> watchAll({String query = ''});
 
   Stream<Product?> watchById(String id);

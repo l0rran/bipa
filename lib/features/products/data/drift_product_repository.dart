@@ -12,6 +12,7 @@ import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/product_photo_files.dart';
 import 'package:bipa/features/products/domain/product_repository.dart';
+import 'package:bipa/features/products/domain/product_search.dart';
 import 'package:bipa/features/stock/domain/stock_location.dart';
 import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
 import 'package:bipa/features/stock/domain/suggested_location.dart';
@@ -34,27 +35,49 @@ final class DriftProductRepository implements ProductRepository {
   final IdGenerator _ids;
   final ProductPhotoFiles? _photos;
 
+  /// A busca é em Dart, não em SQL (`matchesProductSearch`): o `LIKE` do
+  /// SQLite não ignora acento. Com termo, carrega os produtos com as marcas e
+  /// os códigos das embalagens e filtra aqui; o catálogo pessoal é pequeno.
   @override
   Stream<List<Product>> watchAll({String query = ''}) {
     final products = _db.products;
-    final select = _db.select(products)..orderBy([(t) => OrderingTerm.asc(t.name.lower())]);
-
     final term = query.trim();
-    if (term.isNotEmpty) {
-      final pattern = '%$term%';
-      final packages = _db.productPackages;
-      // Produtos com alguma embalagem da marca ou do código procurado.
-      final byPackage = _db.selectOnly(packages)
-        ..addColumns([packages.productId])
-        ..where(packages.brand.like(pattern) | packages.barcode.equals(term));
-      select.where((t) => t.name.like(pattern) | t.id.isInQuery(byPackage));
+    if (term.isEmpty) {
+      final select = _db.select(products);
+      return select.watch().map((rows) => [for (final row in rows) row.toEntity()]..sort(_byName));
     }
 
-    // O SQLite ordena os acentos depois do "z" ("Açúcar" depois de "Arroz");
-    // a ordem de quem lê é a do alfabeto, sem ligar para acento.
-    return select.watch().map((rows) => [for (final row in rows) row.toEntity()]..sort(_byName));
+    final packages = _db.productPackages;
+    final joined = _db.select(products).join([leftOuterJoin(packages, packages.productId.equalsExp(products.id))]);
+    return joined.watch().map((rows) {
+      final byId = <String, Product>{};
+      final brands = <String, List<String>>{};
+      final barcodes = <String, List<String>>{};
+      for (final row in rows) {
+        final product = row.readTable(products).toEntity();
+        byId[product.id] = product;
+        final package = row.readTableOrNull(packages);
+        if (package == null) continue;
+        final brand = package.brand;
+        if (brand != null) (brands[product.id] ??= []).add(brand);
+        final barcode = package.barcode;
+        if (barcode != null) (barcodes[product.id] ??= []).add(barcode);
+      }
+      return [
+        for (final product in byId.values)
+          if (matchesProductSearch(
+            term,
+            name: product.name,
+            brands: brands[product.id] ?? const [],
+            barcodes: barcodes[product.id] ?? const [],
+          ))
+            product,
+      ]..sort(_byName);
+    });
   }
 
+  /// A ordem de quem lê é a do alfabeto, sem ligar para acento (o SQLite poria
+  /// "Açúcar" depois de "Zucchini").
   static int _byName(Product a, Product b) {
     final byFolded = foldText(a.name).compareTo(foldText(b.name));
     return byFolded != 0 ? byFolded : a.id.compareTo(b.id);
