@@ -20,12 +20,25 @@ Barra de navegação flutuante, de vidro, com o botão de bipar no centro: um to
 - **Rolando para baixo** a barra encolhe para 52px, os rótulos somem e o botão de bipar diminui para 56px; **rolando para cima** volta ao normal.
 - **Pressionando** o botão de bipar, ele muda de círculo para "squircle" (raio 30%) e encolhe para 94%. Ao abrir o menu, o ícone gira 135° e vira um "×"; as pílulas sobem uma após a outra com 50ms entre elas.
 - O anel que respira para enquanto o menu está aberto.
+- **Segurando um destino** (toque longo), o ícone e o rótulo aparecem grandes num balão de vidro acima da barra, como o Large Content Viewer do iOS. O balão some ao soltar, e o toque longo do destino não abre o menu do bipar, que é só do botão do meio.
+
+## Letra grande
+
+Decidido em 28/10/2026 ([NavLetraGrande](../../prototipo/telas/NavLetraGrande.png)): **A até 160%, B acima.**
+
+- **Até 160% de letra (A):** a anatomia de sempre. O rótulo cresce até 130%, como no `NavigationBar` do Flutter, e depois encolhe até o maior dos quatro caber, todos no mesmo tamanho (medidos com o peso do selecionado, para nada mudar ao trocar de aba). Nunca reticências.
+- **Acima de 160% (B):** o bipar sai do meio e flutua acima da barra, à direita, a 12px da pílula, com o mesmo tamanho (64px) e o mesmo menu no toque longo, que sai dele. Os quatro destinos dividem a largura da pílula, e os rótulos crescem até caber e só depois encolhem. A pílula cresce com o rótulo, a partir dos 68px.
+- O balão do rótulo grande vale em A e em B, porque em B os rótulos ainda encolhem num celular estreito.
+- **A barra não encolhe ao rolar** a partir de 130% de letra ou com o TalkBack ligado: o rótulo é a informação, e quem aumenta a letra é quem mais precisa dele.
 
 ## Regras
 
 - Um toque no botão sempre abre a câmera direto, sem perguntas.
 - Os itens do menu são atalhos: tudo o que eles fazem também existe nas telas.
 - O desfoque só funciona sobre conteúdo; no Flutter, `BackdropFilter` com `ImageFilter.blur(18)` dentro de um `ClipRRect`.
+- Os rótulos ficam com texto em qualquer tamanho de letra: não se troca rótulo da navegação por ícone sozinho.
+
+> **Pendente no design system publicado.** O toque longo nos destinos e a seção "Letra grande" entraram nesta cópia em 28/10/2026, com a decisão do quadro [NavLetraGrande](../../prototipo/telas/NavLetraGrande.png) e o que o app já faz (`ScanNavBar` em `lib/core/design_system/components/scan_nav_bar.dart`). A página publicada no claude.ai precisa receber a mesma mudança, que muda a anatomia do componente acima de 160%.
 
 ## Markup
 
