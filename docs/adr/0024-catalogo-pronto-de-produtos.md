@@ -90,7 +90,9 @@ A pesquisa foi feita em 28/10/2026. Onde a página da fonte não abriu para leit
   - um arquivo SQLite só de leitura (`catalogo.sqlite`), que vai nos assets do app, separado do banco da pessoa (ADR 0023);
   - bipar um código procura primeiro nas embalagens da pessoa e depois no catálogo. Achado no catálogo, a embalagem nasce na base da pessoa como cópia, marcada como vinda do catálogo (ADR 0023, lacuna C1);
   - o produto (o "Arroz branco" do ADR 0013) continua sendo sugerido pelo nome e pela categoria, e a pessoa confere, como hoje.
-- **A geração:** um script em `tool/catalogo` baixa o dump JSONL, filtra, converte e gera o arquivo. Ele roda antes de cada versão do app, e o arquivo vai junto. Estimativa (não medida): cerca de 37 mil linhas, com 100 bytes cada, dão alguns megabytes no APK. Baixar o catálogo depois da instalação fica para quando o tamanho pesar.
+- **A geração:** o script `tool/catalogo/gerar.py` baixa os dumps, filtra, converte e gera o arquivo. Ele roda antes de cada versão do app, e o arquivo vai junto. Baixar o catálogo depois da instalação fica para quando o tamanho pesar.
+  - **Fonte escolhida (29/10/2026):** os dumps noturnos, sem a API. Do Open Food Facts, o CSV (`en.openfoodfacts.org.products.csv.gz`, 1,5 GB); do Open Beauty Facts e do Open Products Facts, o JSONL (100 MB e 40 MB), que traz o nome em português. O script lê cada dump enquanto baixa e guarda só o recorte brasileiro. O Parquet do Hugging Face foi testado e descartado: ler só as colunas pela rede pede dezenas de milhares de requisições e não terminou em 20 minutos. Detalhes e comando em [tool/catalogo/README.md](../../tool/catalogo/README.md).
+  - **Medido em 29/10/2026:** 40.944 produtos (39.845 do Open Food Facts, 515 do Open Beauty Facts, 584 do Open Products Facts), 71% com marca, 49% com tamanho e 22% com tipo. O arquivo tem **2,70 MB** e vai no repositório, para o build funcionar sem rodar o script.
 - **Licença e atribuição:**
   - o arquivo gerado é uma base derivada do Open Food Facts (filtrada e convertida) e sai sob a ODbL, com o aviso e o link da licença dentro dele e no repositório;
   - o script e o arquivo de cada versão ficam públicos (o script no repositório, o arquivo numa release), para cumprir a ODbL 4.6;
@@ -123,7 +125,6 @@ Antes da fase 2, a escolha passa por uma consulta a reuse@openfoodfacts.org e, s
 - A escolha empurra a base comunitária da fase 2 para a ODbL, pelo menos na parte de produtos. Essa é a decisão de maior alcance deste ADR, e é por isso que ele fica "Proposto" até o mantenedor escolher.
 - Cosmos ou GS1 só voltam a ser opção com acordo escrito que permita guardar e redistribuir. Mesmo assim, não entrariam no mesmo arquivo do Open Food Facts.
 - Falta fazer:
-  - o script `tool/catalogo`;
   - a coluna de origem na embalagem (ADR 0023, C1);
   - a busca no catálogo no fluxo do bipe;
   - os textos de atribuição no ARB;
