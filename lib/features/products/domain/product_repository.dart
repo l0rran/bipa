@@ -1,4 +1,5 @@
 import 'package:bipa/core/errors/domain_exception.dart';
+import 'package:bipa/features/products/domain/deleted_package.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 
@@ -42,6 +43,36 @@ abstract interface class ProductRepository {
   /// preços, o estoque, a lista e o carrinho dele; [fromId] deixa de existir.
   /// É o caminho para quem cadastrou o mesmo produto uma vez por marca.
   Future<void> merge({required String fromId, required String intoId});
+
+  /// Passa a embalagem [packageId] para o produto [intoId] (ADR 0022), com
+  /// os preços, os lotes em casa, o carrinho e os preços da compra dela. A
+  /// quantidade em casa sai do produto antigo e entra no novo. Para o mesmo
+  /// produto, não faz nada.
+  ///
+  /// Lança [PackageNotFoundException] se a embalagem não existir.
+  Future<void> movePackage({required String packageId, required String intoId});
+
+  /// Apaga a embalagem e os preços dela (ADR 0022). O que está em casa e as
+  /// compras terminadas ficam sem embalagem. Devolve o que saiu, para
+  /// [restorePackage].
+  ///
+  /// Lança [PackageNotFoundException] se a embalagem não existir e
+  /// [PackageInOpenTripException] se ela estiver na compra em andamento.
+  Future<DeletedPackage> deletePackage(String packageId);
+
+  /// Grava de volta o que [deletePackage] apagou: o "Desfazer". Sem o
+  /// produto (apagado nesse meio-tempo), não faz nada.
+  Future<void> restorePackage(DeletedPackage deleted);
+}
+
+final class PackageNotFoundException extends DomainException {
+  const PackageNotFoundException() : super(DomainErrorCode.packageNotFound);
+}
+
+/// A embalagem está no carrinho da compra em andamento: o que está na mão
+/// da pessoa não some (ADR 0022).
+final class PackageInOpenTripException extends DomainException {
+  const PackageInOpenTripException() : super(DomainErrorCode.packageInOpenTrip);
 }
 
 final class DuplicateBarcodeException extends DomainException {

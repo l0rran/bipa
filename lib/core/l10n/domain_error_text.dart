@@ -9,5 +9,7 @@ String domainErrorText(AppLocalizations l10n, DomainException error) => switch (
   DomainErrorCode.missingPackageProduct => l10n.packageProductMissing,
   DomainErrorCode.invalidPackageSize => l10n.packageSizeNotPositive,
   DomainErrorCode.scaleBarcode => l10n.barcodeScale,
+  DomainErrorCode.packageNotFound => l10n.packageNotFound,
+  DomainErrorCode.packageInOpenTrip => l10n.packageInOpenTrip,
   DomainErrorCode.duplicateBarcode => l10n.packageDuplicate(error.args[0], error.args[1]),
 };

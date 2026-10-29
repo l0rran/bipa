@@ -2,6 +2,8 @@ import 'package:bipa/core/database/database_provider.dart';
 import 'package:bipa/core/di/core_providers.dart';
 import 'package:bipa/features/products/data/drift_product_repository.dart';
 import 'package:bipa/features/products/domain/create_product_by_weight.dart';
+import 'package:bipa/features/products/domain/delete_package.dart';
+import 'package:bipa/features/products/domain/move_package.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/product_repository.dart';
@@ -9,7 +11,11 @@ import 'package:bipa/features/products/domain/register_package.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final productRepositoryProvider = Provider<ProductRepository>(
-  (ref) => DriftProductRepository(ref.watch(appDatabaseProvider), clock: ref.watch(clockProvider)),
+  (ref) => DriftProductRepository(
+    ref.watch(appDatabaseProvider),
+    clock: ref.watch(clockProvider),
+    ids: ref.watch(idGeneratorProvider),
+  ),
 );
 
 /// Texto digitado na busca da lista de produtos.
@@ -42,6 +48,20 @@ final registerPackageProvider = Provider<RegisterPackage>(
     ids: ref.watch(idGeneratorProvider),
     clock: ref.watch(clockProvider),
   ),
+);
+
+/// "Mover para outro produto…" (ADR 0022).
+final movePackageProvider = Provider<MovePackage>(
+  (ref) => MovePackage(
+    products: ref.watch(productRepositoryProvider),
+    ids: ref.watch(idGeneratorProvider),
+    clock: ref.watch(clockProvider),
+  ),
+);
+
+/// "Apagar embalagem", com o "Desfazer" (ADR 0022).
+final deletePackageProvider = Provider<DeletePackage>(
+  (ref) => DeletePackage(products: ref.watch(productRepositoryProvider)),
 );
 
 /// Cadastra um produto vendido por quilo (ADR 0018).

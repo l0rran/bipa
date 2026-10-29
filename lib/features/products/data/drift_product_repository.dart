@@ -1,16 +1,27 @@
+import 'dart:math' as math;
+
 import 'package:bipa/core/database/app_database.dart';
+import 'package:bipa/core/id/id_generator.dart';
 import 'package:bipa/core/time/clock.dart';
+import 'package:bipa/features/prices/data/drift_price_repository.dart';
 import 'package:bipa/features/products/data/product_mapper.dart';
+import 'package:bipa/features/products/domain/deleted_package.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/product_repository.dart';
+import 'package:bipa/features/stock/domain/stock_location.dart';
+import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
+import 'package:bipa/features/stock/domain/suggested_location.dart';
 import 'package:drift/drift.dart';
 
 final class DriftProductRepository implements ProductRepository {
-  const DriftProductRepository(this._db, {Clock clock = systemClock}) : _clock = clock;
+  const DriftProductRepository(this._db, {Clock clock = systemClock, IdGenerator ids = const UuidGenerator()})
+    : _clock = clock,
+      _ids = ids;
 
   final AppDatabase _db;
   final Clock _clock;
+  final IdGenerator _ids;
 
   @override
   Stream<List<Product>> watchAll({String query = ''}) {
@@ -207,4 +218,177 @@ final class DriftProductRepository implements ProductRepository {
       await (_db.delete(_db.products)..where((t) => t.id.equals(fromId))).go();
     });
   }
+
+  @override
+  Future<void> movePackage({required String packageId, required String intoId}) => _db.transaction(() async {
+    final package = await _selectPackage(packageId).getSingleOrNull();
+    if (package == null) throw const PackageNotFoundException();
+    final fromId = package.productId;
+    if (fromId == intoId) return;
+    final now = _clock();
+
+    await (_db.update(_db.productPackages)..where((t) => t.id.equals(packageId))).write(
+      ProductPackagesCompanion(productId: Value(intoId), updatedAt: Value(now), syncedAt: const Value(null)),
+    );
+    // A exceção do ADR 0013, agora para uma embalagem só (ADR 0022): as
+    // observações dela mudam de produto e voltam para a fila de
+    // sincronização. Preço, mercado, data e embalagem não mudam.
+    await _db.customUpdate(
+      'UPDATE price_observations SET product_id = ?, synced_at = NULL WHERE package_id = ?',
+      variables: [Variable.withString(intoId), Variable.withString(packageId)],
+      updates: {_db.priceObservations},
+    );
+    // O carrinho e os preços das compras. A chave do preço da compra começa
+    // pelo produto (`produto:embalagem`, `TripPrice.keyOf`).
+    await _db.customUpdate(
+      'UPDATE cart_items SET product_id = ? WHERE package_id = ?',
+      variables: [Variable.withString(intoId), Variable.withString(packageId)],
+      updates: {_db.cartItems},
+    );
+    await _db.customUpdate(
+      'UPDATE trip_prices SET product_id = ?, item_key = ? || substr(item_key, length(product_id) + 1) '
+      'WHERE package_id = ?',
+      variables: [Variable.withString(intoId), Variable.withString(intoId), Variable.withString(packageId)],
+      updates: {_db.tripPrices},
+    );
+
+    // O que está em casa dessa embalagem passa de um produto para o outro.
+    final lots = await (_db.select(_db.stockLots)..where((t) => t.packageId.equals(packageId))).get();
+    final moved = lots.fold(0.0, (sum, lot) => sum + lot.quantity);
+    await (_db.update(
+      _db.stockLots,
+    )..where((t) => t.packageId.equals(packageId))).write(StockLotsCompanion(productId: Value(intoId)));
+    if (moved <= _epsilon) return;
+
+    final from = await _selectStockItem(fromId).getSingleOrNull();
+    if (from != null) {
+      final quantity = math.max(0.0, from.quantity - moved);
+      await (_db.update(_db.stockItems)..where((t) => t.productId.equals(fromId))).write(
+        StockItemsCompanion(quantity: Value(quantity), updatedAt: Value(now)),
+      );
+      await _recordAdjustment(fromId, quantity - from.quantity, now);
+    }
+    final into = await _selectStockItem(intoId).getSingleOrNull();
+    if (into == null) {
+      await _db
+          .into(_db.stockItems)
+          .insert(
+            StockItemsCompanion.insert(
+              productId: intoId,
+              quantity: moved,
+              location: await _newItemLocation(intoId),
+              updatedAt: now,
+            ),
+          );
+    } else {
+      await (_db.update(_db.stockItems)..where((t) => t.productId.equals(intoId))).write(
+        StockItemsCompanion(quantity: Value(into.quantity + moved), updatedAt: Value(now)),
+      );
+    }
+    await _recordAdjustment(intoId, moved, now);
+  });
+
+  @override
+  Future<DeletedPackage> deletePackage(String packageId) => _db.transaction(() async {
+    final row = await _selectPackage(packageId).getSingleOrNull();
+    if (row == null) throw const PackageNotFoundException();
+
+    // Na compra em andamento, a embalagem é o que está na mão da pessoa.
+    final openTrips = _db.selectOnly(_db.shoppingTrips)
+      ..addColumns([_db.shoppingTrips.id])
+      ..where(_db.shoppingTrips.finishedAt.isNull());
+    final inOpenCart =
+        await (_db.select(_db.cartItems)
+              ..where((t) => t.packageId.equals(packageId) & t.tripId.isInQuery(openTrips))
+              ..limit(1))
+            .getSingleOrNull();
+    final inOpenPrices =
+        await (_db.select(_db.tripPrices)
+              ..where((t) => t.packageId.equals(packageId) & t.tripId.isInQuery(openTrips))
+              ..limit(1))
+            .getSingleOrNull();
+    if (inOpenCart != null || inOpenPrices != null) throw const PackageInOpenTripException();
+
+    final prices = await (_db.select(_db.priceObservations)..where((t) => t.packageId.equals(packageId))).get();
+    final lots = await (_db.select(_db.stockLots)..where((t) => t.packageId.equals(packageId))).get();
+    final cartItems = await (_db.select(_db.cartItems)..where((t) => t.packageId.equals(packageId))).get();
+
+    // Os preços saem explicitamente: com a chave nula, virariam preços do
+    // produto sem tamanho (ADR 0022). Lotes e carrinho ficam sem embalagem,
+    // pela chave estrangeira.
+    await (_db.delete(_db.priceObservations)..where((t) => t.packageId.equals(packageId))).go();
+    await (_db.delete(_db.productPackages)..where((t) => t.id.equals(packageId))).go();
+
+    return DeletedPackage(
+      package: row.toEntity(),
+      prices: [for (final price in prices) price.toEntity()],
+      lotIds: {for (final lot in lots) lot.id},
+      cartItemIds: {for (final item in cartItems) item.id},
+    );
+  });
+
+  @override
+  Future<void> restorePackage(DeletedPackage deleted) => _db.transaction(() async {
+    final package = deleted.package;
+    if (await findById(package.productId) == null) return;
+    await savePackage(package);
+    await _db.batch((batch) {
+      batch.insertAll(_db.priceObservations, [
+        for (final price in deleted.prices) price.toCompanion(),
+      ], mode: InsertMode.insertOrIgnore);
+    });
+
+    final lotIds = deleted.lotIds;
+    if (lotIds.isNotEmpty) {
+      await (_db.update(_db.stockLots)
+            ..where((t) => t.id.isIn(lotIds) & t.packageId.isNull() & t.productId.equals(package.productId)))
+          .write(StockLotsCompanion(packageId: Value(package.id)));
+    }
+    final cartItemIds = deleted.cartItemIds;
+    if (cartItemIds.isNotEmpty) {
+      await (_db.update(_db.cartItems)..where((t) => t.id.isIn(cartItemIds) & t.packageId.isNull())).write(
+        CartItemsCompanion(packageId: Value(package.id)),
+      );
+    }
+    // Os preços das compras guardam a embalagem na chave do item.
+    await _db.customUpdate(
+      "UPDATE trip_prices SET package_id = ? WHERE package_id IS NULL AND item_key = product_id || ':' || ?",
+      variables: [Variable.withString(package.id), Variable.withString(package.id)],
+      updates: {_db.tripPrices},
+    );
+  });
+
+  SimpleSelectStatement<$ProductPackagesTable, ProductPackageRow> _selectPackage(String id) =>
+      _db.select(_db.productPackages)..where((t) => t.id.equals(id));
+
+  SimpleSelectStatement<$StockItemsTable, StockItemRow> _selectStockItem(String productId) =>
+      _db.select(_db.stockItems)..where((t) => t.productId.equals(productId));
+
+  Future<void> _recordAdjustment(String productId, double delta, DateTime now) async {
+    if (delta.abs() <= _epsilon) return;
+    await _db
+        .into(_db.stockMovements)
+        .insert(
+          StockMovementsCompanion.insert(
+            id: _ids.newId(),
+            productId: productId,
+            delta: delta,
+            reason: StockMovementReason.adjustment,
+            occurredAt: now,
+          ),
+        );
+  }
+
+  /// O local do item que nasce no produto: o lembrado ou o sugerido pelo
+  /// nome, como em `DriftStockRepository` (ADR 0021).
+  Future<StockLocation> _newItemLocation(String productId) async {
+    final remembered = await (_db.select(
+      _db.rememberedLocations,
+    )..where((t) => t.productId.equals(productId))).getSingleOrNull();
+    if (remembered != null) return remembered.location;
+    final product = await findById(productId);
+    return product == null ? StockLocation.pantry : suggestedLocation(product.name);
+  }
 }
+
+const _epsilon = 1e-9;

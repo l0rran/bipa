@@ -3,6 +3,7 @@ import 'package:bipa/features/prices/domain/market_price.dart';
 import 'package:bipa/features/prices/domain/price_condition.dart';
 import 'package:bipa/features/prices/domain/price_observation.dart';
 import 'package:bipa/features/prices/domain/price_repository.dart';
+import 'package:bipa/features/products/domain/deleted_package.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/product_repository.dart';
@@ -75,6 +76,23 @@ final class InMemoryProductRepository implements ProductRepository {
       packages[package.id] = package.copyWith(productId: intoId);
     }
     products.remove(fromId);
+  }
+
+  @override
+  Future<void> movePackage({required String packageId, required String intoId}) async {
+    final package = packages[packageId] ?? (throw const PackageNotFoundException());
+    packages[packageId] = package.copyWith(productId: intoId);
+  }
+
+  @override
+  Future<DeletedPackage> deletePackage(String packageId) async {
+    final package = packages.remove(packageId) ?? (throw const PackageNotFoundException());
+    return DeletedPackage(package: package);
+  }
+
+  @override
+  Future<void> restorePackage(DeletedPackage deleted) async {
+    packages[deleted.package.id] = deleted.package;
   }
 }
 

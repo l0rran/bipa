@@ -8,6 +8,10 @@ enum DomainErrorCode {
   missingPackageProduct,
   scaleBarcode,
   invalidPackageSize,
+  packageNotFound,
+
+  /// A embalagem está no carrinho da compra em andamento (ADR 0022).
+  packageInOpenTrip,
 
   /// `args`: o código de barras e o nome do produto que já o tem.
   duplicateBarcode,

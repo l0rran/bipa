@@ -606,6 +606,11 @@
   "priceNotPositive": "Informe um preço maior que zero.",
   "packageProductMissing": "Escolha o produto desta embalagem.",
   "packageSizeNotPositive": "Informe um tamanho maior que zero.",
+  "packageNotFound": "Essa embalagem não existe mais.",
+  "packageInOpenTrip": "Essa embalagem está na compra em andamento. Tire-a do carrinho ou termine a compra antes de apagar.",
+  "@packageInOpenTrip": {
+    "description": "Erro ao apagar uma embalagem que está no carrinho da compra em andamento (ADR 0022)."
+  },
   "packageDuplicate": "O código {barcode} já está cadastrado para \"{product}\".",
   "@packageDuplicate": {
     "placeholders": {

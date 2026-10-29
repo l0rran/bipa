@@ -13,10 +13,12 @@ import 'package:bipa/features/products/domain/product_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_cart_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_list_repository.dart';
 import 'package:bipa/features/shopping_list/data/drift_shopping_trip_repository.dart';
+import 'package:bipa/features/shopping_list/data/drift_trip_price_repository.dart';
+import 'package:bipa/features/shopping_list/domain/trip_price.dart';
 import 'package:bipa/features/stock/data/drift_stock_repository.dart';
 import 'package:bipa/features/stock/domain/stock_location.dart';
 import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
-import 'package:drift/drift.dart' hide isNull;
+import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/fakes.dart';
@@ -226,5 +228,183 @@ void main() {
     expect(await db.select(db.priceObservations).get(), isEmpty);
     expect(await stock.findByProduct('arroz'), isNull);
     expect(await list.watchAll().first, isEmpty);
+  });
+
+  group('embalagem no produto errado (ADR 0022)', () {
+    late DriftStockRepository stock;
+    late DriftShoppingTripRepository trips;
+    late DriftCartRepository cart;
+    late DriftTripPriceRepository tripPrices;
+
+    PriceObservation observation(String id, String productId, String packageId, int cents) => PriceObservation(
+      id: id,
+      productId: productId,
+      packageId: packageId,
+      marketId: 'm',
+      price: Money.cents(cents),
+      source: PriceSource.priceTag,
+      observedAt: now,
+      createdAt: now,
+    );
+
+    Future<PriceObservationRow> priceRow(String id) =>
+        (db.select(db.priceObservations)..where((t) => t.id.equals(id))).getSingle();
+
+    /// O Leite Ninho foi bipado no Leite integral, que também tem a Italac.
+    setUp(() async {
+      final ids = SequentialIdGenerator();
+      repository = DriftProductRepository(db, clock: () => now, ids: ids);
+      stock = DriftStockRepository(db, ids: ids, clock: () => now);
+      trips = DriftShoppingTripRepository(db, ids: ids, clock: () => now);
+      cart = DriftCartRepository(db, ids: ids, clock: () => now);
+      tripPrices = DriftTripPriceRepository(db);
+
+      await repository.save(product('integral', 'Leite integral'));
+      await repository.save(product('ninho', 'Leite Ninho'));
+      await repository.savePackage(package('ninho-400', 'integral', barcode: '7891000100101', brand: 'Ninho'));
+      await repository.savePackage(package('italac', 'integral', barcode: '7898080640017', brand: 'Italac'));
+      await DriftMarketRepository(db).save(Market(id: 'm', name: 'Central', createdAt: now, updatedAt: now));
+      await DriftPriceRepository(db).addAll([
+        observation('preco-ninho', 'integral', 'ninho-400', 1890),
+        observation('preco-italac', 'integral', 'italac', 549),
+      ]);
+      await db.update(db.priceObservations).write(PriceObservationsCompanion(syncedAt: Value(now)));
+      await stock.adjust(productId: 'integral', delta: 1, reason: StockMovementReason.purchase, packageId: 'ninho-400');
+      await stock.adjust(productId: 'integral', delta: 2, reason: StockMovementReason.purchase, packageId: 'italac');
+    });
+
+    test('mover leva os preços, o estoque, o carrinho e o preço da compra', () async {
+      // O Ninho já saiu de casa uma vez da Limpeza: volta a nascer ali (ADR 0021).
+      await stock.setLocation('ninho', StockLocation.cleaning);
+      await stock.remove('ninho');
+      final trip = await trips.start(marketId: 'm');
+      await cart.addProduct(trip.id, 'integral', packageId: 'ninho-400');
+      await tripPrices.save(
+        TripPrice(
+          tripId: trip.id,
+          productId: 'integral',
+          packageId: 'ninho-400',
+          price: const Money.cents(1890),
+          source: PriceSource.priceTag,
+          readAt: now,
+          observationId: 'preco-ninho',
+          marketId: 'm',
+        ),
+      );
+
+      await repository.movePackage(packageId: 'ninho-400', intoId: 'ninho');
+
+      final moved = await (db.select(db.productPackages)..where((t) => t.id.equals('ninho-400'))).getSingle();
+      expect((moved.productId, moved.updatedAt, moved.syncedAt), ('ninho', now, null));
+      expect((await repository.watchPackages('integral').first).map((p) => p.id), ['italac']);
+
+      // A observação muda só de produto e volta para a fila; a outra fica.
+      final ninhoPrice = await priceRow('preco-ninho');
+      expect(
+        (ninhoPrice.productId, ninhoPrice.packageId, ninhoPrice.priceCents, ninhoPrice.syncedAt),
+        ('ninho', 'ninho-400', 1890, null),
+      );
+      final italacPrice = await priceRow('preco-italac');
+      expect(italacPrice.productId, 'integral');
+      expect(italacPrice.syncedAt, isNotNull);
+
+      expect((await stock.findByProduct('integral'))?.quantity, 2);
+      final ninhoItem = await stock.findByProduct('ninho');
+      expect((ninhoItem?.quantity, ninhoItem?.location), (1, StockLocation.cleaning));
+      expect((await stock.watchLots('ninho').first).map((lot) => lot.packageId), ['ninho-400']);
+      expect((await stock.watchLots('integral').first).map((lot) => lot.packageId), ['italac']);
+      final adjustments = await (db.select(
+        db.stockMovements,
+      )..where((t) => t.reason.equalsValue(StockMovementReason.adjustment))).get();
+      expect(adjustments.map((m) => (m.productId, m.delta)), unorderedEquals([('integral', -1.0), ('ninho', 1.0)]));
+
+      final items = await cart.watchTrip(trip.id).first;
+      expect(items.map((e) => (e.item.productId, e.item.packageId)), [('ninho', 'ninho-400')]);
+      final tripPrice = await tripPrices.find(trip.id, TripPrice.keyOf('ninho', 'ninho-400'));
+      expect((tripPrice?.productId, tripPrice?.observationId), ('ninho', 'preco-ninho'));
+    });
+
+    test('mover para o produto em que ela já está não muda nada', () async {
+      final before = await db.select(db.productPackages).get();
+
+      await repository.movePackage(packageId: 'ninho-400', intoId: 'integral');
+
+      expect(await db.select(db.productPackages).get(), before);
+      expect((await priceRow('preco-ninho')).syncedAt, isNotNull);
+      expect((await stock.findByProduct('integral'))?.quantity, 3);
+    });
+
+    test('a última embalagem pode sair: o produto fica, com o item em casa zerado', () async {
+      await repository.movePackage(packageId: 'italac', intoId: 'ninho');
+      await stock.setTargetQuantity('integral', 2);
+
+      await repository.movePackage(packageId: 'ninho-400', intoId: 'ninho');
+
+      expect(await repository.findById('integral'), isNotNull);
+      expect(await repository.watchPackages('integral').first, isEmpty);
+      final item = await stock.findByProduct('integral');
+      expect((item?.quantity, item?.targetQuantity), (0, 2));
+      expect((await stock.findByProduct('ninho'))?.quantity, 3);
+    });
+
+    test('mover uma embalagem que não existe avisa', () async {
+      await expectLater(
+        repository.movePackage(packageId: 'nenhuma', intoId: 'ninho'),
+        throwsA(isA<PackageNotFoundException>()),
+      );
+    });
+
+    test('apagar leva os preços, deixa em casa sem embalagem, e o desfazer devolve tudo', () async {
+      // Uma compra terminada com o Ninho no carrinho.
+      final trip = await trips.start(marketId: 'm');
+      await cart.addProduct(trip.id, 'integral', packageId: 'ninho-400');
+      await trips.finish(trip.id);
+      final pricesBefore = await (db.select(db.priceObservations)..where((t) => t.id.equals('preco-ninho'))).get();
+
+      final deleted = await repository.deletePackage('ninho-400');
+
+      expect(await repository.findPackageById('ninho-400'), isNull);
+      expect((await db.select(db.priceObservations).get()).map((p) => p.id), ['preco-italac']);
+      expect((await stock.findByProduct('integral'))?.quantity, 3);
+      expect(
+        (await stock.watchLots('integral').first).map((lot) => (lot.packageId, lot.quantity)),
+        unorderedEquals([(null, 1.0), ('italac', 2.0)]),
+      );
+      expect((await cart.watchTrip(trip.id).first).single.item.packageId, isNull);
+
+      await repository.restorePackage(deleted);
+
+      expect((await repository.findPackageById('ninho-400'))?.productId, 'integral');
+      final restored = await (db.select(db.priceObservations)..where((t) => t.id.equals('preco-ninho'))).get();
+      // Volta igual, mas pendente de sincronização.
+      expect(
+        restored.single.copyWith(syncedAt: const Value(null)),
+        pricesBefore.single.copyWith(syncedAt: const Value(null)),
+      );
+      expect(
+        (await stock.watchLots('integral').first).map((lot) => lot.packageId),
+        unorderedEquals(['ninho-400', 'italac']),
+      );
+      expect((await cart.watchTrip(trip.id).first).single.item.packageId, 'ninho-400');
+    });
+
+    test('apagar a última embalagem deixa o produto', () async {
+      await repository.deletePackage('ninho-400');
+      await repository.deletePackage('italac');
+
+      expect(await repository.findById('integral'), isNotNull);
+      expect(await repository.watchPackages('integral').first, isEmpty);
+      expect((await stock.findByProduct('integral'))?.quantity, 3);
+    });
+
+    test('não apaga a embalagem que está na compra em andamento', () async {
+      final trip = await trips.start(marketId: 'm');
+      await cart.addProduct(trip.id, 'integral', packageId: 'ninho-400');
+
+      await expectLater(repository.deletePackage('ninho-400'), throwsA(isA<PackageInOpenTripException>()));
+
+      expect(await repository.findPackageById('ninho-400'), isNotNull);
+      expect(await db.select(db.priceObservations).get(), hasLength(2));
+    });
   });
 }
