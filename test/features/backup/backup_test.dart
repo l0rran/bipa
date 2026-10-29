@@ -400,6 +400,70 @@ void main() {
       expect(app.photos(), {'arroz.jpg': '1,2,3,4'});
       expect(await app.offer()(), isNull);
     });
+
+    /// Uma cópia da casa de agora, num arquivo à parte, como a de "Salvar
+    /// uma cópia…" no Drive.
+    Future<String> copyOfNow() async {
+      final copy = joinPath(root.path, 'copia.bipa');
+      await app.create().saveCopy(File(copy).openWrite());
+      return copy;
+    }
+
+    test('restaurar outro arquivo não responde pelo backup do outro celular (BK5)', () async {
+      final id = await arriveOnNewPhone();
+      await startUsing();
+      final copy = await copyOfNow();
+
+      await app.restore()(copy);
+
+      final latest = (await app.readLatest())!;
+      expect((latest.manifest.id, latest.madeHere), (id, false));
+      expect((await app.offer()())?.manifest.id, id);
+      expect(await app.create(now: at.add(const Duration(days: 1)))(trigger: BackupTrigger.daily), isNull);
+    });
+
+    test('o Desfazer da restauração devolve a pendência do backup do outro celular (BK5)', () async {
+      final id = await arriveOnNewPhone();
+      await startUsing();
+      final before = await dump();
+
+      await app.restore()(app.latestPath);
+      expect(await app.offer()(), isNull);
+      expect(await app.restore().undo(), isTrue);
+
+      expect(await dump(), before);
+      final latest = (await app.readLatest())!;
+      expect((latest.manifest.id, latest.madeHere), (id, false));
+      expect((await app.offer()())?.manifest.id, id);
+      expect(await app.create(now: at.add(const Duration(days: 1)))(trigger: BackupTrigger.daily), isNull);
+      expect((await app.readLatest())!.manifest.id, id);
+    });
+
+    test('o Desfazer de uma segunda restauração volta ao estado depois da primeira (BK5)', () async {
+      final id = await arriveOnNewPhone();
+      await startUsing();
+      final copy = await copyOfNow();
+
+      await app.restore()(app.latestPath);
+      await app.restore()(copy);
+      expect(await app.restore().undo(), isTrue);
+
+      // A primeira restauração respondeu; desfazer a segunda não a desfaz.
+      final latest = (await app.readLatest())!;
+      expect((latest.manifest.id, latest.madeHere), (id, true));
+      expect(await app.offer()(), isNull);
+    });
+
+    test('depois que o aviso sai, a marca guardada para o Desfazer sai junto (BK5)', () async {
+      await arriveOnNewPhone();
+      await startUsing();
+
+      await app.restore()(app.latestPath);
+      await app.restore().discardUndo();
+
+      expect(File(joinPath(app.location.restoreAreaPath, 'ultimo.id')).existsSync(), isFalse);
+      expect((await app.readLatest())!.madeHere, isTrue);
+    });
   });
 
   group('restaurar', () {
@@ -462,6 +526,8 @@ void main() {
       expect(await dump(), before);
       expect(app.photos(), photos);
       expect(await app.restore().undo(), isFalse);
+      // O backup deste celular continua deste celular.
+      expect((await app.readLatest())!.madeHere, isTrue);
     });
 
     test('depois do prazo, a reserva sai e não há o que desfazer', () async {

@@ -17,7 +17,8 @@ import 'package:bipa/features/backup/domain/backup_ports.dart';
 ///   ([AppDataLocation]), e trocada pela [AppDataSwap], que guarda o banco e
 ///   as fotos de antes em `restauracao/reserva/` para o "Desfazer". Um
 ///   arquivo recebido como fluxo fica em `restauracao/recebido.bipa` até ser
-///   conferido.
+///   conferido. Quando a restauração adota o `ultimo.bipa`, a marca de antes
+///   fica em `restauracao/ultimo.id`, para o "Desfazer" devolvê-la (BK5).
 final class LocalBackupStorage implements BackupStorage {
   LocalBackupStorage({
     required Future<AppDataLocation> Function() location,
@@ -123,8 +124,10 @@ final class LocalBackupStorage implements BackupStorage {
   }
 
   @override
-  Future<void> replaceAppData(RestoreWorkspace workspace) async {
+  Future<void> replaceAppData(RestoreWorkspace workspace, {String? adopt}) async {
     final swap = AppDataSwap(await _location());
+    final marker = await _madeHereMarker();
+    final before = await marker.exists() ? (await marker.readAsString()).trim() : null;
     await _closeDatabase();
     try {
       await swap.replace(databasePath: workspace.databasePath, photosPath: workspace.photosPath);
@@ -132,6 +135,17 @@ final class LocalBackupStorage implements BackupStorage {
       // Com os arquivos novos, ou com os antigos de volta se a troca falhou.
       await _reopenDatabase();
     }
+
+    // A reserva agora é a desta restauração: a marca guardada por uma
+    // restauração anterior não vale mais.
+    final saved = await _markerBeforeRestore();
+    if (adopt == null) {
+      if (await saved.exists()) await saved.delete();
+      return;
+    }
+    // Vazio quer dizer que não havia marca.
+    await saved.writeAsString(before ?? '', flush: true);
+    await adoptLatest(adopt);
   }
 
   @override
@@ -139,13 +153,43 @@ final class LocalBackupStorage implements BackupStorage {
     final swap = AppDataSwap(await _location());
     if (!await swap.hasReserve()) return false;
     await _closeDatabase();
+    final bool undone;
     try {
-      return await swap.undo();
+      undone = await swap.undo();
     } finally {
       await _reopenDatabase();
     }
+    if (undone) await _returnMarker();
+    return undone;
   }
 
   @override
-  Future<void> discardReserve() async => AppDataSwap(await _location()).discardReserve();
+  Future<void> discardReserve() async {
+    await AppDataSwap(await _location()).discardReserve();
+    try {
+      final saved = await _markerBeforeRestore();
+      if (await saved.exists()) await saved.delete();
+    } on FileSystemException {
+      // Sai com a área de restauração, na próxima abertura.
+    }
+  }
+
+  /// A marca `ultimo.id` de antes de uma restauração que adotou o
+  /// `ultimo.bipa` (BK5), para o "Desfazer" devolvê-la. Fica na área de
+  /// restauração, que a abertura seguinte do app limpa junto com a reserva.
+  Future<File> _markerBeforeRestore() async => File(joinPath((await _location()).restoreAreaPath, 'ultimo.id'));
+
+  /// Devolve a marca de antes da restauração, se ela adotou o `ultimo.bipa`.
+  Future<void> _returnMarker() async {
+    final saved = await _markerBeforeRestore();
+    if (!await saved.exists()) return;
+    final before = (await saved.readAsString()).trim();
+    if (before.isEmpty) {
+      final marker = await _madeHereMarker();
+      if (await marker.exists()) await marker.delete();
+    } else {
+      await adoptLatest(before);
+    }
+    await saved.delete();
+  }
 }

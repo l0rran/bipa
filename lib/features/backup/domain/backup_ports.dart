@@ -138,10 +138,16 @@ abstract interface class BackupStorage {
   /// Fecha o banco do app, troca o banco e as fotos pelos de [workspace] e
   /// reabre. Os de antes ficam numa reserva, para [undoReplace]. Se a troca
   /// falha, os de antes voltam e o banco reabre com eles.
-  Future<void> replaceAppData(RestoreWorkspace workspace);
+  ///
+  /// Com [adopt], depois da troca, o `ultimo.bipa` de id [adopt] passa a ser
+  /// deste aparelho ([adoptLatest]), e a marca de antes fica junto da
+  /// reserva: o [undoReplace] a devolve, e o arquivo volta a esperar
+  /// resposta (BK5).
+  Future<void> replaceAppData(RestoreWorkspace workspace, {String? adopt});
 
-  /// Volta o banco e as fotos da reserva, fechando e reabrindo o banco.
-  /// Devolve `false` se não há reserva.
+  /// Volta o banco e as fotos da reserva, fechando e reabrindo o banco, e a
+  /// marca do `ultimo.bipa` de antes, se a restauração o adotou. Devolve
+  /// `false` se não há reserva.
   Future<bool> undoReplace();
 
   /// Apaga a reserva: a restauração não pode mais ser desfeita.

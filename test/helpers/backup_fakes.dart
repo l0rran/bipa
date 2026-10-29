@@ -42,12 +42,13 @@ BackupInfo fakeBackupInfo({
 /// Um backup conferido, pronto para a folha de confirmação.
 PreparedRestore fakePrepared({
   required DateTime createdAt,
+  String id = 'b1',
   BackupSummary current = const BackupSummary(products: 230, prices: 1452, itemsAtHome: 60),
   bool currentIsEmpty = false,
   int adjustedItems = 0,
   DateTime? currentLatestActivity,
 }) => PreparedRestore(
-  manifest: fakeManifest(createdAt: createdAt),
+  manifest: fakeManifest(createdAt: createdAt, id: id),
   backup: const BackupSummary(products: 214, prices: 1380, itemsAtHome: 56),
   current: current,
   currentIsEmpty: currentIsEmpty,
