@@ -184,6 +184,20 @@
       "w": 390,
       "h": 844,
       "title": "Guardar em casa: escolher o local"
+    },
+    "CapturaComprei.dc.html": {
+      "x": 2350,
+      "y": 3700,
+      "w": 390,
+      "h": 844,
+      "title": "Guardar em casa: desfazer no aviso"
+    },
+    "CapturaUsei.dc.html": {
+      "x": 2820,
+      "y": 3700,
+      "w": 390,
+      "h": 844,
+      "title": "Dar baixa em casa: aviso e snackbar"
     }
   },
   "order": [
@@ -211,7 +225,9 @@
     "ModoCarrinhoGranelBandeja.dc.html",
     "ModoCarrinhoGranelValor.dc.html",
     "CapturaCasaLocal.dc.html",
-    "CapturaCasaLocalEscolha.dc.html"
+    "CapturaCasaLocalEscolha.dc.html",
+    "CapturaComprei.dc.html",
+    "CapturaUsei.dc.html"
   ],
   "notes": {
     "titulo": {

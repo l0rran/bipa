@@ -199,6 +199,16 @@ O problema: **corrigir o local de um item novo na hora do bipe**, quando a suges
 - O chip é o mesmo chip de vidro do mercado, com a seta, e só aparece quando o item nasce no bipe, a hora em que a sugestão pode errar.
 - A escolha usa os chips de local de "Arrumar o que entrou". Tocar escolhe e fecha, sem botão de salvar.
 
+### Quadros do que o app já fazia (outubro de 2026)
+
+O "Desfazer" no aviso da câmera, o preço em destaque velho do produto, o editor da linha do Início e a folha "Editar embalagem" nasceram no código, a partir das análises de UX, sem quadro. Os quadros foram desenhados a partir do app: o conteúdo, a ordem e as ações são os do código, no visual do design system, e as diferenças do widget ficam na linha de cada quadro no [protótipo](prototipo/README.md). As referências são as que já estavam nas análises:
+
+| Referência | O que o app já leva |
+| --- | --- |
+| **Material Design** ([snackbars](https://m3.material.io/components/snackbar/guidelines)) | Uma ação por aviso, e um aviso novo substitui o anterior: por isso o Desfazer vai para o aviso do visor quando a lista não muda |
+| **Menor Preço Brasil** e **Preço da Hora** (no benchmark acima) | A idade do preço sempre à vista: o preço em destaque com mais de 30 dias diz onde e quando |
+| **Baymard** e **Pantry Check** (nas inspirações) | Controles só no item tocado, e o resto do item (local, "Tirar de casa") a um toque, sem passar pelo chip do "ter sempre" |
+
 ## Fontes
 
 - [Menor Preço Brasil (Olhar Digital)](https://olhardigital.com.br/2025/08/03/dicas-e-tutoriais/quer-economizar-na-farmacia-e-supermercado-conheca-o-app-menor-preco-brasil/)
