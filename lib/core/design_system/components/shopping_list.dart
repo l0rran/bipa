@@ -246,13 +246,39 @@ class QuickTile extends StatelessWidget {
   static const _iconSize = 28.0;
   static const _gap = 6.0;
 
-  /// O lado do bloco: [size], ou mais quando a letra grande não cabe nele. A
-  /// lista horizontal usa o mesmo valor para a altura.
-  static double sideFor(BuildContext context, {double size = 76}) => math.max(
-    size,
+  static TextStyle get _labelStyle => BipaText.caption.copyWith(letterSpacing: 0);
+
+  /// O tamanho do bloco: um quadrado de [size], ou mais quando a letra grande
+  /// não cabe nele. A lista horizontal usa a altura para si.
+  ///
+  /// Com letra grande (H9) o bloco alarga, até uma vez e meia, e o nome ganha
+  /// quantas linhas precisar: a lista passa os [labels] de todos os blocos, e a
+  /// altura cobre o nome mais comprido.
+  static Size sizeFor(BuildContext context, {double size = 76, Iterable<String> labels = const []}) {
+    final lineHeight = BipaText.caption.scaledLineHeight(context);
     // 2 de folga para o arredondamento do texto.
-    _padding * 2 + _iconSize + _gap + BipaText.caption.scaledLineHeight(context) + 2,
-  );
+    double heightFor(int lines) => _padding * 2 + _iconSize + _gap + lineHeight * lines + 2;
+    final side = math.max(size, heightFor(1));
+    if (!isLargeText(context)) return Size.square(side);
+
+    final width = side * (1 + (MediaQuery.textScalerOf(context).scale(1) - 1) * 0.5).clamp(1.0, 1.5);
+    var lines = 1;
+    for (final label in labels) {
+      final painter = TextPainter(
+        text: TextSpan(text: label, style: _labelStyle),
+        textAlign: TextAlign.center,
+        textScaler: MediaQuery.textScalerOf(context),
+        textDirection: Directionality.of(context),
+      )..layout(maxWidth: width - _padding * 2);
+      lines = math.max(lines, painter.computeLineMetrics().length);
+      painter.dispose();
+    }
+    return Size(width, math.max(side, heightFor(lines)));
+  }
+
+  /// O lado do bloco em letra normal, e a altura dele com letra grande.
+  static double sideFor(BuildContext context, {double size = 76, Iterable<String> labels = const []}) =>
+      sizeFor(context, size: size, labels: labels).height;
 
   @override
   Widget build(BuildContext context) {
@@ -265,8 +291,8 @@ class QuickTile extends StatelessWidget {
       label: label,
       excludeSemantics: true,
       onTap: onTap,
-      child: SizedBox.square(
-        dimension: sideFor(context, size: size),
+      child: SizedBox.fromSize(
+        size: sizeFor(context, size: size),
         child: Material(
           color: selected ? colors.brandSoft : colors.surface,
           borderRadius: BorderRadius.circular(BipaRadius.md),
@@ -285,10 +311,11 @@ class QuickTile extends StatelessWidget {
                         const SizedBox(height: _gap),
                         Text(
                           label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          // Com letra grande o nome não é cortado (H9).
+                          maxLines: isLargeText(context) ? null : 1,
+                          overflow: isLargeText(context) ? TextOverflow.visible : TextOverflow.ellipsis,
                           textAlign: TextAlign.center,
-                          style: BipaText.caption.copyWith(letterSpacing: 0, color: foreground),
+                          style: _labelStyle.copyWith(color: foreground),
                         ),
                       ],
                     ),
@@ -428,19 +455,19 @@ class ShoppingListRow extends StatelessWidget {
               // A quantidade e o preço não quebram a linha: com letra grande,
               // encolhem até um teto, e o nome fica com o resto (H3).
               child: LayoutBuilder(
-                builder: (context, constraints) => Row(
-                  children: [
-                    AnimatedContainer(
-                      duration: BipaMotion.base,
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color: checked ? colors.ink : null,
-                        borderRadius: BorderRadius.circular(BipaRadius.sm),
-                        border: checked ? null : Border.all(color: colors.line, width: 2),
-                      ),
-                      child: checked ? Icon(Icons.check_rounded, size: 18, color: colors.surface) : null,
+                builder: (context, constraints) {
+                  final box = AnimatedContainer(
+                    duration: BipaMotion.base,
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: checked ? colors.ink : null,
+                      borderRadius: BorderRadius.circular(BipaRadius.sm),
+                      border: checked ? null : Border.all(color: colors.line, width: 2),
                     ),
+                    child: checked ? Icon(Icons.check_rounded, size: 18, color: colors.surface) : null,
+                  );
+                  final quantityWidgets = [
                     if (quantity != null && tappable)
                       _Quantity(label: quantity, maxWidth: constraints.maxWidth * 0.3, onTap: onQuantityTap)
                     else ...[
@@ -450,36 +477,66 @@ class ShoppingListRow extends StatelessWidget {
                         const SizedBox(width: BipaSpacing.s1),
                       ],
                     ],
-                    Expanded(
-                      child: Text(
-                        name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: BipaText.bodyLarge.copyWith(
-                          fontSize: 15,
-                          height: 20 / 15,
-                          color: colors.ink,
-                          decoration: checked ? TextDecoration.lineThrough : null,
-                          decorationColor: colors.ink,
-                        ),
+                  ];
+                  // Com letra grande o nome não é cortado: ele fica com o resto
+                  // da linha, sem limite de linhas, e o preço desce (H9).
+                  final large = isLargeText(context);
+                  final nameText = Text(
+                    name,
+                    maxLines: large ? null : 2,
+                    overflow: large ? TextOverflow.visible : TextOverflow.ellipsis,
+                    style: BipaText.bodyLarge.copyWith(
+                      fontSize: 15,
+                      height: 20 / 15,
+                      color: colors.ink,
+                      decoration: checked ? TextDecoration.lineThrough : null,
+                      decorationColor: colors.ink,
+                    ),
+                  );
+                  Widget priceText(double maxWidth) => ShrinkToFit(
+                    maxWidth: maxWidth,
+                    child: Text(
+                      price!,
+                      style: BipaText.label.copyWith(
+                        fontSize: 13,
+                        color: colors.inkMuted,
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
-                    if (price != null) ...[
-                      const SizedBox(width: BipaSpacing.s3),
-                      ShrinkToFit(
-                        maxWidth: constraints.maxWidth * 0.35,
-                        child: Text(
-                          price,
-                          style: BipaText.label.copyWith(
-                            fontSize: 13,
-                            color: colors.inkMuted,
-                            fontFeatures: const [FontFeature.tabularFigures()],
+                  );
+                  if (large && price != null) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            box,
+                            ...quantityWidgets,
+                            Expanded(child: nameText),
+                          ],
+                        ),
+                        Align(
+                          alignment: AlignmentDirectional.centerEnd,
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: BipaSpacing.s1),
+                            child: priceText(constraints.maxWidth),
                           ),
                         ),
-                      ),
+                      ],
+                    );
+                  }
+                  return Row(
+                    children: [
+                      box,
+                      ...quantityWidgets,
+                      Expanded(child: nameText),
+                      if (price != null) ...[
+                        const SizedBox(width: BipaSpacing.s3),
+                        priceText(constraints.maxWidth * 0.35),
+                      ],
                     ],
-                  ],
-                ),
+                  );
+                },
               ),
             ),
           ),
