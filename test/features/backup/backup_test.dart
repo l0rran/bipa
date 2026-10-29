@@ -275,15 +275,75 @@ void main() {
       expect((await app.readLatest())!.manifest.id, id);
     });
 
-    test('mesmo com dados novos, o diário espera a resposta à oferta', () async {
+    /// A casa já em uso no celular novo, antes de responder: um mercado.
+    Future<void> startUsing() => app.db
+        .into(app.db.markets)
+        .insert(MarketsCompanion.insert(id: 'novo', name: 'Novo', createdAt: at, updatedAt: at));
+
+    test('com a casa em uso, a oferta fica, sem prazo, e o diário segue pausado (BK1)', () async {
       final id = await arriveOnNewPhone();
-      await app.db
-          .into(app.db.markets)
-          .insert(MarketsCompanion.insert(id: 'novo', name: 'Novo', createdAt: at, updatedAt: at));
+      await startUsing();
+
+      // Um mês depois, ainda sem resposta.
+      final later = at.add(const Duration(days: 30));
+      expect((await app.offer()())!.manifest.id, id);
+      expect(await app.create(now: later)(trigger: BackupTrigger.daily), isNull);
+      expect((await app.readLatest())!.manifest.id, id);
+      expect((await app.readLatest())!.madeHere, isFalse);
+    });
+
+    test('"Fazer backup agora" não grava por cima sem a confirmação (BK1)', () async {
+      final id = await arriveOnNewPhone();
+      await startUsing();
+
+      expect(await app.create()(), isNull);
+      expect((await app.readLatest())!.manifest.id, id);
+    });
+
+    test('"Apagar e fazer backup" grava por cima, e o diário volta', () async {
+      final id = await arriveOnNewPhone();
+      await startUsing();
+
+      final made = await app.create()(replacePending: true);
+
+      expect(made, isNotNull);
+      expect(made!.manifest.id, isNot(id));
+      final latest = (await app.readLatest())!;
+      expect((latest.manifest.id, latest.madeHere), (made.manifest.id, true));
+      expect(await app.offer()(), isNull);
+      expect(await app.create(now: at.add(const Duration(days: 1)))(trigger: BackupTrigger.daily), isNotNull);
+    });
+
+    test('mesmo com a confirmação, um banco vazio não toma o lugar do backup do outro celular', () async {
+      final id = await arriveOnNewPhone();
+
+      expect(await app.create()(replacePending: true), isNull);
+      expect((await app.readLatest())!.manifest.id, id);
+    });
+
+    test('"Salvar uma cópia…" grava só a cópia, sem tocar no backup do outro celular', () async {
+      final id = await arriveOnNewPhone();
+      await startUsing();
+      final copy = joinPath(root.path, 'copia.bipa');
+
+      final manifest = await app.create().saveCopy(File(copy).openWrite());
+
+      expect(manifest.id, isNot(id));
+      expect((await const ZipBackupArchive().readManifest(copy)).id, manifest.id);
+      final latest = (await app.readLatest())!;
+      expect((latest.manifest.id, latest.madeHere), (id, false));
+    });
+
+    test('"Deixar de lado" com a casa em uso: a oferta some e o próximo diário grava por cima', () async {
+      final id = await arriveOnNewPhone();
+      await startUsing();
+
+      await app.offer().dismiss((await app.offer()())!);
 
       expect(await app.offer()(), isNull);
-      expect(await app.create(now: at.add(const Duration(days: 1)))(trigger: BackupTrigger.daily), isNull);
-      expect((await app.readLatest())!.manifest.id, id);
+      final daily = await app.create(now: at.add(const Duration(days: 1)))(trigger: BackupTrigger.daily);
+      expect(daily, isNotNull);
+      expect((await app.readLatest())!.manifest.id, isNot(id));
     });
 
     test('"Começar do zero" tira a oferta; o arquivo continua restaurável até o próximo diário', () async {
@@ -697,7 +757,7 @@ final class _App {
 
   RestoreBackup restore() => RestoreBackup(database: database, archive: const ZipBackupArchive(), storage: storage);
 
-  RestoreOffer offer() => RestoreOffer(database: database, storage: storage, archive: const ZipBackupArchive());
+  RestoreOffer offer() => RestoreOffer(storage: storage, archive: const ZipBackupArchive());
 
   Future<BackupInfo?> readLatest() => ReadLatestBackup(storage: storage, archive: const ZipBackupArchive())();
 

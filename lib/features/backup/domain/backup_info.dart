@@ -17,7 +17,8 @@ final class BackupInfo {
 
   /// `false` quando o arquivo veio de outro aparelho, pelo Auto Backup do
   /// Android numa troca de celular, e a pessoa ainda não respondeu à oferta
-  /// de restaurar (`RestoreOffer`). Enquanto isso, o backup diário não o
+  /// de restaurar (`RestoreOffer`). Enquanto isso, sem prazo, o backup
+  /// diário fica pausado e só "Fazer backup agora", com a confirmação, o
   /// substitui.
   final bool madeHere;
 

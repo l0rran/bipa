@@ -64,11 +64,7 @@ final restoreBackupProvider = Provider<RestoreBackup>(
 );
 
 final restoreOfferProvider = Provider<RestoreOffer>(
-  (ref) => RestoreOffer(
-    database: ref.watch(backupDatabaseProvider),
-    storage: ref.watch(backupStorageProvider),
-    archive: ref.watch(backupArchiveProvider),
-  ),
+  (ref) => RestoreOffer(storage: ref.watch(backupStorageProvider), archive: ref.watch(backupArchiveProvider)),
 );
 
 final readLatestBackupProvider = Provider<ReadLatestBackup>(
@@ -80,11 +76,18 @@ final readLatestBackupProvider = Provider<ReadLatestBackup>(
 final class BackupState {
   const BackupState({this.lastBackup, this.restoreOffer, this.canUndoRestore = false});
 
-  /// O `ultimo.bipa`: "Último backup — hoje, 08:40" nos Ajustes.
+  /// O `ultimo.bipa`: "Último backup — hoje, 08:40" nos Ajustes. Quando é
+  /// de outro aparelho e espera resposta (`madeHere` falso), Ajustes o
+  /// restaura pela linha e pede confirmação para gravar por cima.
   final BackupInfo? lastBackup;
 
-  /// A oferta de restaurar no celular novo (Início), ou `null`.
+  /// O cartão de restaurar o backup de outro celular no Início, ou `null`.
+  /// É o [lastBackup] pendente, a não ser enquanto o aviso de "Deixar de
+  /// lado" está na tela: o cartão já saiu, e o arquivo ainda espera.
   final BackupInfo? restoreOffer;
+
+  /// O [lastBackup] é de outro aparelho e espera resposta.
+  bool get pending => RestoreOffer.pendingOf(lastBackup) != null;
 
   /// Se o "Desfazer" do aviso de restauração ainda vale.
   final bool canUndoRestore;
@@ -112,8 +115,10 @@ class BackupController extends AsyncNotifier<BackupState> {
   var _restoreEpoch = 0;
 
   @override
-  Future<BackupState> build() async =>
-      BackupState(lastBackup: await ref.read(readLatestBackupProvider)(), restoreOffer: await _offer());
+  Future<BackupState> build() async {
+    final latest = await ref.read(readLatestBackupProvider)();
+    return BackupState(lastBackup: latest, restoreOffer: RestoreOffer.pendingOf(latest));
+  }
 
   /// O `ultimo.bipa` mais recente, ou `null`.
   BackupInfo? get lastBackupInfo => state.value?.lastBackup;
@@ -121,11 +126,13 @@ class BackupController extends AsyncNotifier<BackupState> {
   /// O backup a oferecer no celular novo, ou `null`.
   BackupInfo? get pendingRestoreOffer => state.value?.restoreOffer;
 
-  /// "Fazer backup agora". Devolve `null` quando o `ultimo.bipa` veio de
-  /// outro aparelho e o banco está vazio (veja [CreateBackup]).
-  Future<BackupInfo?> createBackup() => _serial(() async {
-    final info = await ref.read(createBackupProvider)();
-    if (info != null) await _update((current) => current.copyWith(lastBackup: info));
+  /// "Fazer backup agora". Com o `ultimo.bipa` de outro aparelho à espera
+  /// de resposta, só grava com [replacePending] ("Apagar e fazer backup"),
+  /// e o cartão do Início sai. Devolve `null` quando nada foi gravado (veja
+  /// [CreateBackup]).
+  Future<BackupInfo?> createBackup({bool replacePending = false}) => _serial(() async {
+    final info = await ref.read(createBackupProvider)(replacePending: replacePending);
+    if (info != null) await _update((current) => current.copyWith(lastBackup: info, clearOffer: true));
     return info;
   });
 
@@ -146,7 +153,8 @@ class BackupController extends AsyncNotifier<BackupState> {
 
   /// "Salvar uma cópia…": um backup novo em [destination] (o arquivo que a
   /// pessoa escolheu no "Salvar como" do Android), que também passa a ser o
-  /// `ultimo.bipa`. O nome sugerido vem de [backupFileName].
+  /// `ultimo.bipa`, a não ser que este seja de outro aparelho e espere
+  /// resposta. O nome sugerido vem de [backupFileName].
   Future<BackupManifest> saveCopy(StreamConsumer<List<int>> destination) => _serial(() async {
     final manifest = await ref.read(createBackupProvider).saveCopy(destination);
     final latest = await ref.read(readLatestBackupProvider)();
@@ -209,9 +217,11 @@ class BackupController extends AsyncNotifier<BackupState> {
     await _update((current) => current.copyWith(canUndoRestore: false));
   });
 
-  /// "Começar do zero", na tela: o cartão do celular novo some na hora, mas
-  /// o arquivo só é adotado em [dismissRestoreOffer], quando o aviso com
-  /// "Desfazer" sai. Devolve a oferta escondida, ou `null`.
+  /// "Começar do zero" ou "Deixar de lado", na tela: o cartão some na hora,
+  /// mas o arquivo só é adotado em [dismissRestoreOffer], quando o aviso com
+  /// "Desfazer" sai; até lá, ele continua pendente (Ajustes ainda o
+  /// restaura, e o diário segue pausado). Devolve a oferta escondida, ou
+  /// `null`.
   BackupInfo? hideRestoreOffer() {
     final current = state.value;
     final offer = current?.restoreOffer;
@@ -219,29 +229,26 @@ class BackupController extends AsyncNotifier<BackupState> {
     return offer;
   }
 
-  /// O "Desfazer" de "Começar do zero": o cartão volta.
+  /// O "Desfazer" de "Começar do zero" ou "Deixar de lado": o cartão volta.
   void bringBackRestoreOffer(BackupInfo offer) {
     final current = state.value;
     if (current != null) state = AsyncData(current.copyWith(restoreOffer: offer));
   }
 
-  /// "Começar do zero" valendo: adota [offer] (ou a oferta pendente), que
-  /// deixa de ser oferecida, e o backup diário volta a substituí-lo.
+  /// "Começar do zero" ou "Deixar de lado" valendo: adota [offer] (ou a
+  /// oferta pendente), que deixa de ser oferecida, e o backup diário volta
+  /// a substituí-lo. Ajustes volta a ser o de sempre.
   Future<void> dismissRestoreOffer([BackupInfo? offer]) => _serial(() async {
     final dismissed = offer ?? pendingRestoreOffer;
     if (dismissed != null) await ref.read(restoreOfferProvider).dismiss(dismissed);
-    await _update((current) => current.copyWith(clearOffer: true));
+    final latest = await ref.read(readLatestBackupProvider)();
+    await _update((current) => current.copyWith(lastBackup: latest, clearOffer: true));
   });
 
-  Future<BackupInfo?> _offer() => ref.read(restoreOfferProvider)();
-
   Future<void> _refresh({required bool canUndoRestore}) async {
+    final latest = await ref.read(readLatestBackupProvider)();
     state = AsyncData(
-      BackupState(
-        lastBackup: await ref.read(readLatestBackupProvider)(),
-        restoreOffer: await _offer(),
-        canUndoRestore: canUndoRestore,
-      ),
+      BackupState(lastBackup: latest, restoreOffer: RestoreOffer.pendingOf(latest), canUndoRestore: canUndoRestore),
     );
   }
 
