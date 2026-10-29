@@ -7,6 +7,8 @@ formatter:
 analyzer:
   exclude:
     - "**/*.g.dart"
+    # Gerados pelo drift_dev a partir de drift_schemas/ (docs/contribuindo.md).
+    - test/core/database/schemas/**
     - build/**
     - android/**
   language:

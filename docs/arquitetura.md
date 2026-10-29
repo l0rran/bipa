@@ -82,7 +82,7 @@ class StockController extends _$StockController {
 - **IDs UUID** são gerados no aparelho, para registros criados offline nunca colidirem no servidor.
 - **Preços são eventos imutáveis** (só inserção). Na sincronização não existe conflito de edição.
 - **Outbox:** tabelas compartilháveis (`products`, `markets`, `price_observations`) têm `synced_at`. Nulo significa pendente de envio. O estoque e a lista de compras são privados e nunca saem do aparelho.
-- **Migrações:** toda mudança de esquema sobe o `schemaVersion` e ganha um passo em `MigrationStrategy.onUpgrade`, com teste de migração (`drift_dev schema`).
+- **Migrações:** toda mudança de esquema sobe o `schemaVersion` e ganha um passo em `MigrationStrategy.onUpgrade`, com teste de migração. Do esquema 14 em diante, o esquema de cada versão fica em `drift_schemas/` (`drift_dev schema dump`), e o teste parte dele (ADR 0023; passo a passo em [contribuindo.md](contribuindo.md#mudança-no-esquema-do-banco)).
 
 ## Valores e unidades
 

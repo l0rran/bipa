@@ -1,12 +1,16 @@
 import 'dart:io';
 
 import 'package:bipa/core/database/app_database.dart';
+import 'package:bipa/features/prices/domain/price_condition.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/stock/domain/stock_location.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:drift_dev/api/migrations_native.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'schemas/schema.dart';
 
 /// As migrações mais recentes, num arquivo de verdade: o banco é criado no
 /// esquema atual, volta para a versão anterior (tirando a coluna nova com
@@ -190,5 +194,76 @@ void main() {
 
     expect(remembered, isEmpty);
     expect((item.quantity, item.location), (2, StockLocation.pantry));
+  });
+
+  /// Do esquema 14 em diante, cada versão tem o esquema real guardado em
+  /// `drift_schemas/` (ADR 0023, lacuna B3), e um backup de qualquer uma delas
+  /// precisa abrir no app atual. Os testes acima simulam as versões antigas;
+  /// estes partem do esquema que o app de fato criou.
+  group('esquema real de cada versão (drift_schemas/)', () {
+    final verifier = SchemaVerifier(GeneratedHelper());
+
+    test('o esquema que o app cria é o guardado para a versão atual', () async {
+      // Falha quando as tabelas mudam sem subir o `schemaVersion` ou sem
+      // guardar o esquema novo (docs/contribuindo.md).
+      final current = AppDatabase(NativeDatabase.memory());
+      addTearDown(current.close);
+
+      expect(GeneratedHelper.versions.last, current.schemaVersion);
+      await verifier.migrateAndValidate(current, current.schemaVersion);
+    });
+
+    for (final version in GeneratedHelper.versions) {
+      test('v$version → atual: a migração chega ao esquema atual', () async {
+        final db = AppDatabase(await verifier.startAt(version));
+        addTearDown(db.close);
+
+        await verifier.migrateAndValidate(db, db.schemaVersion);
+      });
+    }
+
+    test('v14 → atual: os dados gravados no esquema 14 continuam legíveis', () async {
+      final schema = await verifier.schemaAt(14);
+      addTearDown(schema.close);
+      // Datas em segundos, como o drift grava (ADR 0023, seção 3).
+      final seconds = at.millisecondsSinceEpoch ~/ 1000;
+      schema.rawDatabase
+        ..execute(
+          'INSERT INTO products (id, name, unit, photo_path, created_at, updated_at) '
+          "VALUES ('atum', 'Atum', 'unit', 'atum.jpg', $seconds, $seconds)",
+        )
+        ..execute(
+          'INSERT INTO product_packages (id, product_id, barcode, size, unit, created_at, updated_at) '
+          "VALUES ('gomes', 'atum', '7891167021013', 170, 'gram', $seconds, $seconds)",
+        )
+        ..execute(
+          'INSERT INTO markets (id, name, created_at, updated_at) '
+          "VALUES ('vila', 'Vila', $seconds, $seconds)",
+        )
+        ..execute(
+          'INSERT INTO price_observations '
+          '(id, product_id, market_id, package_id, price_cents, condition_kind, source, observed_at, created_at) '
+          "VALUES ('p1', 'atum', 'vila', 'gomes', 899, 'loyaltyMembers', 'priceTag', $seconds, $seconds)",
+        )
+        ..execute(
+          'INSERT INTO stock_items (product_id, quantity, location, updated_at) '
+          "VALUES ('atum', 2, 'pantry', $seconds)",
+        );
+
+      final db = AppDatabase(schema.newConnection());
+      addTearDown(db.close);
+      final product = await db.select(db.products).getSingle();
+      final package = await db.select(db.productPackages).getSingle();
+      final price = await db.select(db.priceObservations).getSingle();
+      final item = await db.select(db.stockItems).getSingle();
+
+      expect((product.unit, product.photoPath, product.createdAt), (MeasureUnit.unit, 'atum.jpg', at));
+      expect((package.barcode, package.unit), ('7891167021013', MeasureUnit.gram));
+      expect(
+        (price.priceCents, price.conditionKind, price.source, price.syncedAt),
+        (899, PriceConditionKind.loyaltyMembers, PriceSource.priceTag, null),
+      );
+      expect((item.quantity, item.location), (2, StockLocation.pantry));
+    });
   });
 }
