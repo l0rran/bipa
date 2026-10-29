@@ -398,7 +398,7 @@ void main() {
         "VALUES ('feijao', 'Feijão', 'gram', $seconds, $seconds)",
       );
       await _raw(file, "INSERT INTO stock_lots (id, product_id, quantity, since) VALUES ('l3', 'feijao', 3, $seconds)");
-      final source = await app.archiveOf(file, schemaVersion: 14);
+      final source = await app.archiveOf(file, schemaVersion: app.db.schemaVersion);
       await changeEverything();
 
       final prepared = await app.restore().prepare(source);
