@@ -33,12 +33,14 @@ final _now = DateTime(2026, 10, 28, 9);
 ///
 /// Com [withRouter], a tela fica num roteador que mostra "destino" e o id nas
 /// rotas de produto abertas por cima; com [nameless], a embalagem não tem marca
-/// nem tamanho, só o código de barras; [origin] diz de onde ela veio.
+/// nem tamanho, só o código de barras; [origin] diz de onde ela veio. [more]
+/// grava mais dados antes de a tela abrir.
 Future<ProviderContainer> _pumpProduct(
   WidgetTester tester, {
   bool withRouter = false,
   bool nameless = false,
   PackageOrigin origin = PackageOrigin.person,
+  Future<void> Function(ProviderContainer container)? more,
 }) async {
   tester.view
     ..physicalSize = const Size(411, 2000)
@@ -93,6 +95,7 @@ Future<ProviderContainer> _pumpProduct(
             createdAt: _now,
           ),
         );
+    await more?.call(container);
   });
   const supportedLocales = [Locale('pt', 'BR')];
   const delegates = [AppLocalizations.delegate, ...GlobalMaterialLocalizations.delegates];
@@ -188,6 +191,55 @@ void main() {
       findsOneWidget,
     );
     semantics.dispose();
+  });
+
+  testWidgets('com kg e litro no mesmo produto, o destaque e o "menor preço" ficam no litro da maioria (G16)', (
+    tester,
+  ) async {
+    // O UHT de 1 L em dois mercados e o leite em pó de 400 g, mais barato
+    // pela ordem antiga (kg antes de L), em outro.
+    await _pumpProduct(
+      tester,
+      more: (container) async {
+        final products = container.read(productRepositoryProvider);
+        final markets = container.read(marketRepositoryProvider);
+        final prices = container.read(priceRepositoryProvider);
+        for (final (id, size, unit) in [('uht', 1.0, MeasureUnit.liter), ('po', 400.0, MeasureUnit.gram)]) {
+          await products.savePackage(
+            ProductPackage(id: id, productId: 'integral', size: size, unit: unit, createdAt: _now, updatedAt: _now),
+          );
+        }
+        for (final (market, package, cents) in [
+          ('Mercado A', 'uht', 549),
+          ('Mercado C', 'uht', 579),
+          ('Mercado B', 'po', 2190),
+        ]) {
+          await markets.save(Market(id: market, name: market, createdAt: _now, updatedAt: _now));
+          await prices.add(
+            PriceObservation(
+              id: '$market-$package',
+              productId: 'integral',
+              packageId: package,
+              marketId: market,
+              price: Money.cents(cents),
+              source: PriceSource.manual,
+              observedAt: _now,
+              createdAt: _now,
+            ),
+          );
+        }
+      },
+    );
+
+    expect(find.textContaining('5,49'), findsWidgets);
+    expect(find.text('menor por L'), findsNothing);
+    expect(find.text('menor por kg'), findsNothing);
+    // O "menor preço" está na linha do Mercado A, e o B (por kg) vem depois do C.
+    final badge = tester.getCenter(find.text('menor preço')).dy;
+    double rowOf(String market) => tester.getCenter(find.text(market)).dy;
+    expect(rowOf('Mercado A'), lessThan(rowOf('Mercado C')));
+    expect(rowOf('Mercado C'), lessThan(rowOf('Mercado B')));
+    expect((badge - rowOf('Mercado A')).abs(), lessThan((badge - rowOf('Mercado C')).abs()));
   });
 
   testWidgets('embalagens da pessoa não citam fonte nenhuma', (tester) async {

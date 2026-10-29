@@ -73,4 +73,64 @@ void main() {
     expect(best.single.package, isNull);
     expect(best.single.unitPrice, isNull);
   });
+
+  group('kg e litro não se comparam (G16)', () {
+    // O "Leite" com o UHT de 1 L e o leite em pó de 400 g, movido para ele.
+    ProductPackage milkPackage(String id, double size, MeasureUnit unit, {required int day}) => ProductPackage(
+      id: id,
+      productId: 'arroz',
+      size: size,
+      unit: unit,
+      createdAt: DateTime(2026, 10, day),
+      updatedAt: DateTime(2026, 10, day),
+    );
+    final uht = milkPackage('uht', 1, MeasureUnit.liter, day: 1);
+    final powder = milkPackage('po', 400, MeasureUnit.gram, day: 2);
+    final milk = [uht, powder];
+
+    test('o destaque fica na grandeza da maioria dos preços, mesmo mais cara', () {
+      final history = [_price('a', 'uht', 549), _price('c', 'uht', 579), _price('b', 'po', 2190)];
+
+      expect(mainPriceUnit(history, milk), MeasureUnit.liter);
+      final prices = latestPricePerPackage(history, milk);
+      expect(prices.map((p) => (p.unitPrice?.price.cents, p.unitPrice?.unit)), [
+        (549, MeasureUnit.liter),
+        (5475, MeasureUnit.kilogram),
+      ]);
+      // Uma embalagem só por litro: não há "menor por litro" a mostrar.
+      expect(firstIsCheapest(prices), isFalse);
+    });
+
+    test('num empate, vale a grandeza da embalagem mais recente', () {
+      final history = [_price('a', 'uht', 549), _price('b', 'po', 2190)];
+
+      expect(mainPriceUnit(history, milk), MeasureUnit.kilogram);
+      expect(latestPricePerPackage(history, milk).first.package, powder);
+      // Com o UHT mais recente, o litro vence.
+      final newerUht = milkPackage('uht', 1, MeasureUnit.liter, day: 3);
+      expect(mainPriceUnit(history, [newerUht, powder]), MeasureUnit.liter);
+    });
+
+    test('o "Mais barato" compara só os mercados da mesma grandeza', () {
+      final history = [_price('a', 'uht', 549), _price('c', 'uht', 579), _price('b', 'po', 2190)];
+
+      final best = bestPricePerMarket(history, milk);
+
+      expect(best.map((p) => p.entry.marketName), ['a', 'c', 'b']);
+      expect(firstIsCheapest(best), isTrue);
+      expect(firstIsCheapest(bestPricePerMarket([_price('a', 'uht', 549), _price('b', 'po', 2190)], milk)), isFalse);
+    });
+
+    test('num mercado com as duas, fica a da grandeza principal', () {
+      final history = [_price('a', 'uht', 549), _price('a', 'po', 2190), _price('c', 'uht', 579)];
+
+      final best = bestPricePerMarket(history, milk);
+
+      expect(best.map((p) => (p.entry.marketName, p.package?.id)), [('a', 'uht'), ('c', 'uht')]);
+    });
+
+    test('sem preço com tamanho, não há grandeza principal', () {
+      expect(mainPriceUnit([_price('feira', null, 500), _price('a', 'granel', 600)], packages), isNull);
+    });
+  });
 }

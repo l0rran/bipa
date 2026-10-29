@@ -519,7 +519,7 @@ class _ProductView extends ConsumerWidget {
                         // Registrar o preço desta embalagem.
                         onTap: () => context.push(Routes.cameraPriceFor(product.id, packageId: row.package.id)),
                         tapHint: l10n.productRegisterPriceHint,
-                        badge: _cheapestPerUnit(l10n, row.price, isFirst: index == 0 && perPackage.length > 1),
+                        badge: _cheapestPerUnit(l10n, row.price, isFirst: index == 0 && firstIsCheapest(perPackage)),
                       ),
                   ],
                 ),
@@ -558,7 +558,8 @@ class _ProductView extends ConsumerWidget {
                         // do "ter sempre".
                         metaIcon: Icons.schedule_rounded,
                         value: price.unitPrice?.format() ?? price.price.format(),
-                        badge: index == 0 && perMarket.length > 1 ? l10n.productCheapest : null,
+                        // Só entre preços da mesma grandeza (G16).
+                        badge: index == 0 && firstIsCheapest(perMarket) ? l10n.productCheapest : null,
                         // A folha do preço: corrigir uma leitura errada, ou ir ao mercado (F3, H5).
                         onTap: () => showPriceSheet(
                           context,
