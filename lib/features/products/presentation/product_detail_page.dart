@@ -27,6 +27,7 @@ import 'package:bipa/features/prices/domain/price_observation.dart';
 import 'package:bipa/features/prices/domain/price_trend.dart';
 import 'package:bipa/features/prices/presentation/price_sheet.dart';
 import 'package:bipa/features/prices/presentation/prices_providers.dart';
+import 'package:bipa/features/products/domain/package_origin.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/presentation/measure_unit_label.dart';
@@ -522,6 +523,19 @@ class _ProductView extends ConsumerWidget {
                       ),
                   ],
                 ),
+                if (_catalogSources(l10n, packages) case final source?) ...[
+                  const SizedBox(height: BipaSpacing.s2),
+                  // A fonte que a licença pede (ADR 0024), sem chamar atenção:
+                  // em cinza, abaixo das embalagens.
+                  Semantics(
+                    label: l10n.productCatalogSourceLabel(source),
+                    excludeSemantics: true,
+                    child: Text(
+                      l10n.productCatalogSource(source),
+                      style: BipaText.caption.copyWith(color: colors.inkMuted),
+                    ),
+                  ),
+                ],
               ],
               const SizedBox(height: BipaSpacing.s6),
               if (perMarket.isEmpty)
@@ -600,6 +614,24 @@ class _ProductView extends ConsumerWidget {
   /// Em dias do calendário: um preço de ontem à noite visto hoje cedo é de
   /// "ontem", não de "hoje".
   static int _ageInDays(DateTime now, PackagePrice price) => calendarDaysSince(price.entry.observation.observedAt, now);
+
+  /// As bases do catálogo de onde vieram as embalagens ("Open Food Facts"),
+  /// ou `null` se todas são da pessoa.
+  static String? _catalogSources(AppLocalizations l10n, List<ProductPackage> packages) {
+    final origins = {for (final package in packages) package.origin};
+    final names = [
+      for (final origin in PackageOrigin.values)
+        if (origins.contains(origin)) ?_sourceName(l10n, origin),
+    ];
+    return names.isEmpty ? null : names.reduce((first, second) => l10n.catalogSourcesJoin(first, second));
+  }
+
+  static String? _sourceName(AppLocalizations l10n, PackageOrigin origin) => switch (origin) {
+    PackageOrigin.person => null,
+    PackageOrigin.openFoodFacts => l10n.catalogSourceOpenFoodFacts,
+    PackageOrigin.openProductsFacts => l10n.catalogSourceOpenProductsFacts,
+    PackageOrigin.openBeautyFacts => l10n.catalogSourceOpenBeautyFacts,
+  };
 
   /// "menor por kg", só para a primeira de várias, quando ela tem tamanho.
   static String? _cheapestPerUnit(AppLocalizations l10n, PackagePrice? price, {required bool isFirst}) {

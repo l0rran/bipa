@@ -12,6 +12,7 @@ import 'package:bipa/features/prices/domain/price_observation.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/prices/presentation/prices_providers.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
+import 'package:bipa/features/products/domain/package_origin.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/presentation/product_detail_page.dart';
@@ -32,8 +33,13 @@ final _now = DateTime(2026, 10, 28, 9);
 ///
 /// Com [withRouter], a tela fica num roteador que mostra "destino" e o id nas
 /// rotas de produto abertas por cima; com [nameless], a embalagem não tem marca
-/// nem tamanho, só o código de barras.
-Future<ProviderContainer> _pumpProduct(WidgetTester tester, {bool withRouter = false, bool nameless = false}) async {
+/// nem tamanho, só o código de barras; [origin] diz de onde ela veio.
+Future<ProviderContainer> _pumpProduct(
+  WidgetTester tester, {
+  bool withRouter = false,
+  bool nameless = false,
+  PackageOrigin origin = PackageOrigin.person,
+}) async {
   tester.view
     ..physicalSize = const Size(411, 2000)
     ..devicePixelRatio = 1;
@@ -65,6 +71,7 @@ Future<ProviderContainer> _pumpProduct(WidgetTester tester, {bool withRouter = f
         barcode: '7891000100101',
         brand: nameless ? null : 'Ninho',
         unit: MeasureUnit.unit,
+        origin: origin,
         createdAt: _now,
         updatedAt: _now,
       ),
@@ -171,6 +178,24 @@ Future<void> _openMenuItem(WidgetTester tester, String label) async {
 }
 
 void main() {
+  testWidgets('uma embalagem do catálogo cita a fonte abaixo das embalagens, com rótulo acessível', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await _pumpProduct(tester, origin: PackageOrigin.openFoodFacts);
+
+    expect(find.text('Dados do Open Food Facts'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel('Marca e tamanho das embalagens com dados do Open Food Facts, sob a licença ODbL'),
+      findsOneWidget,
+    );
+    semantics.dispose();
+  });
+
+  testWidgets('embalagens da pessoa não citam fonte nenhuma', (tester) async {
+    await _pumpProduct(tester);
+
+    expect(find.textContaining('Dados do'), findsNothing);
+  });
+
   testWidgets('"Apagar embalagem" confirma no botão neutro, apaga e desfaz', (tester) async {
     final container = await _pumpProduct(tester);
     final products = container.read(productRepositoryProvider);

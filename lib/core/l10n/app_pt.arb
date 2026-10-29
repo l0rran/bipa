@@ -454,6 +454,39 @@
     }
   },
   "productPackages": "Embalagens",
+  "productCatalogSource": "Dados do {source}",
+  "@productCatalogSource": {
+    "description": "Abaixo das embalagens, quando alguma veio do catálogo pronto (ADR 0024). source é o nome da base, como em catalogSourceOpenFoodFacts.",
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "productCatalogSourceLabel": "Marca e tamanho das embalagens com dados do {source}, sob a licença ODbL",
+  "@productCatalogSourceLabel": {
+    "description": "Rótulo acessível da fonte do catálogo na tela do produto.",
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogSourceOpenFoodFacts": "Open Food Facts",
+  "catalogSourceOpenProductsFacts": "Open Products Facts",
+  "catalogSourceOpenBeautyFacts": "Open Beauty Facts",
+  "catalogSourcesJoin": "{first} e do {second}",
+  "@catalogSourcesJoin": {
+    "description": "Junta duas bases do catálogo em productCatalogSource: Dados do Open Food Facts e do Open Beauty Facts.",
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "second": {
+        "type": "String"
+      }
+    }
+  },
   "productMarkets": "Nos mercados",
   "productAtHome": "Em casa",
   "productHistory": "Últimos 6 meses",
