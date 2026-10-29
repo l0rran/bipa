@@ -34,7 +34,9 @@ enum BackupTrigger {
 ///   ([BackupInfo.madeHere], decisão do mantenedor em 29/10, BK1): o diário
 ///   fica pausado, sem prazo; "Fazer backup agora" só grava por cima com a
 ///   confirmação ("Apagar o backup do outro celular?", `replacePending`) e
-///   com algo para guardar; e "Salvar uma cópia…" grava só a cópia.
+///   com algo para guardar; e "Salvar uma cópia…" grava só a cópia. Depois
+///   de "Deixar de lado" ([BackupInfo.setAsideAt]), o diário volta a gravar
+///   por cima a partir do dia seguinte (BK6).
 final class CreateBackup {
   CreateBackup({
     required BackupDatabase database,
@@ -65,9 +67,10 @@ final class CreateBackup {
     final latest = await ReadLatestBackup(storage: _storage, archive: _archive)();
     final pending = latest != null && !latest.madeHere;
     if (trigger == BackupTrigger.daily) {
+      final now = _clock();
       if (await _database.isEmpty()) return null;
-      if (pending) return null;
-      if (latest != null && _sameDay(latest.createdAt, _clock())) return null;
+      if (pending && !_setAsideBefore(latest, now)) return null;
+      if (latest != null && _sameDay(latest.createdAt, now)) return null;
     } else if (pending && !replacePending) {
       return null;
     }
@@ -130,6 +133,13 @@ final class CreateBackup {
     } finally {
       await _storage.discard(workspace.path);
     }
+  }
+
+  /// O backup de outro aparelho foi deixado de lado num dia antes de [now]:
+  /// o diário já pode gravar por cima (BK6).
+  static bool _setAsideBefore(BackupInfo latest, DateTime now) {
+    final setAside = latest.setAsideAt;
+    return setAside != null && setAside.isBefore(now) && !_sameDay(setAside, now);
   }
 
   static bool _sameDay(DateTime a, DateTime b) {

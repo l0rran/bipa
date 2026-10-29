@@ -10,7 +10,8 @@ import 'package:bipa/features/backup/domain/backup_ports.dart';
 ///   marca `ultimo.id` ao lado dele, com o id do último backup feito (ou
 ///   adotado) aqui. O Auto Backup do Android leva só o `ultimo.bipa`, então
 ///   num aparelho novo a marca não vem junto, e o app sabe que o arquivo é
-///   de outro aparelho;
+///   de outro aparelho. A marca `ultimo.deixado` guarda o id e a hora em que
+///   a pessoa deixou de lado o arquivo de outro aparelho (BK6);
 /// * o backup é montado em `backup/trabalho/`, ao lado do `ultimo.bipa`,
 ///   para a troca final ser um `rename`;
 /// * a restauração é preparada em `restauracao/novo/`, ao lado do banco
@@ -102,7 +103,14 @@ final class LocalBackupStorage implements BackupStorage {
     if (!await file.exists()) return null;
     final marker = await _madeHereMarker();
     final madeHereId = await marker.exists() ? (await marker.readAsString()).trim() : null;
-    return LatestBackupFile(path: file.path, size: await file.length(), madeHereId: madeHereId);
+    final (setAsideId, setAsideAt) = await _readSetAside();
+    return LatestBackupFile(
+      path: file.path,
+      size: await file.length(),
+      madeHereId: madeHereId,
+      setAsideId: setAsideId,
+      setAsideAt: setAsideAt,
+    );
   }
 
   @override
@@ -112,15 +120,40 @@ final class LocalBackupStorage implements BackupStorage {
     // `rename` no mesmo volume troca o arquivo de uma vez.
     final published = await File(archivePath).rename(target.path);
     await adoptLatest(backupId);
+    // O backup deixado de lado saiu do lugar: a marca dele não serve mais.
+    final setAside = await _setAsideMarker();
+    if (await setAside.exists()) await setAside.delete();
     return LatestBackupFile(path: published.path, size: await published.length(), madeHereId: backupId);
   }
 
   @override
-  Future<void> adoptLatest(String backupId) async {
-    final marker = await _madeHereMarker();
-    final temporary = File('${marker.path}.novo');
-    await temporary.writeAsString(backupId, flush: true);
-    await temporary.rename(marker.path);
+  Future<void> adoptLatest(String backupId) => _writeAtOnce(_madeHereMarker(), backupId);
+
+  @override
+  Future<void> setAside(String backupId, DateTime at) =>
+      _writeAtOnce(_setAsideMarker(), '$backupId\n${at.toUtc().toIso8601String()}');
+
+  /// A marca `ultimo.deixado`, ao lado do `ultimo.bipa`: o id do backup de
+  /// outro aparelho deixado de lado e quando, uma linha cada (BK6).
+  Future<File> _setAsideMarker() async =>
+      File('${(await _latestFile()).parent.path}${Platform.pathSeparator}ultimo.deixado');
+
+  Future<(String?, DateTime?)> _readSetAside() async {
+    final marker = await _setAsideMarker();
+    if (!await marker.exists()) return (null, null);
+    final lines = (await marker.readAsString()).trim().split('\n');
+    final at = lines.length < 2 ? null : DateTime.tryParse(lines[1].trim())?.toLocal();
+    // Sem a data, a marca não diz nada: o arquivo segue esperando resposta.
+    return at == null ? (null, null) : (lines.first.trim(), at);
+  }
+
+  /// Grava [contents] em [file] de uma vez: quem lê vê o antigo ou o novo.
+  Future<void> _writeAtOnce(Future<File> file, String contents) async {
+    final target = await file;
+    await target.parent.create(recursive: true);
+    final temporary = File('${target.path}.novo');
+    await temporary.writeAsString(contents, flush: true);
+    await temporary.rename(target.path);
   }
 
   @override

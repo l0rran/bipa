@@ -72,6 +72,10 @@
   "@backupMakeNowPaused": {
     "description": "Embaixo de \"Fazer backup agora\" enquanto o backup de outro celular espera resposta: o backup diário não grava."
   },
+  "backupMakeNowResumesTomorrow": "Automático volta amanhã",
+  "@backupMakeNowResumesTomorrow": {
+    "description": "Embaixo de \"Fazer backup agora\" no dia em que a pessoa deixou de lado o backup de outro celular: ele ainda se restaura pela linha de cima, e o diário grava por cima a partir de amanhã (BK6)."
+  },
   "backupReplacePendingTitle": "Apagar o backup do outro celular?",
   "backupReplacePendingBody": "O backup de {date}, com {productsText} {products, plural, =1{produto} other{produtos}}, {pricesText} {prices, plural, =1{preço} other{preços}} e {itemsText} {items, plural, =1{item em casa} other{itens em casa}}, dá lugar ao deste celular e não volta mais.",
   "@backupReplacePendingBody": {
@@ -242,9 +246,9 @@
   "@backupOfferSetAside": {
     "description": "No cartão menor do Início, com a casa já em uso, no lugar de \"Começar do zero\" (protótipo InicioBackupPendente)."
   },
-  "backupOfferSetAsideNotice": "Backup de {date} deixado de lado. O próximo grava por cima.",
+  "backupOfferSetAsideNotice": "Backup de {date} deixado de lado. Amanhã o backup deste celular grava por cima.",
   "@backupOfferSetAsideNotice": {
-    "description": "Aviso de \"Deixar de lado\", com Desfazer, que traz o cartão de volta; passado o aviso, o backup automático volta.",
+    "description": "Aviso de \"Deixar de lado\", com Desfazer, que traz o cartão de volta. Passado o aviso, o backup do outro celular ainda se restaura em Ajustes até o fim do dia, e o automático grava por cima a partir do dia seguinte (decisão do mantenedor em 29/10, BK6).",
     "placeholders": {
       "date": {
         "type": "String",

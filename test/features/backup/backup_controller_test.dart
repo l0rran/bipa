@@ -178,16 +178,24 @@ void main() {
       expect(controller().lastBackupInfo?.manifest.id, id);
     });
 
-    test('"Deixar de lado" valendo: o arquivo é adotado e o diário volta a gravar', () async {
+    test('"Deixar de lado" valendo: o cartão sai, Ajustes o restaura hoje, e o diário grava amanhã (BK6)', () async {
       final id = await arriveFromOtherPhone();
 
       final hidden = controller().hideRestoreOffer()!;
       await controller().dismissRestoreOffer(hidden);
 
       final state = container.read(backupProvider).value!;
-      expect((state.pending, state.restoreOffer), (false, null));
-      // O backup do outro celular ainda é o último, até o diário seguinte.
-      expect(state.lastBackup?.manifest.id, id);
+      expect(state.restoreOffer, isNull);
+      expect((state.pending, state.lastBackup?.manifest.id, state.lastBackup?.setAsideAt), (true, id, at));
+      now = at.add(const Duration(hours: 8));
+      await controller().runDailyBackup();
+      expect(controller().lastBackupInfo?.manifest.id, id);
+
+      now = at.add(const Duration(days: 1));
+      await controller().runDailyBackup();
+      final next = container.read(backupProvider).value!;
+      expect(next.lastBackup?.manifest.id, isNot(id));
+      expect((next.pending, next.restoreOffer), (false, null));
     });
 
     test(

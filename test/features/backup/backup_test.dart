@@ -244,9 +244,9 @@ void main() {
   group('celular novo, com o ultimo.bipa trazido pelo Android', () {
     /// O aparelho antigo grava o backup; o novo recebe só o `ultimo.bipa`
     /// (sem a marca `ultimo.id`) e começa com o banco vazio.
-    Future<String> arriveOnNewPhone() async {
+    Future<String> arriveOnNewPhone({DateTime? madeAt}) async {
       await seed();
-      final info = (await app.create()())!;
+      final info = (await app.create(now: madeAt)())!;
       await app.close();
       File(app.location.databasePath).deleteSync();
       Directory(app.location.photosPath).deleteSync(recursive: true);
@@ -334,16 +334,42 @@ void main() {
       expect((latest.manifest.id, latest.madeHere), (id, false));
     });
 
-    test('"Deixar de lado" com a casa em uso: a oferta some e o próximo diário grava por cima', () async {
-      final id = await arriveOnNewPhone();
-      await startUsing();
+    test(
+      '"Deixar de lado" com a casa em uso: a oferta some e o diário grava por cima só no dia seguinte (BK6)',
+      () async {
+        // O backup do outro celular é de dois dias antes: o diário de hoje
+        // gravaria se não esperasse o dia seguinte.
+        final id = await arriveOnNewPhone(madeAt: at.subtract(const Duration(days: 2)));
+        await startUsing();
 
+        await app.offer().dismiss((await app.offer()())!);
+
+        expect(await app.offer()(), isNull);
+        final latest = (await app.readLatest())!;
+        expect((latest.manifest.id, latest.madeHere, latest.setAsideAt), (id, false, at));
+        final later = at.add(const Duration(hours: 10));
+        expect(await app.create(now: later)(trigger: BackupTrigger.daily), isNull);
+        expect(await app.create(now: later)(), isNull, reason: '"Fazer backup agora" ainda pergunta');
+        expect((await app.readLatest())!.manifest.id, id);
+
+        final tomorrow = DateTime(at.year, at.month, at.day + 1, 7);
+        final daily = await app.create(now: tomorrow)(trigger: BackupTrigger.daily);
+        expect(daily, isNotNull);
+        final replaced = (await app.readLatest())!;
+        expect((replaced.manifest.id, replaced.madeHere, replaced.setAsideAt), (daily!.manifest.id, true, null));
+      },
+    );
+
+    test('deixado de lado, o backup do outro celular ainda se restaura no mesmo dia (BK6)', () async {
+      final id = await arriveOnNewPhone(madeAt: at.subtract(const Duration(days: 2)));
+      await startUsing();
       await app.offer().dismiss((await app.offer()())!);
 
-      expect(await app.offer()(), isNull);
-      final daily = await app.create(now: at.add(const Duration(days: 1)))(trigger: BackupTrigger.daily);
-      expect(daily, isNotNull);
-      expect((await app.readLatest())!.manifest.id, isNot(id));
+      await app.restore()(app.latestPath);
+
+      expect((await dump())['products'], hasLength(1));
+      final latest = (await app.readLatest())!;
+      expect((latest.manifest.id, latest.madeHere), (id, true));
     });
 
     test('"Deixar de lado" depois de um backup novo não adota o id antigo (BK7)', () async {
@@ -367,9 +393,22 @@ void main() {
       await app.offer().dismiss(offer);
 
       expect(await app.offer()(), isNull);
-      expect((await app.readLatest())!.madeHere, isTrue);
+      expect((await app.readLatest())!.setAsideAt, at);
       await app.restore()(app.latestPath);
       expect((await dump())['products'], hasLength(1));
+    });
+
+    test('o Desfazer de restaurar o backup deixado de lado o devolve deixado de lado (BK5, BK6)', () async {
+      await arriveOnNewPhone();
+      await startUsing();
+      await app.offer().dismiss((await app.offer()())!);
+
+      await app.restore()(app.latestPath);
+      expect(await app.restore().undo(), isTrue);
+
+      final latest = (await app.readLatest())!;
+      expect((latest.madeHere, latest.setAsideAt), (false, at));
+      expect(await app.offer()(), isNull, reason: 'o cartão não volta: a pessoa já o deixou de lado');
     });
 
     test('casa vazia por completo: a restauração não apaga nada (BK4)', () async {
@@ -886,7 +925,7 @@ final class _App {
 
   RestoreBackup restore() => RestoreBackup(database: database, archive: const ZipBackupArchive(), storage: storage);
 
-  RestoreOffer offer() => RestoreOffer(storage: storage, archive: const ZipBackupArchive());
+  RestoreOffer offer() => RestoreOffer(storage: storage, archive: const ZipBackupArchive(), clock: clock);
 
   Future<BackupInfo?> readLatest() => ReadLatestBackup(storage: storage, archive: const ZipBackupArchive())();
 

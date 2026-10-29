@@ -277,7 +277,10 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
 
       expect(find.text('Backup do Google'), findsNothing);
-      expect(find.text('Backup de 12/10/2026 deixado de lado. O próximo grava por cima.'), findsOneWidget);
+      expect(
+        find.text('Backup de 12/10/2026 deixado de lado. Amanhã o backup deste celular grava por cima.'),
+        findsOneWidget,
+      );
 
       await tester.tap(find.text('Desfazer'));
       await tester.pump();
@@ -287,12 +290,14 @@ void main() {
       expect(backup.calls, isNot(contains('dismiss')), reason: 'o arquivo continua pendente');
     });
 
-    testWidgets('"Deixar de lado" vale quando o aviso sai: o arquivo é adotado', (tester) async {
+    testWidgets('"Deixar de lado" vale quando o aviso sai: o cartão some, e Ajustes ainda o restaura hoje (BK6)', (
+      tester,
+    ) async {
       final backup = await _pumpHome(
         tester,
         FakeBackupController(
           initial: BackupState(lastBackup: _offer, restoreOffer: _offer),
-        ),
+        )..setAsideClock = () => _now,
         inUse: true,
       );
 
@@ -303,7 +308,8 @@ void main() {
 
       expect(backup.calls, ['dismiss']);
       expect(find.text('Backup do Google'), findsNothing);
-      expect(backup.lastBackupInfo?.madeHere, isTrue, reason: 'Ajustes volta a ser o de sempre');
+      final last = backup.lastBackupInfo!;
+      expect((last.madeHere, last.setAsideAt), (false, _now), reason: 'o backup do outro celular ainda está lá');
     });
 
     testWidgets('um backup novo feito com o aviso na tela não vira "de outro celular" (BK7)', (tester) async {

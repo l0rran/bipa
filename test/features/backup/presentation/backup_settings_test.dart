@@ -270,6 +270,41 @@ void main() {
       expect(find.textContaining('Automático, uma vez por dia'), findsOneWidget);
     });
 
+    testWidgets('deixado de lado hoje: a linha ainda restaura, e o automático volta amanhã (BK6)', (tester) async {
+      final setAside = fakeBackupInfo(
+        createdAt: DateTime(2026, 10, 12, 21),
+        madeHere: false,
+        setAsideAt: _now.subtract(const Duration(hours: 1)),
+      );
+      final backup = FakeBackupController(initial: BackupState(lastBackup: setAside));
+      await pumpSettings(tester, backup: backup);
+
+      expect(find.text('De outro celular. Toque para restaurar.'), findsOneWidget);
+      expect(find.text('Automático volta amanhã'), findsOneWidget);
+      expect(find.text('Automático pausado até você decidir'), findsNothing);
+
+      await tester.tap(find.text('De outro celular. Toque para restaurar.'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(backup.calls, ['prepare']);
+      expect(find.text('Restaurar o backup de 12/10/2026?'), findsOneWidget);
+    });
+
+    testWidgets('deixado de lado ontem: o automático já não está pausado (BK6)', (tester) async {
+      final setAside = fakeBackupInfo(
+        createdAt: DateTime(2026, 10, 12, 21),
+        madeHere: false,
+        setAsideAt: _now.subtract(const Duration(days: 1)),
+      );
+      await pumpSettings(
+        tester,
+        backup: FakeBackupController(initial: BackupState(lastBackup: setAside)),
+      );
+
+      expect(find.text('Automático volta amanhã'), findsNothing);
+      expect(find.text('Automático pausado até você decidir'), findsNothing);
+    });
+
     testWidgets('"Salvar uma cópia…" não pergunta', (tester) async {
       final backup = FakeBackupController(initial: pendingState());
       final files = FakeBackupFiles();

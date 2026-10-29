@@ -31,12 +31,14 @@ BackupInfo fakeBackupInfo({
   String id = 'b1',
   int size = 4 * 1024 * 1024,
   bool madeHere = true,
+  DateTime? setAsideAt,
   BackupSummary summary = const BackupSummary(products: 214, prices: 1380, itemsAtHome: 56),
 }) => BackupInfo(
   path: 'ultimo.bipa',
   size: size,
   manifest: fakeManifest(createdAt: createdAt, id: id, summary: summary),
   madeHere: madeHere,
+  setAsideAt: setAsideAt,
 );
 
 /// Um backup conferido, pronto para a folha de confirmação.
@@ -138,12 +140,22 @@ class FakeBackupController extends BackupController {
     calls.add('dismiss');
     final current = state.value ?? initial;
     final last = current.lastBackup;
-    // O arquivo passa a ser deste aparelho: Ajustes volta a ser o de sempre.
-    final adopted = last == null
-        ? null
-        : BackupInfo(path: last.path, size: last.size, manifest: last.manifest, madeHere: true);
-    state = AsyncData(current.copyWith(lastBackup: adopted, clearOffer: true));
+    // O arquivo é deixado de lado agora: sai do Início, e Ajustes ainda o
+    // restaura até amanhã (BK6).
+    final setAside = last == null || last.madeHere
+        ? last
+        : BackupInfo(
+            path: last.path,
+            size: last.size,
+            manifest: last.manifest,
+            madeHere: false,
+            setAsideAt: setAsideClock(),
+          );
+    state = AsyncData(current.copyWith(lastBackup: setAside, clearOffer: true));
   }
+
+  /// A hora em que [dismissRestoreOffer] deixa o arquivo de lado.
+  DateTime Function() setAsideClock = DateTime.now;
 }
 
 /// O seletor de arquivos do Android, sem Android: "Salvar como" grava em

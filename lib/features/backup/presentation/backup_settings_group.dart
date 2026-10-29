@@ -127,7 +127,7 @@ class _BackupSettingsCardState extends ConsumerState<BackupSettingsCard> {
           BackupActionRow(
             icon: Icons.cloud_upload_outlined,
             title: l10n.backupMakeNow,
-            subtitle: pending ? l10n.backupMakeNowPaused : null,
+            subtitle: pending ? _automaticState(l10n, last, now) : null,
             busyLabel: l10n.backupMaking,
             busy: _busy == _Busy.making,
             onTap: _busy == _Busy.none ? _makeNow : null,
@@ -151,6 +151,18 @@ class _BackupSettingsCardState extends ConsumerState<BackupSettingsCard> {
       ),
     );
   }
+}
+
+/// O estado do automático embaixo de "Fazer backup agora", com o backup de
+/// outro celular no lugar: pausado até a resposta, ou, no dia em que ele foi
+/// deixado de lado, de volta amanhã (BK6). Passado esse dia, o diário grava
+/// na próxima volta ao app, e a linha não diz nada.
+String? _automaticState(AppLocalizations l10n, BackupInfo pending, DateTime now) {
+  final setAside = pending.setAsideAt;
+  if (setAside == null) return l10n.backupMakeNowPaused;
+  final (day, today) = (setAside.toLocal(), now.toLocal());
+  final sameDay = day.year == today.year && day.month == today.month && day.day == today.day;
+  return sameDay ? l10n.backupMakeNowResumesTomorrow : null;
 }
 
 /// A linha que só informa: "Último backup", a frase e o valor à direita, o
