@@ -161,8 +161,17 @@ final class PackageSuggestion {
 ///    kg e o por litro não se comparam. Um produto que ainda não se mede em
 ///    nada aceita qualquer uma.
 ///
-/// Um produto com a marca no nome passa pelos passos 2 e 3: "Coca-cola" fica
-/// com "Refrigerante Coca-Cola", e "Nescau" com "Achocolatado Pó Nescau".
+/// Um produto com a marca no nome ("Ninho", "Coca-cola") passa só pelo passo
+/// 2: o nome do catálogo pode começar por outra palavra, desde que ela não
+/// diga outro produto ("Ninho Forti+", "Lava Roupas Omo"). A palavra do
+/// produto pelo qual a marca é conhecida ([_brandProducts]) conta como dele:
+/// "Coca-cola" fica com "Refrigerante Coca-Cola", "Nescau" com "Achocolatado
+/// Pó Nescau" e "Ninho" com "Leite Ninho Integral". Os passos 3, 4 e 5 valem
+/// como para os outros (G17), com as palavras de outro produto da marca
+/// ([_otherProducts]): o "Ninho" não recebe o iogurte de morango, a fórmula
+/// infantil nem o brownie, e o "Nescau" não recebe a bebida láctea nem o
+/// cereal. O tipo dele, para o passo 4, é o desse produto.
+///
 /// Entre os que passam, vence o de mais palavras, depois o do tipo da
 /// categoria. Na dúvida, nenhum: a folha sugere o produto novo, e a escolha
 /// de produto mostra os parecidos a um toque.
@@ -188,14 +197,19 @@ Product? _catalogProductIn(
   for (final product in products) {
     final productWords = _words(foldText(product.name)).where((w) => !_isNumber(w)).toSet();
     if (productWords.isEmpty || !available.containsAll(productWords)) continue;
-    final productKind = ProductKind.of(product.name);
+    final branded = productWords.any(brandWords.contains);
+    final own = branded ? _brandProductWords(productWords) : const <String>{};
+    final productKind = _productKind(product.name, own);
     if (!_kindsAgree(package.kind, productKind)) continue;
     if (unit != null && !_measureAgrees(unit, product, measures[product.id])) continue;
 
-    if (!productWords.any(brandWords.contains)) {
-      if (head != null && !productWords.contains(head)) continue;
-      final extra = named.where((word) => !productWords.contains(word));
-      if (extra.any((word) => _typeWords.contains(word) || brandWords.contains(word))) continue;
+    final extra = named.where((word) => !productWords.contains(word) && !own.contains(word));
+    final otherType = extra.any(
+      (word) => _typeWords.contains(word) || brandWords.contains(word) || (branded && _otherProducts.contains(word)),
+    );
+    if (otherType) continue;
+    if (head != null && !productWords.contains(head) && !own.contains(head)) {
+      if (!branded || ProductKind.of(head) != ProductKind.other) continue;
     }
 
     final sameKind = package.kind != null && productKind == package.kind;
@@ -249,6 +263,65 @@ bool _kindsAgree(ProductKind? catalog, ProductKind product) {
   if (loose.contains(catalog) || loose.contains(product)) return true;
   return {catalog, product}.containsAll(const {ProductKind.dairy, ProductKind.sweets});
 }
+
+/// O produto pelo qual cada marca é conhecida, para quem chama o produto da
+/// casa pela marca (G17): o "Ninho" é leite em pó, e não o iogurte nem a
+/// fórmula infantil que também levam a marca. Sem acento e em minúsculas,
+/// como [_knownBrands].
+const _brandProducts = {
+  'nescau': 'achocolatado',
+  'toddy': 'achocolatado',
+  'ninho': 'leite',
+  'molico': 'leite',
+  'coca cola': 'refrigerante',
+  'fanta': 'refrigerante',
+  'heineken': 'cerveja',
+  'omo': 'sabao',
+  'danone': 'iogurte',
+  'pilao': 'cafe',
+  'melitta': 'cafe',
+  'tres coracoes': 'cafe',
+  'ype': 'detergente',
+};
+
+/// A palavra do produto pelo qual é conhecida a marca que está em
+/// [productWords] ("leite" para "Ninho"), ou nenhuma.
+Set<String> _brandProductWords(Set<String> productWords) => {
+  for (final MapEntry(key: brand, value: word) in _brandProducts.entries)
+    if (productWords.containsAll(brand.split(' '))) word,
+};
+
+/// O tipo do produto da pessoa pelo nome; com nome de marca, que não diz o
+/// tipo, o do produto pelo qual a marca é conhecida ([own]).
+ProductKind _productKind(String name, Set<String> own) {
+  final kind = ProductKind.of(name);
+  if (kind != ProductKind.other || own.isEmpty) return kind;
+  return ProductKind.of(own.first);
+}
+
+/// Palavras que, no nome do catálogo, dizem outro produto da mesma marca
+/// (G17): o "Ninho" não é a "Fórmula Infantil Ninho", o "Composto Lácteo
+/// Ninho" nem o "Brownie Recheado - Leite Ninho"; o "Nescau" não é o
+/// "Cereal Nescau" nem o "Biscoito Nescau". Valem só para o produto com nome
+/// de marca, junto com [_typeWords].
+const _otherProducts = {
+  'formula',
+  'composto',
+  'brownie',
+  'cereal',
+  'biscoito',
+  'bolacha',
+  'cookie',
+  'cookies',
+  'wafer',
+  'barra',
+  'bombom',
+  'trufa',
+  'ovo',
+  'iogurte',
+  'tira',
+  'amaciante',
+};
 
 /// Palavras que, a mais no nome do catálogo, mudam o tipo do produto: o
 /// leite condensado não é leite, nem o arroz carreteiro, arroz. Também os
@@ -590,6 +663,7 @@ const _knownBrands = {
   'marilan': 'Marilan',
   'melitta': 'Melitta',
   'moca': 'Moça',
+  'molico': 'Molico',
   'nescau': 'Nescau',
   'nestle': 'Nestlé',
   'ninho': 'Ninho',
@@ -609,6 +683,7 @@ const _knownBrands = {
   'soya': 'Soya',
   'swift': 'Swift',
   'tio joao': 'Tio João',
+  'toddy': 'Toddy',
   'tres coracoes': 'Três Corações',
   'uniao': 'União',
   'vitarella': 'Vitarella',

@@ -156,6 +156,81 @@ const _cases = <_Case>[
   ),
 ];
 
+/// Uma casa que chama os produtos pela marca (G17), cada um com uma
+/// embalagem do produto pelo qual a marca é conhecida, e o "Leite" em litros
+/// ao lado do "Ninho" em pó.
+const _brandHousehold = <(String, String?)>[
+  ('Leite', '1 L'),
+  ('Ninho', '380 g'),
+  ('Nescau', '400 g'),
+  ('Toddy', '370 g'),
+  ('Danone', '170 g'),
+  ('Coca-cola', '2 L'),
+  ('Omo', '1,6 kg'),
+];
+
+/// Calibragem do mantenedor (29/10): a marca no nome do produto não dispensa
+/// as palavras que mudam o tipo, a categoria nem a grandeza. Conta como do
+/// produto só a palavra do produto pelo qual a marca é conhecida ("leite"
+/// para o "Ninho", "achocolatado" para o "Nescau").
+const _brandCases = <_Case>[
+  // Ninho: o leite em pó; não o iogurte, a fórmula, o composto, o brownie
+  // nem o Ninho líquido, em litros.
+  ('7891000094396', 'Iogurte Parcialmente Desnatado Morango Ninho Fruti 250g', 'NESTLE', null, '250 g', null),
+  ('7891000001080', 'Fórmula Infantil Ninho Fases 1+', 'NESTLE', ProductKind.dairy, '400 g', null),
+  ('0609963517664', 'Brownie Recheado - Leite Ninho', 'Brownie 3 Irmãs', null, null, null),
+  ('7891000062661', 'Composto Lácteo Ninho Fases 1 Lata 800g', 'NESTLE', ProductKind.dairy, '800 g', null),
+  ('7891000340035', 'Bebida Láctea Uht Morango E Banana Ninho Fruti Caixa 190ml', 'NINHO', null, '190 ml', null),
+  ('7891000119495', 'NESTLÉ NINHO Forti+ UHT Zero Lactose', 'Nestle5', ProductKind.dairy, '1 L', null),
+  ('7891000340882', 'leite ninho', 'nestle', ProductKind.dairy, '380 g', 'Ninho'),
+  ('7891000393482', 'Leite po ninho instant lt', null, null, '380 g', 'Ninho'),
+  ('7891000284933', 'Ninho Forti+', 'Nestlé', ProductKind.shelfStable, '380 g', 'Ninho'),
+  // Nescau: o achocolatado em pó; não a bebida láctea, o biscoito nem o
+  // cereal.
+  ('7891000023167', 'Bebida Láctea Uht Chocolate Light Nescau Caixa 200ml', 'NESTLE', null, '200 ml', null),
+  ('7891000101926', 'Nescau 170ml', 'Nestlé', null, '270 ml', null),
+  ('7891000089279', 'Biscoito Nescau', 'Nestle', ProductKind.sweets, '140 g', null),
+  ('7891000008119', 'Nescau Cereal', 'Nestlé', ProductKind.grains, '270 g', null),
+  ('7891000266182', 'Cereal Nescau 400g', null, null, '400 g', null),
+  ('7891000338087', 'Achocolatado em pó Nescau 550g Refil', 'Nestlé', ProductKind.sweets, '550 g', 'Nescau'),
+  ('7891000009437', 'Nescau', 'Nestlé', null, '400 g', 'Nescau'),
+  // Toddy: o mesmo, com a marca que o catálogo às vezes troca pela linha.
+  ('7892840814137', 'Toddy Original', 'Toddy', ProductKind.sweets, '1,02 kg', 'Toddy'),
+  ('7894321711478', 'Achocolatado Toddy 800g', 'Toddy', ProductKind.sweets, '800 g', 'Toddy'),
+  ('7892840819798', 'Achocolatado Pó Original Toddy Pacote 480g Econômica', 'ORIGINAL', null, '480 g', 'Toddy'),
+  (
+    '7892840818678',
+    'Biscoito Cookie Chocolate Com Gotas De Chocolate Toddy Pacote 133g Embalagem Econômica',
+    'COOKIE',
+    null,
+    '133 g',
+    null,
+  ),
+  // Danone: o iogurte natural; o de sabor, a bebida láctea, o leite e o leite
+  // em pó da marca não.
+  ('7891025109556', 'Iogurte Natural Desnatado Danone', 'Danone', null, '160 g', 'Danone'),
+  (
+    '7891025102496',
+    'Iogurte Parcialmente Desnatado Morango Danone Garrafa 900g',
+    'DANONE',
+    ProductKind.sweets,
+    '900 g',
+    null,
+  ),
+  ('7891025121626', 'Bebida Láctea Fermentada Morango Danone Bandeja 510g 6 Unidades', 'MORANGO', null, '510 g', null),
+  ('7891025105640', 'Leite Uht Semidesnatado Danone Caixa Com Tampa 1l', 'DANONE', null, '1 L', 'Leite'),
+  ('7891025107897', 'Leite Em Po Aptamil 800g 2 Danone', 'DANONE', null, '800 g', null),
+  // Coca-cola: a versão (zero) e o tamanho não mudam o produto.
+  ('7894900700015', 'Coca-Cola Zero Açúcar', 'Coca-Cola', ProductKind.drinks, '350 ml', 'Coca-cola'),
+  ('7894900011708', 'Coca-cola', 'Coca-Cola', ProductKind.drinks, '3 L', 'Coca-cola'),
+  ('7894900011517', 'Refrigerante Coca-Cola 2Lt', 'Coca-Cola', null, '2 L', 'Coca-cola'),
+  // Omo: o sabão; não o tira-manchas.
+  ('7891150064522', 'OMO Lavagem Perfeita', 'Omo', null, '400 g', 'Omo'),
+  ('7891150069053', 'Sabão Em Pó Omo Lavagem Perfeita 4kg', 'Unilever', null, '4 kg', 'Omo'),
+  ('7891039023701', 'LAVA ROUPAS OMO MILTIAÇÃO', 'Unilever', null, '1 kg', 'Omo'),
+  ('7891150041431', 'Tira Mancha Omo', null, null, null, null),
+];
+
 /// "1,6 kg" em tamanho e unidade; só a unidade ("kg") vem sem tamanho.
 (double?, MeasureUnit) _measure(String text) {
   final parts = text.split(' ');
@@ -210,10 +285,13 @@ void _check(List<(String, String?)> household, List<_Case> cases) {
 }
 
 void main() {
-  test('o banco tem entre 30 e 60 casos, sem código repetido', () {
-    expect(_cases.length, inInclusiveRange(30, 60));
-    expect({for (final row in _cases) row.$1}.length, _cases.length);
+  test('o banco tem entre 30 e 60 casos por casa, sem código repetido', () {
+    for (final cases in [_cases, _brandCases]) {
+      expect(cases.length, inInclusiveRange(30, 60));
+      expect({for (final row in cases) row.$1}.length, cases.length);
+    }
   });
 
   group('casa com nomes genéricos', () => _check(_household, _cases));
+  group('casa com nomes de marca (G17)', () => _check(_brandHousehold, _brandCases));
 }
