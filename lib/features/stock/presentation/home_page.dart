@@ -20,6 +20,7 @@ import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
 import 'package:bipa/core/widgets/empty_state.dart';
 import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/products/domain/product_search.dart';
 import 'package:bipa/features/products/presentation/product_photos.dart';
 import 'package:bipa/features/products/presentation/scan_product.dart';
 import 'package:bipa/features/settings/presentation/crash_reporting_ask_card.dart';
@@ -189,15 +190,13 @@ class _HomePageState extends ConsumerState<HomePage> {
     showBipaToast(messenger, message, actionLabel: l10n.undo, onAction: undo);
   }
 
-  List<StockEntry> _visible(List<StockEntry> entries) {
-    final query = _query.trim().toLowerCase();
-    return [
-      for (final entry in entries)
-        if ((_place == null || entry.item.location == _place) &&
-            (query.isEmpty || entry.product.name.toLowerCase().contains(query)))
-          entry,
-    ];
-  }
+  /// A mesma busca da aba Produtos (G7): palavra por palavra, em qualquer
+  /// ordem e sem ligar para acento ("acucar" acha "Açúcar refinado").
+  List<StockEntry> _visible(List<StockEntry> entries) => [
+    for (final entry in entries)
+      if ((_place == null || entry.item.location == _place) && matchesProductSearch(_query, name: entry.product.name))
+        entry,
+  ];
 
   @override
   Widget build(BuildContext context) {

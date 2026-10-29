@@ -139,4 +139,57 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     expect(find.text('Usei um: Leite integral'), findsNothing);
   });
+
+  testWidgets('a busca ignora acento e a ordem das palavras, como a aba Produtos (G7)', (tester) async {
+    final AppDatabase db = createTestDatabase();
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        clockProvider.overrideWithValue(() => _now),
+        idGeneratorProvider.overrideWithValue(SequentialIdGenerator()),
+      ],
+    );
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox());
+      container.dispose();
+      await tester.runAsync(db.close);
+    });
+    await tester.runAsync(() async {
+      for (final (id, name) in [('acucar', 'Açúcar refinado'), ('feijao', 'Feijão carioca')]) {
+        await container
+            .read(productRepositoryProvider)
+            .save(Product(id: id, name: name, unit: MeasureUnit.kilogram, createdAt: _now, updatedAt: _now));
+        await container
+            .read(stockRepositoryProvider)
+            .adjust(productId: id, delta: 2, reason: StockMovementReason.purchase);
+      }
+    });
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: BipaTheme.light,
+          locale: const Locale('pt', 'BR'),
+          supportedLocales: const [Locale('pt', 'BR')],
+          localizationsDelegates: const [AppLocalizations.delegate, ...GlobalMaterialLocalizations.delegates],
+          home: const Scaffold(body: HomePage()),
+        ),
+      ),
+    );
+    await _settle(tester);
+
+    await tester.enterText(find.byType(TextField), 'acucar');
+    await _settle(tester);
+    expect(find.textContaining('Açúcar refinado'), findsWidgets);
+    expect(find.textContaining('Feijão carioca'), findsNothing);
+
+    await tester.enterText(find.byType(TextField), 'carioca feijao');
+    await _settle(tester);
+    expect(find.textContaining('Feijão carioca'), findsWidgets);
+    expect(find.textContaining('Açúcar refinado'), findsNothing);
+    // O teste não pode terminar com relógios da tela rodando.
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 1));
+  });
 }
