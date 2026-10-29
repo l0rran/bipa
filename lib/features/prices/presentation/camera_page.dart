@@ -644,10 +644,13 @@ class _CameraPageState extends ConsumerState<CameraPage> {
     );
     if (!mounted) return;
     var place = current;
-    if (chosen != null && chosen != current) {
+    if (chosen != null) {
       try {
-        await stock.setLocation(product.id, chosen);
+        if (chosen != current) await stock.setLocation(product.id, chosen);
         place = chosen;
+        // Escolhido aqui, o local já foi conferido: o item sai de "Arrumar
+        // o que entrou" (AB13).
+        _arrivals.placeChosen(product.id);
       } on Exception {
         showBipaToast(messenger, l10n.stockAdjustFailed);
       }
@@ -657,12 +660,14 @@ class _CameraPageState extends ConsumerState<CameraPage> {
   }
 
   /// Fechar pode mostrar "Arrumar o que entrou" antes (AB5): só em
-  /// "Comprei", e só quando já entraram produtos novos suficientes.
-  bool get _mayArrange => _mode == CameraMode.bought && _arrivals.productIds.length >= HomeArrivals.minimumToArrange;
+  /// "Comprei", e só quando algum produto novo não teve o local conferido
+  /// no aviso (AB13).
+  bool get _mayArrange => _mode == CameraMode.bought && _arrivals.mayArrange;
 
-  /// Fechar a câmera de "Comprei" com três ou mais produtos novos em casa
-  /// abre "Arrumar o que entrou" por cima dela; a câmera sai quando a folha
-  /// fecha, por "Pronto" ou arrastando (pular).
+  /// Fechar a câmera de "Comprei" com produtos novos cujo local ninguém
+  /// conferiu abre "Arrumar o que entrou" por cima dela, mesmo com um só; a
+  /// câmera sai quando a folha fecha, por "Pronto" ou arrastando (pular).
+  /// Sem nada a conferir, ela fecha direto.
   Future<void> _closeAfterArranging() async {
     if (_closing) return;
     _closing = true;
