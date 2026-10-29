@@ -587,7 +587,8 @@ class _CameraPageState extends ConsumerState<CameraPage> {
     // local novo depois da escolha.
     void show(StockLocation? place) => _showNotice(
       (
-        icon: applied > 0 ? Icons.add_rounded : Icons.remove_rounded,
+        // O número já diz o sentido (+1 ou -1); o ícone diz o lugar, a casa.
+        icon: Icons.home_outlined,
         value: applied > 0 ? l10n.cameraDeltaUp(amount) : l10n.cameraDeltaDown(amount),
         detail: place == null
             ? l10n.cameraAtHome(product.name, Formatters.quantity(atHome))

@@ -20,7 +20,7 @@ void main() {
     await tester.pumpWidget(
       _app(
         LiveReadChip(
-          icon: Icons.add_rounded,
+          icon: Icons.home_outlined,
           price: '+1',
           detail: 'Leite · 1 na Geladeira',
           onDetailTap: () => places++,
@@ -58,7 +58,7 @@ void main() {
     await tester.pumpWidget(
       _app(
         LiveReadChip(
-          icon: Icons.add_rounded,
+          icon: Icons.home_outlined,
           price: '+1',
           detail: 'Leite · 1 na Geladeira',
           onDetailTap: () => places++,
