@@ -264,7 +264,24 @@ O problema: **os rótulos da barra cortam a partir de uns 120% num celular de 36
 
 **Do nosso jeito:** duas propostas foram ao mantenedor. A mantém a anatomia do `ScanNavBar` (bipar no meio) e aceita rótulos quase do tamanho normal, com o balão para quem precisa ler maior. B dá aos rótulos uns 35% a mais de largura, mas tira o bipar do centro da barra, que é a marca do componente.
 
-**Decidido em 28/10/2026: A até 160%, B acima.** Até 160% de letra, a barra é a de sempre, com os rótulos limitados a 130% e encolhidos por igual até caber. Acima de 160%, o bipar sai do meio e flutua acima da barra, à direita, e o menu do bipar sai dele. O balão do rótulo grande, no toque longo do destino, vale nas duas, porque em B os rótulos ainda encolhem num celular estreito. A partir de 130% ou com o TalkBack, a barra não encolhe ao rolar. O que fica aberto é B durante a compra, com a barra amarela da compra entre o bipar e a navegação (H12, na [análise do lote 9](../ux/analise-ux-2026-10-28-lote9.md)).
+**Decidido em 28/10/2026: A até 160%, B acima.** Até 160% de letra, a barra é a de sempre, com os rótulos limitados a 130% e encolhidos por igual até caber. Acima de 160%, o bipar sai do meio e flutua acima da barra, à direita, e o menu do bipar sai dele. O balão do rótulo grande, no toque longo do destino, vale nas duas, porque em B os rótulos ainda encolhem num celular estreito. A partir de 130% ou com o TalkBack, a barra não encolhe ao rolar. O que fica aberto é B durante a compra, com a barra amarela da compra entre o bipar e a navegação (H12, em "Letra grande durante a compra", mais abaixo).
+
+### Letra grande durante a compra (outubro de 2026)
+
+O problema: **acima de 160% de letra, durante a compra, dois botões amarelos empilhados levam ao mesmo lugar** (H12). O bipar flutuante fica logo acima da barra da compra, os dois abrem o modo carrinho, e a parte de baixo da tela passa de 40% da altura. O quadro da barra com letra grande desenhou B sem a compra.
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **Material 3** ([botão flutuante](https://m3.material.io/components/floating-action-button/guidelines)) | Um botão flutuante por tela, para a ação principal | Um botão de marca só embaixo | Durante a compra, a ação principal já é a barra da compra: ela faz o papel do botão |
+| **iOS 26** (o acessório de baixo entra na barra minimizada, na análise do lote 8) | O acessório de reprodução ocupa o lugar do que some | A barra da compra no lugar do bipar | Ela herda o toque longo do bipar, para o menu não sumir com a letra grande |
+| **ScanNavBar** ("os itens do menu são atalhos", no guia) | Tudo o que o menu do bipar faz também existe nas telas | Esconder o atalho do toque longo não tira nenhum caminho | — |
+
+**Do nosso jeito:** duas propostas, no quadro [NavLetraGrandeCompra](prototipo/telas/NavLetraGrandeCompra.png), ao lado do caso de hoje. Nas duas, o bipar flutuante sai durante a compra (só acima de 160%: até lá, o bipar fica no meio da barra, longe da barra da compra), ganha 76 dp e fica um amarelo só.
+
+- **A, a barra da compra assume:** ela fica como é, com "Continuar", e ganha o toque longo do bipar, com o rótulo acessível "segure para mais opções". Nada muda no componente além do gesto.
+- **B, o bipar entra na barra:** o fim da barra da compra troca "Continuar" pelo glifo do bipar num círculo `ink`. O texto ganha largura ("3 de 7 itens" numa linha) e o glifo mostra onde se bipa, mas é uma variante nova da `ShoppingBar` e tira o texto de uma ação de navegação.
+
+Recomendação: A, que segue a regra de texto na navegação e não cria variante.
 
 ## Fontes
 
