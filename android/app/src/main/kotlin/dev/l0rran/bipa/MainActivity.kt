@@ -22,6 +22,17 @@ class MainActivity : FlutterActivity() {
     /** O pedido de permissão de notificações esperando a resposta. */
     private var pendingPermission: MethodChannel.Result? = null
 
+    /** O seletor de arquivos do backup (ADR 0023, seção 5). */
+    private val backupFiles by lazy { BackupFiles(this) }
+
+    @Deprecated("O FlutterActivity não é um ComponentActivity: o resultado do seletor chega por aqui.")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (!backupFiles.onActivityResult(requestCode, resultCode, data)) {
+            @Suppress("DEPRECATION")
+            super.onActivityResult(requestCode, resultCode, data)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // Só vale o botão que acabou de ser tocado: recriada (o sistema matou
         // o processo) ou aberta pelos Recentes, a Activity recebe o mesmo
@@ -59,6 +70,9 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
+        }
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, BackupFiles.CHANNEL).setMethodCallHandler { call, result ->
+            backupFiles.handle(call, result)
         }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, ACCESSIBILITY_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
@@ -156,6 +170,7 @@ class MainActivity : FlutterActivity() {
         // Sem a Activity, a resposta não vem: o Dart não fica esperando.
         pendingPermission?.success(null)
         pendingPermission = null
+        backupFiles.dispose()
         super.onDestroy()
     }
 

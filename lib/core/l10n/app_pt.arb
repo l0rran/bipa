@@ -22,6 +22,51 @@
   "@settingsTitle": {
     "description": "Título da tela de Ajustes e rótulo acessível da engrenagem do Início."
   },
+  "settingsBackup": "Backup",
+  "@settingsBackup": {
+    "description": "O primeiro grupo de Ajustes (ADR 0023, seção 5)."
+  },
+  "backupLastTitle": "Último backup",
+  "backupLastSubtitle": "Automático, uma vez por dia. Vai para um celular novo pelo backup do Google.",
+  "backupTooBig": "Com {size} MB, passou dos 25 MB que o backup do Google leva. Use \"Salvar uma cópia…\" para guardar fora do celular.",
+  "@backupTooBig": {
+    "description": "No lugar da frase do último backup, quando o arquivo passa do limite do Auto Backup do Android.",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "backupToday": "hoje",
+  "backupYesterday": "ontem",
+  "backupNow": "agora",
+  "backupNever": "nenhum ainda",
+  "@backupNever": {
+    "description": "O valor do último backup quando nunca houve um."
+  },
+  "backupLastSemantics": "Último backup: {when}",
+  "@backupLastSemantics": {
+    "description": "Rótulo acessível da linha do último backup, com o dia e a hora juntos (\"hoje, 08:40\").",
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "backupMakeNow": "Fazer backup agora",
+  "backupMaking": "Fazendo o backup",
+  "@backupMaking": {
+    "description": "Rótulo acessível do indicador de carregamento no lugar do ícone de \"Fazer backup agora\"."
+  },
+  "backupFailed": "Não deu para fazer o backup. Tente de novo.",
+  "backupNothingYet": "Nada para guardar ainda",
+  "@backupNothingYet": {
+    "description": "\"Fazer backup agora\" com o celular vazio e o backup de outro celular esperando resposta no Início."
+  },
+  "backupSaveCopy": "Salvar uma cópia…",
+  "backupSaveCopySubtitle": "Para guardar fora do celular",
+  "backupCopySaved": "Cópia salva",
+  "backupCopyFailed": "Não deu para salvar a cópia. Tente de novo.",
   "settingsPrivacy": "Privacidade",
   "settingsCrashTitle": "Relatório de falhas",
   "settingsCrashSubtitle": "Se o Bipa travar, manda o erro para ser corrigido.",

@@ -26,6 +26,7 @@ import 'package:bipa/core/location/location_service.dart';
 import 'package:bipa/core/money/money.dart';
 import 'package:bipa/core/permissions/permission_access.dart';
 import 'package:bipa/core/widgets/weighed_value_dialog.dart';
+import 'package:bipa/features/backup/presentation/backup_providers.dart';
 import 'package:bipa/features/markets/domain/market.dart';
 import 'package:bipa/features/markets/presentation/market_form_page.dart';
 import 'package:bipa/features/markets/presentation/market_page.dart';
@@ -63,6 +64,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 
+import '../helpers/backup_fakes.dart';
 import '../helpers/crash_reporting_fakes.dart';
 import '../helpers/fakes.dart';
 import '../helpers/test_database.dart';
@@ -435,10 +437,25 @@ void _tests() {
         overrides: [
           crashReporterProvider.overrideWithValue(FakeCrashReporter()),
           appVersionProvider.overrideWith((ref) async => '0.1.0'),
+          backupProvider.overrideWith(
+            () => FakeBackupController(
+              initial: BackupState(
+                lastBackup: fakeBackupInfo(createdAt: _now, size: 30 * 1024 * 1024),
+              ),
+            ),
+          ),
         ],
       );
+      // O grupo "Backup", com a frase mais longa: a do tamanho acima de 25 MB.
+      expect(find.text('Último backup'), findsOneWidget);
+      expect(find.textContaining('Com 30 MB'), findsOneWidget);
+      expect(find.text('Salvar uma cópia…'), findsOneWidget);
       expect(find.text('Relatório de falhas'), findsOneWidget);
       expect(find.text('O que nunca vai'), findsOneWidget);
+      // Com o grupo do backup, a versão fica abaixo da dobra mesmo aqui.
+      await tester.scrollUntilVisible(find.text('0.1.0'), 400);
+      await tester.pump();
+      _expectReadable(tester);
       expect(find.text('0.1.0'), findsOneWidget);
     });
 
