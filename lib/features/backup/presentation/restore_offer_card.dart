@@ -7,7 +7,6 @@ import 'package:bipa/core/design_system/bipa_typography.dart';
 import 'package:bipa/core/design_system/components/bipa_toast.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/features/backup/domain/backup_info.dart';
-import 'package:bipa/features/backup/domain/backup_manifest.dart';
 import 'package:bipa/features/backup/domain/restore_backup.dart';
 import 'package:bipa/features/backup/presentation/backup_files.dart';
 import 'package:bipa/features/backup/presentation/backup_labels.dart';
@@ -23,8 +22,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// zero" (secundário). Nada é restaurado sozinho.
 ///
 /// "Restaurar" confere e troca com o botão carregando, sem a folha de
-/// confirmação, porque a casa vazia não perde nada; se já há o que perder,
-/// passa pela folha. "Começar do zero" tira o cartão com Desfazer por 10 s;
+/// confirmação, porque a casa vazia (nenhuma linha em nenhuma tabela, inclusive
+/// a lista e os mercados) não perde nada; se já há o que perder, passa pela
+/// folha, com o "Desfazer". "Começar do zero" tira o cartão com Desfazer por 10 s;
 /// o arquivo continua restaurável pelos Ajustes até o próximo backup diário.
 class RestoreOfferCard extends ConsumerStatefulWidget {
   const RestoreOfferCard({required this.offer, super.key});
@@ -58,8 +58,10 @@ class _RestoreOfferCardState extends ConsumerState<RestoreOfferCard> {
       }
       return;
     }
-    if (prepared.current == BackupSummary.empty) {
-      // Pronto, o cartão some com a oferta e o Início se enche.
+    if (prepared.currentIsEmpty) {
+      // A casa não tem nenhuma linha em nenhuma tabela (nem lista, nem
+      // mercado): não há o que perder. Pronto, o cartão some com a oferta e o
+      // Início se enche. Os três números do resumo não decidem isso (BK4).
       await applyRestoreAndNotify(
         backup: backup,
         prepared: prepared,

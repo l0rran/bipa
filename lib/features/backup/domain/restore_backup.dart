@@ -12,6 +12,7 @@ final class PreparedRestore {
     required this.manifest,
     required this.backup,
     required this.current,
+    required this.currentIsEmpty,
     required this.workspace,
     this.adjustedItems = 0,
   });
@@ -23,6 +24,12 @@ final class PreparedRestore {
 
   /// Os números do aparelho agora ("Neste celular agora: …").
   final BackupSummary current;
+
+  /// Se o banco do aparelho não tem nenhuma linha em nenhuma tabela
+  /// ([BackupDatabase.isEmpty]): a restauração não apaga nada. Os três números
+  /// de [current] zerados não bastam, porque a lista escrita à mão e os
+  /// mercados criados ficam fora deles (BK4).
+  final bool currentIsEmpty;
 
   /// Onde o banco e as fotos do backup esperam a confirmação.
   final RestoreWorkspace workspace;
@@ -90,6 +97,7 @@ final class RestoreBackup {
         manifest: manifest,
         backup: checked.summary,
         current: await _database.currentSummary(),
+        currentIsEmpty: await _database.isEmpty(),
         workspace: workspace,
         adjustedItems: checked.adjustedItems,
       );

@@ -298,6 +298,39 @@ void main() {
       expect((await dump())['products'], hasLength(1));
     });
 
+    test('casa vazia por completo: a restauração não apaga nada (BK4)', () async {
+      await arriveOnNewPhone();
+
+      final prepared = await app.restore().prepare(app.latestPath);
+
+      expect(prepared.current, BackupSummary.empty);
+      expect(prepared.currentIsEmpty, isTrue);
+    });
+
+    test('uma lista escrita à mão não entra nos três números, mas a casa não está vazia (BK4)', () async {
+      await arriveOnNewPhone();
+      await app.db
+          .into(app.db.shoppingListItems)
+          .insert(ShoppingListItemsCompanion.insert(id: 'pao', name: 'Pão', addedAt: at));
+
+      final prepared = await app.restore().prepare(app.latestPath);
+
+      expect(prepared.current, BackupSummary.empty);
+      expect(prepared.currentIsEmpty, isFalse);
+    });
+
+    test('um mercado criado não entra nos três números, mas a casa não está vazia (BK4)', () async {
+      await arriveOnNewPhone();
+      await app.db
+          .into(app.db.markets)
+          .insert(MarketsCompanion.insert(id: 'bairro', name: 'Mercado do bairro', createdAt: at, updatedAt: at));
+
+      final prepared = await app.restore().prepare(app.latestPath);
+
+      expect(prepared.current, BackupSummary.empty);
+      expect(prepared.currentIsEmpty, isFalse);
+    });
+
     test('restaurar a oferta traz a casa e as fotos', () async {
       await arriveOnNewPhone();
 

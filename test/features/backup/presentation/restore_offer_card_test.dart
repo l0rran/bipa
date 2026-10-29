@@ -100,7 +100,7 @@ void main() {
       tester,
       FakeBackupController(
         initial: BackupState(restoreOffer: _offer),
-        onPrepare: () async => fakePrepared(createdAt: _backupDay, current: BackupSummary.empty),
+        onPrepare: () async => fakePrepared(createdAt: _backupDay, current: BackupSummary.empty, currentIsEmpty: true),
       ),
     );
 
@@ -114,6 +114,35 @@ void main() {
     expect(find.text('Backup de 12/10 restaurado'), findsOneWidget);
     expect(find.text('Desfazer'), findsNothing);
     expect(find.text('Backup do Google'), findsNothing);
+    await _finishToasts(tester);
+  });
+
+  testWidgets('os três números zerados, mas com lista ou mercado: passa pela folha, com Desfazer (BK4)', (
+    tester,
+  ) async {
+    final backup = await _pumpHome(
+      tester,
+      FakeBackupController(
+        initial: BackupState(restoreOffer: _offer),
+        // Uma lista escrita à mão e um mercado não entram nos três números.
+        onPrepare: () async => fakePrepared(createdAt: _backupDay, current: BackupSummary.empty),
+      ),
+    );
+
+    await tester.tap(find.text('Restaurar'));
+    await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(backup.calls, ['prepare'], reason: 'nada foi restaurado sem a confirmação');
+    expect(find.text('Substituir pelo backup'), findsOneWidget);
+
+    await tester.tap(find.text('Substituir pelo backup'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(backup.calls, ['prepare', 'apply']);
+    expect(find.text('Desfazer'), findsOneWidget);
     await _finishToasts(tester);
   });
 
