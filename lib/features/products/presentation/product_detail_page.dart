@@ -205,6 +205,8 @@ class _ProductView extends ConsumerWidget {
     String? openProductId,
   }) async {
     var undone = false;
+    // Fica falso quando a tela do destino criado na hora sai de cena.
+    var destinationOpen = false;
     // O aviso sai sozinho (com o leitor de tela, quando a pessoa o dispensa),
     // e só então o segundo aviso vem.
     final controller = showBipaToast(
@@ -213,6 +215,16 @@ class _ProductView extends ConsumerWidget {
       actionLabel: l10n.undo,
       onAction: () {
         undone = true;
+        // Desfazer um mover para um produto criado na hora apaga esse produto.
+        // Se a tela dele ainda está em cima, fecha-a antes: a pessoa volta ao
+        // produto de origem, onde a embalagem reaparece, e o destino não pisca
+        // "Produto não encontrado" (G8). Se ela já voltou, só desfaz.
+        if (destinationOpen && openProductId != null && navigatorContext != null && navigatorContext.mounted) {
+          final router = GoRouter.of(navigatorContext);
+          if (router.routerDelegate.currentConfiguration.last.matchedLocation == Routes.productDetail(openProductId)) {
+            router.pop();
+          }
+        }
         unawaited(undo());
       },
       duration: BipaToastDuration.long,
@@ -221,7 +233,10 @@ class _ProductView extends ConsumerWidget {
     if (openProductId != null) {
       // A oferta de apagar o produto vazio espera a volta: quem foi ver o
       // destino ainda não terminou aqui.
-      await GoRouter.of(navigatorContext).push<void>(Routes.productDetail(openProductId));
+      destinationOpen = true;
+      await GoRouter.of(navigatorContext).push<void>(Routes.productDetail(openProductId)).whenComplete(() {
+        destinationOpen = false;
+      });
     } else if (offerDelete) {
       await controller.closed;
     }
