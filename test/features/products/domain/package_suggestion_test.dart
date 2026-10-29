@@ -85,10 +85,10 @@ void main() {
     test('sem resultado para o recorte, o único produto com a maioria das palavras', () {
       // O nome vem abreviado: "achoc" e "po" são 2 de 3.
       expect(query('ACHOC PO MALTADO 400G', ['Achocolatado em pó', 'Café']), 'Achocolatado em pó');
-      // Metade não é maioria.
-      expect(query('CAFE GOURMET 500G', ['Café torrado']), 'Café gourmet');
-      // Empate: fica o recorte, sem adivinhar.
-      expect(query('ACHOC PO MALTADO 400G', ['Achocolatado em pó', 'Achocolatado pó diet']), 'Achoc pó maltado');
+      // Metade não é maioria: abre só com a palavra que acha (G9).
+      expect(query('CAFE GOURMET 500G', ['Café torrado']), 'Café');
+      // Empate: não adivinha um deles; abre com a palavra que acha os dois (G9).
+      expect(query('ACHOC PO MALTADO 400G', ['Achocolatado em pó', 'Achocolatado pó diet']), 'Achoc');
     });
 
     test('sem nome lido, ou só com o tamanho, abre vazio', () {
@@ -160,17 +160,20 @@ void main() {
     String query(String hint, List<String> names) =>
         productQueryFromLabel(hint, products: [for (final name in names) _product(name)]);
 
-    test('com a outra variedade cadastrada, a busca não acha nenhuma das duas', () {
-      for (final (hint, other) in [
-        ('BANANA NANICA KG', 'Banana prata'),
-        ('QUEIJO PRATO KG', 'Queijo mussarela'),
-        ('QUEIJO MINAS KG', 'Queijo prato'),
-        ('TOMATE CEREJA KG', 'Tomate italiano'),
-        ('CARNE ACEM KG', 'Carne moída patinho'),
+    test('com a outra variedade cadastrada, abre com a palavra comum e o recorte segue sendo outro nome', () {
+      for (final (hint, other, word) in [
+        ('BANANA NANICA KG', 'Banana prata', 'Banana'),
+        ('QUEIJO PRATO KG', 'Queijo mussarela', 'Queijo'),
+        ('QUEIJO MINAS KG', 'Queijo prato', 'Queijo'),
+        ('TOMATE CEREJA KG', 'Tomate italiano', 'Tomate'),
+        ('CARNE ACEM KG', 'Carne moída patinho', 'Carne'),
       ]) {
         final text = query(hint, [other]);
-        expect(text, productNameFromLabel(hint), reason: hint);
-        expect(matchesProductSearch(text, name: other), isFalse, reason: '$hint → $text');
+        // A lista mostra o parecido para comparar (G9)...
+        expect(text, word, reason: hint);
+        expect(matchesProductSearch(text, name: other), isTrue, reason: '$hint → $text');
+        // ...mas "Criar" propõe a variedade lida, que não é a cadastrada (G6).
+        expect(sameSearchWords(other, productNameFromLabel(hint)), isFalse, reason: hint);
       }
     });
 
@@ -184,6 +187,43 @@ void main() {
     test('a mesma variedade acha o produto dela, com as mesmas palavras', () {
       expect(query('BANANA PRATA KG', ['Banana prata', 'Banana nanica']), 'Banana prata');
       expect(sameSearchWords('Banana prata', productNameFromLabel('BANANA PRATA KG')), isTrue);
+    });
+  });
+
+  group('uma palavra a mais na etiqueta não esconde o produto que existe (G9)', () {
+    String query(String hint, List<String> names) =>
+        productQueryFromLabel(hint, products: [for (final name in names) _product(name)]);
+
+    test('abre com a palavra que acha o produto e o recorte segue como nome a criar', () {
+      expect(query('LIMAO TAITI KG', ['Limão tahiti']), 'Limão');
+      expect(productNameFromLabel('LIMAO TAITI KG'), 'Limão taiti');
+      expect(query('MUSSARELA TIROLEZ KG', ['Queijo mussarela']), 'Mussarela');
+      expect(productNameFromLabel('MUSSARELA TIROLEZ KG'), 'Mussarela tirolez');
+    });
+
+    test('a palavra escolhida acha o produto na busca', () {
+      for (final (hint, name) in [('LIMAO TAITI KG', 'Limão tahiti'), ('MUSSARELA TIROLEZ KG', 'Queijo mussarela')]) {
+        expect(matchesProductSearch(query(hint, [name]), name: name), isTrue, reason: hint);
+      }
+    });
+
+    test('com a abreviação de balança, fica a palavra que acha', () {
+      expect(query('QJO MUSS FAT KG', ['Queijo mussarela']), 'Muss');
+    });
+
+    test('entre várias palavras que acham, fica a que acha menos produtos', () {
+      const names = ['Queijo prato', 'Queijo minas', 'Queijo mussarela'];
+      expect(query('QUEIJO TIROLEZ MUSS FAT', names), 'Muss');
+    });
+
+    test('sem palavra que ache, ou com uma só, fica o recorte', () {
+      expect(query('LIMAO TAITI KG', ['Arroz']), 'Limão taiti');
+      expect(query('PITAYA KG', ['Arroz']), 'Pitaya');
+    });
+
+    test('o recorte que já acha produtos, ou o produto de nome inteiro na etiqueta, não mudam', () {
+      expect(query('LIMAO TAHITI KG', ['Limão tahiti']), 'Limão tahiti');
+      expect(query('LIMAO TAHITI KG', ['Limão']), 'Limão');
     });
   });
 }

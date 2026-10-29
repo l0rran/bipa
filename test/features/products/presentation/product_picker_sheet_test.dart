@@ -117,21 +117,56 @@ void main() {
       expect(find.textContaining('Criar'), findsNothing);
     });
 
-    testWidgets('com outra variedade cadastrada, abre com a lida e oferece criá-la', (tester) async {
-      for (final (hint, other, name) in [
-        ('QUEIJO PRATO KG', 'Queijo mussarela', 'Queijo prato'),
-        ('TOMATE CEREJA KG', 'Tomate italiano', 'Tomate cereja'),
-        ('CARNE ACEM KG', 'Carne moída patinho', 'Carne acém'),
+    testWidgets('com outra variedade cadastrada, mostra o parecido e oferece criar a lida', (tester) async {
+      for (final (hint, other, word, name) in [
+        ('QUEIJO PRATO KG', 'Queijo mussarela', 'Queijo', 'Queijo prato'),
+        ('TOMATE CEREJA KG', 'Tomate italiano', 'Tomate', 'Tomate cereja'),
+        ('CARNE ACEM KG', 'Carne moída patinho', 'Carne', 'Carne acém'),
       ]) {
         await _pumpPicker(tester, nameHint: hint, names: [other]);
 
-        expect(find.widgetWithText(TextField, name), findsOneWidget, reason: hint);
+        expect(find.widgetWithText(TextField, word), findsOneWidget, reason: hint);
+        expect(
+          find.descendant(of: find.byType(ListTile), matching: find.text(other)),
+          findsOneWidget,
+          reason: hint,
+        );
         expect(find.text('Criar “$name”'), findsOneWidget, reason: hint);
-        expect(find.text(other), findsNothing, reason: hint);
 
         Navigator.of(tester.element(find.byType(ProductPickerSheet))).pop();
         await tester.pumpAndSettle();
       }
+    });
+
+    testWidgets('uma palavra a mais na etiqueta mostra o produto que existe e oferece criar o lido (G9)', (
+      tester,
+    ) async {
+      final chosen = await _pumpPicker(
+        tester,
+        nameHint: 'LIMAO TAITI KG',
+        names: const ['Limão tahiti', 'Arroz branco'],
+      );
+      final row = find.descendant(of: find.byType(ListTile), matching: find.text('Limão tahiti'));
+      final create = find.text('Criar “Limão taiti”');
+
+      expect(find.text('Na etiqueta: LIMAO TAITI KG'), findsOneWidget);
+      expect(find.widgetWithText(TextField, 'Limão'), findsOneWidget);
+      expect(row, findsOneWidget);
+      expect(create, findsOneWidget);
+      expect(tester.getTopLeft(row).dy, lessThan(tester.getTopLeft(create).dy));
+
+      await tester.tap(row);
+      await tester.pumpAndSettle();
+      expect(chosen.value, isA<ExistingProduct>().having((e) => e.product.name, 'nome', 'Limão tahiti'));
+    });
+
+    testWidgets('com marca fora da lista, o queijo cadastrado aparece e "Criar" leva o recorte (G9)', (tester) async {
+      final chosen = await _pumpPicker(tester, nameHint: 'MUSSARELA TIROLEZ KG', names: const ['Queijo mussarela']);
+
+      expect(find.descendant(of: find.byType(ListTile), matching: find.text('Queijo mussarela')), findsOneWidget);
+      await tester.tap(find.text('Criar “Mussarela tirolez”'));
+      await tester.pumpAndSettle();
+      expect(chosen.value, isA<NewProduct>().having((n) => n.name, 'nome', 'Mussarela tirolez'));
     });
 
     testWidgets('depois de digitar, "Criar" usa o que a pessoa digitou', (tester) async {
