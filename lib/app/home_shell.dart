@@ -17,7 +17,8 @@ import 'package:go_router/go_router.dart';
 ///
 /// Durante uma compra, a barra da compra fica acima da navegação em todas as
 /// abas, menos na Lista, que já mostra o mesmo progresso. "Continuar" abre o
-/// modo carrinho.
+/// modo carrinho. Com a letra acima de 160%, ela fica no lugar do bipar
+/// flutuante, que sai, e segurá-la abre o menu do bipar (H12).
 ///
 /// Rolando o conteúdo de qualquer aba para baixo, a barra encolhe; para cima,
 /// no topo ou ao trocar de aba, ela volta ao normal. Com a letra a partir de
@@ -57,6 +58,8 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     final trip = ref.watch(shoppingTripSummaryProvider);
     final marketName = ref.watch(activeTripMarketNameProvider);
     final navigationShell = widget.navigationShell;
+    // Com o bipar flutuante, a barra da compra assume o toque longo dele.
+    final floatingScan = ScanNavBar.floatsScan(context);
 
     void goBranch(int index) {
       _compact.expand();
@@ -102,10 +105,19 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                 ),
                 // "Continuar" volta para o modo carrinho.
                 onTap: () => context.push(Routes.cartMode),
+                // Acima de 160%, o bipar flutuante sai e a barra fica no
+                // lugar dele: segurar abre o menu, ancorado nela.
+                onLongPress: floatingScan
+                    ? (barRect) {
+                        _openScanMenu(context, ref, shopping: true, anchor: barRect);
+                      }
+                    : null,
+                longPressHint: l10n.navScanMore,
               ),
             ),
             _ => null,
           },
+          aboveReplacesScan: true,
           selectedIndex: navigationShell.currentIndex,
           onSelected: goBranch,
           // Durante a compra, bipar é o modo carrinho; fora dela, a câmera.

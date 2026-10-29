@@ -7,6 +7,7 @@ import 'package:bipa/core/design_system/components/shrink_to_fit.dart';
 import 'package:bipa/core/design_system/components/tap_target.dart';
 import 'package:bipa/core/design_system/text_scale.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// A lista no Início (ListPreview do design system): quantos itens, o total
 /// estimado, as miniaturas do que tem nela e uma ação só.
@@ -592,6 +593,10 @@ class _Quantity extends StatelessWidget {
 
 /// A compra em andamento (ShoppingBar do design system): fica acima da
 /// navegação com o progresso da lista e o total, e "Continuar" volta à lista.
+///
+/// Com [onLongPress], segurar a barra faz o que segurar o bipar faz: com
+/// letra acima de 160%, durante a compra, ela assume o papel do bipar
+/// flutuante, que sai (H12, quadro "NavLetraGrandeCompra", decisão A).
 class ShoppingBar extends StatelessWidget {
   const ShoppingBar({
     required this.title,
@@ -600,6 +605,8 @@ class ShoppingBar extends StatelessWidget {
     required this.semanticLabel,
     this.progress,
     this.subtitle,
+    this.onLongPress,
+    this.longPressHint,
     super.key,
   });
 
@@ -615,11 +622,25 @@ class ShoppingBar extends StatelessWidget {
   final VoidCallback onTap;
   final String semanticLabel;
 
+  /// Segurar a barra. Recebe onde ela está na tela, em coordenadas globais,
+  /// para o menu se ancorar nela.
+  final ValueChanged<Rect>? onLongPress;
+
+  /// O que o leitor de tela diz do toque longo: "Mais opções".
+  final String? longPressHint;
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final subtitle = this.subtitle;
     final progress = this.progress;
+    final onLongPress = this.onLongPress;
+    // Onde a barra está na tela.
+    Rect globalRect() {
+      final box = context.findRenderObject()! as RenderBox;
+      return box.localToGlobal(Offset.zero) & box.size;
+    }
+
     // Uma linha no normal; com letra grande, duas, e a barra cresce em vez de
     // cortar o total e o mercado (H3).
     final lines = MediaQuery.textScalerOf(context).scale(1) > 1.3 ? 2 : 1;
@@ -629,6 +650,9 @@ class ShoppingBar extends StatelessWidget {
       label: semanticLabel,
       excludeSemantics: true,
       onTap: onTap,
+      // O toque longo não se vê: o leitor de tela o anuncia.
+      onLongPress: onLongPress == null ? null : () => onLongPress(globalRect()),
+      onLongPressHint: onLongPress == null ? null : longPressHint,
       child: TweenAnimationBuilder<double>(
         // Entra subindo com mola.
         tween: Tween(begin: 0, end: 1),
@@ -643,6 +667,12 @@ class ShoppingBar extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: onTap,
+            onLongPress: onLongPress == null
+                ? null
+                : () {
+                    HapticFeedback.mediumImpact();
+                    onLongPress(globalRect());
+                  },
             // Pelo menos 60; com letra grande, cresce em vez de cortar.
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: 60),

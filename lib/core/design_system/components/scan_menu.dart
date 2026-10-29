@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
@@ -14,6 +16,10 @@ typedef ScanMenuItem<T> = ({T value, IconData icon, String label, String? hint})
 /// `ScanNavBar` passa no toque longo): o "×" fica exatamente no lugar dele, e
 /// as pílulas, logo acima, alinhadas à direita quando o botão flutua à
 /// direita (letra grande). Sem [anchor], o menu fica no meio, embaixo.
+///
+/// Uma [anchor] mais larga que alta é a barra da compra, que fica no lugar do
+/// bipar flutuante durante a compra com letra grande (H12): o "×" é um botão
+/// de 64 no fim dela, e as pílulas sobem acima da barra, alinhadas ao "×".
 Future<T?> showScanMenu<T>(
   BuildContext context, {
   required List<ScanMenuItem<T>> items,
@@ -137,17 +143,28 @@ class _ScanMenu<T> extends StatelessWidget {
     );
   }
 
+  /// Onde o "×" fica: sobre o botão de bipar ou, numa [anchor] larga (a
+  /// barra da compra), no fim dela, centrado na altura e com a folga de
+  /// dentro da barra.
+  static Rect _closeRect(Rect anchor, TextDirection direction) {
+    if (anchor.width <= anchor.height * 1.5) return anchor;
+    final side = math.min(64.0, anchor.height);
+    final left = direction == TextDirection.ltr ? anchor.right - BipaSpacing.s2 - side : anchor.left + BipaSpacing.s2;
+    return Rect.fromLTWH(left, anchor.center.dy - side / 2, side, side);
+  }
+
   /// O "×" exatamente sobre o botão de bipar, e as pílulas logo acima.
   Widget _anchored(BuildContext context, Rect anchor) => LayoutBuilder(
     builder: (context, constraints) {
       final size = constraints.biggest;
+      final close = _closeRect(anchor, Directionality.of(context));
       // O bipar flutuante fica à direita; o da barra normal, no meio.
-      final atEnd = anchor.center.dx > size.width * 2 / 3;
+      final atEnd = close.center.dx > size.width * 2 / 3;
       return Stack(
         children: [
           Positioned(
             left: atEnd ? BipaSpacing.s3 : 0,
-            right: atEnd ? size.width - anchor.right : 0,
+            right: atEnd ? size.width - close.right : 0,
             bottom: size.height - anchor.top + BipaSpacing.s2,
             child: Padding(
               padding: atEnd ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: BipaSpacing.s3),
@@ -158,7 +175,7 @@ class _ScanMenu<T> extends StatelessWidget {
               ),
             ),
           ),
-          Positioned.fromRect(rect: anchor, child: _close(context, anchor.shortestSide)),
+          Positioned.fromRect(rect: close, child: _close(context, close.shortestSide)),
         ],
       );
     },

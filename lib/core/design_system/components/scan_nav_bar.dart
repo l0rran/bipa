@@ -39,6 +39,9 @@ class ScanNavDestination {
 ///   dele.
 /// - A partir de [largeTextScale], ou com o TalkBack, a barra não encolhe ao
 ///   rolar ([canCompact]): ali o rótulo é a informação.
+/// - Com [aboveReplacesScan] e o bipar flutuante, [above] (a barra da compra)
+///   assume o papel do bipar, e o botão flutuante sai (H12, quadro
+///   "NavLetraGrandeCompra", decisão A): um amarelo só no canto da tela.
 ///
 /// Segurar um destino mostra o rótulo grande num balão, como o Large Content
 /// Viewer do iOS. O balão é só dos destinos: segurar o bipar abre o menu.
@@ -55,6 +58,7 @@ class ScanNavBar extends StatelessWidget {
     this.scanLongPressLabel,
     this.compact = false,
     this.above,
+    this.aboveReplacesScan = false,
     super.key,
   });
 
@@ -79,6 +83,12 @@ class ScanNavBar extends StatelessWidget {
   /// O que fica logo acima da barra (a barra da compra). Desce junto quando
   /// a barra encolhe, para não sobrar um vão entre os dois.
   final Widget? above;
+
+  /// Com o bipar flutuante (letra acima de 160%), [above] fica no lugar dele:
+  /// o botão sai, e quem monta [above] liga nele o toque longo do menu do
+  /// bipar ([floatsScan] diz quando). Sem [above], o bipar flutua como
+  /// sempre; até 160%, nada muda.
+  final bool aboveReplacesScan;
 
   /// O anel que respira no botão de bipar, para os testes acharem.
   @visibleForTesting
@@ -355,20 +365,22 @@ class ScanNavBar extends StatelessWidget {
       children: [
         // O bipar faz parte da caixa da barra: o espaço que ela reserva no
         // layout inclui o botão, e o fim das telas não fica atrás dele. Ao
-        // lado do botão, o toque passa para o conteúdo.
-        Padding(
-          padding: const EdgeInsetsDirectional.only(end: _margin + _floatingInset, bottom: _floatingGap),
-          child: Align(
-            alignment: AlignmentDirectional.centerEnd,
-            child: _ScanButton(
-              label: scanLabel,
-              size: _scanSize,
-              onPressed: onScan,
-              onLongPress: onScanLongPress,
-              longPressLabel: scanLongPressLabel,
+        // lado do botão, o toque passa para o conteúdo. Quando [above] fica
+        // no lugar dele, o espaço sai junto.
+        if (above == null || !aboveReplacesScan)
+          Padding(
+            padding: const EdgeInsetsDirectional.only(end: _margin + _floatingInset, bottom: _floatingGap),
+            child: Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: _ScanButton(
+                label: scanLabel,
+                size: _scanSize,
+                onPressed: onScan,
+                onLongPress: onScanLongPress,
+                longPressLabel: scanLongPressLabel,
+              ),
             ),
           ),
-        ),
         ?above,
         SafeArea(
           top: false,

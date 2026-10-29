@@ -6,7 +6,10 @@ import 'dart:ui' as ui;
 import 'package:bipa/app/home_shell.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/components/scan_nav_bar.dart';
+import 'package:bipa/core/design_system/components/shopping_list.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
+import 'package:bipa/core/navigation/routes.dart';
+import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -34,7 +37,13 @@ class _Tabs {
   }
 }
 
-Widget _app(_Tabs tabs, {bool reduceMotion = true, double textScale = 1, bool accessibleNavigation = false}) {
+Widget _app(
+  _Tabs tabs, {
+  bool reduceMotion = true,
+  double textScale = 1,
+  bool accessibleNavigation = false,
+  ShoppingTripSummary? trip,
+}) {
   final router = GoRouter(
     initialLocation: _paths.first,
     routes: [
@@ -67,12 +76,16 @@ Widget _app(_Tabs tabs, {bool reduceMotion = true, double textScale = 1, bool ac
         path: '/cobre',
         builder: (_, _) => const Scaffold(body: Text('cobre')),
       ),
+      GoRoute(
+        path: Routes.cartMode,
+        builder: (_, _) => const Scaffold(body: Text('carrinho')),
+      ),
     ],
   );
   return ProviderScope(
     overrides: [
-      // Fora de uma compra: sem a barra da compra e sem banco.
-      shoppingTripSummaryProvider.overrideWith((ref) => null),
+      // Sem banco; fora de uma compra, sem a barra da compra.
+      shoppingTripSummaryProvider.overrideWith((ref) => trip),
       activeTripMarketNameProvider.overrideWith((ref) => null),
     ],
     child: MaterialApp.router(
@@ -151,6 +164,9 @@ Rect _scanRect(WidgetTester tester) => tester.getRect(
 /// A pílula de vidro na tela.
 Rect _pillRect(WidgetTester tester) =>
     tester.getRect(find.descendant(of: find.byType(ScanNavBar), matching: find.byType(BackdropFilter)));
+
+/// Uma compra em andamento: "3 de 7 itens".
+const _trip = ShoppingTripSummary(done: 3, total: 7);
 
 /// A escala de letra como porcentagem, para o nome do teste.
 String _percent(double scale) => '${(scale * 100).round()}%';
@@ -587,5 +603,101 @@ void main() {
       expect(ring, findsNothing);
       expect(tester.hasRunningAnimations, isFalse);
     });
+  });
+
+  // H12, quadro "NavLetraGrandeCompra", decisão A: acima de 160%, durante a
+  // compra, o bipar flutuante sai e a barra da compra fica no lugar dele.
+  group('letra grande durante a compra', () {
+    final shoppingBar = find.byType(ShoppingBar);
+    final scanButton = find.byIcon(Icons.qr_code_scanner_rounded);
+
+    for (final scale in [1.7, 2.0]) {
+      testWidgets('a ${_percent(scale)}, a barra da compra fica no lugar do bipar flutuante', (tester) async {
+        final semantics = tester.ensureSemantics();
+        _usePhone(tester, 360);
+        await tester.pumpWidget(_app(tabs, textScale: scale, trip: _trip));
+        await tester.pumpAndSettle();
+
+        // Um amarelo só: sem o bipar, e a barra da compra logo acima da pílula.
+        expect(scanButton, findsNothing);
+        expect(shoppingBar, findsOneWidget);
+        final bar = tester.getRect(shoppingBar);
+        final pill = _pillRect(tester);
+        expect(bar.bottom, lessThanOrEqualTo(pill.top));
+        expect(pill.top - bar.bottom, lessThan(16));
+
+        // O conteúdo reserva a barra da compra e a pílula, sem o vão do bipar.
+        final content = tester.element(find.byKey(ValueKey(_paths.first)));
+        final reserved = MediaQuery.paddingOf(content).bottom;
+        expect(reserved, greaterThanOrEqualTo(_phoneHeight - bar.top));
+        expect(reserved, lessThan(_phoneHeight - bar.top + 64));
+
+        // O leitor de tela ouve o toque longo da barra e o que ele faz.
+        final barNode = find.descendant(
+          of: shoppingBar,
+          matching: find.byWidgetPredicate(
+            (widget) => widget is Semantics && widget.properties.hintOverrides?.onLongPressHint == 'Mais opções',
+          ),
+        );
+        expect(barNode, findsOneWidget);
+        expect(tester.getSemantics(barNode), isSemantics(isButton: true, hasTapAction: true, hasLongPressAction: true));
+
+        // Segurar a barra abre o menu do bipar, com o "×" no fim dela e as
+        // pílulas acima dela, alinhadas ao "×".
+        await tester.longPress(shoppingBar);
+        await tester.pumpAndSettle();
+        final cart = find.text('Modo carrinho');
+        expect(cart, findsOneWidget);
+        final close = tester.getRect(find.byIcon(Icons.close_rounded));
+        expect(close.center.dy, closeTo(bar.center.dy, 0.5));
+        expect(close.right, lessThanOrEqualTo(bar.right));
+        expect(close.right, greaterThan(bar.right - 16));
+        final menuPill = tester.getRect(find.ancestor(of: cart, matching: find.byType(Material)).first);
+        expect(menuPill.bottom, lessThan(bar.top));
+
+        // "Modo carrinho" volta à compra.
+        await tester.tap(cart);
+        await tester.pumpAndSettle();
+        expect(find.text('carrinho'), findsOneWidget);
+        semantics.dispose();
+      });
+    }
+
+    testWidgets('a 200%, tocar na barra da compra continua a compra', (tester) async {
+      _usePhone(tester, 360);
+      await tester.pumpWidget(_app(tabs, textScale: 2, trip: _trip));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Continuar'));
+      await tester.pumpAndSettle();
+      expect(find.text('carrinho'), findsOneWidget);
+    });
+
+    testWidgets('a 200%, na Lista, sem a barra da compra, o bipar flutua como sempre', (tester) async {
+      final semantics = tester.ensureSemantics();
+      _usePhone(tester, 360);
+      await tester.pumpWidget(_app(tabs, textScale: 2, trip: _trip));
+      await tester.pumpAndSettle();
+      await tester.tap(find.bySemanticsLabel('Lista'));
+      await tester.pumpAndSettle();
+      expect(shoppingBar, findsNothing);
+      expect(_scanRect(tester).size, const Size.square(64));
+      semantics.dispose();
+    });
+
+    for (final scale in [1.0, 1.5]) {
+      testWidgets('a ${_percent(scale)}, o bipar fica no meio e a barra da compra não tem toque longo', (tester) async {
+        final semantics = tester.ensureSemantics();
+        _usePhone(tester, 360);
+        await tester.pumpWidget(_app(tabs, textScale: scale, trip: _trip));
+        await tester.pumpAndSettle();
+        expect(shoppingBar, findsOneWidget);
+        expect(_scanRect(tester).center.dx, closeTo(180, 0.5));
+        expect(
+          tester.getSemantics(find.descendant(of: shoppingBar, matching: find.byType(Semantics)).first),
+          isSemantics(isButton: true, hasTapAction: true, hasLongPressAction: false),
+        );
+        semantics.dispose();
+      });
+    }
   });
 }
