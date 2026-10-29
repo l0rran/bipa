@@ -61,3 +61,6 @@ app.*.map.json
 # Banco de testes do OCR (tool/ocr_bench)
 tool/ocr_bench/tessdata/
 __pycache__/
+
+# Recorte baixado pelo gerador do catálogo (tool/catalogo)
+tool/catalogo/cache/
