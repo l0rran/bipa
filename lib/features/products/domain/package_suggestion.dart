@@ -68,7 +68,7 @@ final class PackageSuggestion {
   /// A embalagem do catálogo pronto (ADR 0024) já traz marca, tamanho e
   /// unidade; falta dizer de que produto da pessoa ela é (ADR 0013).
   ///
-  /// O produto é o que cobre o nome do catálogo ([_catalogProductIn]):
+  /// O produto é o que começa o nome do catálogo ([_catalogProductIn]):
   /// "Arroz branco" para "Arroz Branco Tipo 1 Tio João", mas não "Leite"
   /// para "Leite Condensado Semidesnatado" (G12). Sem nenhum, sugere um
   /// produto novo com o nome do catálogo sem a marca, o tamanho e as palavras
@@ -131,71 +131,68 @@ final class PackageSuggestion {
 
 /// O produto da pessoa para a embalagem do catálogo (G12). O nome do
 /// catálogo é longo, e nele cabem produtos genéricos demais: "Leite" está em
-/// "Leite Condensado Semidesnatado ITALAC", e "Uva" em "Fanta Uva". Por isso
-/// um produto só é escolhido quando:
+/// "Leite Condensado Semidesnatado ITALAC", "Sal" em "Manteiga Sem Sal", e
+/// "Uva" em "Fanta Uva". Por isso um produto só é escolhido quando:
 ///
 /// 1. todas as palavras do nome dele estão no nome do catálogo, como na
 ///    etiqueta ([_productIn]);
-/// 2. elas cobrem mais da metade das palavras de [newName], o nome que o
-///    catálogo sugere sem marca e tamanho ("Fanta uva", com a marca, porque
-///    sem ela sobraria só o sabor). Palavras que não mudam o produto
-///    ([_weakWords]: "branco", "tradicional", "uht") não contam: "Arroz"
-///    cobre "Arroz branco", mas não "Arroz carreteiro cozinha sabor";
+/// 2. ele é o começo de [newName], o nome que o catálogo sugere sem marca e
+///    tamanho: a primeira palavra que diz o que é ("Uva" em "Uva Thompson",
+///    "Leite" em "Leite UHT integral"), e não uma do meio ("Sal" em
+///    "Manteiga extra sem sal", "Uva" em "Fanta uva", que leva a marca
+///    porque sem ela sobraria só o sabor);
 /// 3. o que sobra não tem palavra que muda o tipo ([_typeWords]: sabor,
-///    "condensado", "refrigerante", "pronto"), a menos que o produto tenha a
-///    marca no nome ("Coca-cola" para "Refrigerante Coca-Cola");
+///    "condensado", "carreteiro", "refrigerante", "suco", "pronto") nem a
+///    marca que ficou no nome. Versão e linha não contam: "integral", "em
+///    pó", "desnatado", "Lavagem Perfeita", "Cristal";
 /// 4. o tipo dele, pelo nome, combina com a categoria do catálogo
 ///    ([_kindsAgree]): "Laranja" não recebe um refrigerante de laranja.
 ///
-/// Entre os que passam, vence o que cobre mais, depois o de mais palavras, e
-/// depois o do tipo da categoria. Na dúvida, nenhum: a folha sugere o
-/// produto novo, e a escolha de produto mostra os parecidos a um toque.
+/// Um produto com a marca no nome passa pelos passos 2 e 3: "Coca-cola" fica
+/// com "Refrigerante Coca-Cola", e "Nescau" com "Achocolatado Pó Nescau".
+/// Entre os que passam, vence o de mais palavras, depois o do tipo da
+/// categoria. Na dúvida, nenhum: a folha sugere o produto novo, e a escolha
+/// de produto mostra os parecidos a um toque.
 Product? _catalogProductIn(CatalogPackage package, {required String newName, required List<Product> products}) {
   final words = _words(foldText(package.name));
   final available = words.toSet();
   final named = _significantWords(_words(foldText(newName)));
+  final head = named.isEmpty ? null : named.first;
   final brandWords = {
     for (final brand in package.brand?.split(',') ?? const <String>[]) ..._words(foldText(brand)),
     for (final i in _brandPositions(words)) words[i],
   };
 
   Product? best;
-  var (bestCoverage, bestLength, bestKind) = (0.0, 0, false);
+  var (bestLength, bestKind) = (0, false);
   for (final product in products) {
     final productWords = _words(foldText(product.name)).where((w) => !_isNumber(w)).toSet();
     if (productWords.isEmpty || !available.containsAll(productWords)) continue;
     final productKind = ProductKind.of(product.name);
     if (!_kindsAgree(package.kind, productKind)) continue;
 
-    final own = _significantWords(productWords);
-    final all = {...named, ...own};
-    if (all.isNotEmpty && own.length * 2 <= all.length) continue;
-    final extra = all.difference(own);
-    if (extra.any(_typeWords.contains) && !own.any(brandWords.contains)) continue;
+    if (!productWords.any(brandWords.contains)) {
+      if (head != null && !productWords.contains(head)) continue;
+      final extra = named.where((word) => !productWords.contains(word));
+      if (extra.any((word) => _typeWords.contains(word) || brandWords.contains(word))) continue;
+    }
 
-    final coverage = all.isEmpty ? 1.0 : own.length / all.length;
     final sameKind = package.kind != null && productKind == package.kind;
     final better =
         best == null ||
-        coverage > bestCoverage ||
-        (coverage == bestCoverage &&
-            (productWords.length > bestLength || (productWords.length == bestLength && sameKind && !bestKind)));
-    if (better) (best, bestCoverage, bestLength, bestKind) = (product, coverage, productWords.length, sameKind);
+        productWords.length > bestLength ||
+        (productWords.length == bestLength && sameKind && !bestKind);
+    if (better) (best, bestLength, bestKind) = (product, productWords.length, sameKind);
   }
   return best;
 }
 
-/// As palavras que dizem o que o produto é: sem número, tamanho, embalagem,
-/// ligação nem [_weakWords].
-Set<String> _significantWords(Iterable<String> words) => {
+/// As palavras que dizem o que o produto é, na ordem do nome: sem número,
+/// tamanho, embalagem nem ligação.
+List<String> _significantWords(Iterable<String> words) => [
   for (final word in words)
-    if (!_isNumber(word) &&
-        !_connectors.contains(word) &&
-        !_packaging.contains(word) &&
-        !_units.contains(word) &&
-        !_weakWords.contains(word))
-      word,
-};
+    if (!_isNumber(word) && !_connectors.contains(word) && !_packaging.contains(word) && !_units.contains(word)) word,
+];
 
 /// A categoria do catálogo e o tipo do produto da pessoa, deduzido do nome,
 /// combinam: são o mesmo, ou um deles não diz (sem categoria, "outros"), ou
@@ -209,50 +206,24 @@ bool _kindsAgree(ProductKind? catalog, ProductKind product) {
   return {catalog, product}.containsAll(const {ProductKind.dairy, ProductKind.sweets});
 }
 
-/// Palavras que não mudam o que o produto é, só a versão mais comum dele
-/// ("Arroz branco tipo 1", "Café torrado e moído extraforte", "Leite UHT"):
-/// não contam para cobrir o nome do catálogo. Fica de fora o que muda o
-/// preço ou o uso ("integral", "carioca", "em pó").
-const _weakWords = {
-  'tradicional',
-  'original',
-  'classico',
-  'classic',
-  'especial',
-  'extra',
-  'premium',
-  'selecionado',
-  'selecionada',
-  'novo',
-  'nova',
-  'uht',
-  'longa',
-  'vida',
-  'branco',
-  'branca',
-  'refinado',
-  'refinada',
-  'torrado',
-  'moido',
-  'vacuo',
-  'forte',
-  'extraforte',
-  'suave',
-};
-
 /// Palavras que, a mais no nome do catálogo, mudam o tipo do produto: o
 /// leite condensado não é leite, nem o arroz carreteiro, arroz. Também os
-/// sabores ([_flavors]): a "Fanta Uva" não é uva.
+/// sabores ([_flavors]): a "Fanta Uva" não é uva. E as palavras em espanhol
+/// que o catálogo traz com código brasileiro ("Arroz con leche"), para não
+/// cair num produto em português.
 const _typeWords = {
   ..._flavors,
   'chocolate',
   'condensado',
   'condensada',
   'carreteiro',
+  'tropeiro',
   'refrigerante',
   'suco',
   'nectar',
   'bebida',
+  'fermentado',
+  'fermentada',
   'sabor',
   'sabores',
   'pronto',
@@ -263,16 +234,39 @@ const _typeWords = {
   'cozida',
   'recheado',
   'recheada',
+  'empanado',
+  'empanada',
   'instantaneo',
   'instantanea',
   'soluvel',
   'achocolatado',
   'molho',
+  'caldo',
+  'tempero',
   'creme',
   'doce',
+  'mel',
+  'queijo',
   'passa',
   'polpa',
   'geleia',
+  'gelatina',
+  'pudim',
+  'sorvete',
+  'bolo',
+  'farofa',
+  'pipoca',
+  'palha',
+  'frita',
+  'chips',
+  'amendoa',
+  'amendoas',
+  'con',
+  'leche',
+  'crema',
+  'polvo',
+  'jugo',
+  'dulce',
 };
 
 /// A marca do catálogo, que pode vir com várias separadas por vírgula
