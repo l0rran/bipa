@@ -32,6 +32,9 @@ dependencies:
   google_mlkit_text_recognition: ^0.15.0
   intl: ^0.20.2
   meta: ^1.15.0
+  # A versão do app, mostrada nos Ajustes. Já vinha com o sentry_flutter; aqui
+  # passa a ser dependência direta, sem pacote novo no build.
+  package_info_plus: ^10.2.2
   # Pasta de documentos do app, onde ficam as fotos dos produtos.
   path_provider: ^2.1.6
   # Relatório de falhas, só com consentimento e com filtro de privacidade (ADR 0025).

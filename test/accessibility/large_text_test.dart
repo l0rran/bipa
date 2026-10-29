@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:bipa/core/crash_reporting/crash_reporting_providers.dart';
 import 'package:bipa/core/database/app_database.dart';
 import 'package:bipa/core/database/database_provider.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
@@ -44,6 +45,8 @@ import 'package:bipa/features/products/presentation/product_detail_page.dart';
 import 'package:bipa/features/products/presentation/product_form_page.dart';
 import 'package:bipa/features/products/presentation/products_page.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
+import 'package:bipa/features/settings/presentation/settings_page.dart';
+import 'package:bipa/features/settings/presentation/settings_providers.dart';
 import 'package:bipa/features/shopping_list/domain/trip_review.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_page.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
@@ -57,8 +60,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 
+import '../helpers/crash_reporting_fakes.dart';
 import '../helpers/fakes.dart';
 import '../helpers/test_database.dart';
 
@@ -247,6 +252,7 @@ Future<ProviderContainer> _pumpScreen(
   WidgetTester tester,
   Widget screen, {
   Future<void> Function(ProviderContainer container)? prepare,
+  List<Override> overrides = const [],
 }) async {
   _usePhone(tester);
 
@@ -257,6 +263,7 @@ Future<ProviderContainer> _pumpScreen(
       clockProvider.overrideWithValue(() => _now),
       idGeneratorProvider.overrideWithValue(SequentialIdGenerator()),
       locationServiceProvider.overrideWithValue(_FixedLocation()),
+      ...overrides,
     ],
   );
   addTearDown(() async {
@@ -398,6 +405,20 @@ void _tests() {
       expect(find.text('2 embalagens'), findsOneWidget);
       expect(find.text('o kg'), findsWidgets);
       expect(find.text('Cadastrar produto'), findsOneWidget);
+    });
+
+    testWidgets('Ajustes', (tester) async {
+      await _pumpScreen(
+        tester,
+        const SettingsPage(),
+        overrides: [
+          crashReporterProvider.overrideWithValue(FakeCrashReporter()),
+          appVersionProvider.overrideWith((ref) async => '0.1.0'),
+        ],
+      );
+      expect(find.text('Relatório de falhas'), findsOneWidget);
+      expect(find.text('O que nunca vai'), findsOneWidget);
+      expect(find.text('0.1.0'), findsOneWidget);
     });
 
     testWidgets('folha "Fim da compra"', (tester) async {

@@ -235,9 +235,30 @@ class _HomePageState extends ConsumerState<HomePage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Semantics(
-                          header: true,
-                          child: Text(l10n.homeTitle, style: BipaText.headline.copyWith(color: context.colors.ink)),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Semantics(
+                                header: true,
+                                child: Text(
+                                  l10n.homeTitle,
+                                  style: BipaText.headline.copyWith(color: context.colors.ink),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: BipaSpacing.s3),
+                            // Os Ajustes (ADR 0025): o botão redondo das outras telas.
+                            IconButton.filled(
+                              tooltip: l10n.settingsTitle,
+                              style: IconButton.styleFrom(
+                                backgroundColor: context.colors.surface,
+                                foregroundColor: context.colors.ink,
+                                fixedSize: const Size.square(48),
+                              ),
+                              onPressed: () => context.push(Routes.settings),
+                              icon: const Icon(Icons.settings_outlined),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: BipaSpacing.s4),
                         BipaSearchBar(
