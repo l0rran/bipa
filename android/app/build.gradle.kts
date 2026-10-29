@@ -21,7 +21,8 @@ android {
         applicationId = "dev.l0rran.bipa"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // Android 8.0: o sentry_flutter 10 (ADR 0025) não aceita menos.
+        minSdk = 26
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
