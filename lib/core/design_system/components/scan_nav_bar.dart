@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' show ImageFilter, clampDouble, lerpDouble;
 
 import 'package:bipa/core/design_system/bipa_metrics.dart';
@@ -25,6 +26,23 @@ class ScanNavDestination {
 /// desenho encolhe para baixo. Quem decide quando encolher é o
 /// [ScanNavBarCompactController].
 ///
+/// Com letra grande (H8, quadro "NavLetraGrande", decidido em 28/10/2026: "A
+/// até 160%, B acima"):
+///
+/// - Até [floatingScanScale] (160%), a barra de sempre: os rótulos crescem
+///   até [largeTextScale] (130%) e, se não couberem, encolhem até caber, todos
+///   no mesmo tamanho, em vez de serem cortados.
+/// - Acima disso, o bipar sai do meio e flutua acima da barra, à direita, e
+///   os quatro destinos dividem a largura. Os rótulos crescem com a letra até
+///   caber e só então encolhem; a pílula cresce junto. O espaço reservado no
+///   layout inclui o botão flutuante, para o fim das telas não ficar atrás
+///   dele.
+/// - A partir de [largeTextScale], ou com o TalkBack, a barra não encolhe ao
+///   rolar ([canCompact]): ali o rótulo é a informação.
+///
+/// Segurar um destino mostra o rótulo grande num balão, como o Large Content
+/// Viewer do iOS. O balão é só dos destinos: segurar o bipar abre o menu.
+///
 /// Use com `Scaffold(extendBody: true)` para o conteúdo passar por trás.
 class ScanNavBar extends StatelessWidget {
   const ScanNavBar({
@@ -46,13 +64,16 @@ class ScanNavBar extends StatelessWidget {
   final VoidCallback onScan;
   final String scanLabel;
 
-  /// Segurar o botão abre mais opções (protótipo "Menu do bipar").
-  final VoidCallback? onScanLongPress;
+  /// Segurar o botão abre mais opções (protótipo "Menu do bipar"). Recebe
+  /// onde o botão fica na tela, em coordenadas globais e com a barra inteira
+  /// (não a compacta), para o menu pôr o "×" no lugar dele.
+  final ValueChanged<Rect>? onScanLongPress;
 
   /// O que o leitor de tela diz do toque longo: "Mais opções".
   final String? scanLongPressLabel;
 
-  /// Barra encolhida, sem os rótulos (eles continuam no leitor de tela).
+  /// Barra encolhida, sem os rótulos (eles continuam no leitor de tela). Com
+  /// letra grande ou com o TalkBack, a barra ignora o pedido ([canCompact]).
   final bool compact;
 
   /// O que fica logo acima da barra (a barra da compra). Desce junto quando
@@ -63,11 +84,37 @@ class ScanNavBar extends StatelessWidget {
   @visibleForTesting
   static const ringKey = ValueKey('scan-ring');
 
+  /// O balão com o rótulo grande, para os testes acharem.
+  @visibleForTesting
+  static const balloonKey = ValueKey('nav-balloon');
+
+  /// A partir desta escala de letra, a barra não encolhe ao rolar, e os
+  /// rótulos da barra com o bipar no meio param de crescer (como no
+  /// `NavigationBar` do Flutter).
+  static const largeTextScale = 1.3;
+
+  /// Acima desta escala de letra, o bipar flutua acima da barra.
+  static const floatingScanScale = 1.6;
+
+  // A escala vem de uma conta com ponto flutuante: 12 × 1,6 ÷ 12 dá um pouco
+  // mais que 1,6. A folga mantém os 160% do Android do lado da barra normal.
+  static const _scaleTolerance = 0.005;
+
+  // O rótulo: `BipaText.caption`, 12 px em linhas de 16.
+  static const _labelSize = 12.0;
+  static const _labelLineHeight = 16.0;
+
+  // Folga de cada lado do rótulo, para dois rótulos vizinhos não se tocarem.
+  static const _labelPadding = 2.0;
+
   // As medidas vêm do `.bipa-nav` e do `.bipa-scan` do design system.
   static const _barHeight = 68.0;
   static const _compactBarHeight = 52.0;
   static const _scanSize = 64.0;
   static const _compactScanSize = 56.0;
+
+  // A margem da barra nas laterais e embaixo.
+  static const _margin = 12.0;
 
   // O quanto o botão de bipar passa da borda de cima da pílula. No CSS ele tem
   // `margin-top: -40px` numa caixa de 64 px centrada na pílula de 68, o que
@@ -84,40 +131,157 @@ class ScanNavBar extends StatelessWidget {
   // ganhar 6 dp a mais de largura (a letra grande já aperta os rótulos, H8).
   static const _scanGap = 76.0;
 
+  // O bipar flutuante (quadro "NavLetraGrande", B): 12 px acima da pílula e
+  // 4 para dentro da margem; a pílula tem 8 px de folga nas laterais e 6 em
+  // cima e embaixo, e o destino, 30 do indicador e 2 de vão até o rótulo.
+  static const _floatingGap = 12.0;
+  static const _floatingInset = 4.0;
+  static const _floatingPadding = 8.0;
+  static const _pillPadding = 6.0;
+  static const _indicatorHeight = 30.0;
+  static const _labelGap = 2.0;
+
+  // O balão do rótulo grande fica 8 px acima do bipar da barra normal, e 12
+  // acima da pílula quando o bipar flutua.
+  static const _balloonGap = 8.0;
+
+  /// A escala da letra no rótulo da barra. O Android 14 escala a letra de
+  /// forma não linear, então a conta usa o tamanho do rótulo.
+  static double textScaleOf(BuildContext context) => MediaQuery.textScalerOf(context).scale(_labelSize) / _labelSize;
+
+  /// Se o bipar sai do meio e flutua acima da barra (acima de 160%).
+  static bool floatsScan(BuildContext context) => textScaleOf(context) > floatingScanScale + _scaleTolerance;
+
+  /// Se a barra pode encolher ao rolar: só com a letra abaixo de 130% e sem
+  /// o TalkBack.
+  static bool canCompact(BuildContext context) =>
+      textScaleOf(context) < largeTextScale - _scaleTolerance && !MediaQuery.accessibleNavigationOf(context);
+
   @override
   Widget build(BuildContext context) {
+    final scale = textScaleOf(context);
+    final floating = floatsScan(context);
+    final shrinkable = canCompact(context);
     // Com movimento reduzido, a troca é imediata.
     final still = MediaQuery.disableAnimationsOf(context);
-    return TweenAnimationBuilder<double>(
-      tween: Tween(end: compact ? 1 : 0),
-      duration: still ? Duration.zero : BipaMotion.slow,
-      curve: BipaMotion.spring,
-      builder: (context, t, _) => _build(context, t),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final padding = MediaQuery.paddingOf(context);
+        final width = constraints.hasBoundedWidth ? constraints.maxWidth : MediaQuery.sizeOf(context).width;
+        final barWidth = width - math.max(_margin, padding.left) - math.max(_margin, padding.right);
+        if (floating) {
+          final column = (barWidth - 2 * _floatingPadding) / destinations.length;
+          return _buildFloating(context, _fitLabels(context, column, scale));
+        }
+        final column = (barWidth - _scanGap) / destinations.length;
+        final labelScale = _fitLabels(context, column, math.min(scale, largeTextScale));
+        return TweenAnimationBuilder<double>(
+          tween: Tween(end: compact && shrinkable ? 1 : 0),
+          duration: still ? Duration.zero : BipaMotion.slow,
+          curve: BipaMotion.spring,
+          builder: (context, t, _) => _build(context, t, labelScale),
+        );
+      },
     );
   }
 
-  /// A barra em [t]: 0 é a normal e 1 a compacta. A mola passa um pouco de
-  /// 0 e de 1 antes de assentar.
-  Widget _build(BuildContext context, double t) {
+  /// A escala em que todos os rótulos cabem numa coluna de [columnWidth]:
+  /// [desired], se couber, ou a maior menor que ela que caiba. Os quatro
+  /// usam a mesma, e a conta usa o peso do destino escolhido, o mais largo,
+  /// para nada mudar de tamanho ao trocar de aba.
+  double _fitLabels(BuildContext context, double columnWidth, double desired) {
+    final available = columnWidth - 2 * _labelPadding;
+    if (available <= 0) return desired;
+    final style = DefaultTextStyle.of(context).style.merge(_labelStyle(context, selected: true));
+    final direction = Directionality.of(context);
+    double widestAt(double scale) {
+      var widest = 0.0;
+      for (final destination in destinations) {
+        final painter = TextPainter(
+          text: TextSpan(text: destination.label, style: style),
+          textDirection: direction,
+          textScaler: TextScaler.linear(scale),
+          maxLines: 1,
+        )..layout();
+        widest = math.max(widest, painter.width);
+        painter.dispose();
+      }
+      return widest;
+    }
+
+    // A conta parte do tamanho normal, para o resultado não depender da letra
+    // pedida quando ela não cabe. A largura não cresce em proporção exata com
+    // a letra (o arredondamento dos glifos), então confere de novo.
+    var scale = math.min(desired, available / widestAt(1));
+    for (var i = 0; i < 4; i++) {
+      final widest = widestAt(scale);
+      if (widest <= available) break;
+      scale *= available / (widest + 0.5);
+    }
+    return scale;
+  }
+
+  static TextStyle _labelStyle(BuildContext context, {required bool selected}) {
     final colors = context.colors;
+    return BipaText.caption.copyWith(
+      fontSize: _labelSize,
+      color: selected ? colors.ink : colors.inkMuted,
+      fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+    );
+  }
+
+  /// A pílula de vidro em volta de [child].
+  static Widget _glass(BuildContext context, Widget child) {
+    final colors = context.colors;
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        shape: const StadiumBorder(),
+        shadows: [BoxShadow(color: colors.ink.withValues(alpha: 0.12), blurRadius: 24, offset: const Offset(0, 8))],
+      ),
+      child: ClipPath(
+        clipper: const ShapeBorderClipper(shape: StadiumBorder()),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: _blur, sigmaY: _blur),
+          child: ColoredBox(color: colors.surfaceGlass, child: child),
+        ),
+      ),
+    );
+  }
+
+  Widget _destination(
+    int index, {
+    required double labelFactor,
+    required double labelScale,
+    required double balloonGap,
+  }) => Expanded(
+    child: _Destination(
+      destination: destinations[index],
+      selected: index == selectedIndex,
+      labelFactor: labelFactor,
+      labelScale: labelScale,
+      balloonGap: balloonGap,
+      onTap: () => onSelected(index),
+    ),
+  );
+
+  /// A barra com o bipar no meio, em [t]: 0 é a normal e 1 a compacta. A mola
+  /// passa um pouco de 0 e de 1 antes de assentar.
+  Widget _build(BuildContext context, double t, double labelScale) {
     final half = (destinations.length / 2).ceil();
     final barHeight = lerpDouble(_barHeight, _compactBarHeight, t)!;
     final scanSize = lerpDouble(_scanSize, _compactScanSize, t)!;
     final scanLift = lerpDouble(_scanLift, _compactScanLift, t)!;
     final labelFactor = clampDouble(1 - t, 0, 1);
+    // Onde o botão fica dentro da caixa da barra: no topo na barra normal.
+    final scanTop = _barHeight + _scanLift - barHeight - scanLift;
 
-    Widget destination(int index) => Expanded(
-      child: _Destination(
-        destination: destinations[index],
-        selected: index == selectedIndex,
-        labelFactor: labelFactor,
-        onTap: () => onSelected(index),
-      ),
-    );
+    Widget destination(int index) =>
+        _destination(index, labelFactor: labelFactor, labelScale: labelScale, balloonGap: scanLift + _balloonGap);
 
+    final onScanLongPress = this.onScanLongPress;
     final bar = SafeArea(
       top: false,
-      minimum: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      minimum: const EdgeInsets.fromLTRB(_margin, 0, _margin, _margin),
       // O botão de bipar sobe 18 px acima da pílula. A caixa inclui essa parte,
       // porque o toque não passa dos limites do pai. A altura é sempre a da
       // barra normal: compacta, a pílula encolhe para baixo e o toque acima
@@ -134,38 +298,30 @@ class ScanNavBar extends StatelessWidget {
               right: 0,
               bottom: 0,
               height: barHeight,
-              child: DecoratedBox(
-                decoration: ShapeDecoration(
-                  shape: const StadiumBorder(),
-                  shadows: [
-                    BoxShadow(color: colors.ink.withValues(alpha: 0.12), blurRadius: 24, offset: const Offset(0, 8)),
+              child: _glass(
+                context,
+                Row(
+                  children: [
+                    for (var i = 0; i < half; i++) destination(i),
+                    const SizedBox(width: _scanGap),
+                    for (var i = half; i < destinations.length; i++) destination(i),
                   ],
-                ),
-                child: ClipPath(
-                  clipper: const ShapeBorderClipper(shape: StadiumBorder()),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: _blur, sigmaY: _blur),
-                    child: ColoredBox(
-                      color: colors.surfaceGlass,
-                      child: Row(
-                        children: [
-                          for (var i = 0; i < half; i++) destination(i),
-                          const SizedBox(width: _scanGap),
-                          for (var i = half; i < destinations.length; i++) destination(i),
-                        ],
-                      ),
-                    ),
-                  ),
                 ),
               ),
             ),
             Positioned(
-              top: _barHeight + _scanLift - barHeight - scanLift,
+              top: scanTop,
               child: _ScanButton(
                 label: scanLabel,
                 size: scanSize,
                 onPressed: onScan,
-                onLongPress: onScanLongPress,
+                // O menu põe o "×" onde o botão fica na barra normal, que é
+                // como a barra volta ao abrir o menu.
+                onLongPress: onScanLongPress == null
+                    ? null
+                    : (rect) => onScanLongPress(
+                        Rect.fromLTWH(rect.center.dx - _scanSize / 2, rect.top - scanTop, _scanSize, _scanSize),
+                      ),
                 longPressLabel: scanLongPressLabel,
               ),
             ),
@@ -182,6 +338,57 @@ class ScanNavBar extends StatelessWidget {
         // Só no desenho (e no toque), sem mudar o layout.
         Transform.translate(offset: Offset(0, _barHeight - barHeight), child: above),
         bar,
+      ],
+    );
+  }
+
+  /// A barra com o bipar flutuando acima dela, à direita, para a letra acima
+  /// de 160%. Não encolhe: os rótulos estão ali porque a pessoa precisa deles.
+  Widget _buildFloating(BuildContext context, double labelScale) {
+    // A pílula cresce com o rótulo, a partir dos 68 px de sempre.
+    final pillHeight = math
+        .max(_barHeight, 2 * _pillPadding + _indicatorHeight + _labelGap + _labelLineHeight * labelScale + 1)
+        .ceilToDouble();
+    final above = this.above;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // O bipar faz parte da caixa da barra: o espaço que ela reserva no
+        // layout inclui o botão, e o fim das telas não fica atrás dele. Ao
+        // lado do botão, o toque passa para o conteúdo.
+        Padding(
+          padding: const EdgeInsetsDirectional.only(end: _margin + _floatingInset, bottom: _floatingGap),
+          child: Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: _ScanButton(
+              label: scanLabel,
+              size: _scanSize,
+              onPressed: onScan,
+              onLongPress: onScanLongPress,
+              longPressLabel: scanLongPressLabel,
+            ),
+          ),
+        ),
+        ?above,
+        SafeArea(
+          top: false,
+          minimum: const EdgeInsets.fromLTRB(_margin, 0, _margin, _margin),
+          child: SizedBox(
+            height: pillHeight,
+            child: _glass(
+              context,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: _floatingPadding),
+                child: Row(
+                  children: [
+                    for (var i = 0; i < destinations.length; i++)
+                      _destination(i, labelFactor: 1, labelScale: labelScale, balloonGap: _floatingGap),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -276,11 +483,13 @@ class ScanNavBarCompactController extends ValueNotifier<bool> {
       metrics.maxScrollExtent <= metrics.minScrollExtent || metrics.pixels <= metrics.minScrollExtent;
 }
 
-class _Destination extends StatelessWidget {
+class _Destination extends StatefulWidget {
   const _Destination({
     required this.destination,
     required this.selected,
     required this.labelFactor,
+    required this.labelScale,
+    required this.balloonGap,
     required this.onTap,
   });
 
@@ -290,64 +499,181 @@ class _Destination extends StatelessWidget {
   /// Quanto do rótulo aparece: 1 na barra normal, 0 na compacta. Sumido, ele
   /// continua no rótulo acessível.
   final double labelFactor;
+
+  /// A escala do rótulo, a mesma nos quatro destinos ([ScanNavBar._fitLabels]).
+  final double labelScale;
+
+  /// Quanto o balão do rótulo grande fica acima do topo da pílula.
+  final double balloonGap;
   final VoidCallback onTap;
+
+  @override
+  State<_Destination> createState() => _DestinationState();
+}
+
+class _DestinationState extends State<_Destination> {
+  final _balloon = OverlayPortalController();
+
+  void _hold() {
+    HapticFeedback.selectionClick();
+    _balloon.show();
+  }
+
+  void _release() {
+    if (_balloon.isShowing) _balloon.hide();
+  }
+
+  /// O balão, centrado na tela e logo acima da barra.
+  Widget _buildBalloon(BuildContext overlayContext) {
+    final box = context.findRenderObject();
+    final overlay = Overlay.of(context).context.findRenderObject();
+    if (box is! RenderBox || overlay is! RenderBox || !box.hasSize) return const SizedBox.shrink();
+    final top = box.localToGlobal(Offset.zero, ancestor: overlay).dy;
+    return Positioned(
+      left: BipaSpacing.s4,
+      right: BipaSpacing.s4,
+      bottom: overlay.size.height - top + widget.balloonGap,
+      child: Center(
+        child: _LabelBalloon(
+          icon: widget.selected ? widget.destination.selectedIcon : widget.destination.icon,
+          label: widget.destination.label,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final selected = widget.selected;
+    final labelFactor = widget.labelFactor;
     return Semantics(
       button: true,
       selected: selected,
-      label: destination.label,
+      label: widget.destination.label,
       excludeSemantics: true,
-      // excludeSemantics descarta a ação do InkResponse: ela vai aqui.
-      onTap: onTap,
-      child: InkResponse(
-        onTap: onTap,
-        radius: 36,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedContainer(
-              duration: BipaMotion.slow,
-              curve: BipaMotion.spring,
-              width: selected ? 52 : 32,
-              height: 30,
-              decoration: ShapeDecoration(
-                shape: const StadiumBorder(),
-                color: selected ? colors.brandSoft : Colors.transparent,
-              ),
-              child: Icon(
-                selected ? destination.selectedIcon : destination.icon,
-                size: 22,
-                color: selected ? colors.ink : colors.inkMuted,
-              ),
-            ),
-            // O rótulo recolhe de baixo para cima e some junto.
-            ClipRect(
-              child: Align(
-                alignment: Alignment.topCenter,
-                heightFactor: labelFactor,
-                child: Opacity(
-                  opacity: labelFactor,
-                  child: Padding(
-                    // 30 do ícone, 2 de vão e 16 do rótulo: 48 px no meio dos
-                    // 68 da barra, o indicador a 10 px do topo (como no CSS).
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      destination.label,
-                      maxLines: 1,
-                      style: BipaText.caption.copyWith(
-                        fontSize: 12,
-                        color: selected ? colors.ink : colors.inkMuted,
-                        fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+      // excludeSemantics descarta a ação do InkResponse: ela vai aqui. O
+      // balão não entra: o leitor de tela já diz o rótulo.
+      onTap: widget.onTap,
+      child: OverlayPortal(
+        controller: _balloon,
+        overlayChildBuilder: _buildBalloon,
+        child: GestureDetector(
+          // Segurar mostra o rótulo grande enquanto o dedo fica.
+          onLongPressStart: (_) => _hold(),
+          onLongPressEnd: (_) => _release(),
+          onLongPressCancel: _release,
+          child: InkResponse(
+            onTap: widget.onTap,
+            radius: 36,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedContainer(
+                  duration: BipaMotion.slow,
+                  curve: BipaMotion.spring,
+                  width: selected ? 52 : 32,
+                  height: ScanNavBar._indicatorHeight,
+                  decoration: ShapeDecoration(
+                    shape: const StadiumBorder(),
+                    color: selected ? colors.brandSoft : Colors.transparent,
+                  ),
+                  child: Icon(
+                    selected ? widget.destination.selectedIcon : widget.destination.icon,
+                    size: 22,
+                    color: selected ? colors.ink : colors.inkMuted,
+                  ),
+                ),
+                // O rótulo recolhe de baixo para cima e some junto.
+                ClipRect(
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    heightFactor: labelFactor,
+                    child: Opacity(
+                      opacity: labelFactor,
+                      child: Padding(
+                        // 30 do ícone, 2 de vão e 16 do rótulo: 48 px no meio dos
+                        // 68 da barra, o indicador a 10 px do topo (como no CSS).
+                        padding: const EdgeInsets.fromLTRB(
+                          ScanNavBar._labelPadding,
+                          ScanNavBar._labelGap,
+                          ScanNavBar._labelPadding,
+                          0,
+                        ),
+                        child: Text(
+                          widget.destination.label,
+                          maxLines: 1,
+                          textAlign: TextAlign.center,
+                          // A escala já leva em conta a letra do aparelho.
+                          textScaler: TextScaler.linear(widget.labelScale),
+                          style: ScanNavBar._labelStyle(context, selected: selected),
+                        ),
                       ),
                     ),
                   ),
                 ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// O rótulo grande de um destino, num balão de vidro (quadro
+/// "NavLetraGrande", `.big-label`).
+class _LabelBalloon extends StatelessWidget {
+  const _LabelBalloon({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  static const _shape = RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(BipaRadius.lg)));
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return IgnorePointer(
+      child: ExcludeSemantics(
+        child: DecoratedBox(
+          key: ScanNavBar.balloonKey,
+          decoration: ShapeDecoration(
+            shape: _shape,
+            shadows: [BoxShadow(color: colors.ink.withValues(alpha: 0.12), blurRadius: 24, offset: const Offset(0, 8))],
+          ),
+          child: ClipPath(
+            clipper: const ShapeBorderClipper(shape: _shape),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: ScanNavBar._blur, sigmaY: ScanNavBar._blur),
+              child: ColoredBox(
+                color: colors.surfaceGlass,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s6, vertical: BipaSpacing.s4),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(icon, size: 40, color: colors.ink),
+                      const SizedBox(height: 6),
+                      // Já é grande (28 px): crescer com a letra do aparelho
+                      // faria o balão passar da tela.
+                      Text(
+                        label,
+                        textAlign: TextAlign.center,
+                        textScaler: TextScaler.noScaling,
+                        style: BipaText.body.copyWith(
+                          fontSize: 28,
+                          height: 34 / 28,
+                          fontWeight: FontWeight.w700,
+                          color: colors.ink,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -368,7 +694,9 @@ class _ScanButton extends StatefulWidget {
   /// 64 px, ou 56 na barra compacta.
   final double size;
   final VoidCallback onPressed;
-  final VoidCallback? onLongPress;
+
+  /// Recebe onde o botão está na tela, em coordenadas globais.
+  final ValueChanged<Rect>? onLongPress;
   final String? longPressLabel;
 
   @override
@@ -417,6 +745,12 @@ class _ScanButtonState extends State<_ScanButton> with SingleTickerProviderState
     return (scale: lerpDouble(1, _ringScale, k)!, opacity: lerpDouble(_ringOpacity, 0, k)!);
   }
 
+  /// Onde o botão está na tela.
+  Rect _globalRect() {
+    final box = context.findRenderObject()! as RenderBox;
+    return box.localToGlobal(Offset.zero) & box.size;
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -457,7 +791,7 @@ class _ScanButtonState extends State<_ScanButton> with SingleTickerProviderState
           label: widget.label,
           excludeSemantics: true,
           onTap: widget.onPressed,
-          onLongPress: onLongPress,
+          onLongPress: onLongPress == null ? null : () => onLongPress(_globalRect()),
           onLongPressHint: widget.longPressLabel,
           child: Material(
             color: colors.brand,
@@ -474,7 +808,7 @@ class _ScanButtonState extends State<_ScanButton> with SingleTickerProviderState
                   ? null
                   : () {
                       HapticFeedback.mediumImpact();
-                      onLongPress();
+                      onLongPress(_globalRect());
                     },
               child: SizedBox.square(
                 dimension: widget.size,

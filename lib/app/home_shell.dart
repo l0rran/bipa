@@ -20,7 +20,9 @@ import 'package:go_router/go_router.dart';
 /// modo carrinho.
 ///
 /// Rolando o conteúdo de qualquer aba para baixo, a barra encolhe; para cima,
-/// no topo ou ao trocar de aba, ela volta ao normal.
+/// no topo ou ao trocar de aba, ela volta ao normal. Com a letra a partir de
+/// 130% ou com o TalkBack, ela não encolhe, e acima de 160% o bipar flutua
+/// acima da barra (`ScanNavBar`).
 class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({required this.navigationShell, super.key});
 
@@ -69,7 +71,8 @@ class _HomeShellState extends ConsumerState<HomeShell> {
       // O conteúdo passa por trás das barras; as telas usam o
       // MediaQuery.padding.bottom para deixar espaço embaixo. A barra ocupa
       // sempre a altura da normal, então o conteúdo não fica escondido atrás
-      // dela em nenhum dos dois tamanhos.
+      // dela em nenhum dos dois tamanhos; com o bipar flutuante, a altura
+      // inclui o botão.
       extendBody: true,
       // A rolagem de todas as abas passa por aqui, sem mexer em cada tela.
       body: NotificationListener<ScrollMetricsNotification>(
@@ -108,10 +111,11 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           // Durante a compra, bipar é o modo carrinho; fora dela, a câmera.
           onScan: () => context.push(trip == null ? Routes.camera : Routes.cartMode),
           scanLabel: l10n.navScan,
-          onScanLongPress: () {
-            // O "×" do menu fica no lugar do botão da barra normal.
+          onScanLongPress: (scanRect) {
+            // O "×" do menu fica no lugar do botão da barra normal, ou do
+            // bipar flutuante com letra grande.
             _compact.expand();
-            _openScanMenu(context, ref, shopping: trip != null);
+            _openScanMenu(context, ref, shopping: trip != null, anchor: scanRect);
           },
           scanLongPressLabel: l10n.navScanMore,
           destinations: [
@@ -131,11 +135,17 @@ class _HomeShellState extends ConsumerState<HomeShell> {
 
   /// Segurar o bipar: o modo carrinho, guardar em casa o que chegou ou dar
   /// baixa em casa.
-  static Future<void> _openScanMenu(BuildContext context, WidgetRef ref, {required bool shopping}) async {
+  static Future<void> _openScanMenu(
+    BuildContext context,
+    WidgetRef ref, {
+    required bool shopping,
+    required Rect anchor,
+  }) async {
     final l10n = AppLocalizations.of(context);
     final choice = await showScanMenu<_ScanAction>(
       context,
       closeLabel: l10n.scanMenuClose,
+      anchor: anchor,
       items: [
         (
           value: _ScanAction.cart,

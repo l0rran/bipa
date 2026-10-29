@@ -12,6 +12,7 @@ import 'package:bipa/core/design_system/components/place_filter.dart';
 import 'package:bipa/core/design_system/components/price_rows.dart';
 import 'package:bipa/core/design_system/components/product_card.dart';
 import 'package:bipa/core/design_system/components/quantity_stepper.dart';
+import 'package:bipa/core/design_system/components/scan_nav_bar.dart';
 import 'package:bipa/core/design_system/components/scan_tray.dart';
 import 'package:bipa/core/design_system/components/section_header.dart';
 import 'package:bipa/core/design_system/components/shopping_list.dart';
@@ -70,8 +71,10 @@ import '../helpers/test_database.dart';
 /// `FittedBox` pode ficar pequeno demais. Tudo roda em duas larguras: 411 dp
 /// (um celular comum) e 360 dp (um celular pequeno).
 ///
-/// A barra de navegação (`ScanNavBar`) fica de fora: as telas são montadas
-/// sem o `HomeShell`, que a desenha.
+/// As telas são montadas sem o `HomeShell`; a barra de navegação
+/// (`ScanNavBar`) entra como componente. O `test/app/home_shell_test.dart`
+/// mede a barra de 100% a 200%, com a fonte do app, que este teste não
+/// carrega.
 const _scale = 2.0;
 
 /// Um celular comum, em pixels lógicos de largura. A altura é grande de
@@ -654,6 +657,48 @@ void _tests() {
   });
 
   group('componentes com a letra a 200%', () {
+    testWidgets('barra de navegação, com o bipar flutuando acima dela', (tester) async {
+      _usePhone(tester);
+      await tester.pumpWidget(
+        _app(
+          Scaffold(
+            extendBody: true,
+            body: const SizedBox.expand(),
+            bottomNavigationBar: ScanNavBar(
+              destinations: const [
+                ScanNavDestination(icon: Icons.home_outlined, selectedIcon: Icons.home_rounded, label: 'Início'),
+                ScanNavDestination(icon: Icons.sell_outlined, selectedIcon: Icons.sell_rounded, label: 'Produtos'),
+                ScanNavDestination(icon: Icons.place_outlined, selectedIcon: Icons.place_rounded, label: 'Mercados'),
+                ScanNavDestination(
+                  icon: Icons.checklist_outlined,
+                  selectedIcon: Icons.checklist_rounded,
+                  label: 'Lista',
+                ),
+              ],
+              selectedIndex: 0,
+              onSelected: (_) {},
+              onScan: () {},
+              scanLabel: 'Bipar',
+              onScanLongPress: (_) {},
+              compact: true,
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+      _expectReadable(tester);
+      // Os rótulos encolhem até caber, mas nunca são cortados; e a 200% a
+      // barra ignora o pedido para encolher.
+      for (final label in ['Início', 'Produtos', 'Mercados', 'Lista']) {
+        final paragraph = tester.renderObject<RenderParagraph>(find.text(label));
+        expect(paragraph.didExceedMaxLines, isFalse, reason: '"$label" cortado a ${_width.toInt()} dp');
+        final opacity = tester.widget<Opacity>(
+          find.ancestor(of: find.text(label), matching: find.byType(Opacity)).first,
+        );
+        expect(opacity.opacity, 1);
+      }
+    });
+
     testWidgets('cabeçalho de seção com selo e ação', (tester) async {
       await _pumpComponent(
         tester,

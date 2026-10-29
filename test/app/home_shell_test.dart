@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:bipa/app/home_shell.dart';
@@ -6,7 +8,10 @@ import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/components/scan_nav_bar.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -29,7 +34,7 @@ class _Tabs {
   }
 }
 
-Widget _app(_Tabs tabs, {bool reduceMotion = true}) {
+Widget _app(_Tabs tabs, {bool reduceMotion = true, double textScale = 1, bool accessibleNavigation = false}) {
   final router = GoRouter(
     initialLocation: _paths.first,
     routes: [
@@ -77,7 +82,11 @@ Widget _app(_Tabs tabs, {bool reduceMotion = true}) {
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: router,
       builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(disableAnimations: reduceMotion),
+        data: MediaQuery.of(context).copyWith(
+          disableAnimations: reduceMotion,
+          textScaler: TextScaler.linear(textScale),
+          accessibleNavigation: accessibleNavigation,
+        ),
         child: child!,
       ),
     ),
@@ -102,8 +111,53 @@ Future<void> _scrollTo(WidgetTester tester, _Tabs tabs, double offset, {String? 
   await tester.pumpAndSettle();
 }
 
+/// Os rótulos dos destinos, na ordem da barra.
+const _labels = ['Início', 'Produtos', 'Mercados', 'Lista'];
+
+/// A altura do celular nos testes de letra grande.
+const _phoneHeight = 800.0;
+
+/// A largura de um texto depende da fonte: sem a Figtree do app, o teste
+/// mediria com a fonte de testes do Flutter, de glifos quadrados, e os
+/// rótulos encolheriam muito mais que no aparelho.
+Future<void> _loadAppFonts() async {
+  final figtree = FontLoader('Figtree');
+  for (final weight in ['Regular', 'Medium', 'SemiBold', 'Bold']) {
+    final bytes = File('assets/fonts/Figtree-$weight.ttf').readAsBytesSync();
+    figtree.addFont(Future.value(ByteData.sublistView(bytes)));
+  }
+  await figtree.load();
+}
+
+/// Um celular de [width] dp.
+void _usePhone(WidgetTester tester, double width) {
+  tester.view
+    ..physicalSize = Size(width, _phoneHeight)
+    ..devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+}
+
+/// O parágrafo de cada rótulo, na barra (o balão fica no overlay, fora dela).
+List<RenderParagraph> _labelParagraphs(WidgetTester tester) => [
+  for (final label in _labels)
+    tester.renderObject<RenderParagraph>(find.descendant(of: find.byType(ScanNavBar), matching: find.text(label))),
+];
+
+/// O botão de bipar na tela.
+Rect _scanRect(WidgetTester tester) => tester.getRect(
+  find.ancestor(of: find.byIcon(Icons.qr_code_scanner_rounded), matching: find.byType(SizedBox)).first,
+);
+
+/// A pílula de vidro na tela.
+Rect _pillRect(WidgetTester tester) =>
+    tester.getRect(find.descendant(of: find.byType(ScanNavBar), matching: find.byType(BackdropFilter)));
+
+/// A escala de letra como porcentagem, para o nome do teste.
+String _percent(double scale) => '${(scale * 100).round()}%';
+
 void main() {
   late _Tabs tabs;
+  setUpAll(_loadAppFonts);
   setUp(() => tabs = _Tabs());
   tearDown(() => tabs.dispose());
 
@@ -355,5 +409,183 @@ void main() {
     await tester.pumpAndSettle();
     final glass = tester.widget<BackdropFilter>(find.byType(BackdropFilter));
     expect(glass.filter, ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18));
+  });
+
+  // H8, quadro "NavLetraGrande": até 160%, a barra de sempre com os rótulos
+  // até 130% e encolhidos até caber; acima, o bipar flutua acima da barra.
+  group('letra grande', () {
+    for (final width in [360.0, 411.0]) {
+      for (final scale in [1.0, 1.3, 1.5, 1.7, 2.0]) {
+        final floating = scale > 1.6;
+        testWidgets('a ${_percent(scale)} em ${width.toInt()} dp, os rótulos cabem inteiros e o bipar fica '
+            '${floating ? 'acima da barra' : 'no meio'}', (tester) async {
+          final semantics = tester.ensureSemantics();
+          _usePhone(tester, width);
+          await tester.pumpWidget(_app(tabs, textScale: scale));
+          await tester.pumpAndSettle();
+
+          // Nenhum rótulo cortado, e os quatro no mesmo tamanho: nunca menor
+          // que o normal, nem maior que a letra pedida (até 130% com o bipar
+          // no meio).
+          final paragraphs = _labelParagraphs(tester);
+          for (final paragraph in paragraphs) {
+            expect(paragraph.didExceedMaxLines, isFalse, reason: '"${paragraph.text.toPlainText()}" cortado');
+          }
+          final sizes = {for (final p in paragraphs) p.textScaler.scale(p.text.style!.fontSize!).toStringAsFixed(2)};
+          expect(sizes, hasLength(1), reason: 'rótulos em tamanhos diferentes: $sizes');
+          final size = double.parse(sizes.single);
+          expect(size, greaterThanOrEqualTo(12));
+          expect(size, lessThanOrEqualTo(12 * (floating ? scale : math.min(scale, 1.3)) + 0.01));
+
+          final scan = _scanRect(tester);
+          final pill = _pillRect(tester);
+          expect(scan.size, const Size.square(64));
+          if (floating) {
+            // À direita, 16 px da borda, e inteiro acima da pílula, 12 px acima.
+            expect(scan.right, closeTo(width - 16, 0.5));
+            expect(scan.bottom, closeTo(pill.top - 12, 0.5));
+            // Os quatro destinos dividem a largura: o meio da barra fica
+            // entre o segundo e o terceiro.
+            final second = tester.getCenter(
+              find.descendant(of: find.byType(ScanNavBar), matching: find.text('Produtos')),
+            );
+            final third = tester.getCenter(
+              find.descendant(of: find.byType(ScanNavBar), matching: find.text('Mercados')),
+            );
+            expect((second.dx + third.dx) / 2, closeTo(width / 2, 0.5));
+            expect(pill.height, greaterThanOrEqualTo(68));
+          } else {
+            // No meio, 18 px acima da pílula de 68.
+            expect(scan.center.dx, closeTo(width / 2, 0.5));
+            expect(pill.top - scan.top, closeTo(18, 0.5));
+            expect(pill.height, 68);
+          }
+
+          // O conteúdo reserva o espaço da barra e do bipar, flutuante ou não.
+          final content = tester.element(find.byKey(ValueKey(_paths.first)));
+          expect(
+            MediaQuery.paddingOf(content).bottom,
+            greaterThanOrEqualTo(_phoneHeight - math.min(scan.top, pill.top)),
+          );
+
+          // O leitor de tela ouve os mesmos destinos e o toque longo do bipar.
+          for (final label in _labels) {
+            expect(
+              tester.getSemantics(find.bySemanticsLabel(label)),
+              isSemantics(label: label, isButton: true, hasTapAction: true),
+            );
+          }
+          expect(
+            tester.getSemantics(find.bySemanticsLabel('Bipar')),
+            isSemantics(label: 'Bipar', isButton: true, hasTapAction: true, hasLongPressAction: true),
+          );
+          semantics.dispose();
+        });
+      }
+    }
+
+    for (final scale in [1.3, 1.5, 1.7, 2.0]) {
+      testWidgets('a ${_percent(scale)}, a barra não encolhe ao rolar', (tester) async {
+        _usePhone(tester, 360);
+        await tester.pumpWidget(_app(tabs, textScale: scale));
+        await tester.pumpAndSettle();
+        final pill = _pillRect(tester);
+
+        await tester.drag(find.byKey(ValueKey(_paths.first)), const Offset(0, -300));
+        await tester.pumpAndSettle();
+        expect(tabs.controllers[_paths.first]!.offset, greaterThan(100));
+        expect(_pillRect(tester), pill);
+        expect(_scanRect(tester).size, const Size.square(64));
+        for (final label in _labels) {
+          final text = find.descendant(of: find.byType(ScanNavBar), matching: find.text(label));
+          expect(tester.widget<Opacity>(find.ancestor(of: text, matching: find.byType(Opacity)).first).opacity, 1);
+        }
+      });
+    }
+
+    testWidgets('com o TalkBack, a barra não encolhe ao rolar', (tester) async {
+      await tester.pumpWidget(_app(tabs, accessibleNavigation: true));
+      await tester.pumpAndSettle();
+      await _scrollTo(tester, tabs, 300);
+      expect(_pillHeight(tester), 68);
+      expect(_scanRect(tester).size, const Size.square(64));
+    });
+
+    for (final scale in [1.0, 1.5, 2.0]) {
+      testWidgets('a ${_percent(scale)}, segurar um destino mostra o rótulo grande num balão', (tester) async {
+        _usePhone(tester, 360);
+        await tester.pumpWidget(_app(tabs, textScale: scale));
+        await tester.pumpAndSettle();
+        final balloon = find.byKey(ScanNavBar.balloonKey);
+        expect(balloon, findsNothing);
+        final scan = _scanRect(tester);
+        final pill = _pillRect(tester);
+
+        final markets = find.descendant(of: find.byType(ScanNavBar), matching: find.text('Mercados'));
+        final gesture = await tester.startGesture(tester.getCenter(markets));
+        await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+        expect(balloon, findsOneWidget);
+        expect(find.descendant(of: balloon, matching: find.text('Mercados')), findsOneWidget);
+        // Acima da barra, sem cobrir o bipar.
+        final rect = tester.getRect(balloon);
+        expect(rect.bottom, lessThanOrEqualTo(pill.top));
+        expect(rect.overlaps(scan), isFalse);
+        expect(rect.left, greaterThanOrEqualTo(0));
+        expect(rect.right, lessThanOrEqualTo(360));
+
+        // Soltar esconde o balão, sem trocar de aba.
+        await gesture.up();
+        await tester.pumpAndSettle();
+        expect(balloon, findsNothing);
+        expect(find.text('/inicio 0'), findsOneWidget);
+      });
+    }
+
+    for (final scale in [1.0, 2.0]) {
+      testWidgets('a ${_percent(scale)}, segurar o bipar abre o menu com o "×" no lugar do botão', (tester) async {
+        _usePhone(tester, 360);
+        await tester.pumpWidget(_app(tabs, textScale: scale));
+        await tester.pumpAndSettle();
+        final scan = _scanRect(tester);
+        // Com a barra compacta, o "×" vai para onde o botão fica na normal,
+        // que é como a barra volta ao abrir o menu.
+        if (scale == 1.0) {
+          await _scrollTo(tester, tabs, 300);
+          expect(_scanRect(tester).size, const Size.square(56));
+        }
+
+        await tester.longPress(find.byIcon(Icons.qr_code_scanner_rounded));
+        await tester.pumpAndSettle();
+        expect(find.byKey(ScanNavBar.balloonKey), findsNothing);
+        final cart = find.text('Modo carrinho');
+        expect(cart, findsOneWidget);
+        final close = find.byIcon(Icons.close_rounded);
+        expect(tester.getCenter(close), offsetMoreOrLessEquals(scan.center));
+        // As pílulas ficam acima do "×"; com o bipar à direita, alinhadas a ele.
+        final pill = tester.getRect(find.ancestor(of: cart, matching: find.byType(Material)).first);
+        expect(pill.bottom, lessThan(scan.top));
+        if (scale > 1.6) expect(pill.right, closeTo(scan.right, 0.5));
+
+        await tester.tap(close);
+        await tester.pumpAndSettle();
+        expect(cart, findsNothing);
+      });
+    }
+
+    testWidgets('acima de 160%, o anel respira em volta do bipar flutuante e para com movimento reduzido', (
+      tester,
+    ) async {
+      _usePhone(tester, 360);
+      await tester.pumpWidget(_app(tabs, reduceMotion: false, textScale: 2));
+      await tester.pump(const Duration(seconds: 1));
+      final ring = find.byKey(ScanNavBar.ringKey);
+      expect(ring, findsOneWidget);
+      expect(tester.getCenter(ring), offsetMoreOrLessEquals(_scanRect(tester).center));
+
+      await tester.pumpWidget(_app(tabs, textScale: 2));
+      await tester.pump(const Duration(seconds: 1));
+      expect(ring, findsNothing);
+      expect(tester.hasRunningAnimations, isFalse);
+    });
   });
 }
