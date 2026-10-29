@@ -220,6 +220,19 @@ O problema: **achar um produto e o preço dele numa aba vizinha de Mercados, sem
 
 **Do nosso jeito:** uma linha por produto, e não por embalagem: a embalagem aparece na linha de baixo ("Pilão · 500 g"), ou quantas são ("2 embalagens"). Sem preço, a linha não mostra nada à direita, em vez de um "—".
 
+### Navegação com letra grande (outubro de 2026)
+
+O problema: **os rótulos da barra cortam a partir de uns 120% num celular de 360 dp** ("Produt", "Merca"), e a barra compacta os tira de vez (H8). O `CLAUDE.md` pede texto na navegação, e quem aumenta a letra é quem mais precisa dele.
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **Flutter** (`NavigationBar`, [código-fonte](https://codebrowser.dev/flutter/flutter/packages/flutter/lib/src/material/navigation_bar.dart.html)) | Limita a escala do rótulo a 1,3 e mostra o rótulo maior no tooltip do toque longo | O teto de 130% e o rótulo grande no toque longo (proposta A) | Além do teto, o rótulo encolhe até caber, e os quatro ficam no mesmo tamanho |
+| **iOS** (Large Content Viewer, [WWDC 2019](https://developer.apple.com/videos/play/wwdc2019/261/)) | Barras de abas não crescem com a letra; nos tamanhos de acessibilidade, segurar um item mostra o ícone e o rótulo num balão grande | O balão com ícone e rótulo, só com letra grande | No Android não há o recurso pronto: o balão é do Bipa e não pode brigar com o toque longo do bipar, que fica no botão do meio |
+| **WCAG 1.4.4** ([redimensionar texto](https://www.w3.org/WAI/WCAG21/Understanding/resize-text.html)) e **Material 3** (rótulos de uma linha, sem cortar) | Texto até 200% sem perder conteúdo; o M3 pede rótulo de uma linha, inteiro | Nada de reticências na barra | A proposta B ganha largura tirando o bipar do meio, em vez de esconder rótulos |
+| **iOS 26** (barra que minimiza, na análise do lote 8) | Minimiza ao rolar só quando há o que rolar | — | Com letra grande ou TalkBack, a barra não encolhe: o rótulo é a informação |
+
+**Do nosso jeito:** duas propostas para o mantenedor escolher. A mantém a anatomia do `ScanNavBar` (bipar no meio) e aceita rótulos quase do tamanho normal, com o balão para quem precisa ler maior. B dá aos rótulos uns 35% a mais de largura, mas tira o bipar do centro da barra, que é a marca do componente.
+
 ## Fontes
 
 - [Menor Preço Brasil (Olhar Digital)](https://olhardigital.com.br/2025/08/03/dicas-e-tutoriais/quer-economizar-na-farmacia-e-supermercado-conheca-o-app-menor-preco-brasil/)
@@ -254,3 +267,6 @@ O problema: **achar um produto e o preço dele numa aba vizinha de Mercados, sem
 - [Spotify: pedidos sobre o "+" e a playlist padrão (comunidade)](https://community.spotify.com/t5/Live-Ideas/Ability-to-Change-the-Default-Playlist-for-button/idi-p/5678036/page/3)
 - [Material Design: snackbars](https://m3.material.io/components/snackbar/guidelines)
 - [Nielsen Norman Group: consistência e padrões](https://www.nngroup.com/articles/consistency-and-standards/)
+- [Flutter: código do NavigationBar (escala máxima do rótulo)](https://codebrowser.dev/flutter/flutter/packages/flutter/lib/src/material/navigation_bar.dart.html)
+- [Apple, WWDC 2019: Large Content Viewer](https://developer.apple.com/videos/play/wwdc2019/261/)
+- [W3C: Understanding SC 1.4.4 Resize Text](https://www.w3.org/WAI/WCAG21/Understanding/resize-text.html)

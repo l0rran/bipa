@@ -38,6 +38,7 @@ Cada tela tem uma imagem (390 px de largura, em 2x) e o HTML de origem em [`font
 | **Início, editor da linha aberto**: o stepper (com fundo `alert-soft` abaixo do "ter sempre") e, na linha de baixo, a lista, o chip "Ter sempre 3", que abre a folha do item, e o "⋯ Mais do item". Desenhado a partir do app. | [MainEditor.png](telas/MainEditor.png) | Feita; o quadro aguarda revisão. Diferenças do `StockStepper.md`: o guia tem uma linha só, com o botão "Pôr na lista" escrito; o app usa um ícone sem texto para a lista e acrescenta o chip e o "⋯", que o guia não tem |
 | **Produto, editar embalagem** (G1): no menu "⋯" da tela do produto, "Editar embalagem" (com mais de uma, pergunta qual antes) abre a folha com o código, a marca, o tamanho e a unidade. Mudar o tamanho refaz o preço por kg de todo o histórico. Desenhado a partir do app. | [EditarEmbalagem.png](telas/EditarEmbalagem.png) | Feita; o quadro aguarda revisão. Diferenças: os campos do app são os do Material, com preenchimento `surface` sem borda, e somem sobre a folha branca; o código vem na fonte do texto, não em JetBrains Mono; a unidade fica num menu à parte ("Quilograma (kg)"), e não dentro do campo do tamanho como na "Embalagem nova" |
 | **Produtos** (H1): a aba com os componentes de Mercados: título, a busca com o bipar dentro (que abre a câmera no modo Código, no lugar do leitor antigo) e os produtos em ordem alfabética num cartão, com a miniatura da categoria, a embalagem (ou quantas são) e o preço, com o preço por unidade quando há mais de uma embalagem. "Cadastrar produto" fecha a lista, como "Cadastrar mercado". | [Produtos.png](telas/Produtos.png) | Aguarda revisão. O app usa `AppBar`, `SearchBar` e `ListTile` do Material, com a mesma cesta para todos os produtos |
+| **Proposta: navegação com letra grande** (H8), num celular de 360 dp com a letra do Android em 130% e, embaixo, em 200%. **A:** a barra de hoje, com os rótulos limitados a 130% e encolhidos até caber, todos no mesmo tamanho, e o rótulo grande num balão ao segurar o destino. **B:** com letra grande, o bipar sai do meio e flutua acima da barra, à direita, e os quatro destinos dividem a largura, com rótulos maiores. Nas duas, a barra não encolhe ao rolar com letra grande nem com o TalkBack. O quadro tem 780 px de largura, para mostrar as duas lado a lado. | [NavLetraGrande.png](telas/NavLetraGrande.png) | Proposta, aguarda revisão e a escolha entre A e B. O app corta os rótulos ("Produt", "Merca") a partir de uns 120% |
 
 ## Ainda não desenhado
 
@@ -45,11 +46,12 @@ Cada tela tem uma imagem (390 px de largura, em 2x) e o HTML de origem em [`font
 
 ## Variantes de componente desenhadas fora do design system
 
-Os quadros que aguardam revisão usam variantes que o design system publicado ainda não tem. Aprovadas, elas entram no guia do componente.
+Os quadros que aguardam revisão foram desenhados nesta cópia, sem acesso ao claude.ai: aprovados, o protótipo publicado precisa receber os mesmos quadros (o `canvas.json` já tem a posição de cada um, numa terceira fileira). Eles usam variantes que o design system publicado ainda não tem, e que, aprovadas, entram no guia do componente.
 
 - **FilterChips como escolha** ([ArrumarEntrou.png](telas/ArrumarEntrou.png)): os chips compactos escolhem o local de um item (`role="radio"`), sem contagem, em `surface-sunken` para aparecerem sobre a folha clara.
 - **ScanTray: linha com uma segunda linha** ([ModoCarrinhoGranelBandeja.png](telas/ModoCarrinhoGranelBandeja.png)): sob o nome, o preço por kg com o ícone da balança, em `ink-muted`. O mesmo quadro desenha a **etiqueta vazada** (só o contorno `price`), que o app já usa para o preço do histórico e o guia `ScanTray.md` ainda não define, e o **traço** da etiqueta sem preço.
 - **Diálogo de valor** ([ModoCarrinhoGranelValor.png](telas/ModoCarrinhoGranelValor.png)): o design system não tem diálogo. O quadro usa `surface` com raio 28, o campo de valor em `surface-sunken` com `shadow-focus`, "Cancelar" só texto e "Salvar" no botão neutro.
+- **ScanNavBar com letra grande** ([NavLetraGrande.png](telas/NavLetraGrande.png)): o guia não diz o que acontece com a letra grande. A proposta A só acrescenta o balão do rótulo grande; a B tira o bipar da barra, o que muda a anatomia do componente.
 
 ## Como exportar de novo
 

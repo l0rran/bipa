@@ -226,6 +226,13 @@
       "w": 390,
       "h": 1100,
       "title": "Produtos (página inteira)"
+    },
+    "NavLetraGrande.dc.html": {
+      "x": 5170,
+      "y": 3700,
+      "w": 780,
+      "h": 880,
+      "title": "Proposta: navegação com letra grande (A e B)"
     }
   },
   "order": [
@@ -259,7 +266,8 @@
     "ProdutoPrecoVelho.dc.html",
     "MainEditor.dc.html",
     "EditarEmbalagem.dc.html",
-    "Produtos.dc.html"
+    "Produtos.dc.html",
+    "NavLetraGrande.dc.html"
   ],
   "notes": {
     "titulo": {
