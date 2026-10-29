@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:bipa/core/crash_reporting/crash_reporting_providers.dart';
@@ -26,7 +27,10 @@ import 'package:bipa/core/location/location_service.dart';
 import 'package:bipa/core/money/money.dart';
 import 'package:bipa/core/permissions/permission_access.dart';
 import 'package:bipa/core/widgets/weighed_value_dialog.dart';
+import 'package:bipa/features/backup/domain/backup_exception.dart';
+import 'package:bipa/features/backup/domain/restore_backup.dart';
 import 'package:bipa/features/backup/presentation/backup_providers.dart';
+import 'package:bipa/features/backup/presentation/restore_sheet.dart';
 import 'package:bipa/features/markets/domain/market.dart';
 import 'package:bipa/features/markets/presentation/market_form_page.dart';
 import 'package:bipa/features/markets/presentation/market_page.dart';
@@ -492,6 +496,57 @@ void _tests() {
       await tester.tap(find.text('abrir'));
       await _settle(tester);
       expect(find.byType(TripReviewSheet), findsOneWidget);
+    });
+
+    /// A folha de restaurar um backup, com a conferência de [preparing].
+    Future<void> openRestoreSheet(WidgetTester tester, Future<PreparedRestore> Function() preparing) async {
+      await _pumpScreen(
+        tester,
+        Builder(
+          builder: (context) => Scaffold(
+            body: Center(
+              child: TextButton(
+                onPressed: () => showRestoreSheet(
+                  context,
+                  preparing: preparing(),
+                  fileName: 'bipa-2026-10-12.bipa',
+                  onPickAnother: () {},
+                ),
+                child: const Text('abrir'),
+              ),
+            ),
+          ),
+        ),
+        overrides: [backupProvider.overrideWith(FakeBackupController.new)],
+      );
+      await tester.tap(find.text('abrir'));
+      await _settle(tester);
+    }
+
+    testWidgets('folha "Restaurar o backup", conferindo', (tester) async {
+      await openRestoreSheet(tester, () => Completer<PreparedRestore>().future);
+      expect(find.text('Conferindo o arquivo'), findsOneWidget);
+      expect(find.text('Substituir pelo backup'), findsOneWidget);
+    });
+
+    testWidgets('folha "Restaurar o backup", com os números', (tester) async {
+      await openRestoreSheet(tester, () async => fakePrepared(createdAt: DateTime(2026, 10, 12, 21), adjustedItems: 2));
+      expect(find.text('Restaurar o backup de 12/10?'), findsOneWidget);
+      expect(find.text('Neste celular agora: 230 produtos e 1.452 preços.'), findsOneWidget);
+      expect(find.textContaining('quantidade acertada'), findsOneWidget);
+      expect(find.text('Cancelar'), findsOneWidget);
+    });
+
+    testWidgets('folha de backup que não abre', (tester) async {
+      await openRestoreSheet(tester, () async => throw const BackupException.notRecognized());
+      expect(find.text('Não deu para abrir este backup'), findsOneWidget);
+      expect(find.text('Escolher outro arquivo'), findsOneWidget);
+    });
+
+    testWidgets('folha de backup de um Bipa mais novo', (tester) async {
+      await openRestoreSheet(tester, () async => throw const BackupException.fromNewerApp());
+      expect(find.text('Este backup é de um Bipa mais novo'), findsOneWidget);
+      expect(find.text('Atualizar o Bipa'), findsOneWidget);
     });
 
     testWidgets('folha do item do estoque', (tester) async {

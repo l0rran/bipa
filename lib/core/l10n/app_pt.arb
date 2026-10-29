@@ -67,6 +67,93 @@
   "backupSaveCopySubtitle": "Para guardar fora do celular",
   "backupCopySaved": "Cópia salva",
   "backupCopyFailed": "Não deu para salvar a cópia. Tente de novo.",
+  "backupRestoreFromFile": "Restaurar de um arquivo…",
+  "backupChecking": "Conferindo o arquivo",
+  "backupRestoreTitle": "Restaurar o backup de {date}?",
+  "@backupRestoreTitle": {
+    "description": "Título da folha de confirmação e do cartão do celular novo.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "12/10"
+      }
+    }
+  },
+  "backupProducts": "{count, plural, =1{produto} other{produtos}}",
+  "@backupProducts": {
+    "description": "Rótulo de um dos números do backup, embaixo do número.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupPrices": "{count, plural, =1{preço} other{preços}}",
+  "@backupPrices": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupItemsAtHome": "{count, plural, =1{item em casa} other{itens em casa}}",
+  "@backupItemsAtHome": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupCurrent": "Neste celular agora: {productsText} {products, plural, =1{produto} other{produtos}} e {pricesText} {prices, plural, =1{preço} other{preços}}.",
+  "@backupCurrent": {
+    "description": "A linha deste celular na folha de confirmação; os números já formatados vão em negrito.",
+    "placeholders": {
+      "productsText": {
+        "type": "String"
+      },
+      "products": {
+        "type": "int"
+      },
+      "pricesText": {
+        "type": "String"
+      },
+      "prices": {
+        "type": "int"
+      }
+    }
+  },
+  "backupReplaceWarning": "Tudo o que está neste celular (produtos, preços, estoque, lista e compras) é trocado pelo que está no arquivo.",
+  "backupAdjusted": "{count, plural, =1{1 item teve a quantidade acertada pela soma das compras.} other{{count} itens tiveram a quantidade acertada pela soma das compras.}}",
+  "@backupAdjusted": {
+    "description": "Na folha de confirmação, quando a quantidade em casa de algum item não batia com a soma dos lotes e foi acertada.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupReplace": "Substituir pelo backup",
+  "backupRestoring": "Restaurando",
+  "@backupRestoring": {
+    "description": "Rótulo acessível do botão carregando, enquanto os arquivos são trocados."
+  },
+  "backupRestored": "Backup de {date} restaurado",
+  "@backupRestored": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoreFailed": "Não deu para restaurar. Seus dados continuam como estavam.",
+  "backupUndoExpired": "O prazo para desfazer já passou.",
+  "backupNotRecognizedTitle": "Não deu para abrir este backup",
+  "backupNotRecognizedMessage": "O arquivo não é um backup do Bipa ou está incompleto. Nada mudou neste celular.",
+  "backupPickAnother": "Escolher outro arquivo",
+  "backupNewerTitle": "Este backup é de um Bipa mais novo",
+  "backupNewerMessage": "Atualize o Bipa neste celular e escolha o arquivo de novo. Nada mudou neste celular.",
+  "backupUpdateApp": "Atualizar o Bipa",
+  "backupClose": "Fechar",
   "settingsPrivacy": "Privacidade",
   "settingsCrashTitle": "Relatório de falhas",
   "settingsCrashSubtitle": "Se o Bipa travar, manda o erro para ser corrigido.",

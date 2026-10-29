@@ -11,6 +11,7 @@ import 'package:bipa/features/backup/domain/backup_info.dart';
 import 'package:bipa/features/backup/presentation/backup_files.dart';
 import 'package:bipa/features/backup/presentation/backup_labels.dart';
 import 'package:bipa/features/backup/presentation/backup_providers.dart';
+import 'package:bipa/features/backup/presentation/restore_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -109,6 +110,12 @@ class _BackupSettingsCardState extends ConsumerState<BackupSettingsCard> {
             busyLabel: l10n.backupMaking,
             busy: _busy == _Busy.saving,
             onTap: _busy == _Busy.none ? _saveCopy : null,
+          ),
+          Divider(color: colors.line),
+          BackupActionRow(
+            icon: Icons.file_open_outlined,
+            title: l10n.backupRestoreFromFile,
+            onTap: _busy == _Busy.none ? () => unawaited(restoreFromFile(context, ref)) : null,
           ),
         ],
       ),
