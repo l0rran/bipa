@@ -1174,7 +1174,45 @@
       }
     }
   },
-  "tripMovePricesTitle": "{count, plural, =1{Levar o preço lido para {market}?} other{Levar os {count} preços lidos para {market}?}}",
+  "cartWeighingTitle": "Quanto deu o {name}?",
+  "@cartWeighingTitle": {
+    "description": "Título do diálogo do valor pago pela pesagem (a linha do granel ou da balança), que pergunta em vez de pedir \"o preço\", para não parecer o preço da gôndola (D9). Também é o rótulo acessível do valor da linha.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cartWeighingValueField": "Valor pago, em reais",
+  "@cartWeighingValueField": {
+    "description": "Rótulo acessível do campo do valor pago pela pesagem."
+  },
+  "cartWeighedBack": "{weight} a {price}",
+  "@cartWeighedBack": {
+    "description": "A conta de volta sob o campo do valor da pesagem, com o peso que o valor dá pelo preço por quilo: \"1,38 kg a R$ 8,99/kg\".",
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String",
+        "description": "O preço por quilo já com o \"/kg\"."
+      }
+    }
+  },
+  "cartWeighedBackSpoken": "{weight} a {price} o quilo",
+  "@cartWeighedBackSpoken": {
+    "description": "Versão falada de cartWeighedBack, no lugar do \"/kg\": \"1,38 kg a R$ 8,99 o quilo\".",
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "tripMovePricesTitle":"{count, plural, =1{Levar o preço lido para {market}?} other{Levar os {count} preços lidos para {market}?}}",
   "@tripMovePricesTitle": {
     "description": "Pergunta ao trocar o mercado da compra quando já há preços gravados no anterior (ADR 0020).",
     "placeholders": {

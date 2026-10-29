@@ -23,6 +23,7 @@ import 'package:bipa/core/location/geo_point.dart';
 import 'package:bipa/core/location/location_service.dart';
 import 'package:bipa/core/money/money.dart';
 import 'package:bipa/core/permissions/permission_access.dart';
+import 'package:bipa/core/widgets/weighed_value_dialog.dart';
 import 'package:bipa/features/markets/domain/market.dart';
 import 'package:bipa/features/markets/presentation/market_form_page.dart';
 import 'package:bipa/features/markets/presentation/market_page.dart';
@@ -548,6 +549,31 @@ void _tests() {
       await tester.tap(find.text('abrir'));
       await _settle(tester);
     }
+
+    testWidgets('diálogo "Quanto deu" da pesagem, com a conta de volta', (tester) async {
+      await _pumpScreen(
+        tester,
+        Builder(
+          builder: (context) => Scaffold(
+            body: Center(
+              child: TextButton(
+                onPressed: () => showWeighedValueDialog(
+                  context,
+                  title: 'Quanto deu o Tomate italiano de talo comprido?',
+                  initial: const Money.cents(1240),
+                  backFor: (_) => (text: r'1,38 kg a R$ 8,99/kg', spoken: r'1,38 kg a R$ 8,99 o quilo'),
+                ),
+                child: const Text('abrir'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('abrir'));
+      await _settle(tester);
+      expect(find.byType(Dialog), findsOneWidget);
+      expect(find.text(r'1,38 kg a R$ 8,99/kg'), findsOneWidget);
+    });
 
     testWidgets('formulário de produto novo', (tester) async {
       await _pumpScreen(

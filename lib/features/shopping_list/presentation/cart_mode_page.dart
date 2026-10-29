@@ -4,8 +4,10 @@ import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/components/scan_tray.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
+import 'package:bipa/core/money/money.dart';
 import 'package:bipa/core/widgets/price_dialog.dart';
 import 'package:bipa/core/widgets/quantity_dialog.dart';
+import 'package:bipa/core/widgets/weighed_value_dialog.dart';
 import 'package:bipa/features/markets/presentation/market_picker_sheet.dart';
 import 'package:bipa/features/prices/domain/price_comparison.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
@@ -431,10 +433,30 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     final messenger = ScaffoldMessenger.of(context);
     final recordPrice = ref.read(recordTripPriceProvider);
     final cart = ref.read(cartRepositoryProvider);
-
-    final price = await _withAnalysisPaused(
-      () => showPriceDialog(context, title: l10n.cartPriceTitle(entry.name), initial: entry.item.price),
+    final tripPrices = ref.read(activeTripPricesProvider).value ?? const <TripPrice>[];
+    final weighing = isWeighingLine(
+      packageId: entry.item.packageId,
+      shelfPrice: shelfPriceOf(tripPrices, entry.product.id),
     );
+
+    final Money? price;
+    if (weighing) {
+      // A pesagem pergunta quanto deu, e mostra o peso que o valor dá pelo
+      // preço por quilo lido na gôndola, quando há (D9).
+      final perKilo = perKiloPriceOf(tripPrices, entry.product.id);
+      price = await _withAnalysisPaused(
+        () => showWeighedValueDialog(
+          context,
+          title: l10n.cartWeighingTitle(entry.name),
+          initial: entry.item.price,
+          backFor: (value) => _weighedBack(l10n, value, perKilo),
+        ),
+      );
+    } else {
+      price = await _withAnalysisPaused(
+        () => showPriceDialog(context, title: l10n.cartPriceTitle(entry.name), initial: entry.item.price),
+      );
+    }
     if (price == null || !mounted) return;
 
     try {
@@ -454,6 +476,20 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     } on Exception {
       messenger.showSnackBar(SnackBar(content: Text(l10n.cartPriceFailed)));
     }
+  }
+
+  /// A conta de volta do diálogo da pesagem: o peso que [value] dá a
+  /// [perKilo] ("1,38 kg a R$ 8,99/kg"). Sem preço por quilo ou sem conta,
+  /// nada.
+  static WeighedBack? _weighedBack(AppLocalizations l10n, Money value, Money? perKilo) {
+    if (perKilo == null) return null;
+    final grams = weightInGrams(value, perKilo);
+    if (grams == null) return null;
+    final weight = formatWeight(grams);
+    return (
+      text: l10n.cartWeighedBack(weight, l10n.pricePerKilo(perKilo.format())),
+      spoken: l10n.cartWeighedBackSpoken(weight, perKilo.format()),
+    );
   }
 
   /// Tocar no nome de uma pesagem: troca o produto que a balança lembra
@@ -740,7 +776,8 @@ class _CartModePageState extends ConsumerState<CartModePage> {
                 take: entry.item.take,
                 takeLabel: l10n.cartTake(entry.name),
                 onTakeChanged: (take) => _setTake(entry, take: take),
-                priceTapLabel: l10n.cartTypePrice,
+                // A pesagem pergunta quanto deu; as outras linhas, o preço.
+                priceTapLabel: isWeighing(entry) ? l10n.cartWeighingTitle(entry.name) : l10n.cartTypePrice,
                 onPriceTap: () {
                   if (trip != null) unawaited(_typePrice(trip, entry));
                 },
