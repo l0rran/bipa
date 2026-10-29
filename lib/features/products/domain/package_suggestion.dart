@@ -248,40 +248,61 @@ final _knownBrandWords = [for (final brand in _knownBrands) brand.split(' ')];
 /// palavras sem outra leitura no mercado: uma palavra fora daqui fica como
 /// veio, sem acento inventado.
 const _accents = {
+  'abobora': 'abóbora',
   'acai': 'açaí',
   'acem': 'acém',
   'acucar': 'açúcar',
+  'agriao': 'agrião',
   'agua': 'água',
   'alcool': 'álcool',
+  'almeirao': 'almeirão',
+  'almondega': 'almôndega',
+  'amendoa': 'amêndoa',
   'brocolis': 'brócolis',
   'cafe': 'café',
   'camarao': 'camarão',
   'cha': 'chá',
+  'contrafile': 'contrafilé',
+  'coracao': 'coração',
   'coxao': 'coxão',
+  'cupuacu': 'cupuaçu',
   'feijao': 'feijão',
   'figado': 'fígado',
   'file': 'filé',
+  'frances': 'francês',
   'fuba': 'fubá',
+  'grao': 'grão',
   'graos': 'grãos',
   'hamburguer': 'hambúrguer',
   'higienico': 'higiênico',
+  'hortela': 'hortelã',
+  'jilo': 'jiló',
   'limao': 'limão',
+  'linguica': 'linguiça',
   'maca': 'maçã',
   'macarrao': 'macarrão',
   'mamao': 'mamão',
+  'manjericao': 'manjericão',
   'maracuja': 'maracujá',
   'melao': 'melão',
   'moida': 'moída',
   'moido': 'moído',
   'musculo': 'músculo',
   'oleo': 'óleo',
+  'padrao': 'padrão',
   'pao': 'pão',
+  'parmesao': 'parmesão',
   'pessego': 'pêssego',
   'pimentao': 'pimentão',
   'po': 'pó',
   'pure': 'purê',
   'requeijao': 'requeijão',
+  'rucula': 'rúcula',
   'sabao': 'sabão',
+  'salmao': 'salmão',
+  'suina': 'suína',
+  'suino': 'suíno',
+  'tilapia': 'tilápia',
 };
 
 /// [word], sem acento e em minúsculas, com o acento de [_accents].
@@ -384,7 +405,11 @@ String productNameFromLabel(String? nameHint) {
 ///    maioria delas, abre com o nome dele: em "ACHOC PO MALTADO 400G", o
 ///    nome vem abreviado, e "achoc" e "po" acham o "Achocolatado em pó".
 ///    Isso só vale para o texto inicial: a busca continua pedindo todas as
-///    palavras, e com um empate fica o recorte, sem adivinhar.
+///    palavras, e com um empate não adivinha (passo 4).
+/// 4. Se ainda assim nada acha, abre com uma só palavra do recorte que ache
+///    algum produto ([_shorterQuery], G9): a etiqueta tem uma palavra a mais
+///    ("LIMAO TAITI" e o "Limão tahiti") e a lista vazia esconderia o que a
+///    pessoa já tem. O "Criar" segue com o recorte inteiro.
 String productQueryFromLabel(String? nameHint, {required List<Product> products}) {
   final hint = nameHint?.trim() ?? '';
   if (hint.isEmpty) return '';
@@ -411,5 +436,25 @@ String productQueryFromLabel(String? nameHint, {required List<Product> products}
       tied = true;
     }
   }
-  return best != null && !tied && bestCount * 2 > words.length ? best.name : query;
+  if (best != null && !tied && bestCount * 2 > words.length) return best.name;
+  return _shorterQuery(query, products: products) ?? query;
+}
+
+/// Uma palavra do recorte [query] que ainda acha produto, para a escolha não
+/// abrir vazia só porque a etiqueta tem uma palavra que o cadastro não tem
+/// (G9): "LIMAO TAITI KG" e o "Limão tahiti", ou "MUSSARELA TIROLEZ KG" e o
+/// "Queijo mussarela". Fica a palavra que acha menos produtos (a mais
+/// específica); com empate, a primeira. O nome a criar continua sendo o
+/// recorte inteiro, que a escolha mantém à parte. Sem palavra que ache, ou
+/// com uma só palavra, devolve `null`.
+String? _shorterQuery(String query, {required List<Product> products}) {
+  final candidates = query.split(' ').where((word) => word.length > 2 && !_connectors.contains(foldText(word)));
+  String? best;
+  var bestCount = 0;
+  for (final word in candidates) {
+    final count = products.where((product) => matchesProductSearch(word, name: product.name)).length;
+    if (count > 0 && (best == null || count < bestCount)) (best, bestCount) = (word, count);
+  }
+  if (best == null || best == query) return null;
+  return best[0].toUpperCase() + best.substring(1);
 }

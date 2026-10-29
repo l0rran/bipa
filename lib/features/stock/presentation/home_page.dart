@@ -351,10 +351,13 @@ class _HomePageState extends ConsumerState<HomePage> {
               ],
               // A pergunta do relatório de falhas: depois de "Acabando", que é
               // o que o Início existe para mostrar, e só uma vez (ADR 0025).
-              const SliverPadding(
-                padding: EdgeInsets.symmetric(horizontal: BipaSpacing.s4),
-                sliver: SliverToBoxAdapter(child: CrashReportingAskCard()),
-              ),
+              // Com busca ou local escolhido some, para não empurrar os
+              // resultados para baixo do teclado (H18).
+              if (_query.trim().isEmpty && _place == null)
+                const SliverPadding(
+                  padding: EdgeInsets.symmetric(horizontal: BipaSpacing.s4),
+                  sliver: SliverToBoxAdapter(child: CrashReportingAskCard()),
+                ),
               if (atHome.isNotEmpty) ...[
                 _sectionHeader(SectionHeader(title: l10n.sectionAtHome, count: atHome.length)),
                 SliverPadding(

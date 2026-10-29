@@ -315,6 +315,31 @@ void main() {
     expect(find.text('Leite integral ficou sem embalagem, preço e estoque.'), findsOneWidget);
   });
 
+  testWidgets('voltar do produto criado mantém o "Desfazer" até o aviso fechar, e só então oferece apagar (G10)', (
+    tester,
+  ) async {
+    final container = await _pumpProduct(tester, withRouter: true);
+    final products = container.read(productRepositoryProvider);
+    await _moveToNewProduct(tester);
+    expect(_destinationPage(), findsOneWidget);
+
+    // Voltar sem desfazer: o aviso continua, com o "Desfazer", e a oferta não o substitui.
+    tester.state<NavigatorState>(find.byType(Navigator).first).pop();
+    await _settle(tester);
+    expect(_destinationPage(), findsNothing);
+    expect(find.text('Embalagem movida para Leite em pó.'), findsOneWidget);
+    expect(find.text('Desfazer'), findsOneWidget);
+    expect(find.textContaining('ficou sem embalagem'), findsNothing);
+    expect(find.text('Apagar produto'), findsNothing);
+
+    // Sem desfazer, o aviso fecha e só então vem a oferta.
+    await _letSnackBarGo(tester);
+    expect(find.text('Desfazer'), findsNothing);
+    expect(find.text('Leite integral ficou sem embalagem, preço e estoque.'), findsOneWidget);
+    expect(find.text('Apagar produto'), findsOneWidget);
+    expect(await tester.runAsync(() => products.findById('integral')), isNotNull);
+  });
+
   testWidgets('desfazer na tela do produto criado fecha o destino e leva a embalagem de volta, sem piscar', (
     tester,
   ) async {

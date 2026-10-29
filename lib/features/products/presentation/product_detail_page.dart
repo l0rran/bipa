@@ -237,6 +237,9 @@ class _ProductView extends ConsumerWidget {
       await GoRouter.of(navigatorContext).push<void>(Routes.productDetail(openProductId)).whenComplete(() {
         destinationOpen = false;
       });
+      // Voltar não pode tirar o "Desfazer" da tela: o segundo aviso entra no
+      // lugar do primeiro, então espera o primeiro fechar também (G10).
+      if (offerDelete) await controller.closed;
     } else if (offerDelete) {
       await controller.closed;
     }
