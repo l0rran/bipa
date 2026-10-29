@@ -464,6 +464,33 @@ void _tests() {
       expect(find.text('0.1.0'), findsOneWidget);
     });
 
+    testWidgets('Ajustes com o backup de outro celular, e o diálogo de gravar por cima', (tester) async {
+      final pending = fakeBackupInfo(createdAt: DateTime(2026, 10, 12, 21), madeHere: false);
+      await _pumpScreen(
+        tester,
+        const SettingsPage(),
+        overrides: [
+          crashReporterProvider.overrideWithValue(FakeCrashReporter()),
+          appVersionProvider.overrideWith((ref) async => '0.1.0'),
+          backupProvider.overrideWith(
+            () => FakeBackupController(
+              initial: BackupState(lastBackup: pending, restoreOffer: pending),
+            ),
+          ),
+        ],
+      );
+      expect(find.text('De outro celular. Toque para restaurar.'), findsOneWidget);
+      expect(find.text('2026'), findsOneWidget);
+      expect(find.text('Automático pausado até você decidir'), findsOneWidget);
+      _expectReadable(tester);
+
+      await tester.tap(find.text('Fazer backup agora'));
+      await _settle(tester);
+      expect(find.text('Apagar o backup do outro celular?'), findsOneWidget);
+      expect(find.text('Apagar e fazer backup'), findsOneWidget);
+      _expectReadable(tester);
+    });
+
     testWidgets('folha "Fim da compra"', (tester) async {
       await _pumpScreen(
         tester,

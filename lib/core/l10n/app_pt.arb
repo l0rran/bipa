@@ -44,6 +44,20 @@
   "@backupNever": {
     "description": "O valor do último backup quando nunca houve um."
   },
+  "backupLastFromOtherPhone": "De outro celular. Toque para restaurar.",
+  "@backupLastFromOtherPhone": {
+    "description": "A frase do último backup quando ele veio de outro celular e a pessoa não decidiu sobre ele: a linha restaura ao toque (protótipo AjustesBackupPendente)."
+  },
+  "backupLastPendingSemantics": "Último backup: de outro celular, {date}. Restaurar",
+  "@backupLastPendingSemantics": {
+    "description": "Rótulo acessível da linha do último backup de outro celular, que é um botão; a data vai por extenso.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "12 de outubro de 2026"
+      }
+    }
+  },
   "backupLastSemantics": "Último backup: {when}",
   "@backupLastSemantics": {
     "description": "Rótulo acessível da linha do último backup, com o dia e a hora juntos (\"hoje, 08:40\").",
@@ -54,6 +68,40 @@
     }
   },
   "backupMakeNow": "Fazer backup agora",
+  "backupMakeNowPaused": "Automático pausado até você decidir",
+  "@backupMakeNowPaused": {
+    "description": "Embaixo de \"Fazer backup agora\" enquanto o backup de outro celular espera resposta: o backup diário não grava."
+  },
+  "backupReplacePendingTitle": "Apagar o backup do outro celular?",
+  "backupReplacePendingBody": "O backup de {date}, com {productsText} {products, plural, =1{produto} other{produtos}}, {pricesText} {prices, plural, =1{preço} other{preços}} e {itemsText} {items, plural, =1{item em casa} other{itens em casa}}, dá lugar ao deste celular e não volta mais.",
+  "@backupReplacePendingBody": {
+    "description": "O diálogo de \"Fazer backup agora\" com o backup de outro celular pendente; a data e os números vão em negrito.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "12/10/2026"
+      },
+      "productsText": {
+        "type": "String"
+      },
+      "products": {
+        "type": "int"
+      },
+      "pricesText": {
+        "type": "String"
+      },
+      "prices": {
+        "type": "int"
+      },
+      "itemsText": {
+        "type": "String"
+      },
+      "items": {
+        "type": "int"
+      }
+    }
+  },
+  "backupReplacePendingConfirm": "Apagar e fazer backup",
   "backupMaking": "Fazendo o backup",
   "@backupMaking": {
     "description": "Rótulo acessível do indicador de carregamento no lugar do ícone de \"Fazer backup agora\"."
