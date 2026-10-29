@@ -47,12 +47,16 @@ class StockGauge extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final numberColor = state == GaugeState.full ? colors.ink : colors.alertText;
+    // Com letra grande o anel cresce, para o número crescer junto (H9): metade
+    // do aumento da letra, no máximo 1,5 vez. Em 100% fica do tamanho de sempre.
+    final scale = MediaQuery.textScalerOf(context).scale(1);
+    final ring = size * (1 + (scale - 1) * 0.5).clamp(1.0, 1.5);
 
     return Semantics(
       label: semanticsLabel,
       excludeSemantics: true,
       child: SizedBox.square(
-        dimension: size,
+        dimension: ring,
         child: TweenAnimationBuilder<double>(
           tween: Tween(end: fraction),
           duration: BipaMotion.slow,
@@ -61,10 +65,10 @@ class StockGauge extends StatelessWidget {
             painter: _GaugePainter(fraction: value, state: state, colors: colors),
             child: child,
           ),
-          // O anel tem tamanho fixo (é desenho): com letra grande, o número
-          // encolhe para caber dentro dele em vez de passar do traço (H3).
+          // O número encolhe para caber dentro do anel em vez de passar do
+          // traço (H3); como o anel cresce com a letra, o número também.
           child: Padding(
-            padding: EdgeInsets.all(size * 0.14),
+            padding: EdgeInsets.all(ring * 0.14),
             child: Center(
               child: FittedBox(
                 fit: BoxFit.scaleDown,
