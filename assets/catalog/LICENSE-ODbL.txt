@@ -1,0 +1,21 @@
+catalogo.sqlite: catálogo de produtos do Bipa
+
+Contém informações do Open Food Facts, disponíveis sob a ODbL.
+
+Este arquivo é uma base de dados derivada do Open Food Facts
+(https://world.openfoodfacts.org), do Open Beauty Facts
+(https://world.openbeautyfacts.org) e do Open Products Facts
+(https://world.openproductsfacts.org): um recorte dos produtos vendidos no
+Brasil, com nome, marca, quantidade e categoria convertidos para o app.
+
+A base de dados está disponível sob a Open Database License (ODbL) 1.0:
+https://opendatacommons.org/licenses/odbl/1-0/
+
+O conteúdo de cada registro está sob a Database Contents License (DbCL) 1.0:
+https://opendatacommons.org/licenses/dbcl/1-0/
+
+Nenhuma imagem dos produtos faz parte deste arquivo.
+
+Como refazer o arquivo: o script e as instruções estão em tool/catalogo, no
+repositório do Bipa (https://github.com/l0rran/bipa). As datas dos dumps
+usados ficam na tabela catalog_meta, na chave "sources".
