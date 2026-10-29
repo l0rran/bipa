@@ -1,7 +1,9 @@
 # 0024. Embarcar um catálogo de produtos brasileiros a partir do Open Food Facts
 
-- Status: Proposto
+- Status: Aceito, menos a licença da base comunitária, que fica para o ADR de sincronização
 - Data: 2026-10-28
+
+Em 28/10, o mantenedor decidiu: o catálogo inclui limpeza e higiene (Open Products Facts e Open Beauty Facts), ele vai embarcado no APK e é refeito a cada versão, e a consulta online fica desligada na primeira versão.
 
 ## Contexto
 
@@ -78,7 +80,7 @@ A pesquisa foi feita em 28/10/2026. Onde a página da fonte não abriu para leit
 
 ## Decisão
 
-- **A fonte do catálogo é o Open Food Facts.** Entram os produtos alimentícios e, se a cobertura brasileira valer o tamanho, os do Open Products Facts e do Open Beauty Facts. Cosmos e GS1 Brasil ficam de fora: os termos que achamos não permitem embarcar nem redistribuir, e eles exigem internet a cada bipe.
+- **A fonte do catálogo é o Open Food Facts.** Entram os produtos alimentícios e também os do Open Products Facts e do Open Beauty Facts (limpeza e higiene), pela decisão do mantenedor. Se o tamanho pesar no APK, o recorte dessas duas fontes encolhe antes de sair alguma delas. Cosmos e GS1 Brasil ficam de fora: os termos que achamos não permitem embarcar nem redistribuir, e eles exigem internet a cada bipe.
 - **O recorte:**
   - produtos com o Brasil em `countries_tags`, mais os de prefixo GS1 brasileiro (789 e 790) que a etiqueta de país não pegou;
   - só os que têm nome e código válido (dígito verificador, ADR 0005);

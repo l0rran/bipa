@@ -1,7 +1,9 @@
 # 0023. Fechar o modelo de dados antes do backup
 
-- Status: Proposto
+- Status: Aceito
 - Data: 2026-10-28
+
+Em 28/10, o mantenedor decidiu manter o Auto Backup do Android ligado, mas só com o arquivo `.bipa` mais recente (lacuna B1).
 
 ## Contexto
 
@@ -87,7 +89,7 @@ Uma tabela é **compartilhável** quando a fase 2 pode enviá-la à base comunit
 
 **Antes do backup (fase 1):**
 
-- **B1.** `android/app/src/main/AndroidManifest.xml`: declarar `android:allowBackup` e, se ficar ligado, `android:dataExtractionRules` (Android 12+) e `android:fullBackupContent` com o banco e `fotos/`. Esta é uma decisão do mantenedor.
+- **B1.** `android/app/src/main/AndroidManifest.xml`: declarar `android:allowBackup="true"` com `android:dataExtractionRules` (Android 12+) e `android:fullBackupContent` que incluam só o arquivo `.bipa` mais recente, e deixem de fora o banco e `fotos/`. Assim, a troca de celular restaura pelo nosso formato, já validado. Decisão do mantenedor em 28/10.
 - **B2.** `products.photo_path`: apagar o produto (`DriftProductRepository.delete`) e o "Juntar com…" não apagam o arquivo da foto. Apagar o arquivo junto ou limpar as órfãs ao fazer o backup.
 - **B3.** O esquema de cada versão guardado no repositório: hoje o teste de migração simula as versões antigas tirando colunas (`migration_test.dart`, da v8 em diante). Começar a guardar o esquema de cada versão com `drift_dev schema dump`, a partir da versão em que o backup entrar, para cada backup possível ter teste de migração com o esquema real.
 - **B4.** Nomes de enum e o JSON de `trip_prices.other_offers` fazem parte do formato do arquivo: `products.unit`, `product_packages.unit`, `price_observations.condition_kind` e `source`, `stock_items.location`, `stock_movements.reason`, `market_aisles.aisle` e `remembered_locations.location` gravam o nome do valor. Renomear um valor ou uma chave do JSON exige migração. Escrever essa regra no cabeçalho de `tables.dart`, onde hoje só o `Aisle` a menciona.
