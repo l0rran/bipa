@@ -144,6 +144,16 @@ O selo "mais barato" ia para o mercado com a lista inteira, mesmo quando outro, 
 | **S-Group** ([comparação da cesta](https://s-etukortti.fi/en/support/grocery-basket-comparison)) | Compara só os produtos que as duas lojas têm, com preço normal (sem cartão), de menos de dois dias e do mesmo dia nas duas | **A cesta em comum decide o selo**: o primeiro precisa da lista inteira e de ganhar de cada um nos itens que os dois têm. O preço normal na frente já vinha da ADR 0011 | Os preços são da própria pessoa, de dias diferentes: em vez de descartar os antigos, cada mercado mostra a idade do mais antigo ("preços de até 12 dias") |
 | **Basket** (nas fontes) | Soma a lista em cada loja próxima, com preços da comunidade | O total por mercado, com a barra | Sem selo quando a comparação não é justa: a ordem e "sem preço de N itens" já dizem o resto |
 
+### Ícone do app (outubro de 2026)
+
+O problema: **reconhecer o Bipa em 48 px numa tela inicial cheia de amarelo**, nas máscaras de cada fabricante e no ícone temático. As referências, as quatro propostas e a recomendação estão em [icone/](icone/README.md).
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **Android** ([ícones adaptativos](https://developer.android.com/develop/ui/views/launch/icon_design_adaptive)) | Fundo e primeiro plano de 108 dp, zona segura de 66 dp e camada monocromática para o tema | O desenho dentro dos 66 dp e um monocromático nosso | — |
+| **Vizinhos amarelos** (Mercado Livre, Banco do Brasil, Google Keep) | Branco ou azul sobre o amarelo | Uma silhueta sólida sobre fundo chapado | Ink sobre o amarelo, como na etiqueta de gôndola |
+| **Leitores de código genéricos** | Código de barras com linha vermelha | — | O furo da etiqueta como assinatura, no lugar do laser |
+
 ## Fontes
 
 - [Menor Preço Brasil (Olhar Digital)](https://olhardigital.com.br/2025/08/03/dicas-e-tutoriais/quer-economizar-na-farmacia-e-supermercado-conheca-o-app-menor-preco-brasil/)
@@ -171,3 +181,4 @@ O selo "mais barato" ia para o mercado com a lista inteira, mesmo quando outro, 
 - [Juntar contatos duplicados (Ajuda do Google Contatos)](https://support.google.com/contacts/answer/7078226)
 - [Grocy 3.1.3: juntar tarefas (linuxserver/docker-grocy)](https://newreleases.io/project/github/linuxserver/docker-grocy/release/v3.1.3-ls128)
 - [Juntar produtos no Readysell](https://readysell.atlassian.net/wiki/spaces/RSELL7/pages/107945786/Merging+products+through+the+products+module)
+- [Ícones adaptativos (Android Developers)](https://developer.android.com/develop/ui/views/launch/icon_design_adaptive)

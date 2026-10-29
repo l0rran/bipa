@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108">
+  <!-- O ícone inteiro é a etiqueta: o furo à esquerda, como na PriceTag, e quatro barras de código, tudo em ink.
+       É o símbolo atual com o furo da etiqueta no lugar do laser -->
+  <g fill="#1C1B1F">
+    <circle cx="33" cy="54" r="4.5"/>
+    <rect x="44" y="39" width="5" height="30" rx="2"/>
+    <rect x="53" y="39" width="9" height="30" rx="2"/>
+    <rect x="66" y="39" width="4" height="30" rx="2"/>
+    <rect x="74" y="39" width="7" height="30" rx="2"/>
+  </g>
+</svg>

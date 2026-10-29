@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108">
+  <!-- Uma forma só: a etiqueta pendurada (pentágono com furo) de pé é uma casa. As barras de código vazadas são as janelas -->
+  <path fill="#1C1B1F" fill-rule="evenodd" d="M58.43 28.05L73.31 41.63Q77 45 77 50V70Q77 76 71 76H37Q31 76 31 70V50Q31 45 34.69 41.63L49.57 28.05Q54 24 58.43 28.05Z M54 33.5a4.5 4.5 0 1 0 0 9a4.5 4.5 0 1 0 0-9Z M42.5 53h1.5a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-1.5a2 2 0 0 1-2-2V55a2 2 0 0 1 2-2Z M51.5 53h5a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5a2 2 0 0 1-2-2V55a2 2 0 0 1 2-2Z M64 53h1.5a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H64a2 2 0 0 1-2-2V55a2 2 0 0 1 2-2Z"/>
+</svg>
