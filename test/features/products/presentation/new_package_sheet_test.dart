@@ -6,6 +6,7 @@ import 'package:bipa/core/di/core_providers.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/package_origin.dart';
+import 'package:bipa/features/products/domain/package_suggestion.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_catalog.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
@@ -133,6 +134,50 @@ void main() {
       (saved?.productId, saved?.brand, saved?.size, saved?.unit, saved?.origin),
       ('arroz', 'Tio João', 5.0, MeasureUnit.kilogram, PackageOrigin.openFoodFacts),
     );
+  });
+
+  testWidgets('o leite condensado do catálogo não cai no leite, que fica a um toque na troca (G12)', (tester) async {
+    final products = InMemoryProductRepository();
+    final milk = Product(id: 'leite', name: 'Leite', unit: MeasureUnit.liter, createdAt: _now, updatedAt: _now);
+    products.products[milk.id] = milk;
+    const condensed = CatalogPackage(
+      barcode: '7890000110266',
+      name: 'Leite Condensado Semidesnatado ITALAC',
+      brand: 'Italac',
+      size: 395,
+      unit: MeasureUnit.gram,
+      kind: ProductKind.sweets,
+      source: PackageOrigin.openFoodFacts,
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [productRepositoryProvider.overrideWithValue(products)],
+        child: MaterialApp(
+          theme: BipaTheme.light,
+          locale: const Locale('pt', 'BR'),
+          supportedLocales: const [Locale('pt', 'BR')],
+          localizationsDelegates: const [AppLocalizations.delegate, ...GlobalMaterialLocalizations.delegates],
+          home: Scaffold(
+            body: NewPackageSheet(
+              barcode: condensed.barcode,
+              suggestion: PackageSuggestion.fromCatalog(condensed, products: [milk]),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // A folha sugere o produto novo, não o "Leite".
+    expect(find.text('Leite condensado semidesnatado'), findsOneWidget);
+    expect(find.text('Leite'), findsNothing);
+
+    // Trocar abre a escolha já com o "Leite" que a pessoa tem.
+    await tester.tap(find.text('Leite condensado semidesnatado'));
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(TextField, 'Leite'), findsOneWidget);
+    expect(find.descendant(of: find.byType(ListTile), matching: find.text('Leite')), findsOneWidget);
   });
 
   testWidgets('um código fora do catálogo segue como antes, pelo nome da etiqueta', (tester) async {
