@@ -219,6 +219,13 @@
       "w": 390,
       "h": 844,
       "title": "Produto: editar embalagem"
+    },
+    "Produtos.dc.html": {
+      "x": 4700,
+      "y": 3700,
+      "w": 390,
+      "h": 1100,
+      "title": "Produtos (página inteira)"
     }
   },
   "order": [
@@ -251,7 +258,8 @@
     "CapturaUsei.dc.html",
     "ProdutoPrecoVelho.dc.html",
     "MainEditor.dc.html",
-    "EditarEmbalagem.dc.html"
+    "EditarEmbalagem.dc.html",
+    "Produtos.dc.html"
   ],
   "notes": {
     "titulo": {

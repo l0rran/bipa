@@ -209,6 +209,17 @@ O "Desfazer" no aviso da câmera, o preço em destaque velho do produto, o edito
 | **Menor Preço Brasil** e **Preço da Hora** (no benchmark acima) | A idade do preço sempre à vista: o preço em destaque com mais de 30 dias diz onde e quando |
 | **Baymard** e **Pantry Check** (nas inspirações) | Controles só no item tocado, e o resto do item (local, "Tirar de casa") a um toque, sem passar pelo chip do "ter sempre" |
 
+### A aba Produtos (outubro de 2026)
+
+O problema: **achar um produto e o preço dele numa aba vizinha de Mercados, sem mudar de linguagem visual** (H1). A aba ainda usa a barra, a busca e as linhas do Material, com a mesma cesta em todo produto.
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **Mercados** (o próprio Bipa) e **Nielsen** ([consistência e padrões](https://www.nngroup.com/articles/consistency-and-standards/)) | Abas vizinhas com a mesma busca, as mesmas linhas e o mesmo cartão | Título, busca com o bipar dentro e linhas `bipa-mprice` num cartão, com "Cadastrar…" no fim | A miniatura é a da categoria do produto, em neutro: o `place` fica para os mercados |
+| **Menor Preço Brasil** (no benchmark acima) | Busca por nome ou pelo código de barras, e o preço no resultado | O bipar dentro da busca e o preço na linha | O preço é o da pessoa; por unidade (kg, litro) só quando há embalagens de tamanhos diferentes, que é quando ele compara |
+
+**Do nosso jeito:** uma linha por produto, e não por embalagem: a embalagem aparece na linha de baixo ("Pilão · 500 g"), ou quantas são ("2 embalagens"). Sem preço, a linha não mostra nada à direita, em vez de um "—".
+
 ## Fontes
 
 - [Menor Preço Brasil (Olhar Digital)](https://olhardigital.com.br/2025/08/03/dicas-e-tutoriais/quer-economizar-na-farmacia-e-supermercado-conheca-o-app-menor-preco-brasil/)
@@ -242,3 +253,4 @@ O "Desfazer" no aviso da câmera, o preço em destaque velho do produto, o edito
 - [Instacart: preços e itens vendidos por peso](https://instacart.com/help/section/pricing)
 - [Spotify: pedidos sobre o "+" e a playlist padrão (comunidade)](https://community.spotify.com/t5/Live-Ideas/Ability-to-Change-the-Default-Playlist-for-button/idi-p/5678036/page/3)
 - [Material Design: snackbars](https://m3.material.io/components/snackbar/guidelines)
+- [Nielsen Norman Group: consistência e padrões](https://www.nngroup.com/articles/consistency-and-standards/)

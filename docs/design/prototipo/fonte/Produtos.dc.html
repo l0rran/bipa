@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Produtos</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="styles/tokens.css">
+<link rel="stylesheet" href="ds/bipa/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600..800&amp;family=Figtree:wght@400..700&amp;family=JetBrains+Mono:wght@500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1C1B22}a:hover{color:#B00E28}
+.screen{position:relative;width:390px;height:1100px;box-sizing:border-box;overflow:hidden;background:var(--ground)}
+.title{margin:0;font:800 28px/34px var(--font-display);letter-spacing:-0.01em;color:var(--ink)}
+.eyebrow{font:600 14px/20px var(--font-body);color:var(--ink-muted)}
+.section-title{margin:0;font:700 20px/26px var(--font-display);color:var(--ink)}
+.round-btn{display:grid;place-items:center;width:48px;height:48px;border:0;border-radius:50%;background:var(--surface);color:var(--ink)}
+.nav-wrap{position:absolute;left:12px;right:12px;bottom:16px;z-index:3}
+
+.content{display:flex;flex-direction:column;gap:24px;padding:24px 16px 130px}
+.head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.section{display:flex;flex-direction:column;gap:8px}
+.section-head{display:flex;align-items:center;gap:8px;padding:0 4px}
+.count{font:600 13px/18px var(--font-body);color:var(--ink-muted)}
+.enter{animation:bipa-fade-up var(--duration-slow) var(--easing-standard) both}
+
+.content{display:flex;flex-direction:column;gap:20px;padding:24px 16px 150px}
+.map{position:relative;height:200px;border-radius:var(--radius-lg);overflow:hidden;background:var(--place-soft)}
+.map svg{position:absolute;inset:0;width:100%;height:100%}
+.pin{position:absolute;display:grid;place-items:center;width:36px;height:36px;margin:-36px 0 0 -18px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);background:var(--surface);color:var(--place);box-shadow:var(--shadow-raised)}
+.pin svg{transform:rotate(45deg);width:18px;height:18px}
+.pin.is-here{background:var(--place);color:var(--on-place)}
+.pin.is-best::after{content:"";position:absolute;inset:-5px;border-radius:inherit;box-shadow:0 0 0 3px var(--positive-text)}
+.cmp-note{font:500 12px/16px var(--font-body);color:var(--ink-muted)}
+.me{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:var(--place);box-shadow:0 0 0 5px rgba(52,80,122,.25),0 0 0 2px var(--surface) inset}
+
+/* H1: a aba Produtos com a busca e as linhas de Mercados. O preço por unidade vem embaixo, pequeno, como na etiqueta. */
+.bipa-mprice__value small{color:var(--ink-muted);font-weight:600}
+</style>
+</helmet>
+<div class="screen bipa-root">
+  <div class="content">
+    <header class="head" style="flex-direction: column; align-items: stretch; gap: 16px;">
+      <h1 class="title">Produtos</h1>
+      <label class="bipa-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><input type="search" placeholder="Buscar produto" aria-label="Buscar produto"><button class="bipa-search__scan" type="button" aria-label="Bipar um produto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16M3 12h18"/></svg></button></label>
+    </header>
+
+    <section class="section">
+      <div class="bipa-mprices">
+        <a class="bipa-mprice" href="ProdutoEmbalagens.dc.html" style="text-decoration: none; color: inherit;"><span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="8" width="14" height="13" rx="2"/><path d="M8 8V5h8v3M9 13h6"/></svg></span><span class="bipa-mprice__name">Açúcar refinado<span class="bipa-mprice__age">União · 1&nbsp;kg</span></span><span class="bipa-mprice__value">R$ 4,59</span></a>
+        <a class="bipa-mprice" href="ProdutoEmbalagens.dc.html" style="text-decoration: none; color: inherit;"><span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11h17a8.5 8.5 0 0 1-17 0z"/><path d="M8.5 8.5c.6-1.2 2-1.2 2.6 0M13 7.5c.6-1.2 2-1.2 2.6 0"/></svg></span><span class="bipa-mprice__name">Arroz branco<span class="bipa-mprice__age">2 embalagens</span></span><span class="bipa-mprice__value">R$ 4,99<small>o kg</small></span></a>
+        <a class="bipa-mprice" href="ProdutoEmbalagens.dc.html" style="text-decoration: none; color: inherit;"><span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="7" rx="7" ry="2.5"/><path d="M5 7v10c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5V7"/></svg></span><span class="bipa-mprice__name">Atum<span class="bipa-mprice__age">Gomes da Costa · 170&nbsp;g</span></span><span class="bipa-mprice__value">R$ 8,49</span></a>
+        <a class="bipa-mprice" href="ProdutoEmbalagens.dc.html" style="text-decoration: none; color: inherit;"><span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9h11v5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16M8 3v3M11 3v3"/></svg></span><span class="bipa-mprice__name">Café torrado e moído<span class="bipa-mprice__age">Pilão · 500&nbsp;g</span></span><span class="bipa-mprice__value">R$ 18,99</span></a>
+        <a class="bipa-mprice" href="ProdutoEmbalagens.dc.html" style="text-decoration: none; color: inherit;"><span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11h17a8.5 8.5 0 0 1-17 0z"/><path d="M8.5 8.5c.6-1.2 2-1.2 2.6 0M13 7.5c.6-1.2 2-1.2 2.6 0"/></svg></span><span class="bipa-mprice__name">Feijão carioca<span class="bipa-mprice__age">Kicaldo · 1&nbsp;kg</span></span><span class="bipa-mprice__value">R$ 8,79</span></a>
+        <a class="bipa-mprice" href="ProdutoEmbalagens.dc.html" style="text-decoration: none; color: inherit;"><span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3h8v3l2 3v12H6V9l2-3z"/><path d="M6 9h12"/></svg></span><span class="bipa-mprice__name">Leite integral<span class="bipa-mprice__age">3 embalagens</span></span><span class="bipa-mprice__value">R$ 5,49<small>o litro</small></span></a>
+        <a class="bipa-mprice" href="ProdutoEmbalagens.dc.html" style="text-decoration: none; color: inherit;"><span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="7" width="14" height="14" rx="2.5"/><path d="M9 7V4h6v3M9 12h6"/></svg></span><span class="bipa-mprice__name">Sabão em pó<span class="bipa-mprice__age">Omo · 1,6&nbsp;kg</span></span><span></span></a>
+        <a class="bipa-mprice" href="ProdutoEmbalagens.dc.html" style="text-decoration: none; color: inherit;"><span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13.5" r="7"/><path d="M12 6.5V4M9 7l3 1.5L15 7"/></svg></span><span class="bipa-mprice__name">Tomate italiano<span class="bipa-mprice__age">a granel</span></span><span class="bipa-mprice__value">R$ 8,99<small>o kg</small></span></a>
+        <a class="bipa-mprice" href="EmbalagemNova.dc.html" style="text-decoration: none; color: inherit;"><span class="bipa-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="bipa-mprice__name">Cadastrar produto</span><span></span></a>
+      </div>
+    </section>
+  </div>
+  <div class="nav-wrap">
+    <nav class="bipa-nav bipa-nav--glass" aria-label="Navegação principal">
+      <span class="bipa-nav__indicator" aria-hidden="true" style="width: 52px; transform: translateX(82px);"></span>
+      <a class="bipa-nav__dest" href="Main.dc.html" style="text-decoration: none;"><span class="bipa-nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-6.5 8 6.5v8.5H4z"/><path d="M10 19.5v-5h4v5"/></svg></span><span class="bipa-nav__label">Início</span></a>
+      <a class="bipa-nav__dest" href="Produtos.dc.html" aria-current="page" style="text-decoration: none;"><span class="bipa-nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.6 3.5H20v7.4L11 20 3.9 12.9z"/><circle cx="16" cy="7.8" r="1.4"/></svg></span><span class="bipa-nav__label">Produtos</span></a>
+      <a class="bipa-scan" href="Captura.dc.html" aria-label="Bipar (segure para mais opções)">
+        <span class="bipa-scan__icon">
+          <span class="bipa-scan__glyph" style="display: grid;"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16M3 12h18"/></svg></span>
+          <span class="bipa-scan__close" style="display: grid;"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
+        </span>
+      </a>
+      <a class="bipa-nav__dest" href="Mercados.dc.html" style="text-decoration: none;"><span class="bipa-nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg></span><span class="bipa-nav__label">Mercados</span></a>
+      <a class="bipa-nav__dest" href="Lista.dc.html" style="text-decoration: none;"><span class="bipa-nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r="1"/><circle cx="4.8" cy="12" r="1"/><circle cx="4.8" cy="17.5" r="1"/></svg></span><span class="bipa-nav__label">Lista</span></a>
+      
+    </nav>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
