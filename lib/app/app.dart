@@ -1,3 +1,4 @@
+import 'package:bipa/app/daily_backup.dart';
 import 'package:bipa/app/router.dart';
 import 'package:bipa/core/accessibility/recommended_timeouts.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
@@ -26,8 +27,10 @@ class BipaApp extends ConsumerWidget {
         supportedLocales: const [Locale('pt', 'BR')],
         localizationsDelegates: const [AppLocalizations.delegate, ...GlobalMaterialLocalizations.delegates],
         routerConfig: ref.watch(routerProvider),
-        // A notificação ao vivo da compra acompanha o app inteiro, acima das rotas.
-        builder: (context, child) => LiveShoppingNotification(child: child ?? const SizedBox.shrink()),
+        // A notificação ao vivo da compra e o backup diário acompanham o app
+        // inteiro, acima das rotas.
+        builder: (context, child) =>
+            LiveShoppingNotification(child: DailyBackup(child: child ?? const SizedBox.shrink())),
       ),
     );
   }
