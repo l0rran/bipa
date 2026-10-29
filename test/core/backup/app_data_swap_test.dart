@@ -39,7 +39,7 @@ void main() {
   Future<void> replace() =>
       swap.replace(databasePath: joinPath(staged.path, 'bipa.sqlite'), photosPath: joinPath(staged.path, 'fotos'));
 
-  test('troca o banco e as fotos, e não deixa reserva nem marca', () async {
+  test('troca o banco e as fotos, e guarda os de antes na reserva', () async {
     prepare();
 
     await replace();
@@ -47,9 +47,53 @@ void main() {
     expect(read(location.databasePath), 'banco novo');
     expect(File(photo('a.jpg')).existsSync(), isFalse);
     expect(read(photo('b.jpg')), 'foto nova');
-    expect(Directory(joinPath(location.restoreAreaPath, 'reserva')).existsSync(), isFalse);
     expect(File(joinPath(location.restoreAreaPath, 'troca')).existsSync(), isFalse);
     expect(await swap.recover(), isFalse);
+    expect(read(joinPath(location.restoreAreaPath, 'reserva', 'bipa.sqlite')), 'banco antigo');
+  });
+
+  group('desfazer', () {
+    test('volta o banco e as fotos de antes, e a reserva sai', () async {
+      prepare();
+      await replace();
+
+      expect(await swap.undo(), isTrue);
+
+      expect(read(location.databasePath), 'banco antigo');
+      expect(read(photo('a.jpg')), 'foto antiga');
+      expect(File(photo('b.jpg')).existsSync(), isFalse);
+      expect(Directory(joinPath(location.restoreAreaPath, 'reserva')).existsSync(), isFalse);
+      expect(await swap.undo(), isFalse);
+    });
+
+    test('num app que não tinha banco, volta a não ter', () async {
+      write(joinPath(staged.path, 'bipa.sqlite'), 'banco novo');
+      await replace();
+
+      expect(await swap.undo(), isTrue);
+
+      expect(File(location.databasePath).existsSync(), isFalse);
+    });
+
+    test('depois de apagar a reserva, não há o que desfazer', () async {
+      prepare();
+      await replace();
+
+      await swap.discardReserve();
+
+      expect(await swap.undo(), isFalse);
+      expect(read(location.databasePath), 'banco novo');
+    });
+
+    test('a primeira abertura do app apaga a reserva e a área de restauração', () async {
+      prepare();
+      await replace();
+
+      await swap.atStartup();
+
+      expect(read(location.databasePath), 'banco novo');
+      expect(Directory(location.restoreAreaPath).existsSync(), isFalse);
+    });
   });
 
   test('um backup sem fotos deixa a pasta de fotos vazia', () async {

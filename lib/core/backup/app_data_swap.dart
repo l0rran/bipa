@@ -39,7 +39,11 @@ String joinPath(String first, String second, [String? third, String? fourth]) =>
 /// última troca. Se o app fechar no meio, a marca ainda está lá, e
 /// [recover], chamado antes de abrir o banco, devolve os arquivos antigos.
 ///
-/// O banco precisa estar fechado durante a troca.
+/// Terminada a troca, a reserva fica, para o "Desfazer" da restauração
+/// ([undo]), até [discardReserve]: no fim do prazo do aviso, ou na primeira
+/// abertura do banco depois de o app fechar ([AppDataSwap.atStartup]).
+///
+/// O banco precisa estar fechado durante a troca e o [undo].
 final class AppDataSwap {
   AppDataSwap(this.location);
 
@@ -53,19 +57,69 @@ final class AppDataSwap {
   String get _reserveDatabase => joinPath(_reservePath, 'bipa.sqlite');
   String get _reservePhotos => joinPath(_reservePath, 'fotos');
 
+  /// Onde o [undo] põe a reserva enquanto ela volta para o lugar.
+  String get _previousPath => joinPath(location.restoreAreaPath, 'anterior');
+
+  /// Antes da primeira abertura do banco em cada execução do app: desfaz uma
+  /// troca interrompida e apaga o que sobrou da área de restauração (a
+  /// reserva de um "Desfazer" que não veio, uma restauração conferida e não
+  /// aplicada).
+  Future<void> atStartup() async {
+    await recover();
+    await _deleteDirectory(location.restoreAreaPath);
+  }
+
   /// Põe o banco em [databasePath] e a pasta de fotos em [photosPath] no
-  /// lugar dos atuais. Os dois caminhos precisam estar no mesmo volume dos
-  /// dados do app (a área de restauração serve). Se algo falhar, os arquivos
-  /// antigos voltam antes de o erro subir.
-  Future<void> replace({required String databasePath, required String photosPath}) async {
+  /// lugar dos atuais, que vão para a reserva. Os dois caminhos precisam
+  /// estar no mesmo volume dos dados do app (a área de restauração serve).
+  /// Se algo falhar, os arquivos antigos voltam antes de o erro subir.
+  Future<void> replace({required String databasePath, required String photosPath}) =>
+      _replace(databasePath: databasePath, photosPath: photosPath);
+
+  /// "Desfazer": o banco e as fotos da reserva voltam para o lugar, e os de
+  /// agora saem. Devolve `false` se não há reserva.
+  Future<bool> undo() async {
+    await recover();
+    final reserve = Directory(_reservePath);
+    if (!await reserve.exists()) return false;
+    await _deleteDirectory(_previousPath);
+    await reserve.rename(_previousPath);
+    final database = joinPath(_previousPath, 'bipa.sqlite');
+    // Sem banco na reserva, não havia banco antes da restauração (um app
+    // recém-instalado): depois do desfazer, também não há.
+    await _replace(
+      databasePath: await File(database).exists() ? database : null,
+      photosPath: joinPath(_previousPath, 'fotos'),
+    );
+    // A reserva agora tem os dados do backup, que a pessoa desfez.
+    await discardReserve();
+    return true;
+  }
+
+  /// Se há uma restauração para desfazer.
+  Future<bool> hasReserve() => Directory(_reservePath).exists();
+
+  /// Apaga a reserva: a última restauração não pode mais ser desfeita.
+  Future<void> discardReserve() async {
+    try {
+      await _deleteDirectory(_reservePath);
+      await _deleteDirectory(_previousPath);
+    } on FileSystemException {
+      // Sai na próxima abertura ([atStartup]).
+    }
+  }
+
+  Future<void> _replace({required String? databasePath, required String photosPath}) async {
     // Uma troca anterior interrompida volta primeiro, para a reserva ser a
     // do estado de agora.
     await recover();
     final reserve = Directory(_reservePath);
     if (await reserve.exists()) await reserve.delete(recursive: true);
     await reserve.create(recursive: true);
-    for (final suffix in _sidecars) {
-      await _deleteFile('$databasePath$suffix');
+    if (databasePath != null) {
+      for (final suffix in _sidecars) {
+        await _deleteFile('$databasePath$suffix');
+      }
     }
 
     final hadDatabase = await File(location.databasePath).exists();
@@ -74,7 +128,7 @@ final class AppDataSwap {
     try {
       if (hadDatabase) await _moveDatabase(location.databasePath, _reserveDatabase);
       if (hadPhotos) await Directory(location.photosPath).rename(_reservePhotos);
-      await _moveDatabase(databasePath, location.databasePath);
+      if (databasePath != null) await _moveDatabase(databasePath, location.databasePath);
       final photos = Directory(photosPath);
       if (await photos.exists()) {
         await photos.rename(location.photosPath);
@@ -85,24 +139,14 @@ final class AppDataSwap {
       await recover();
       rethrow;
     }
-    // A troca está feita: daqui em diante, nada volta. Uma reserva que não
-    // sair agora sai no próximo [recover].
+    // A troca está feita: daqui em diante, só o [undo] volta atrás.
     await _marker.delete();
-    try {
-      await _deleteDirectory(_reservePath);
-    } on FileSystemException {
-      // Fica para depois.
-    }
   }
 
   /// Desfaz uma troca interrompida, se houver; devolve se havia uma. Chame
   /// antes de abrir o banco.
   Future<bool> recover() async {
-    if (!await _marker.exists()) {
-      // Sobra de uma troca que terminou mas não chegou a limpar a reserva.
-      await _deleteDirectory(_reservePath);
-      return false;
-    }
+    if (!await _marker.exists()) return false;
     final state = await _readMarker();
     if (state != null) {
       final (:hadDatabase, :hadPhotos) = state;

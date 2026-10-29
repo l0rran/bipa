@@ -145,15 +145,28 @@ class AppDatabase extends _$AppDatabase {
   @override
   Future<void> close() => _closing ??= super.close();
 
+  /// Se o banco já abriu nesta execução do app. A restauração do backup
+  /// reabre o banco, e essa reabertura não pode apagar a reserva do
+  /// "Desfazer".
+  static bool _openedBefore = false;
+
   /// O banco fica em `bipa.sqlite`, na pasta de documentos do app (o padrão
   /// do `driftDatabase`, aqui explícito). Antes de abrir, uma restauração de
-  /// backup interrompida no meio volta ao que era (ADR 0023, seção 5).
+  /// backup interrompida no meio volta ao que era, e, na primeira abertura
+  /// de cada execução, a reserva de uma restauração anterior sai (ADR 0023,
+  /// seção 5).
   static QueryExecutor _openConnection() => driftDatabase(
     name: 'bipa',
     native: DriftNativeOptions(
       databasePath: () async {
         final location = await appDataLocation();
-        await AppDataSwap(location).recover();
+        final swap = AppDataSwap(location);
+        if (_openedBefore) {
+          await swap.recover();
+        } else {
+          _openedBefore = true;
+          await swap.atStartup();
+        }
         return location.databasePath;
       },
     ),
