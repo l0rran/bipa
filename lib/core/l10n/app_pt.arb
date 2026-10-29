@@ -442,6 +442,15 @@
       }
     }
   },
+  "productPickLabel": "Na etiqueta: {text}",
+  "@productPickLabel": {
+    "description": "Dica sob a busca da escolha de produto: o nome como foi lido na etiqueta, para a pessoa comparar com a linha que vai tocar.",
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "productPackages": "Embalagens",
   "productMarkets": "Nos mercados",
   "productAtHome": "Em casa",

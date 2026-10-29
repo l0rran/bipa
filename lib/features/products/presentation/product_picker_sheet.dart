@@ -32,26 +32,38 @@ final class NewProduct extends ProductChoice {
 
 /// Escolhe o produto de uma embalagem, ou cria um, a partir de uma busca que
 /// começa com [initialQuery]. Sem [allowCreate], só os que existem, tirando
-/// [excludeId] (para juntar um produto com outro).
+/// [excludeId] (para juntar um produto com outro). [label] e [newName] vêm
+/// de uma etiqueta ([pickProductForLabel]).
 Future<ProductChoice?> pickProduct(
   BuildContext context, {
   String initialQuery = '',
   bool allowCreate = true,
   String? excludeId,
   String? title,
+  String? label,
+  String? newName,
 }) {
   return showModalBottomSheet<ProductChoice>(
     context: context,
     isScrollControlled: true,
-    builder: (_) =>
-        ProductPickerSheet(initialQuery: initialQuery, allowCreate: allowCreate, excludeId: excludeId, title: title),
+    builder: (_) => ProductPickerSheet(
+      initialQuery: initialQuery,
+      allowCreate: allowCreate,
+      excludeId: excludeId,
+      title: title,
+      label: label,
+      newName: newName,
+    ),
   );
 }
 
 /// A escolha de produto a partir do nome lido numa etiqueta ([nameHint]): o
 /// texto inicial vem recortado, sem marca, tamanho nem ruído, para a busca
 /// achar o produto que já existe em vez de oferecer um duplicado (G4,
-/// [productQueryFromLabel]).
+/// [productQueryFromLabel]). A etiqueta aparece sob a busca, e "Criar"
+/// propõe o recorte dela ([productNameFromLabel]) sempre que ela tiver
+/// palavras que o produto achado não tem: "BANANA NANICA" não cai em
+/// "Banana" sem a pessoa ver (G6).
 Future<ProductChoice?> pickProductForLabel(
   BuildContext context,
   WidgetRef ref, {
@@ -59,22 +71,39 @@ Future<ProductChoice?> pickProductForLabel(
   bool allowCreate = true,
   String? title,
 }) async {
-  var query = nameHint?.trim() ?? '';
-  if (query.isNotEmpty) {
+  final label = nameHint?.trim() ?? '';
+  var query = label;
+  final newName = productNameFromLabel(label);
+  if (label.isNotEmpty) {
     try {
       final products = await ref.read(productRepositoryProvider).watchAll().first;
-      query = productQueryFromLabel(query, products: products);
+      query = productQueryFromLabel(label, products: products);
     } on Exception catch (error, stack) {
       // Sem a lista, abre com o texto lido, como antes.
       FlutterError.reportError(FlutterErrorDetails(exception: error, stack: stack, library: 'products'));
     }
   }
   if (!context.mounted) return null;
-  return pickProduct(context, initialQuery: query, allowCreate: allowCreate, title: title);
+  return pickProduct(
+    context,
+    initialQuery: query,
+    allowCreate: allowCreate,
+    title: title,
+    label: label.isEmpty ? null : label,
+    newName: newName.isEmpty ? null : newName,
+  );
 }
 
 class ProductPickerSheet extends ConsumerStatefulWidget {
-  const ProductPickerSheet({this.initialQuery = '', this.allowCreate = true, this.excludeId, this.title, super.key});
+  const ProductPickerSheet({
+    this.initialQuery = '',
+    this.allowCreate = true,
+    this.excludeId,
+    this.title,
+    this.label,
+    this.newName,
+    super.key,
+  });
 
   final String initialQuery;
   final bool allowCreate;
@@ -82,6 +111,14 @@ class ProductPickerSheet extends ConsumerStatefulWidget {
 
   /// Sem título, pergunta "De que produto é?".
   final String? title;
+
+  /// O nome como foi lido na etiqueta, mostrado sob a busca para a pessoa
+  /// comparar com a linha que vai tocar.
+  final String? label;
+
+  /// O nome que "Criar" propõe enquanto a busca é a de abertura (o recorte
+  /// da etiqueta). Depois que a pessoa digita, vale o que ela digitou.
+  final String? newName;
 
   @override
   ConsumerState<ProductPickerSheet> createState() => _ProductPickerSheetState();
@@ -93,6 +130,14 @@ class _ProductPickerSheetState extends ConsumerState<ProductPickerSheet> {
   late var _products = _watch();
 
   Stream<List<Product>> _watch() => ref.read(productRepositoryProvider).watchAll(query: _query);
+
+  /// O que "Criar" cadastra: o recorte da etiqueta enquanto a busca é a de
+  /// abertura, que pode ser o nome de um produto achado ("Banana" para
+  /// "BANANA NANICA KG"); depois, o que a pessoa digitou.
+  String get _createName {
+    final newName = widget.newName?.trim() ?? '';
+    return newName.isNotEmpty && _query == widget.initialQuery.trim() ? newName : _query;
+  }
 
   @override
   void dispose() {
@@ -135,6 +180,11 @@ class _ProductPickerSheetState extends ConsumerState<ProductPickerSheet> {
                 }),
               ),
             ),
+            if (widget.label case final label?)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(BipaSpacing.s4, BipaSpacing.s2, BipaSpacing.s4, 0),
+                child: Text(l10n.productPickLabel(label), style: BipaText.caption.copyWith(color: colors.inkMuted)),
+              ),
             const SizedBox(height: BipaSpacing.s2),
             Flexible(
               child: StreamBuilder<List<Product>>(
@@ -144,11 +194,14 @@ class _ProductPickerSheetState extends ConsumerState<ProductPickerSheet> {
                     for (final product in snapshot.data ?? const <Product>[])
                       if (product.id != widget.excludeId) product,
                   ];
-                  // Sem "Cadastrar" quando já há um produto com as mesmas palavras
-                  // ("FEIJAO CARIOCA" da etiqueta e "Feijão carioca" do cadastro):
-                  // o atalho que cria um duplicado não pode ser o mais à mão.
-                  final exact = items.any((p) => sameSearchWords(p.name, _query));
-                  final canCreate = widget.allowCreate && _query.isNotEmpty && !exact;
+                  // Sem "Criar" só quando já há um produto com exatamente as mesmas
+                  // palavras do nome a criar ("FEIJAO CARIOCA" da etiqueta e
+                  // "Feijão carioca" do cadastro): o atalho que cria um duplicado
+                  // não pode ser o mais à mão. Uma palavra a mais na etiqueta
+                  // ("Banana nanica" e o produto "Banana") mantém o "Criar" (G6).
+                  final createName = _createName;
+                  final exact = items.any((p) => sameSearchWords(p.name, createName));
+                  final canCreate = widget.allowCreate && createName.isNotEmpty && !exact;
                   if (snapshot.hasData && items.isEmpty && !canCreate) {
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: BipaSpacing.s6),
@@ -178,8 +231,8 @@ class _ProductPickerSheetState extends ConsumerState<ProductPickerSheet> {
                             foregroundColor: colors.brandText,
                             child: const Icon(Icons.add_rounded),
                           ),
-                          title: Text(l10n.productPickCreate(_query)),
-                          onTap: () => Navigator.of(context).pop(NewProduct(_query)),
+                          title: Text(l10n.productPickCreate(createName)),
+                          onTap: () => Navigator.of(context).pop(NewProduct(createName)),
                         ),
                     ],
                   );
