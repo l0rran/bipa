@@ -5,6 +5,7 @@ import 'package:bipa/features/prices/domain/price_condition.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/prices/domain/price_tag.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
+import 'package:bipa/features/products/domain/package_origin.dart';
 import 'package:bipa/features/stock/domain/stock_location.dart';
 import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -19,6 +20,15 @@ void main() {
 
   test('as unidades: products.unit e product_packages.unit', () {
     expect(names(MeasureUnit.values), containsAll(['unit', 'gram', 'kilogram', 'milliliter', 'liter']));
+  });
+
+  test('a origem da embalagem: product_packages.origin', () {
+    // `person` é também o padrão da coluna, para as embalagens anteriores
+    // ao esquema 15.
+    expect(
+      names(PackageOrigin.values),
+      containsAll(['person', 'openFoodFacts', 'openProductsFacts', 'openBeautyFacts']),
+    );
   });
 
   test('as condições do preço: price_observations.condition_kind', () {

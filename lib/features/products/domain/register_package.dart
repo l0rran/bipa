@@ -2,6 +2,7 @@ import 'package:bipa/core/errors/domain_exception.dart';
 import 'package:bipa/core/id/id_generator.dart';
 import 'package:bipa/core/time/clock.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
+import 'package:bipa/features/products/domain/package_origin.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/product_repository.dart';
@@ -11,7 +12,15 @@ import 'package:meta/meta.dart';
 /// O que a pessoa confirmou ao bipar um código novo (ADR 0013).
 @immutable
 final class NewPackageInput {
-  const NewPackageInput({required this.unit, this.barcode, this.productId, this.newProductName, this.brand, this.size});
+  const NewPackageInput({
+    required this.unit,
+    this.barcode,
+    this.productId,
+    this.newProductName,
+    this.brand,
+    this.size,
+    this.origin = PackageOrigin.person,
+  });
 
   final String? barcode;
 
@@ -21,6 +30,11 @@ final class NewPackageInput {
   final String? brand;
   final double? size;
   final MeasureUnit unit;
+
+  /// De onde veio o que a folha sugeriu: do catálogo, a embalagem nasce
+  /// marcada como cópia dele (ADR 0023, seção 6), mesmo que a pessoa tenha
+  /// corrigido algum campo.
+  final PackageOrigin origin;
 }
 
 /// Caso de uso: cria a embalagem de um código novo, no produto escolhido ou
@@ -71,6 +85,7 @@ final class RegisterPackage {
       brand: brand == null || brand.isEmpty ? null : brand,
       size: size,
       unit: input.unit,
+      origin: input.origin,
       createdAt: now,
       updatedAt: now,
     );

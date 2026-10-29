@@ -1,5 +1,6 @@
 import 'package:bipa/core/money/money.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
+import 'package:bipa/features/products/domain/package_origin.dart';
 import 'package:bipa/features/products/domain/unit_price.dart';
 import 'package:meta/meta.dart';
 
@@ -17,6 +18,7 @@ final class ProductPackage {
     this.barcode,
     this.brand,
     this.size,
+    this.origin = PackageOrigin.person,
   });
 
   final String id;
@@ -29,6 +31,10 @@ final class ProductPackage {
   /// Quanto a embalagem tem, em [unit]: 5 (kg), 395 (g), 12 (un).
   final double? size;
   final MeasureUnit unit;
+
+  /// De onde vieram os dados: da pessoa ou do catálogo pronto (ADR 0024).
+  /// Editar ou mover a embalagem não muda a origem.
+  final PackageOrigin origin;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -70,6 +76,7 @@ final class ProductPackage {
     brand: brand ?? this.brand,
     size: size ?? this.size,
     unit: unit ?? this.unit,
+    origin: origin,
     createdAt: createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -83,11 +90,12 @@ final class ProductPackage {
       other.brand == brand &&
       other.size == size &&
       other.unit == unit &&
+      other.origin == origin &&
       other.createdAt == createdAt &&
       other.updatedAt == updatedAt;
 
   @override
-  int get hashCode => Object.hash(id, productId, barcode, brand, size, unit, createdAt, updatedAt);
+  int get hashCode => Object.hash(id, productId, barcode, brand, size, unit, origin, createdAt, updatedAt);
 
   @override
   String toString() => 'ProductPackage($id, $productId, $label)';

@@ -70,6 +70,8 @@ class _PackageEditSheetState extends ConsumerState<PackageEditSheet> {
           brand: brand.isEmpty ? null : brand,
           size: _parseSize(_size.text),
           unit: _unit,
+          // Corrigida pela pessoa, continua vindo do catálogo (ADR 0024).
+          origin: original.origin,
           createdAt: original.createdAt,
           updatedAt: now,
         ),

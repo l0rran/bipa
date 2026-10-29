@@ -1,4 +1,5 @@
 import 'package:bipa/features/products/domain/measure_unit.dart';
+import 'package:bipa/features/products/domain/package_origin.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/product_repository.dart';
@@ -54,6 +55,23 @@ void main() {
     // O produto conta em kg; a embalagem fica em gramas.
     expect(product.unit, MeasureUnit.kilogram);
     expect(package.unit, MeasureUnit.gram);
+  });
+
+  test('a embalagem é da pessoa, ou do catálogo quando a folha veio preenchida por ele', () async {
+    final (_, typed) = await register(
+      const NewPackageInput(barcode: '7891089200015', newProductName: 'Café', unit: MeasureUnit.gram),
+    );
+    final (_, fromCatalog) = await register(
+      const NewPackageInput(
+        barcode: '7896006711155',
+        newProductName: 'Arroz branco',
+        unit: MeasureUnit.kilogram,
+        origin: PackageOrigin.openFoodFacts,
+      ),
+    );
+
+    expect(products.packages[typed.id]?.origin, PackageOrigin.person);
+    expect(products.packages[fromCatalog.id]?.origin, PackageOrigin.openFoodFacts);
   });
 
   test('um código que já é de outra embalagem não cria nada', () async {

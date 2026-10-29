@@ -175,7 +175,7 @@ void main() {
       expect(info.size, File(app.latestPath).lengthSync());
       expect(info.madeHere, isTrue);
       final manifest = info.manifest;
-      expect((manifest.format, manifest.schemaVersion, manifest.appVersion), (1, 14, '0.1.0+1'));
+      expect((manifest.format, manifest.schemaVersion, manifest.appVersion), (1, app.db.schemaVersion, '0.1.0+1'));
       expect(manifest.createdAt, at);
       expect(manifest.counts['products'], 1);
       expect(manifest.counts['stock_lots'], 2);
@@ -426,11 +426,13 @@ void main() {
     });
 
     test('um backup de esquema mais antigo passa pela migração do drift', () async {
-      // Simula a v13 como o teste de migração: sem a tabela da v14.
+      // Simula a v13 como o teste de migração: sem a tabela da v14 e sem a
+      // coluna da v15.
       await seed();
       final file = joinPath(root.path, 'v13.sqlite');
       await app.db.customStatement('VACUUM INTO ?', [file]);
       await _raw(file, 'DROP TABLE remembered_locations');
+      await _raw(file, 'ALTER TABLE product_packages DROP COLUMN origin');
       _setUserVersion(file, 13);
       final source = await app.archiveOf(file, schemaVersion: 13, counts: {'products': 1});
       await changeEverything();
@@ -444,19 +446,21 @@ void main() {
     test('recusa um backup de esquema mais novo, sem mexer em nada', () async {
       await seed();
       await app.create()();
-      final source = app.rewriteManifest(app.latestPath, (json) => json..['schemaVersion'] = 15);
+      final newer = app.db.schemaVersion + 1;
+      final source = app.rewriteManifest(app.latestPath, (json) => json..['schemaVersion'] = newer);
 
-      await expectRefused(source, DomainErrorCode.backupFromNewerApp, detail: 'esquema 15');
+      await expectRefused(source, DomainErrorCode.backupFromNewerApp, detail: 'esquema $newer');
     });
 
     test('recusa um banco com user_version mais novo que o do app', () async {
       await seed();
-      final file = joinPath(root.path, 'v15.sqlite');
+      final newer = app.db.schemaVersion + 1;
+      final file = joinPath(root.path, 'mais_novo.sqlite');
       await app.db.customStatement('VACUUM INTO ?', [file]);
-      _setUserVersion(file, 15);
-      final source = await app.archiveOf(file, schemaVersion: 14);
+      _setUserVersion(file, newer);
+      final source = await app.archiveOf(file, schemaVersion: app.db.schemaVersion);
 
-      await expectRefused(source, DomainErrorCode.backupFromNewerApp, detail: 'user_version 15');
+      await expectRefused(source, DomainErrorCode.backupFromNewerApp, detail: 'user_version $newer');
     });
 
     test('recusa um formato mais novo', () async {
@@ -472,7 +476,7 @@ void main() {
       final file = joinPath(root.path, 'enum.sqlite');
       await app.db.customStatement('VACUUM INTO ?', [file]);
       await _raw(file, "UPDATE products SET unit = 'lightYear'");
-      final source = await app.archiveOf(file, schemaVersion: 14);
+      final source = await app.archiveOf(file, schemaVersion: app.db.schemaVersion);
 
       await expectRefused(source, DomainErrorCode.backupFromNewerApp, detail: 'products');
     });
@@ -538,7 +542,10 @@ void main() {
     });
 
     test('um banco que não é SQLite, com o hash certo', () async {
-      final source = await app.archiveBytesOf(utf8.encode('não sou um banco' * 20), schemaVersion: 14);
+      final source = await app.archiveBytesOf(
+        utf8.encode('não sou um banco' * 20),
+        schemaVersion: app.db.schemaVersion,
+      );
 
       await expectRefused(source, DomainErrorCode.backupDamaged, detail: 'não é SQLite');
     });
@@ -546,7 +553,7 @@ void main() {
     test('contagens que não batem com o manifesto', () async {
       final file = joinPath(root.path, 'contagem.sqlite');
       await app.db.customStatement('VACUUM INTO ?', [file]);
-      final source = await app.archiveOf(file, schemaVersion: 14, counts: {'products': 5});
+      final source = await app.archiveOf(file, schemaVersion: app.db.schemaVersion, counts: {'products': 5});
 
       await expectRefused(source, DomainErrorCode.backupDamaged, detail: 'products tem 1 linhas');
     });
@@ -555,7 +562,7 @@ void main() {
       final file = joinPath(root.path, 'lotes.sqlite');
       await app.db.customStatement('VACUUM INTO ?', [file]);
       await _raw(file, "DELETE FROM stock_lots WHERE id = 'l2'");
-      final source = await app.archiveOf(file, schemaVersion: 14);
+      final source = await app.archiveOf(file, schemaVersion: app.db.schemaVersion);
 
       await expectRefused(source, DomainErrorCode.backupDamaged, detail: 'lotes');
     });
@@ -564,7 +571,7 @@ void main() {
       final file = joinPath(root.path, 'chave.sqlite');
       await app.db.customStatement('VACUUM INTO ?', [file]);
       await _raw(file, "UPDATE price_observations SET market_id = 'sumiu'");
-      final source = await app.archiveOf(file, schemaVersion: 14);
+      final source = await app.archiveOf(file, schemaVersion: app.db.schemaVersion);
 
       await expectRefused(source, DomainErrorCode.backupDamaged, detail: 'foreign_key_check');
     });

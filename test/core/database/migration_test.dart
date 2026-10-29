@@ -4,6 +4,7 @@ import 'package:bipa/core/database/app_database.dart';
 import 'package:bipa/features/prices/domain/price_condition.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
+import 'package:bipa/features/products/domain/package_origin.dart';
 import 'package:bipa/features/stock/domain/stock_location.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
@@ -59,6 +60,7 @@ void main() {
     12: ['scale_items'],
     13: ['trip_prices'],
     14: ['remembered_locations'],
+    15: ['product_packages.origin'],
   };
 
   /// Tudo o que veio depois da [version].
@@ -264,6 +266,30 @@ void main() {
         (899, PriceConditionKind.loyaltyMembers, PriceSource.priceTag, null),
       );
       expect((item.quantity, item.location), (2, StockLocation.pantry));
+    });
+
+    test('v14 → v15: as embalagens que já existiam são da pessoa, e a migração não as reenvia', () async {
+      final schema = await verifier.schemaAt(14);
+      addTearDown(schema.close);
+      final seconds = at.millisecondsSinceEpoch ~/ 1000;
+      schema.rawDatabase
+        ..execute(
+          'INSERT INTO products (id, name, unit, created_at, updated_at) '
+          "VALUES ('arroz', 'Arroz branco', 'kilogram', $seconds, $seconds)",
+        )
+        ..execute(
+          'INSERT INTO product_packages (id, product_id, barcode, brand, size, unit, created_at, updated_at, synced_at) '
+          "VALUES ('tio', 'arroz', '7893500020110', 'Tio João', 5, 'kilogram', $seconds, $seconds, $seconds)",
+        );
+
+      final db = AppDatabase(schema.newConnection());
+      addTearDown(db.close);
+      final package = await db.select(db.productPackages).getSingle();
+
+      expect(
+        (package.origin, package.brand, package.size, package.syncedAt),
+        (PackageOrigin.person, 'Tio João', 5.0, at),
+      );
     });
   });
 }

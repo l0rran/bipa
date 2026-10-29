@@ -10,6 +10,7 @@ import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/products/data/directory_product_photo_files.dart';
 import 'package:bipa/features/products/data/drift_product_repository.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
+import 'package:bipa/features/products/domain/package_origin.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/product_repository.dart';
@@ -63,6 +64,30 @@ void main() {
     expect(await repository.findByBarcode('7896006711155'), rice);
     expect((await repository.findPackageByBarcode('7896006711155'))?.brand, 'Tio João');
     expect(await repository.findByBarcode('4006381333931'), isNull);
+  });
+
+  test('a embalagem guarda de onde veio, e mover não muda a origem', () async {
+    await repository.save(product('arroz', 'Arroz branco'));
+    await repository.save(product('integral', 'Arroz integral'));
+    await repository.savePackage(
+      ProductPackage(
+        id: 'tio-joao',
+        productId: 'arroz',
+        barcode: '7896006711155',
+        unit: MeasureUnit.kilogram,
+        origin: PackageOrigin.openFoodFacts,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+    await repository.savePackage(package('camil', 'arroz', brand: 'Camil'));
+
+    expect((await repository.findPackageById('tio-joao'))?.origin, PackageOrigin.openFoodFacts);
+    expect((await repository.findPackageById('camil'))?.origin, PackageOrigin.person);
+
+    final moved = (await repository.findPackageById('tio-joao'))!.copyWith(productId: 'integral', updatedAt: now);
+    await repository.savePackage(moved);
+    expect((await repository.findPackageById('tio-joao'))?.origin, PackageOrigin.openFoodFacts);
   });
 
   test('um produto tem várias embalagens, das mais novas para as mais antigas', () async {

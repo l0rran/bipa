@@ -3,6 +3,7 @@ import 'package:bipa/core/database/price_offers_converter.dart';
 import 'package:bipa/features/prices/domain/price_condition.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
+import 'package:bipa/features/products/domain/package_origin.dart';
 import 'package:bipa/features/stock/domain/stock_location.dart';
 import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
 import 'package:drift/drift.dart';
@@ -14,8 +15,8 @@ import 'package:drift/drift.dart';
 // * O banco é o formato do backup `.bipa` (ADR 0023): o que está gravado
 //   nele precisa abrir em qualquer versão futura do app. Por isso:
 //   - as colunas `textEnum` gravam o nome do valor do enum: `products.unit`,
-//     `product_packages.unit`, `price_observations.condition_kind` e
-//     `source`, `trip_prices.source`, `stock_items.location`,
+//     `product_packages.unit` e `origin`, `price_observations.condition_kind`
+//     e `source`, `trip_prices.source`, `stock_items.location`,
 //     `stock_movements.reason`, `market_aisles.aisle` e
 //     `remembered_locations.location`. Acrescentar um valor não exige
 //     migração (mas um app mais antigo não lê o valor novo); renomear ou
@@ -58,6 +59,11 @@ class ProductPackages extends Table {
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get syncedAt => dateTime().nullable()();
+
+  /// De onde vieram os dados: da pessoa ou do catálogo pronto (ADR 0023,
+  /// lacuna C1; ADR 0024). As embalagens anteriores ao esquema v15 são da
+  /// pessoa. No fim da tabela, como fica nos bancos migrados.
+  TextColumn get origin => textEnum<PackageOrigin>().withDefault(const Constant('person'))();
 
   @override
   Set<Column<Object>> get primaryKey => {id};

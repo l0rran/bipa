@@ -8,6 +8,7 @@ import 'package:bipa/features/prices/domain/price_condition.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
 import 'package:bipa/features/prices/domain/price_tag.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
+import 'package:bipa/features/products/domain/package_origin.dart';
 import 'package:bipa/features/stock/domain/stock_location.dart';
 import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
 import 'package:drift/drift.dart';
@@ -52,10 +53,11 @@ class AppDatabase extends _$AppDatabase {
   // v12: itens da balança de cada mercado (ADR 0018).
   // v13: preços da compra guardados com ela (ADR 0020).
   // v14: o local do item que saiu de casa (ADR 0021).
+  // v15: a embalagem guarda de onde veio, da pessoa ou do catálogo (ADR 0024).
   //
   // Do 14 em diante, cada versão tem o esquema guardado em drift_schemas/
   // (ADR 0023): subir este número pede um dump novo (docs/contribuindo.md).
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -82,6 +84,9 @@ class AppDatabase extends _$AppDatabase {
       if (from < 12) await migrator.createTable(scaleItems);
       if (from < 13) await migrator.createTable(tripPrices);
       if (from < 14) await migrator.createTable(rememberedLocations);
+      // Antes da v7, as embalagens são criadas já com a coluna nova. As que
+      // existem são da pessoa: o catálogo ainda não existia.
+      if (from >= 7 && from < 15) await migrator.addColumn(productPackages, productPackages.origin);
     }),
     beforeOpen: (details) async {
       // SQLite não aplica chaves estrangeiras sem este pragma.
