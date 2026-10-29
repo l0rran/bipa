@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
@@ -40,10 +42,36 @@ class ProductCard extends StatelessWidget {
 
   static const _nameStyle = TextStyle(fontSize: 14, height: 18 / 14);
 
-  /// A altura do cartão: a arte quadrada, o espaço e duas linhas de nome, que
+  /// A largura do cartão: com letra grande ele alarga, até uma vez e meia,
+  /// para o nome ter mais letras por linha (H9).
+  static double widthFor(BuildContext context, {double width = 116}) =>
+      width * (1 + (MediaQuery.textScalerOf(context).scale(1) - 1) * 0.5).clamp(1.0, 1.5);
+
+  /// A altura do cartão: a arte quadrada, o espaço e as linhas de nome, que
   /// crescem com a letra. A prateleira horizontal usa o mesmo valor.
-  static double heightFor(BuildContext context, {double width = 116}) =>
-      width + BipaSpacing.s2 + _nameStyle.scaledLineHeight(context, lines: 2);
+  ///
+  /// Com letra grande o nome não é cortado (H9): a prateleira passa os [names]
+  /// de todos os cartões, e a altura cobre o mais comprido. Em letra normal
+  /// são sempre duas linhas.
+  static double heightFor(BuildContext context, {double width = 116, Iterable<String> names = const []}) {
+    final cardWidth = widthFor(context, width: width);
+    var lines = 2;
+    if (isLargeText(context)) {
+      final style = BipaText.bodyLarge.merge(_nameStyle);
+      final scaler = MediaQuery.textScalerOf(context);
+      final direction = Directionality.of(context);
+      for (final name in names) {
+        final painter = TextPainter(
+          text: TextSpan(text: name, style: style),
+          textScaler: scaler,
+          textDirection: direction,
+        )..layout(maxWidth: cardWidth);
+        lines = math.max(lines, painter.computeLineMetrics().length);
+        painter.dispose();
+      }
+    }
+    return cardWidth + BipaSpacing.s2 + _nameStyle.scaledLineHeight(context, lines: lines);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +79,7 @@ class ProductCard extends StatelessWidget {
     final toggle = onToggleList;
 
     return SizedBox(
-      width: width,
+      width: widthFor(context, width: width),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -94,8 +122,9 @@ class ProductCard extends StatelessWidget {
           const SizedBox(height: BipaSpacing.s2),
           Text(
             name,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+            // Letra grande: a prateleira reserva a altura do nome mais comprido.
+            maxLines: isLargeText(context) ? null : 2,
+            overflow: isLargeText(context) ? TextOverflow.visible : TextOverflow.ellipsis,
             style: BipaText.bodyLarge.merge(_nameStyle).copyWith(color: colors.ink),
           ),
         ],
