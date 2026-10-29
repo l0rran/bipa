@@ -170,6 +170,23 @@ O problema: **conferir onde cada coisa ficou depois da primeira carga, sem abrir
 - A linha é a do estoque (miniatura, nome e medidor). Tocar abre o local e o "ter sempre", como o editor da linha do Início, um item por vez.
 - Cada escolha salva na hora, por isso não há "Salvar": "Pronto" fecha, e arrastar para baixo também.
 
+### Quando aparece "Arrumar o que entrou" (outubro de 2026)
+
+O problema: **a folha só aparece com três ou mais itens novos** (AB13). Com bipes rápidos, o aviso de cada item novo dura até o bipe seguinte, uns 2 s; com um ou dois novos, nada confere o local ao fechar. E, no caso oposto, a folha mostra também os itens cujo local a pessoa já trocou no aviso.
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **Adobe Scan** (no benchmark de "Arrumar o que entrou") | A revisão do lote aparece ao terminar as capturas, com o que foi capturado | A revisão ao fechar a câmera | Ela só mostra o que ninguém conferiu, e não aparece quando não há nada (proposta A) |
+| **Material Design** ([folhas inferiores](https://m3.material.io/components/bottom-sheets/guidelines) e [snackbars](https://m3.material.io/components/snackbar/guidelines)) | A folha modal interrompe e pede atenção; o snackbar informa sem interromper, com uma ação | Para pouca coisa, um aviso com uma ação; para muita, a folha (proposta B) | O aviso diz os nomes e o local, para a pessoa decidir sem abrir nada |
+| **Pantry Check** (no benchmark de "Arrumar o que entrou") | Pede local e validade depois de bipar vários itens, sempre | — | Não perguntar o que já foi respondido: o item com o local escolhido no aviso sai da conta |
+
+**Do nosso jeito:** duas propostas, no quadro [ArrumarEntrouRegra](prototipo/telas/ArrumarEntrouRegra.png). Nas duas, o item cujo local foi escolhido no aviso sai da conta, e um bipe desfeito também, como hoje.
+
+- **A, a folha só com o que ninguém conferiu:** entra o item novo cujo aviso foi trocado por outro bipe antes dos 4 s e cujo local ninguém tocou, sem mínimo. Sem nada assim, a câmera fecha direto. Uma superfície só, e a regra diz quando a pessoa provavelmente não viu o local.
+- **B, um aviso para poucos e a folha para muitos:** com um ou dois itens novos sem o local escolhido, a câmera fecha e o Início mostra o `bipa-toast` "Atum e Lasanha ficaram na Despensa", com "Conferir", que abre a escolha. Com três ou mais, a folha de hoje. Interrompe menos, mas o aviso também some em 4 s.
+
+Recomendação: A, porque não depende de a pessoa ver mais um aviso que some.
+
 ### Granel na bandeja (outubro de 2026)
 
 O problema: **o preço por kg do granel não pode parecer o valor da linha** (D9). Na bandeja, "R$ 8,99/kg" ocupava a etiqueta com o contorno do preço estimado, que entra no total, e ficava fora dele.
@@ -190,14 +207,28 @@ O problema: **corrigir o local de um item novo na hora do bipe**, quando a suges
 
 | Referência | Como resolve | O que levamos | O que fazemos diferente |
 | --- | --- | --- | --- |
-| **Spotify** (botão "+", nas [discussões da comunidade](https://community.spotify.com/t5/Live-Ideas/Ability-to-Change-the-Default-Playlist-for-button/idi-p/5678036/page/3)) | O "+" salva direto nas Curtidas, e o aviso traz "Alterar" para escolher outra playlist | Salvar no destino provável e oferecer a troca no próprio aviso | A troca é um chip à parte, com o local à vista, e não um botão "Alterar" ao lado do "Desfazer" |
-| **Material Design** ([snackbars](https://m3.material.io/components/snackbar/guidelines)) | Uma ação por aviso, reversível; um aviso novo substitui o anterior | O aviso fica com uma ação só (Desfazer) | O local não cabe como segunda ação: vai num controle próprio, que também some com o aviso |
+| **Spotify** (botão "+", nas [discussões da comunidade](https://community.spotify.com/t5/Live-Ideas/Ability-to-Change-the-Default-Playlist-for-button/idi-p/5678036/page/3)) | O "+" salva direto nas Curtidas, e o aviso traz "Alterar" para escolher outra playlist | Salvar no destino provável e oferecer a troca no próprio aviso | A troca é o próprio texto do aviso, com o local à vista e a seta para baixo, e não um botão "Alterar" ao lado do "Desfazer" |
+| **Material Design** ([snackbars](https://m3.material.io/components/snackbar/guidelines)) | Uma ação por aviso, reversível; um aviso novo substitui o anterior | O aviso fica com uma ação escrita só (Desfazer) | O local não vira uma segunda ação com rótulo: o texto que já diz o local é o botão que o troca |
 
 **Do nosso jeito:**
 
-- **Um sinal por informação:** o aviso diz o estoque, e o chip diz o local. O local não se repete no texto do aviso.
-- O chip é o mesmo chip de vidro do mercado, com a seta, e só aparece quando o item nasce no bipe, a hora em que a sugestão pode errar.
-- A escolha usa os chips de local de "Arrumar o que entrou". Tocar escolhe e fecha, sem botão de salvar.
+- **Um sinal por informação:** o local fica dentro do aviso, no texto que já diz o estoque ("Leite integral 1 L · 1 na Despensa ▾"), e não se repete em outro lugar.
+- O texto, com a seta para baixo, é um botão, e o Desfazer é outro no mesmo aviso, cada um com 48 de área de toque. O local só aparece quando o item nasce no bipe, a hora em que a sugestão pode errar.
+- Tocar no local para o tempo do aviso e abre a escolha, com os chips de local de "Arrumar o que entrou". Tocar escolhe e fecha, sem botão de salvar, e o aviso volta com o local novo.
+
+**Decidido em 28/10/2026:** a primeira proposta punha o local num chip de vidro à parte, abaixo do aviso. O quadro aprovado ([CapturaCasaLocal](prototipo/telas/CapturaCasaLocal.png)) pôs o local dentro do aviso, e o app seguiu (`onDetailTap` do `LiveReadChip`). Um chip separado dizia o mesmo item duas vezes, em dois lugares.
+
+### Local que não corta no aviso (outubro de 2026)
+
+O problema: **com um nome comprido, o local é a parte do aviso que corta** (AB12). Num celular de 360 dp, "Leite condensado Moça 395 g · 1 na D…": a seta continua lá, mas o que ela troca não aparece, e o local é a razão de o texto ser um botão.
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **Material Design** ([snackbars](https://m3.material.io/components/snackbar/guidelines)) | O texto do aviso tem uma ou duas linhas; quando não cabe numa, quebra em vez de cortar, e a ação fica ao lado | Duas linhas quando a informação precisa delas (proposta B) | Duas linhas só no bipe em que o item nasce, quando há local; nos outros bipes, uma |
+| **Material Design** ([listas de duas linhas](https://m3.material.io/components/lists/guidelines)) e a `ScanTray` do Bipa (granel com `meta`) | Texto principal em cima e o de apoio embaixo, cada um na sua linha | O nome em cima, mais discreto, e o local embaixo, com a seta, que é o que se toca | O local é o texto mais forte das duas linhas, porque é ele que o botão troca |
+| **Spotify** ("Adicionado a Curtidas · Alterar", no benchmark de "Trocar o local") | O destino vem no fim do aviso | — | O destino no fim é o que corta primeiro: na proposta A ele passa para a frente |
+
+**Do nosso jeito:** duas propostas, no quadro [CapturaCasaLocalNomeLongo](prototipo/telas/CapturaCasaLocalNomeLongo.png). **A** põe o local antes do nome numa linha só ("+1 · 1 na Despensa ▾ · Leite con…"): o aviso não muda de altura, mas num celular de 360 dp o nome fica com uns 60 dp e quase some, e o nome é o que diz qual item foi. **B** usa duas linhas quando há local: o nome em cima (inteiro na maioria dos casos, cortando só no fim) e "1 na Despensa ▾" embaixo. O aviso cresce 16 dp só nesse bipe. Nas duas, o leitor de tela ouve o número, o nome, o local e "trocar o local", e o Desfazer continua um botão à parte. Recomendação: B, que não perde nenhuma das duas informações.
 
 ### Quadros do que o app já fazia (outubro de 2026)
 
@@ -231,7 +262,54 @@ O problema: **os rótulos da barra cortam a partir de uns 120% num celular de 36
 | **WCAG 1.4.4** ([redimensionar texto](https://www.w3.org/WAI/WCAG21/Understanding/resize-text.html)) e **Material 3** (rótulos de uma linha, sem cortar) | Texto até 200% sem perder conteúdo; o M3 pede rótulo de uma linha, inteiro | Nada de reticências na barra | A proposta B ganha largura tirando o bipar do meio, em vez de esconder rótulos |
 | **iOS 26** (barra que minimiza, na análise do lote 8) | Minimiza ao rolar só quando há o que rolar | — | Com letra grande ou TalkBack, a barra não encolhe: o rótulo é a informação |
 
-**Do nosso jeito:** duas propostas para o mantenedor escolher. A mantém a anatomia do `ScanNavBar` (bipar no meio) e aceita rótulos quase do tamanho normal, com o balão para quem precisa ler maior. B dá aos rótulos uns 35% a mais de largura, mas tira o bipar do centro da barra, que é a marca do componente.
+**Do nosso jeito:** duas propostas foram ao mantenedor. A mantém a anatomia do `ScanNavBar` (bipar no meio) e aceita rótulos quase do tamanho normal, com o balão para quem precisa ler maior. B dá aos rótulos uns 35% a mais de largura, mas tira o bipar do centro da barra, que é a marca do componente.
+
+**Decidido em 28/10/2026: A até 160%, B acima.** Até 160% de letra, a barra é a de sempre, com os rótulos limitados a 130% e encolhidos por igual até caber. Acima de 160%, o bipar sai do meio e flutua acima da barra, à direita, e o menu do bipar sai dele. O balão do rótulo grande, no toque longo do destino, vale nas duas, porque em B os rótulos ainda encolhem num celular estreito. A partir de 130% ou com o TalkBack, a barra não encolhe ao rolar. O que fica aberto é B durante a compra, com a barra amarela da compra entre o bipar e a navegação (H12, em "Letra grande durante a compra", mais abaixo).
+
+### Letra grande durante a compra (outubro de 2026)
+
+O problema: **acima de 160% de letra, durante a compra, dois botões amarelos empilhados levam ao mesmo lugar** (H12). O bipar flutuante fica logo acima da barra da compra, os dois abrem o modo carrinho, e a parte de baixo da tela passa de 40% da altura. O quadro da barra com letra grande desenhou B sem a compra.
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **Material 3** ([botão flutuante](https://m3.material.io/components/floating-action-button/guidelines)) | Um botão flutuante por tela, para a ação principal | Um botão de marca só embaixo | Durante a compra, a ação principal já é a barra da compra: ela faz o papel do botão |
+| **iOS 26** (o acessório de baixo entra na barra minimizada, na análise do lote 8) | O acessório de reprodução ocupa o lugar do que some | A barra da compra no lugar do bipar | Ela herda o toque longo do bipar, para o menu não sumir com a letra grande |
+| **ScanNavBar** ("os itens do menu são atalhos", no guia) | Tudo o que o menu do bipar faz também existe nas telas | Esconder o atalho do toque longo não tira nenhum caminho | — |
+
+**Do nosso jeito:** duas propostas, no quadro [NavLetraGrandeCompra](prototipo/telas/NavLetraGrandeCompra.png), ao lado do caso de hoje. Nas duas, o bipar flutuante sai durante a compra (só acima de 160%: até lá, o bipar fica no meio da barra, longe da barra da compra), ganha 76 dp e fica um amarelo só.
+
+- **A, a barra da compra assume:** ela fica como é, com "Continuar", e ganha o toque longo do bipar, com o rótulo acessível "segure para mais opções". Nada muda no componente além do gesto.
+- **B, o bipar entra na barra:** o fim da barra da compra troca "Continuar" pelo glifo do bipar num círculo `ink`. O texto ganha largura ("3 de 7 itens" numa linha) e o glifo mostra onde se bipa, mas é uma variante nova da `ShoppingBar` e tira o texto de uma ação de navegação.
+
+Recomendação: A, que segue a regra de texto na navegação e não cria variante.
+
+### Pergunta do relatório de falhas (outubro de 2026)
+
+O problema: **pedir o consentimento do relatório de falhas sem quebrar a calma, com a recusa tão fácil quanto o aceite e um lugar para mudar de ideia** ([ADR 0025](../adr/0025-relatorio-de-falhas-com-sentry-e-consentimento.md)). O app ainda não tem tela de Ajustes.
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **ANPD** ([guia de cookies, 2022](https://www.gov.br/anpd/pt-br/documentos-e-publicacoes)) e **LGPD** (art. 8º, § 5º) | Recusar tão fácil quanto aceitar, nada pré-marcado, e revogação gratuita e facilitada | "Mandar" e "Não mandar" com o mesmo peso e a mesma largura; o interruptor sempre à mão | Fechar o cartão no × conta como "não", e ele não volta |
+| **iOS** (Análises e Melhorias) | Pergunta uma vez e deixa o interruptor nos Ajustes, com o que é enviado explicado ali | Uma pergunta só e o resto nos Ajustes | Não na primeira abertura: depois da primeira compra terminada, quando a pessoa já sabe o que o app faz |
+| **Firefox para Android** (Ajustes, coleta de dados) | Interruptores por tipo de dado, cada um com uma linha do que faz | Um interruptor com uma linha embaixo | O que vai e o que nunca vai ficam abertos sob o interruptor, sem link para outra página: é a explicação que a LGPD pede, num lugar só |
+| **InsightCard** do Bipa | Cartão dispensável no Início, com o × no canto | O mesmo cartão, neutro | Sem `brand` nem `alert`: o destaque do Início continua sendo "Ir às compras" |
+
+**Do nosso jeito:** dois quadros, [InicioRelatorioFalhas](prototipo/telas/InicioRelatorioFalhas.png) e [Ajustes](prototipo/telas/Ajustes.png).
+
+- **O cartão** fica no lugar do carrossel de insights, abaixo da lista e dos locais, uma vez, depois da primeira compra terminada. O selo diz o assunto ("Relatório de falhas"), o título faz a pergunta e uma frase diz o que vai e o que fica. Os dois botões são secundários, lado a lado, do mesmo tamanho.
+- **Ajustes** abre por um botão redondo com a engrenagem, à direita do título "Sua casa", como o botão redondo das outras telas. A tela tem o mínimo: "Privacidade", com o interruptor "Relatório de falhas" e, embaixo, o que vai e o que nunca vai; e "Sobre o Bipa", com a versão. Desligar fecha o Sentry na hora.
+- Em build sem DSN, nem o cartão nem a seção "Privacidade" aparecem; a tela fica só com a versão.
+
+### O anel que respira (outubro de 2026)
+
+O problema: **o anel do bipar respira sem fim, em todas as abas** (H16). É a assinatura do botão, mas um movimento contínuo no canto do olho briga com a calma por padrão, e durante a compra pulsa ao lado da barra amarela, que já é o destaque.
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **WCAG 2.2.2** ([pausar, parar, esconder](https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide.html)) | Movimento automático por mais de 5 s precisa de um jeito de pausar | Movimento com começo e fim, abaixo de 5 s: dois ciclos de 2,4 s | Sem controle de pausa: o anel para sozinho |
+| **Linear e Shortcut** (calma por padrão, em [identidade-visual.md](identidade-visual.md)) | Não disputar uma atenção que não foi conquistada | O anel chama só quando a barra aparece | Continua sem fim quando a casa e a lista estão vazias, porque aí bipar é a única coisa a fazer |
+
+**Do nosso jeito:** a regra está no guia [`ScanNavBar.md`](design-system/componentes/ScanNavBar.md), como proposta que aguarda revisão: dois ciclos quando a barra aparece, sem fim só com a casa e a lista vazias, parado durante a compra e com movimento reduzido. Muda o design system primeiro e o código depois.
 
 ## Fontes
 
