@@ -27,6 +27,7 @@ Cada arquivo registra uma decisão importante: o contexto, o que foi decidido e 
 | [0021](0021-local-lembrado-ao-tirar-de-casa.md) | Lembrar o local do item ao tirar de casa | Aceito |
 | [0023](0023-modelo-de-dados-antes-do-backup.md) | Fechar o modelo de dados antes do backup | Aceito |
 | [0024](0024-catalogo-pronto-de-produtos.md) | Catálogo de produtos brasileiros a partir do Open Food Facts | Aceito (menos a licença da Fase 2) |
+| [0025](0025-relatorio-de-falhas-com-sentry-e-consentimento.md) | Relatório de falhas com Sentry, só com consentimento | Aceito |
 
 ## Modelo
 
