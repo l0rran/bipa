@@ -155,9 +155,10 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     final matchList = ref.read(matchListToCartProvider);
     _clearNotice();
     final choice = await _withAnalysisPaused(
-      () => pickProduct(
+      () => pickProductForLabel(
         context,
-        initialQuery: read.nameHint ?? '',
+        ref,
+        nameHint: read.nameHint,
         title: l10n.cartGranelTitle(l10n.pricePerKilo(read.price.format())),
       ),
     );
@@ -593,7 +594,13 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     final recordPrice = ref.read(recordTripPriceProvider);
     _clearNotice();
     final choice = await _withAnalysisPaused(
-      () => pickProduct(context, allowCreate: false, initialQuery: read.nameHint ?? '', title: l10n.cameraWhichProduct),
+      () => pickProductForLabel(
+        context,
+        ref,
+        nameHint: read.nameHint,
+        allowCreate: false,
+        title: l10n.cameraWhichProduct,
+      ),
     );
     if (choice is! ExistingProduct || !mounted) return;
     // A espera foi usada: não vai para o próximo bipe.

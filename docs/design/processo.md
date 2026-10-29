@@ -187,6 +187,8 @@ O problema: **a folha só aparece com três ou mais itens novos** (AB13). Com bi
 
 Recomendação: A, porque não depende de a pessoa ver mais um aviso que some.
 
+**Decidido em 28/10/2026: A**, e mais simples que o quadro: a folha lista os itens novos cujo local ninguém escolheu no aviso da câmera, sem mínimo, e sem nenhum a câmera fecha direto. O app não mede se o aviso foi trocado por outro bipe antes dos 4 s: quem não tocou no local não o conferiu, tenha visto o aviso ou não. Escolher no aviso o mesmo local sugerido também conta como conferido (`HomeArrivals.placeChosen`).
+
 ### Granel na bandeja (outubro de 2026)
 
 O problema: **o preço por kg do granel não pode parecer o valor da linha** (D9). Na bandeja, "R$ 8,99/kg" ocupava a etiqueta com o contorno do preço estimado, que entra no total, e ficava fora dele.
@@ -229,6 +231,8 @@ O problema: **com um nome comprido, o local é a parte do aviso que corta** (AB1
 | **Spotify** ("Adicionado a Curtidas · Alterar", no benchmark de "Trocar o local") | O destino vem no fim do aviso | — | O destino no fim é o que corta primeiro: na proposta A ele passa para a frente |
 
 **Do nosso jeito:** duas propostas, no quadro [CapturaCasaLocalNomeLongo](prototipo/telas/CapturaCasaLocalNomeLongo.png). **A** põe o local antes do nome numa linha só ("+1 · 1 na Despensa ▾ · Leite con…"): o aviso não muda de altura, mas num celular de 360 dp o nome fica com uns 60 dp e quase some, e o nome é o que diz qual item foi. **B** usa duas linhas quando há local: o nome em cima (inteiro na maioria dos casos, cortando só no fim) e "1 na Despensa ▾" embaixo. O aviso cresce 16 dp só nesse bipe. Nas duas, o leitor de tela ouve o número, o nome, o local e "trocar o local", e o Desfazer continua um botão à parte. Recomendação: B, que não perde nenhuma das duas informações.
+
+**Decidido em 28/10/2026: B.** No app, o `LiveReadChip` ganhou o `title`: com ele, o nome fica em cima e o local, com a seta, embaixo, mais forte, sem nunca cortar (com letra grande, ele quebra a linha). O texto do local virou só "1 na Despensa" (`cameraAtHomePlaced`), porque o nome já está na linha de cima.
 
 ### Quadros do que o app já fazia (outubro de 2026)
 

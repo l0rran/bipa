@@ -17,6 +17,7 @@ final _now = DateTime(2026, 10, 28, 9);
 Future<ValueNotifier<ProductChoice?>> _pumpPicker(
   WidgetTester tester, {
   String initialQuery = '',
+  String? nameHint,
   bool allowCreate = true,
   List<String> names = const ['Feijão carioca', 'Açúcar refinado', 'Arroz branco', 'Arroz integral'],
 }) async {
@@ -39,12 +40,13 @@ Future<ValueNotifier<ProductChoice?>> _pumpPicker(
         locale: const Locale('pt', 'BR'),
         supportedLocales: const [Locale('pt', 'BR')],
         localizationsDelegates: const [AppLocalizations.delegate, ...GlobalMaterialLocalizations.delegates],
-        home: Builder(
-          builder: (context) => Scaffold(
+        home: Consumer(
+          builder: (context, ref, _) => Scaffold(
             body: Center(
               child: TextButton(
-                onPressed: () async =>
-                    chosen.value = await pickProduct(context, initialQuery: initialQuery, allowCreate: allowCreate),
+                onPressed: () async => chosen.value = nameHint == null
+                    ? await pickProduct(context, initialQuery: initialQuery, allowCreate: allowCreate)
+                    : await pickProductForLabel(context, ref, nameHint: nameHint, allowCreate: allowCreate),
                 child: const Text('abrir'),
               ),
             ),
@@ -68,6 +70,26 @@ void main() {
     await tester.tap(find.text('Feijão carioca'));
     await tester.pumpAndSettle();
     expect(chosen.value, isA<ExistingProduct>().having((e) => e.product.name, 'nome', 'Feijão carioca'));
+  });
+
+  testWidgets('a etiqueta crua, com marca e tamanho, abre recortada e acha o produto (G4)', (tester) async {
+    final chosen = await _pumpPicker(tester, nameHint: 'FEIJAO CARIOCA CAMIL 1KG');
+    final row = find.descendant(of: find.byType(ListTile), matching: find.text('Feijão carioca'));
+
+    expect(find.widgetWithText(TextField, 'Feijão carioca'), findsOneWidget);
+    expect(row, findsOneWidget);
+    expect(find.textContaining('Criar'), findsNothing);
+
+    await tester.tap(row);
+    await tester.pumpAndSettle();
+    expect(chosen.value, isA<ExistingProduct>().having((e) => e.product.name, 'nome', 'Feijão carioca'));
+  });
+
+  testWidgets('sem o produto, a etiqueta recortada vira o nome do novo (G4)', (tester) async {
+    await _pumpPicker(tester, nameHint: 'MACARRAO PARAFUSO RENATA 500G');
+
+    expect(find.widgetWithText(TextField, 'Macarrao'), findsOneWidget);
+    expect(find.text('Criar “Macarrao”'), findsOneWidget);
   });
 
   testWidgets('digitar sem acento e em outra ordem também acha', (tester) async {

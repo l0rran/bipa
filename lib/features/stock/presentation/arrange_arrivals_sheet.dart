@@ -22,8 +22,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Abre "Arrumar o que entrou" (AB5) com [arrivals], os itens que nasceram
-/// em casa nesta câmera, na ordem em que entraram. Não devolve nada: cada
-/// toque já salvou, e fechar é pular.
+/// em casa nesta câmera e cujo local ninguém escolheu no aviso, na ordem em
+/// que entraram (a regra está em `HomeArrivals`, AB13). Não devolve nada:
+/// cada toque já salvou, e fechar é pular.
 Future<void> showArrangeArrivalsSheet(BuildContext context, List<StockEntry> arrivals) => showModalBottomSheet<void>(
   context: context,
   showDragHandle: true,

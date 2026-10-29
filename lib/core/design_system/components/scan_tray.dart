@@ -743,6 +743,11 @@ class CameraModeChip extends StatelessWidget {
 /// aviso: em "Guardar em casa", "Leite · 1 na Geladeira ▾" abre a escolha
 /// do local, e "Desfazer" volta o bipe (protótipo "Guardar em casa, local do
 /// item novo", AB9).
+///
+/// Com [title], esse aviso tem duas linhas: o nome do item em cima, que é o
+/// que corta quando não cabe, e o [detail] embaixo ("1 na Despensa ▾"), mais
+/// forte, que nunca corta, porque é o que o toque troca (AB12, quadro
+/// "Guardar em casa, local com nome longo", proposta B).
 class LiveReadChip extends StatelessWidget {
   const LiveReadChip({
     required this.icon,
@@ -753,6 +758,7 @@ class LiveReadChip extends StatelessWidget {
     this.actionLabel,
     this.onDetailTap,
     this.detailActionLabel,
+    this.title,
     super.key,
   });
 
@@ -782,6 +788,15 @@ class LiveReadChip extends StatelessWidget {
 
   /// O que o toque no texto faz, para o leitor de tela ("trocar o local").
   final String? detailActionLabel;
+
+  /// O nome do item, na linha de cima, quando o [detail] é o que o toque
+  /// troca. Só vale com [onDetailTap].
+  final String? title;
+
+  /// Altura do aviso de duas linhas, que é também a área de toque dos dois
+  /// botões, e o raio do vidro (quadro "CapturaCasaLocalNomeLongo", B).
+  static const _twoLineHeight = 56.0;
+  static const _twoLineRadius = 24.0;
 
   @override
   Widget build(BuildContext context) {
@@ -866,8 +881,14 @@ class LiveReadChip extends StatelessWidget {
     final colors = context.colors;
     final onTap = this.onTap;
     final action = onTap == null ? null : actionLabel;
-    // A folga em cima e embaixo do vidro, dentro da área de toque.
-    const inset = (TapTarget.minSize - 40) / 2;
+    final title = this.title;
+    final twoLines = title != null;
+    // Numa linha, o vidro tem 40 e a área de toque, 48: a folga fica em cima
+    // e embaixo do vidro. Em duas, o vidro passa dos 48 e ocupa tudo.
+    final inset = twoLines ? 0.0 : (TapTarget.minSize - 40) / 2;
+    final minHeight = twoLines ? _twoLineHeight : TapTarget.minSize;
+    final large = MediaQuery.textScalerOf(context).scale(1) > 1.3;
+    final arrow = Icon(Icons.expand_more_rounded, size: 16, color: colors.onCamera);
 
     return Semantics(
       liveRegion: true,
@@ -876,9 +897,9 @@ class LiveReadChip extends StatelessWidget {
         children: [
           Positioned.fill(
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: inset),
+              padding: EdgeInsets.symmetric(vertical: inset),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(BipaRadius.pill),
+                borderRadius: BorderRadius.circular(twoLines ? _twoLineRadius : BipaRadius.pill),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
                   child: ColoredBox(color: colors.camera.withValues(alpha: 0.55)),
@@ -894,20 +915,21 @@ class LiveReadChip extends StatelessWidget {
                   child: Semantics(
                     button: true,
                     onTap: openDetail,
-                    label: [?price, detail, ?detailActionLabel].join(', '),
+                    label: [?price, ?title, detail, ?detailActionLabel].join(', '),
                     excludeSemantics: true,
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
                       onTap: openDetail,
                       child: ConstrainedBox(
-                        // Pelo menos 48; com letra grande, o aviso cresce em vez de cortar (H3).
-                        constraints: const BoxConstraints(minHeight: TapTarget.minSize),
+                        // Pelo menos 48 (56 em duas linhas); com letra grande, o
+                        // aviso cresce em vez de cortar (H3).
+                        constraints: BoxConstraints(minHeight: minHeight),
                         child: Padding(
                           padding: EdgeInsets.fromLTRB(
                             BipaSpacing.s3,
-                            inset,
+                            twoLines ? 6 : inset,
                             action == null ? BipaSpacing.s4 : BipaSpacing.s1,
-                            inset,
+                            twoLines ? 6 : inset,
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -929,16 +951,56 @@ class LiveReadChip extends StatelessWidget {
                                 ),
                                 const SizedBox(width: BipaSpacing.s2),
                               ],
-                              Flexible(
-                                child: Text(
-                                  detail,
-                                  maxLines: MediaQuery.textScalerOf(context).scale(1) > 1.3 ? 2 : 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: BipaText.caption.copyWith(color: colors.onCamera.withValues(alpha: 0.75)),
+                              if (title != null)
+                                Flexible(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // O nome é o que corta, se não couber.
+                                      Text(
+                                        title,
+                                        maxLines: large ? 2 : 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: BipaText.caption.copyWith(
+                                          color: colors.onCamera.withValues(alpha: 0.75),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 1),
+                                      // O local, com a seta, nunca corta: com
+                                      // letra grande, quebra a linha.
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              detail,
+                                              style: BipaText.label.copyWith(
+                                                fontSize: 13,
+                                                height: 18 / 13,
+                                                color: colors.onCamera,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 2),
+                                          arrow,
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              else ...[
+                                Flexible(
+                                  child: Text(
+                                    detail,
+                                    maxLines: large ? 2 : 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: BipaText.caption.copyWith(color: colors.onCamera.withValues(alpha: 0.75)),
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 2),
-                              Icon(Icons.expand_more_rounded, size: 16, color: colors.onCamera),
+                                const SizedBox(width: 2),
+                                arrow,
+                              ],
                             ],
                           ),
                         ),
@@ -956,7 +1018,7 @@ class LiveReadChip extends StatelessWidget {
                       behavior: HitTestBehavior.opaque,
                       onTap: onTap,
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(minHeight: TapTarget.minSize),
+                        constraints: BoxConstraints(minHeight: minHeight),
                         child: Padding(
                           padding: const EdgeInsets.only(left: BipaSpacing.s2, right: BipaSpacing.s4),
                           child: Center(
