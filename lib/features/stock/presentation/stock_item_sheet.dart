@@ -1,6 +1,7 @@
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/bipa_toast.dart';
 import 'package:bipa/core/design_system/components/quantity_stepper.dart';
 import 'package:bipa/core/di/core_providers.dart';
 import 'package:bipa/core/formatting/formatters.dart';
@@ -47,9 +48,7 @@ class StockItemSheet extends ConsumerWidget {
     try {
       await change();
     } on Exception {
-      messenger
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(message)));
+      showBipaToast(messenger, message);
     }
   }
 

@@ -5,6 +5,7 @@ import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
 import 'package:bipa/core/design_system/components/bipa_search_bar.dart';
+import 'package:bipa/core/design_system/components/bipa_toast.dart';
 import 'package:bipa/core/design_system/components/dropdown_chip.dart';
 import 'package:bipa/core/design_system/components/place_filter.dart';
 import 'package:bipa/core/design_system/components/product_card.dart';
@@ -94,17 +95,12 @@ class _HomePageState extends ConsumerState<HomePage> {
       _ => (null, null),
     };
     if (message == null || action == null) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          action: SnackBarAction(
-            label: action,
-            onPressed: () => unawaited(_toggleList(closing.product, onList: listed, notify: true)),
-          ),
-        ),
-      );
+    showBipaToast(
+      ScaffoldMessenger.of(context),
+      message,
+      actionLabel: action,
+      onAction: () => unawaited(_toggleList(closing.product, onList: listed, notify: true)),
+    );
   }
 
   /// O stepper da linha aberta: corrige o estoque. Não mexe na lista nem
@@ -123,9 +119,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     } on Exception {
       // Como na tela do produto (H11): sem o aviso, o número não muda e nada
       // diz por quê.
-      messenger
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(message)));
+      showBipaToast(messenger, message);
     }
   }
 
@@ -139,7 +133,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     try {
       change = await record.used(product);
     } on Exception {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.cameraAdjustFailed)));
+      showBipaToast(messenger, l10n.cameraAdjustFailed);
       return;
     }
     if (change == null || !mounted) return;
@@ -187,19 +181,11 @@ class _HomePageState extends ConsumerState<HomePage> {
 
       undo = () => unawaited(restoreBefore());
     } on Exception {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.listUpdateFailed)));
+      showBipaToast(messenger, l10n.listUpdateFailed);
       return;
     }
     if (!notify) return;
-    messenger
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          duration: const Duration(seconds: 4),
-          action: SnackBarAction(label: l10n.undo, onPressed: undo),
-        ),
-      );
+    showBipaToast(messenger, message, actionLabel: l10n.undo, onAction: undo);
   }
 
   List<StockEntry> _visible(List<StockEntry> entries) {

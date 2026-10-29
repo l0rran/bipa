@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/bipa_toast.dart';
 import 'package:bipa/core/design_system/components/price_history.dart';
 import 'package:bipa/core/design_system/components/price_rows.dart';
 import 'package:bipa/core/design_system/components/price_tag.dart';
@@ -98,7 +99,7 @@ class _ProductView extends ConsumerWidget {
             reason: delta > 0 ? StockMovementReason.purchase : StockMovementReason.consumption,
           );
     } on Exception {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.stockAdjustFailed)));
+      showBipaToast(messenger, l10n.stockAdjustFailed);
     }
   }
 
@@ -165,7 +166,7 @@ class _ProductView extends ConsumerWidget {
         try {
           await move.undo(moved);
         } on Exception {
-          messenger.showSnackBar(SnackBar(content: Text(l10n.packageRestoreFailed)));
+          showBipaToast(messenger, l10n.packageRestoreFailed);
         }
       }
 
@@ -179,9 +180,9 @@ class _ProductView extends ConsumerWidget {
         ref: ref,
       );
     } on DomainException catch (error) {
-      messenger.showSnackBar(SnackBar(content: Text(domainErrorText(l10n, error))));
+      showBipaToast(messenger, domainErrorText(l10n, error));
     } on Exception {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.packageMoveFailed)));
+      showBipaToast(messenger, l10n.packageMoveFailed);
     }
   }
 
@@ -199,21 +200,16 @@ class _ProductView extends ConsumerWidget {
     required WidgetRef ref,
   }) async {
     var undone = false;
-    messenger.hideCurrentSnackBar();
-    final controller = messenger.showSnackBar(
-      SnackBar(
-        content: Text(message),
-        // Com ação, o aviso fica até alguém tocar (persist); aqui ele precisa
-        // sair sozinho para o segundo aviso poder vir.
-        persist: !offerDelete || navigatorContext == null,
-        action: SnackBarAction(
-          label: l10n.undo,
-          onPressed: () {
-            undone = true;
-            unawaited(undo());
-          },
-        ),
-      ),
+    // O aviso sai sozinho (com o leitor de tela, quando a pessoa o dispensa),
+    // e só então o segundo aviso vem.
+    final controller = showBipaToast(
+      messenger,
+      message,
+      actionLabel: l10n.undo,
+      onAction: () {
+        undone = true;
+        unawaited(undo());
+      },
     );
     if (!offerDelete || navigatorContext == null) return;
     await controller.closed;
@@ -221,16 +217,13 @@ class _ProductView extends ConsumerWidget {
     // O produto pode ter ganhado preço ou estoque enquanto o aviso estava na tela.
     if (!await ref.read(productRepositoryProvider).isProductEmpty(product.id)) return;
     if (!navigatorContext.mounted) return;
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(l10n.packageEmptyProduct(product.name)),
-        action: SnackBarAction(
-          label: l10n.productDelete,
-          onPressed: () {
-            if (navigatorContext.mounted) unawaited(_delete(navigatorContext, ref));
-          },
-        ),
-      ),
+    showBipaToast(
+      messenger,
+      l10n.packageEmptyProduct(product.name),
+      actionLabel: l10n.productDelete,
+      onAction: () {
+        if (navigatorContext.mounted) unawaited(_delete(navigatorContext, ref));
+      },
     );
   }
 
@@ -262,7 +255,7 @@ class _ProductView extends ConsumerWidget {
         try {
           await delete.undo(deleted);
         } on Exception {
-          messenger.showSnackBar(SnackBar(content: Text(l10n.packageRestoreFailed)));
+          showBipaToast(messenger, l10n.packageRestoreFailed);
         }
       }
 
@@ -276,9 +269,9 @@ class _ProductView extends ConsumerWidget {
         ref: ref,
       );
     } on DomainException catch (error) {
-      messenger.showSnackBar(SnackBar(content: Text(domainErrorText(l10n, error))));
+      showBipaToast(messenger, domainErrorText(l10n, error));
     } on Exception {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.packageDeleteFailed)));
+      showBipaToast(messenger, l10n.packageDeleteFailed);
     }
   }
 
@@ -330,9 +323,9 @@ class _ProductView extends ConsumerWidget {
     unawaited(GoRouter.of(context).pushReplacement<void>(Routes.productDetail(into.id)));
     try {
       await repository.merge(fromId: product.id, intoId: into.id);
-      messenger.showSnackBar(SnackBar(content: Text(l10n.productMerged(product.name, into.name))));
+      showBipaToast(messenger, l10n.productMerged(product.name, into.name));
     } on Exception {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.productMergeFailed)));
+      showBipaToast(messenger, l10n.productMergeFailed);
     }
   }
 
@@ -353,7 +346,7 @@ class _ProductView extends ConsumerWidget {
     try {
       await repository.delete(product.id);
     } on Exception {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.productDeleteFailed)));
+      showBipaToast(messenger, l10n.productDeleteFailed);
     }
   }
 

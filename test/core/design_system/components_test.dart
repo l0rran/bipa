@@ -7,6 +7,7 @@ import 'package:bipa/core/design_system/components/market_map.dart';
 import 'package:bipa/core/design_system/components/place_filter.dart';
 import 'package:bipa/core/design_system/components/price_history.dart';
 import 'package:bipa/core/design_system/components/price_rows.dart';
+import 'package:bipa/core/design_system/components/price_tag.dart';
 import 'package:bipa/core/design_system/components/quantity_stepper.dart';
 import 'package:bipa/core/design_system/components/scan_menu.dart';
 import 'package:bipa/core/design_system/components/scan_tray.dart';
@@ -14,6 +15,7 @@ import 'package:bipa/core/design_system/components/shopping_list.dart';
 import 'package:bipa/core/design_system/components/stock_gauge.dart';
 import 'package:bipa/core/design_system/components/stock_list.dart';
 import 'package:bipa/core/design_system/components/tap_target.dart';
+import 'package:bipa/core/money/money.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -624,5 +626,30 @@ void main() {
     expect(tester.getSize(find.byType(LiveReadChip)).height, 48);
     await tester.tap(find.text('Tomate italiano?'));
     expect(taps, 1);
+  });
+
+  testWidgets('a etiqueta em destaque tem o furo, os cantos e a sombra da etiqueta de gôndola', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(
+      _app(
+        const PriceTagHero(
+          price: Money.cents(558),
+          unitLine: '/kg · Camil 10 kg',
+          unitLineSpoken: 'o quilo, Camil 10 kg',
+        ),
+      ),
+    );
+
+    final hole = find.byKey(const ValueKey('price-tag-hole'));
+    final tag = tester.widget<Container>(find.ancestor(of: hole, matching: find.byType(Container)).last);
+    final decoration = tag.decoration! as BoxDecoration;
+    expect(decoration.borderRadius, PriceTagHero.borderRadius);
+    expect(decoration.boxShadow, isNotEmpty);
+    expect(tester.getSize(hole), const Size.square(PriceTagHero.holeSize));
+    // O furo fica à esquerda do preço, sem cobrir o texto.
+    expect(tester.getRect(hole).right, lessThan(tester.getRect(find.text('/kg · Camil 10 kg')).left));
+    // A unidade aparece como "/kg", e o leitor de tela ouve "o quilo".
+    expect(find.bySemanticsLabel(RegExp(r'^R\$\s5,58, o quilo, Camil 10 kg$')), findsOneWidget);
+    semantics.dispose();
   });
 }

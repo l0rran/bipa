@@ -35,11 +35,12 @@ a{color:#1C1B22}a:hover{color:#B00E28}
 .read-chip .act{margin-left:4px;font:700 14px/18px var(--font-body);color:var(--on-camera)}
 .hint{font:700 14px/18px var(--font-body);color:var(--on-camera);text-align:center}
 
-/* O snackbar do app: flutuante, em ink, pílula, com a ação no amarelo da marca. */
+/* O aviso do app (bipa-toast): ink, raio radius-lg, a ação em price e a linha do tempo que esvazia em 4 s. */
 .snack-wrap{position:absolute;left:16px;right:16px;bottom:28px;z-index:4}
-.snack{display:flex;align-items:center;gap:12px;min-height:48px;padding:4px 8px 4px 20px;border-radius:var(--radius-pill);background:var(--ink);color:var(--surface);box-shadow:var(--shadow-float);font:400 15px/22px var(--font-body)}
+.snack{position:relative;overflow:hidden;display:flex;align-items:center;gap:12px;min-height:48px;padding:6px 8px 6px 16px;border-radius:var(--radius-lg);background:var(--ink);color:var(--ground);box-shadow:var(--shadow-float);font:600 14px/20px var(--font-body)}
 .snack span{flex:1;min-width:0}
-.snack button{min-height:44px;padding:0 12px;border:0;border-radius:var(--radius-pill);background:none;color:var(--brand);font:700 14px/18px var(--font-body)}
+.snack button{min-height:48px;padding:0 12px;border:0;border-radius:var(--radius-pill);background:none;color:var(--price);font:800 14px/18px var(--font-body)}
+.snack i{position:absolute;left:0;bottom:0;width:60%;height:3px;background:var(--price)}
 </style>
 </helmet>
 <div class="screen bipa-root" style="background: var(--camera);">
@@ -53,7 +54,7 @@ a{color:#1C1B22}a:hover{color:#B00E28}
   <div class="below">
     <button class="bipa-chip bipa-chip--glass read-chip" type="button" role="status" aria-label="−1, Leite integral 1 L · 0 em casa"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12h12"/></svg><b>−1</b><span class="bipa-chip__meta">Leite integral 1&nbsp;L · 0 em casa</span></button>
   </div>
-  <div class="snack-wrap"><div class="snack" role="status"><span>Leite integral 1&nbsp;L foi para a lista</span><button type="button">Desfazer</button></div></div>
+  <div class="snack-wrap"><div class="snack" role="status"><span>Leite integral 1&nbsp;L foi para a lista</span><button type="button">Desfazer</button><i aria-hidden="true"></i></div></div>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>

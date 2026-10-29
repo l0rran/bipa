@@ -140,12 +140,15 @@ abstract final class BipaTheme {
         dragHandleColor: colors.line,
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
       ),
+      // O `bipa-toast` do design system: `ink` com texto `ground`, raio
+      // `radius-lg` e a ação em `price`. O conteúdo com a linha do tempo vem
+      // de `showBipaToast`.
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: colors.ink,
-        contentTextStyle: BipaText.body.copyWith(color: colors.surface),
-        actionTextColor: colors.brand,
-        shape: const StadiumBorder(),
+        contentTextStyle: BipaText.label.copyWith(fontWeight: FontWeight.w600, height: 20 / 14, color: colors.ground),
+        actionTextColor: colors.price,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(BipaRadius.lg)),
       ),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStatePropertyAll(colors.surface),

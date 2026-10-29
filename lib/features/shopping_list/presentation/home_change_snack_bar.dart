@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:bipa/core/design_system/components/bipa_toast.dart';
 import 'package:bipa/core/formatting/formatters.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/features/products/domain/product.dart';
@@ -34,16 +35,9 @@ ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showHomeChangeSnackBar
     try {
       await record.undo(change);
     } on Exception {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.cameraAdjustFailed)));
+      showBipaToast(messenger, l10n.cameraAdjustFailed);
     }
   }
 
-  messenger.hideCurrentSnackBar();
-  return messenger.showSnackBar(
-    SnackBar(
-      content: Text(message),
-      duration: const Duration(seconds: 4),
-      action: SnackBarAction(label: l10n.undo, onPressed: () => unawaited(undo())),
-    ),
-  );
+  return showBipaToast(messenger, message, actionLabel: l10n.undo, onAction: () => unawaited(undo()));
 }

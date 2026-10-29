@@ -18,6 +18,7 @@ import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/register_package.dart';
 import 'package:bipa/features/products/domain/unit_price.dart';
+import 'package:bipa/features/products/presentation/package_fields.dart';
 import 'package:bipa/features/products/presentation/product_picker_sheet.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:flutter/material.dart';
@@ -155,7 +156,6 @@ class _NewPackageSheetState extends ConsumerState<NewPackageSheet> {
     final name = _productName;
     final price = widget.price;
     final unitPrice = price == null ? null : UnitPrice.of(price: price, packageSize: _sizeValue, unit: _unit);
-    final field = InputDecoration(fillColor: colors.surfaceSunken);
 
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
@@ -214,51 +214,15 @@ class _NewPackageSheetState extends ConsumerState<NewPackageSheet> {
               ),
             ),
             const SizedBox(height: BipaSpacing.s4),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 7,
-                  child: TextField(
-                    controller: _brand,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: field.copyWith(labelText: l10n.packageBrand),
-                  ),
-                ),
-                const SizedBox(width: BipaSpacing.s3),
-                Expanded(
-                  flex: 5,
-                  child: TextField(
-                    controller: _size,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: field.copyWith(
-                      labelText: l10n.packageSize,
-                      suffixIcon: Semantics(
-                        label: l10n.packageUnit,
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<MeasureUnit>(
-                            value: _unit,
-                            borderRadius: BorderRadius.circular(BipaRadius.md),
-                            style: BipaText.label.copyWith(color: colors.inkMuted),
-                            items: [
-                              for (final unit in MeasureUnit.values)
-                                DropdownMenuItem(value: unit, child: Text(unit.symbol)),
-                            ],
-                            onChanged: (unit) {
-                              if (unit == null) return;
-                              setState(() {
-                                _unit = unit;
-                                _unitChosen = true;
-                              });
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                    onChanged: (_) => setState(() {}),
-                  ),
-                ),
-              ],
+            PackageFields(
+              brand: _brand,
+              size: _size,
+              unit: _unit,
+              onUnitChanged: (unit) => setState(() {
+                _unit = unit;
+                _unitChosen = true;
+              }),
+              onSizeChanged: (_) => setState(() {}),
             ),
             if (price != null) ...[
               const SizedBox(height: BipaSpacing.s4),

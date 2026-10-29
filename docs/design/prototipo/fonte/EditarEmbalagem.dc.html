@@ -52,11 +52,10 @@ body{margin:0}
 .sheet-title{margin:0;font:800 22px/28px var(--font-display);color:var(--ink)}
 .barcode{font:500 13px/18px var(--font-mono);color:var(--ink-muted);letter-spacing:.02em}
 /* Campos como os da "Embalagem nova": rótulo em cima, caixa em surface-sunken. */
-.fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.fields{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:12px}
 .field{display:grid;gap:6px;min-width:0;align-content:start}
-.field.wide{grid-column:1 / -1}
 .field label{font:600 13px/18px var(--font-body);color:var(--ink-muted)}
-.field small{font:500 12px/16px var(--font-body);color:var(--ink-muted);padding:0 4px}
+.box .unit{display:inline-flex;align-items:center;gap:2px;font:700 14px/18px var(--font-body);color:var(--ink-muted)}
 .box{display:flex;align-items:center;justify-content:space-between;gap:8px;height:52px;padding:0 14px;border-radius:var(--radius-md);background:var(--surface-sunken);font:600 16px/20px var(--font-body);color:var(--ink)}
 .box svg{width:18px;height:18px;flex:none;color:var(--ink-muted)}
 .sheet .bipa-btn{width:100%;height:56px;font-size:16px}
@@ -72,7 +71,7 @@ body{margin:0}
       <span class="hero-art" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11h17a8.5 8.5 0 0 1-17 0z"/><path d="M8 7.5c.6-1 1.6-1.5 2.6-1.2M13 6.5c.8-.8 2-1 3-.4M10.5 4c.6-.6 1.5-.8 2.3-.4"/></svg></span>
       <h1>Arroz branco</h1>
       <div class="best">
-        <div class="bipa-tag bipa-tag--hero"><span class="bipa-tag__value"><small>R$</small>4,99</span><span class="bipa-tag__unit">o kg · Camil 10 kg</span></div>
+        <div class="bipa-tag bipa-tag--hero"><span class="bipa-tag__value"><small>R$</small>4,99</span><span class="bipa-tag__unit">/kg · Camil 10 kg</span></div>
       </div>
     </div>
 
@@ -128,9 +127,8 @@ body{margin:0}
       <span class="barcode" aria-label="Código 7 8 9 6 0 0 6 7 1 1 1 5 5">7896006711155</span>
     </div>
     <div class="fields">
-      <div class="field wide"><label for="emb-marca">Marca</label><div class="box" id="emb-marca">Camil</div></div>
-      <div class="field"><label for="emb-tamanho">Tamanho da embalagem</label><div class="box" id="emb-tamanho">10</div><small>Ex.: 395, 1,5, 12</small></div>
-      <div class="field"><label for="emb-unidade">Unidade</label><div class="box" id="emb-unidade" role="button" aria-haspopup="listbox">Quilograma (kg)<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></div></div>
+      <div class="field"><label for="emb-marca">Marca</label><div class="box" id="emb-marca">Camil</div></div>
+      <div class="field"><label for="emb-tamanho">Tamanho</label><div class="box" id="emb-tamanho">10<span class="unit" role="button" aria-label="Unidade: kg" aria-haspopup="listbox">kg <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></div></div>
     </div>
     <a class="bipa-btn bipa-btn--primary" href="ProdutoEmbalagens.dc.html"><span>Salvar</span></a>
   </section>

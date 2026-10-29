@@ -1,3 +1,4 @@
+import 'package:bipa/core/design_system/components/bipa_toast.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/features/markets/domain/market.dart';
 import 'package:bipa/features/markets/presentation/markets_providers.dart';
@@ -42,6 +43,6 @@ Future<void> changeTripMarket(BuildContext context, WidgetRef ref, ShoppingTrip 
     }
     await setMarket(trip.id, market.id, movePrices: move);
   } on Exception {
-    messenger.showSnackBar(SnackBar(content: Text(l10n.tripMarketFailed)));
+    showBipaToast(messenger, l10n.tripMarketFailed);
   }
 }
