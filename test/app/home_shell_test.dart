@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:bipa/app/home_shell.dart';
@@ -28,7 +29,7 @@ class _Tabs {
   }
 }
 
-Widget _app(_Tabs tabs, {bool reduceMotion = false}) {
+Widget _app(_Tabs tabs, {bool reduceMotion = true}) {
   final router = GoRouter(
     initialLocation: _paths.first,
     routes: [
@@ -55,6 +56,11 @@ Widget _app(_Tabs tabs, {bool reduceMotion = false}) {
               ],
             ),
         ],
+      ),
+      // Uma tela que cobre o shell, como a câmera.
+      GoRoute(
+        path: '/cobre',
+        builder: (_, _) => const Scaffold(body: Text('cobre')),
       ),
     ],
   );
@@ -239,17 +245,80 @@ void main() {
 
   testWidgets('com movimento, a barra anima até o tamanho compacto', (tester) async {
     final semantics = tester.ensureSemantics();
-    await tester.pumpWidget(_app(tabs));
-    await tester.pumpAndSettle();
+    // Com movimento, o anel do botão de bipar respira sem parar e o
+    // pumpAndSettle nunca assentaria: os quadros avançam no relógio.
+    await tester.pumpWidget(_app(tabs, reduceMotion: false));
+    await tester.pump(const Duration(seconds: 1));
 
     tabs.controllers[_paths.first]!.jumpTo(300);
     await tester.pump();
     expect(_scanSize(tester), 64);
     await tester.pump(const Duration(milliseconds: 150));
     expect(_scanSize(tester), allOf(lessThan(64), greaterThan(50)));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
     expect(_scanSize(tester), 56);
     semantics.dispose();
+  });
+
+  testWidgets('o anel respira no botão de bipar e volta ao ponto de partida', (tester) async {
+    await tester.pumpWidget(_app(tabs, reduceMotion: false));
+    await tester.pump();
+
+    // `bipa-breathe`: 2,4 s; aos 50% o anel está em 1,22 e transparente.
+    ({double scale, double opacity}) ring() {
+      final scale = tester.widget<Transform>(
+        find.ancestor(of: find.byKey(ScanNavBar.ringKey), matching: find.byType(Transform)).first,
+      );
+      final box = tester.widget<DecoratedBox>(find.byKey(ScanNavBar.ringKey));
+      final color = (box.decoration as ShapeDecoration).color!;
+      return (scale: scale.transform.getMaxScaleOnAxis(), opacity: color.a);
+    }
+
+    expect(ring().scale, closeTo(1, 0.001));
+    expect(ring().opacity, closeTo(0.35, 0.01));
+    await tester.pump(const Duration(milliseconds: 1200));
+    expect(ring().scale, closeTo(1.22, 0.001));
+    expect(ring().opacity, closeTo(0, 0.01));
+    await tester.pump(const Duration(milliseconds: 1200));
+    expect(ring().scale, closeTo(1, 0.001));
+    expect(ring().opacity, closeTo(0.35, 0.01));
+    // Passa dos limites do botão sem deixar de ser só desenho.
+    expect(find.ancestor(of: find.byKey(ScanNavBar.ringKey), matching: find.byType(IgnorePointer)), findsWidgets);
+  });
+
+  testWidgets('com movimento reduzido, o anel fica parado e nem é desenhado', (tester) async {
+    await tester.pumpWidget(_app(tabs));
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byKey(ScanNavBar.ringKey), findsNothing);
+    // Nenhum ticker ativo: a barra não pede quadros.
+    expect(tester.hasRunningAnimations, isFalse);
+    await tester.pump(const Duration(seconds: 5));
+    expect(tester.hasRunningAnimations, isFalse);
+  });
+
+  testWidgets('ligar o movimento reduzido para o anel que já respirava', (tester) async {
+    await tester.pumpWidget(_app(tabs, reduceMotion: false));
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byKey(ScanNavBar.ringKey), findsOneWidget);
+    expect(tester.hasRunningAnimations, isTrue);
+
+    await tester.pumpWidget(_app(tabs));
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byKey(ScanNavBar.ringKey), findsNothing);
+    expect(tester.hasRunningAnimations, isFalse);
+  });
+
+  testWidgets('com a barra fora da tela, o anel não pede quadros', (tester) async {
+    await tester.pumpWidget(_app(tabs, reduceMotion: false));
+    await tester.pump(const Duration(seconds: 1));
+    expect(tester.hasRunningAnimations, isTrue);
+
+    // Uma rota por cima (a câmera, por exemplo) desliga os tickers da de baixo.
+    final router = GoRouter.of(tester.element(find.byType(HomeShell)));
+    unawaited(router.push('/cobre'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(tester.hasRunningAnimations, isFalse);
   });
 
   testWidgets('o conteúdo reserva o espaço da barra normal nos dois tamanhos', (tester) async {

@@ -59,6 +59,10 @@ class ScanNavBar extends StatelessWidget {
   /// a barra encolhe, para não sobrar um vão entre os dois.
   final Widget? above;
 
+  /// O anel que respira no botão de bipar, para os testes acharem.
+  @visibleForTesting
+  static const ringKey = ValueKey('scan-ring');
+
   // As medidas vêm do `.bipa-nav` e do `.bipa-scan` do design system.
   static const _barHeight = 68.0;
   static const _compactBarHeight = 52.0;
@@ -350,7 +354,7 @@ class _Destination extends StatelessWidget {
   }
 }
 
-class _ScanButton extends StatelessWidget {
+class _ScanButton extends StatefulWidget {
   const _ScanButton({
     required this.label,
     required this.size,
@@ -368,39 +372,118 @@ class _ScanButton extends StatelessWidget {
   final String? longPressLabel;
 
   @override
+  State<_ScanButton> createState() => _ScanButtonState();
+}
+
+class _ScanButtonState extends State<_ScanButton> with SingleTickerProviderStateMixin {
+  /// Um ciclo do anel que respira (`bipa-breathe`: 2,4 s, sem fim).
+  late final AnimationController _breath = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2400),
+  );
+
+  /// O anel cresce até 1,22 vez o botão enquanto some de 35% a 0 de opacidade.
+  static const _ringScale = 1.22;
+  static const _ringOpacity = 0.35;
+
+  bool _still = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Movimento reduzido: o anel para e nem chega a ser desenhado. Fora da
+    // tela (uma câmera aberta por cima, por exemplo) o ticker se cala sozinho,
+    // então a barra escondida não gasta quadros.
+    _still = MediaQuery.disableAnimationsOf(context);
+    if (_still) {
+      _breath.stop();
+    } else if (!_breath.isAnimating) {
+      _breath.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _breath.dispose();
+    super.dispose();
+  }
+
+  /// O anel em [t], de 0 a 1 no ciclo. Como no CSS, a curva vale para cada
+  /// metade: de 0 a 50% o anel cresce e some, de 50 a 100% encolhe e volta.
+  static ({double scale, double opacity}) _ringAt(double t) {
+    final growing = t < 0.5;
+    final p = BipaMotion.standard.transform(growing ? t * 2 : (t - 0.5) * 2);
+    final k = growing ? p : 1 - p;
+    return (scale: lerpDouble(1, _ringScale, k)!, opacity: lerpDouble(_ringOpacity, 0, k)!);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final onLongPress = this.onLongPress;
-    return Semantics(
-      button: true,
-      label: label,
-      excludeSemantics: true,
-      onTap: onPressed,
-      onLongPress: onLongPress,
-      onLongPressHint: longPressLabel,
-      child: Material(
-        color: colors.brand,
-        shape: const CircleBorder(),
-        elevation: 4,
-        shadowColor: colors.ink.withValues(alpha: 0.4),
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: () {
-            HapticFeedback.lightImpact();
-            onPressed();
-          },
-          onLongPress: onLongPress == null
-              ? null
-              : () {
-                  HapticFeedback.mediumImpact();
-                  onLongPress();
-                },
-          child: SizedBox.square(
-            dimension: size,
-            child: Icon(Icons.qr_code_scanner_rounded, size: 30, color: colors.onBrand),
+    final onLongPress = widget.onLongPress;
+    return Stack(
+      alignment: Alignment.center,
+      // O anel passa dos limites do botão.
+      clipBehavior: Clip.none,
+      children: [
+        if (!_still)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: ExcludeSemantics(
+                // Só o anel repinta a cada quadro.
+                child: RepaintBoundary(
+                  child: AnimatedBuilder(
+                    animation: _breath,
+                    builder: (context, _) {
+                      final ring = _ringAt(_breath.value);
+                      return Transform.scale(
+                        scale: ring.scale,
+                        child: DecoratedBox(
+                          key: ScanNavBar.ringKey,
+                          decoration: ShapeDecoration(
+                            shape: const CircleBorder(),
+                            color: colors.brand.withValues(alpha: ring.opacity),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+        Semantics(
+          button: true,
+          label: widget.label,
+          excludeSemantics: true,
+          onTap: widget.onPressed,
+          onLongPress: onLongPress,
+          onLongPressHint: widget.longPressLabel,
+          child: Material(
+            color: colors.brand,
+            shape: const CircleBorder(),
+            elevation: 4,
+            shadowColor: colors.ink.withValues(alpha: 0.4),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: () {
+                HapticFeedback.lightImpact();
+                widget.onPressed();
+              },
+              onLongPress: onLongPress == null
+                  ? null
+                  : () {
+                      HapticFeedback.mediumImpact();
+                      onLongPress();
+                    },
+              child: SizedBox.square(
+                dimension: widget.size,
+                child: Icon(Icons.qr_code_scanner_rounded, size: 30, color: colors.onBrand),
+              ),
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 }
