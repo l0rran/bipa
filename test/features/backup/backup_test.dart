@@ -320,6 +320,7 @@ void main() {
       final prepared = await app.restore().prepare(app.latestPath);
       expect(prepared.backup, const BackupSummary(products: 1, prices: 1, itemsAtHome: 1));
       expect(prepared.current, const BackupSummary(products: 1, prices: 0, itemsAtHome: 0));
+      expect(prepared.adjustedItems, 0);
       await app.restore().apply(prepared);
 
       expect(await dump(), before);
@@ -381,6 +382,34 @@ void main() {
 
       expect(await app.restore().undo(), isFalse);
       expect(await dump(), restored);
+    });
+
+    test('lotes que não somam a quantidade em casa: a quantidade vira a soma (ADR 0013)', () async {
+      await seed();
+      final file = joinPath(root.path, 'lotes.sqlite');
+      await app.db.customStatement('VACUUM INTO ?', [file]);
+      final seconds = at.millisecondsSinceEpoch ~/ 1000;
+      // O arroz fica com 2 em casa e um lote de 1; o feijão tem um lote de 3
+      // e nenhum item.
+      await _raw(file, "DELETE FROM stock_lots WHERE id = 'l2'");
+      await _raw(
+        file,
+        'INSERT INTO products (id, name, unit, created_at, updated_at) '
+        "VALUES ('feijao', 'Feijão', 'gram', $seconds, $seconds)",
+      );
+      await _raw(file, "INSERT INTO stock_lots (id, product_id, quantity, since) VALUES ('l3', 'feijao', 3, $seconds)");
+      final source = await app.archiveOf(file, schemaVersion: 14);
+      await changeEverything();
+
+      final prepared = await app.restore().prepare(source);
+      expect(prepared.adjustedItems, 2);
+      expect(prepared.backup, const BackupSummary(products: 2, prices: 1, itemsAtHome: 2));
+      await app.restore().apply(prepared);
+
+      final items = {
+        for (final item in await app.db.select(app.db.stockItems).get()) item.productId: (item.quantity, item.location),
+      };
+      expect(items, {'arroz': (1.0, StockLocation.pantry), 'feijao': (3.0, StockLocation.pantry)});
     });
 
     test('um backup que chega como fluxo de bytes também se restaura', () async {
@@ -549,15 +578,6 @@ void main() {
       final source = await app.archiveOf(file, schemaVersion: 14, counts: {'products': 5});
 
       await expectRefused(source, DomainErrorCode.backupDamaged, detail: 'products tem 1 linhas');
-    });
-
-    test('lotes que não somam a quantidade em casa (ADR 0013)', () async {
-      final file = joinPath(root.path, 'lotes.sqlite');
-      await app.db.customStatement('VACUUM INTO ?', [file]);
-      await _raw(file, "DELETE FROM stock_lots WHERE id = 'l2'");
-      final source = await app.archiveOf(file, schemaVersion: 14);
-
-      await expectRefused(source, DomainErrorCode.backupDamaged, detail: 'lotes');
     });
 
     test('chave estrangeira quebrada', () async {
@@ -731,7 +751,7 @@ final class _LiveDatabase implements BackupDatabase {
   Future<BackupContents> describe(String path) => _current.describe(path);
 
   @override
-  Future<BackupSummary> check(String path, BackupManifest manifest) => _current.check(path, manifest);
+  Future<CheckedBackup> check(String path, BackupManifest manifest) => _current.check(path, manifest);
 
   @override
   Future<BackupSummary> currentSummary() => _current.currentSummary();

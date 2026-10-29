@@ -20,17 +20,33 @@ abstract interface class BackupDatabase {
   /// Confere o banco de um backup em [path] e o leva ao esquema deste app,
   /// no próprio arquivo: o cabeçalho do SQLite, o `user_version` contra o
   /// [manifest], `PRAGMA integrity_check`, as contagens do manifesto, a
-  /// migração, `PRAGMA foreign_key_check`, a soma dos lotes (ADR 0013) e a
-  /// leitura de cada linha pelo app (um valor de enum que ele não conhece
-  /// vem de um app mais novo, ADR 0023, lacuna B4). Devolve o resumo do
-  /// banco conferido. Lança [BackupException].
-  Future<BackupSummary> check(String path, BackupManifest manifest);
+  /// migração, `PRAGMA foreign_key_check` e a leitura de cada linha pelo app
+  /// (um valor de enum que ele não conhece vem de um app mais novo, ADR
+  /// 0023, lacuna B4). Onde a soma dos lotes não é a quantidade do item em
+  /// casa (ADR 0013), a quantidade passa a ser a soma, no próprio arquivo.
+  /// Devolve o resumo do banco conferido e quantos itens foram acertados.
+  /// Lança [BackupException].
+  Future<CheckedBackup> check(String path, BackupManifest manifest);
 
   /// O resumo do banco do app agora ("Neste celular agora: …").
   Future<BackupSummary> currentSummary();
 
   /// Se o banco do app não tem nenhuma linha: o app acabou de ser instalado.
   Future<bool> isEmpty();
+}
+
+/// Um banco de backup conferido por [BackupDatabase.check].
+@immutable
+final class CheckedBackup {
+  const CheckedBackup({required this.summary, this.adjustedItems = 0});
+
+  /// Os números do banco conferido.
+  final BackupSummary summary;
+
+  /// Quantos itens em casa tinham a quantidade diferente da soma dos lotes e
+  /// passaram a ter a soma (ADR 0023, seção 5): "2 itens tiveram a
+  /// quantidade acertada".
+  final int adjustedItems;
 }
 
 /// O que um banco guarda, para o manifesto.

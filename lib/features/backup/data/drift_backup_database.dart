@@ -31,7 +31,7 @@ final class DriftBackupDatabase implements BackupDatabase {
   Future<BackupContents> describe(String path) => Isolate.run(() => _describe(path));
 
   @override
-  Future<BackupSummary> check(String path, BackupManifest manifest) {
+  Future<CheckedBackup> check(String path, BackupManifest manifest) {
     final current = schemaVersion;
     return Isolate.run(() => _check(path, manifest, current));
   }
@@ -81,7 +81,7 @@ final class DriftBackupDatabase implements BackupDatabase {
     }
   }
 
-  static Future<BackupSummary> _check(String path, BackupManifest manifest, int currentSchema) async {
+  static Future<CheckedBackup> _check(String path, BackupManifest manifest, int currentSchema) async {
     final file = File(path);
     final version = _userVersion(file);
     if (version > currentSchema) throw BackupException.fromNewerApp('user_version $version');
@@ -126,18 +126,6 @@ final class DriftBackupDatabase implements BackupDatabase {
       final foreignKeys = await db.customSelect('PRAGMA foreign_key_check').get();
       if (foreignKeys.isNotEmpty) throw BackupException.damaged('foreign_key_check: ${foreignKeys.length}');
 
-      // A soma dos lotes é a quantidade de cada item em casa (ADR 0013).
-      final lots = await db.customSelect('''
-        SELECT product_id FROM (
-          SELECT product_id, quantity, 0.0 AS lots FROM stock_items
-          UNION ALL
-          SELECT product_id, 0.0, quantity FROM stock_lots
-        )
-        GROUP BY product_id
-        HAVING ABS(SUM(quantity) - SUM(lots)) > 0.000001
-        ''').get();
-      if (lots.isNotEmpty) throw BackupException.damaged('lotes não somam o estoque: ${lots.length} produtos');
-
       // Cada linha precisa virar o que o app usa. Um nome de enum (ou chave
       // de JSON) que este app não conhece foi gravado por um app mais novo
       // com o mesmo esquema (ADR 0023, lacuna B4).
@@ -150,11 +138,41 @@ final class DriftBackupDatabase implements BackupDatabase {
           throw BackupException.fromNewerApp('${table.actualTableName}: $error');
         }
       }
-      return await _summary(db);
+      // Depois da leitura: um backup recusado não chega a ser mexido.
+      final adjusted = await _matchLots(db);
+      return CheckedBackup(summary: await _summary(db), adjustedItems: adjusted);
     } finally {
       await db.close();
     }
   }
+
+  /// A soma dos lotes é a quantidade de cada item em casa (ADR 0013). Num
+  /// backup em que ela não bate, os lotes valem: a quantidade do item passa
+  /// a ser a soma deles (zero, se não há lote), e um produto com lotes e sem
+  /// item ganha o item, na despensa. O backup não é recusado, porque a
+  /// diferença tem conserto e o resto dos dados está bom (decisão do
+  /// mantenedor em 29/10, ADR 0023, seção 5). Muda só a cópia em conferência
+  /// e devolve quantos itens mudaram.
+  static Future<int> _matchLots(AppDatabase db) => db.transaction(() async {
+    final missing = await db.customSelect('''
+      SELECT COUNT(DISTINCT product_id) AS n FROM stock_lots
+      WHERE product_id NOT IN (SELECT product_id FROM stock_items)
+      ''').getSingle();
+    await db.customStatement('''
+      INSERT INTO stock_items (product_id, quantity, location, updated_at)
+      SELECT product_id, SUM(quantity), 'pantry', MAX(since) FROM stock_lots
+      WHERE product_id NOT IN (SELECT product_id FROM stock_items)
+      GROUP BY product_id
+      ''');
+    const lotSum =
+        '(SELECT COALESCE(SUM(lot.quantity), 0.0) FROM stock_lots lot '
+        'WHERE lot.product_id = stock_items.product_id)';
+    final changed = await db.customUpdate(
+      'UPDATE stock_items SET quantity = $lotSum WHERE ABS(quantity - $lotSum) > 0.000001',
+      updates: {db.stockItems},
+    );
+    return missing.read<int>('n') + changed;
+  });
 
   static AppDatabase _open(File file, {DatabaseSetup? setup}) {
     // Neste isolate, o banco do app não está aberto: o aviso de dois bancos

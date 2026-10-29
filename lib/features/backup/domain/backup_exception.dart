@@ -7,8 +7,8 @@ final class BackupException extends DomainException {
   const BackupException.notRecognized([this.detail]) : super(DomainErrorCode.backupNotRecognized);
 
   /// O arquivo é um `.bipa`, mas algo dentro não confere: um hash, um
-  /// tamanho, a integridade do banco, as chaves estrangeiras ou a soma dos
-  /// lotes.
+  /// tamanho, a integridade do banco ou as chaves estrangeiras. A soma dos
+  /// lotes não recusa: a restauração acerta a quantidade por ela.
   const BackupException.damaged([this.detail]) : super(DomainErrorCode.backupDamaged);
 
   /// Feito por uma versão mais nova do app: um formato ou esquema que esta
