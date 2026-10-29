@@ -4,6 +4,7 @@ import 'package:bipa/core/design_system/bipa_typography.dart';
 import 'package:bipa/core/design_system/components/product_category_icon.dart';
 import 'package:bipa/core/design_system/components/product_thumb.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
+import 'package:bipa/features/products/domain/package_suggestion.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_search.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
@@ -45,6 +46,31 @@ Future<ProductChoice?> pickProduct(
     builder: (_) =>
         ProductPickerSheet(initialQuery: initialQuery, allowCreate: allowCreate, excludeId: excludeId, title: title),
   );
+}
+
+/// A escolha de produto a partir do nome lido numa etiqueta ([nameHint]): o
+/// texto inicial vem recortado, sem marca, tamanho nem ruído, para a busca
+/// achar o produto que já existe em vez de oferecer um duplicado (G4,
+/// [productQueryFromLabel]).
+Future<ProductChoice?> pickProductForLabel(
+  BuildContext context,
+  WidgetRef ref, {
+  required String? nameHint,
+  bool allowCreate = true,
+  String? title,
+}) async {
+  var query = nameHint?.trim() ?? '';
+  if (query.isNotEmpty) {
+    try {
+      final products = await ref.read(productRepositoryProvider).watchAll().first;
+      query = productQueryFromLabel(query, products: products);
+    } on Exception catch (error, stack) {
+      // Sem a lista, abre com o texto lido, como antes.
+      FlutterError.reportError(FlutterErrorDetails(exception: error, stack: stack, library: 'products'));
+    }
+  }
+  if (!context.mounted) return null;
+  return pickProduct(context, initialQuery: query, allowCreate: allowCreate, title: title);
 }
 
 class ProductPickerSheet extends ConsumerStatefulWidget {

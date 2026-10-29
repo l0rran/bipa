@@ -249,9 +249,10 @@ class _CameraPageState extends ConsumerState<CameraPage> {
     final createProduct = ref.read(createProductByWeightProvider);
     _clearNotice();
     final choice = await _withAnalysisPaused(
-      () => pickProduct(
+      () => pickProductForLabel(
         context,
-        initialQuery: read.nameHint ?? '',
+        ref,
+        nameHint: read.nameHint,
         title: l10n.cartGranelTitle(l10n.pricePerKilo(read.price.format())),
       ),
     );
@@ -423,7 +424,13 @@ class _CameraPageState extends ConsumerState<CameraPage> {
     final l10n = AppLocalizations.of(context);
     _clearNotice();
     final choice = await _withAnalysisPaused(
-      () => pickProduct(context, allowCreate: false, initialQuery: read.nameHint ?? '', title: l10n.cameraWhichProduct),
+      () => pickProductForLabel(
+        context,
+        ref,
+        nameHint: read.nameHint,
+        allowCreate: false,
+        title: l10n.cameraWhichProduct,
+      ),
     );
     if (choice is! ExistingProduct || !mounted) return;
     await _confirmTag(choice.product, null, read);
