@@ -25,13 +25,14 @@ lib/
 ├── main.dart                  # ponto de entrada: ProviderScope + BipaApp
 ├── app/                       # MaterialApp, rotas (go_router), tema
 ├── core/                      # código compartilhado, sem regra de negócio de uma feature
+│   ├── backup/                # onde ficam o banco, as fotos e o ultimo.bipa; a troca segura dos arquivos
 │   ├── database/              # Drift: tabelas, AppDatabase, migrações
 │   ├── design_system/         # tokens e componentes visuais do Bipa
 │   ├── l10n/                  # textos (ARB) e código gerado de localização
 │   ├── money/, location/, ... # value objects e utilitários puros
 │   └── di/                    # providers globais (relógio, gerador de IDs)
 └── features/
-    └── <feature>/             # products, markets, prices, stock, shopping_list...
+    └── <feature>/             # products, markets, prices, stock, shopping_list, backup...
         ├── domain/            # entidades, contratos, casos de uso, regras puras
         ├── data/              # implementações: Drift, ML Kit, API
         └── presentation/
@@ -83,6 +84,7 @@ class StockController extends _$StockController {
 - **Preços são eventos imutáveis** (só inserção). Na sincronização não existe conflito de edição.
 - **Outbox:** tabelas compartilháveis (`products`, `markets`, `price_observations`) têm `synced_at`. Nulo significa pendente de envio. O estoque e a lista de compras são privados e nunca saem do aparelho.
 - **Migrações:** toda mudança de esquema sobe o `schemaVersion` e ganha um passo em `MigrationStrategy.onUpgrade`, com teste de migração. Do esquema 14 em diante, o esquema de cada versão fica em `drift_schemas/` (`drift_dev schema dump`), e o teste parte dele (ADR 0023; passo a passo em [contribuindo.md](contribuindo.md#mudança-no-esquema-do-banco)).
+- **Backup:** o `.bipa` é um zip com o próprio banco, as fotos e um manifesto (ADR 0023, seção 5), em `features/backup`. Restaurar troca o arquivo do banco: o serviço fecha o banco, troca os arquivos e descarta o `appDatabaseProvider`, e tudo o que o observa recarrega. Por isso, nada guarda o `AppDatabase` fora de um provider que o observe com `ref.watch`.
 
 ## Valores e unidades
 

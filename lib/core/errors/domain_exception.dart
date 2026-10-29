@@ -15,6 +15,16 @@ enum DomainErrorCode {
 
   /// `args`: o código de barras e o nome do produto que já o tem.
   duplicateBarcode,
+
+  /// O arquivo escolhido não é um backup `.bipa` (ADR 0023).
+  backupNotRecognized,
+
+  /// O backup está danificado: um hash, a integridade do banco ou uma regra
+  /// dos dados não confere. Nada foi trocado.
+  backupDamaged,
+
+  /// O backup foi feito por uma versão mais nova do app.
+  backupFromNewerApp,
 }
 
 /// Base para erros de regra de negócio.

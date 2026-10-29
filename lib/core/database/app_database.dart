@@ -1,5 +1,6 @@
 // Os enums (Aisle, PriceConditionKind…), o PriceOffer e o conversor dele são
 // usados pelo código gerado (app_database.g.dart).
+import 'package:bipa/core/backup/app_data_swap.dart';
 import 'package:bipa/core/catalog/product_kind.dart';
 import 'package:bipa/core/database/price_offers_converter.dart';
 import 'package:bipa/core/database/tables.dart';
@@ -137,5 +138,37 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  static QueryExecutor _openConnection() => driftDatabase(name: 'bipa');
+  Future<void>? _closing;
+
+  /// Fechar duas vezes é o mesmo que fechar uma: a restauração do backup
+  /// fecha o banco e espera, e o provider fecha de novo ao ser descartado.
+  @override
+  Future<void> close() => _closing ??= super.close();
+
+  /// Se o banco já abriu nesta execução do app. A restauração do backup
+  /// reabre o banco, e essa reabertura não pode apagar a reserva do
+  /// "Desfazer".
+  static bool _openedBefore = false;
+
+  /// O banco fica em `bipa.sqlite`, na pasta de documentos do app (o padrão
+  /// do `driftDatabase`, aqui explícito). Antes de abrir, uma restauração de
+  /// backup interrompida no meio volta ao que era, e, na primeira abertura
+  /// de cada execução, a reserva de uma restauração anterior sai (ADR 0023,
+  /// seção 5).
+  static QueryExecutor _openConnection() => driftDatabase(
+    name: 'bipa',
+    native: DriftNativeOptions(
+      databasePath: () async {
+        final location = await appDataLocation();
+        final swap = AppDataSwap(location);
+        if (_openedBefore) {
+          await swap.recover();
+        } else {
+          _openedBefore = true;
+          await swap.atStartup();
+        }
+        return location.databasePath;
+      },
+    ),
+  );
 }
