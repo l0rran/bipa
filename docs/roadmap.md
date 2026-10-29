@@ -27,7 +27,8 @@
 ## Fase 1: MVP para uso pessoal
 
 - [ ] Importar cupom fiscal (QR Code da NFC-e) com fila offline: registra os preços e abastece o estoque, e serve de onboarding
-- [ ] Catálogo pronto de produtos do mercado brasileiro (ADR 0024, aceito): Open Food Facts, Open Products Facts e Open Beauty Facts num `catalogo.sqlite` embarcado no APK, sem consulta online na primeira versão. Falta o script em `tool/catalogo`, medir a cobertura com cupons reais e a atribuição na tela "Sobre"
+- [x] Catálogo pronto de produtos do mercado brasileiro (ADR 0024): 40.944 produtos do Open Food Facts, Open Products Facts e Open Beauty Facts em `assets/catalog/catalogo.sqlite` (2,7 MB), gerado por `tool/catalogo`; bipar um código do catálogo preenche a "Embalagem nova" e a atribuição está em "Sobre o Bipa"
+- [ ] Medir a cobertura do catálogo com cupons reais do mantenedor (`py -3 tool/catalogo/cobertura.py`)
 - [x] Modos do bipar: "Preço" no mercado, "Comprei" e "Usei" em casa, com a embalagem vazia pondo na lista ao dar baixa (ADR 0019)
 - [x] Desfazer em toda ação de passagem que muda o estoque (bipes e gestos); os steppers se desfazem no próprio botão (ADR 0019); cada item bipado é salvo na hora
 - [x] Lista de compras: itens de produto ou escritos à mão, os itens de sempre (os com "ter sempre"), seções do mercado, preço esperado e total estimado; "Pôr na lista" no Início
@@ -47,7 +48,7 @@
 - [ ] Lista a partir de foto de lista de papel e por voz ("acabou o café"); widget de adicionar rápido
 - [ ] Previsão de consumo a partir do histórico do estoque
 - [ ] Onboarding (a explicação antes de pedir localização e notificação já existe)
-- [ ] Backup e restauração local (ADR 0023, lacuna B5): o arquivo `.bipa` em `backup/ultimo.bipa`; o modelo já foi fechado (B1–B4) e o Auto Backup do Android guarda só esse arquivo
+- [x] Backup e restauração local (ADR 0023, lacuna B5): o `.bipa` diário em `backup/ultimo.bipa`, "Salvar uma cópia…" e "Restaurar de um arquivo…" em Ajustes, com conferência, Desfazer e o cartão "Backup encontrado" no celular novo
 - [x] Ícone do app: a etiqueta amarela com o "b" (proposta 1, em `docs/design/icone/`)
 - [x] Relatório de falhas com Sentry só com consentimento (ADR 0025): a pergunta no Início depois da primeira compra e o interruptor em Ajustes
 - [ ] Criar o projeto no Sentry (região UE, sem guardar IP) e gerar os builds de publicação com `--dart-define=SENTRY_DSN=...`
@@ -123,9 +124,18 @@ Os achados da [análise do lote 10](ux/analise-ux-2026-10-28-lote10.md), feita d
 
 Os achados da [análise do lote 11](ux/analise-ux-2026-10-29-lote11.md), feita depois de G6, G7, H17, H18 e G8.
 
-- [ ] G9 e G11: uma palavra diferente na etiqueta ("LIMAO TAITI" com "Limão tahiti") não pode esconder o produto que existe (abrir a busca com a primeira palavra e manter o recorte como nome a criar); acentos das palavras de balança que faltam (francês, grão, linguiça, abóbora, suíno, parmesão)
-- [ ] G10 e H18 (resto): o aviso "ficou sem embalagem" espera o Desfazer fechar, e o cartão do relatório de falhas some durante a busca e o filtro de local
+- [x] G9 e G11: uma palavra diferente na etiqueta ("LIMAO TAITI" com "Limão tahiti") não pode esconder o produto que existe (abrir a busca com a primeira palavra e manter o recorte como nome a criar); acentos das palavras de balança que faltam (francês, grão, linguiça, abóbora, suíno, parmesão)
+- [x] G10 e H18 (resto): o aviso "ficou sem embalagem" espera o Desfazer fechar, e o cartão do relatório de falhas some durante a busca e o filtro de local
 - [ ] Redesenhar a cópia do quadro InicioRelatorioFalhas com o texto novo do cartão e a posição depois de "Acabando"
+
+### Ajustes de UX (análise do lote 12, 29/10/2026)
+
+Os achados da [análise do lote 12](ux/analise-ux-2026-10-29-lote12.md), feita depois do backup (B5) e do catálogo pronto.
+
+- [ ] BK1 (crítico) e BK4: backup que não se perde. O `ultimo.bipa` do celular antigo precisa continuar restaurável pelos Ajustes (não só pelo cartão do Início, que some com o primeiro item), o backup diário não pode parar calado nem um "Fazer backup agora" gravar por cima de um backup de outro aparelho sem perguntar, e a casa vazia do cartão se decide por `isEmpty()`. Quadro e decisão antes. Antes de qualquer build para outras pessoas
+- [ ] BK2 e BK3: o Desfazer da restauração dura o mesmo que o aviso (TalkBack, "Tempo para agir", dedo em cima); a confirmação mostra os mesmos três números dos dois lados e a data com ano
+- [ ] G12, G13 e G14: catálogo que não junta. A folha mostra "No catálogo: …"; o produto da pessoa só é escolhido quando cobre a maior parte do nome (leite condensado não vai para "Leite", Fanta Uva não vai para "Uva"); o nome novo mantém a marca quando sobra uma palavra; o gerador fica só com nomes em português, a grafia da marca e o tamanho por massa ("1 u, 120 g")
+- [ ] H20 e G15: atribuição com link, com o texto de "Sobre" no ARB citando as três bases, e a linha "Dados do Open Food Facts" como link para a ficha (quadros antes)
 
 ## Fase 2: base comunitária
 

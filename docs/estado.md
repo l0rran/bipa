@@ -6,16 +6,16 @@ Retrato de 29/10/2026, para quem continua o trabalho (pessoa ou agente). Leia an
 
 - **Branch:** tudo está em `main`, publicado em `l0rran/bipa`. Não há branch aberta.
 - **Compilação:** o código compila e os testes passam (abaixo).
-- **Banco:** esquema 14 (`remembered_locations`, ADR 0021). O teste de migração está em `test/core/database/migration_test.dart`.
+- **Banco:** esquema 15 (`product_packages.origin`, de onde veio a embalagem; ADR 0023, lacuna C1). O teste de migração está em `test/core/database/migration_test.dart`.
 - **Feito até aqui:** o [CHANGELOG](../CHANGELOG.md), seção "Não lançado". O que falta está no [roadmap](roadmap.md).
 - **Android:** minSdk 26 (Android 8.0), exigido pelo `sentry_flutter` 10. `flutter build apk --debug` passa.
 - **Protótipo e design system:** as cópias do repositório estão **à frente** das publicadas no claude.ai. Em 28/10 entraram quadros novos (Arrumar o que entrou, granel na bandeja, local no aviso, Produtos, barra com letra grande e os que o app já fazia), o ícone novo, variantes de componente e guias corrigidos. Cada mudança está anotada na linha do quadro ou no guia; o publicado precisa recebê-las (item no roadmap).
 
 ## Compilado e testado
 
-Em 28/10, no Windows (Flutter 3.47.8, Dart 3.13.7): `flutter analyze` sem problemas, `flutter test` com 829 testes passando, `flutter build apk --debug` passando e o banco do OCR passando. No Windows, o banco do OCR roda com `py -3 tool/ocr_bench/testes.py`, porque não há `python3`, e `dart format .` falha depois de um build por causa de um caminho longo dentro de `build/`: use `dart format lib test tool`.
+Em 28/10, no Windows (Flutter 3.47.8, Dart 3.13.7): `flutter analyze` sem problemas, `flutter test` com 962 testes passando, `flutter build apk --debug` passando e o banco do OCR passando. No Windows, o banco do OCR roda com `py -3 tool/ocr_bench/testes.py`, porque não há `python3`, e `dart format .` falha depois de um build por causa de um caminho longo dentro de `build/`: use `dart format lib test tool`.
 
-Os lotes 8 a 11 foram feitos por agentes em paralelo, cada um num worktree, e juntados em `main` com merges. Cada lote terminou com uma revisão de UX: [lote 8](ux/analise-ux-2026-10-28-lote8.md), [lote 9](ux/analise-ux-2026-10-28-lote9.md) , [lote 10](ux/analise-ux-2026-10-28-lote10.md) e [lote 11](ux/analise-ux-2026-10-29-lote11.md), cujos achados estão no roadmap.
+Os lotes 8 a 12 foram feitos por agentes em paralelo, cada um num worktree, e juntados em `main` com merges. Cada lote terminou com uma revisão de UX: [lote 8](ux/analise-ux-2026-10-28-lote8.md), [lote 9](ux/analise-ux-2026-10-28-lote9.md) , [lote 10](ux/analise-ux-2026-10-28-lote10.md) [lote 11](ux/analise-ux-2026-10-29-lote11.md) e [lote 12](ux/analise-ux-2026-10-29-lote12.md), cujos achados estão no roadmap.
 
 Falta o teste no aparelho, de antes e de agora:
 - compra: "3× Leite" bipando um de cada vez, cancelar pela folha "Fim da compra", trocar o produto de uma pesagem, o granel na bandeja (traço, preço por kg e "Quanto deu…");
@@ -41,9 +41,9 @@ Achados "prováveis" das revisões que ficaram como estão, por serem raros ou p
 
 Os detalhes de cada código estão nas análises de UX (em `ux/`) e no [roadmap](roadmap.md).
 
-1. **Achados do lote 11** (pequenos, sem quadro): G9 e G11 (escolha de produto e acentos de balança), G10 e H18 (resto). O texto do cartão do relatório de falhas está honesto: nada bloqueia o build com DSN.
-2. **Com quadro ou regra antes:** AB14, H19, a escolha de produto no design system (H1) e o quadro InicioRelatorioFalhas com o texto novo.
-3. **Maiores:** o backup e a restauração (B5) e o catálogo pronto (ADR 0024).
+1. **Antes do teste no aparelho:** o mantenedor testa depois do catálogo pronto (feito em 29/10). Falta corrigir BK1 (crítico: o backup do celular antigo pode se perder), BK2 e BK4, e G12 (o catálogo põe a embalagem num produto mais genérico). BK1 pede quadro e decisão.
+2. **Depois:** BK3, G13, G14, H20 e G15; AB14, H19 e a escolha de produto no design system (H1), com quadro ou regra antes; o quadro InicioRelatorioFalhas com o texto novo.
+3. **Cobertura do catálogo:** medir com os cupons reais do mantenedor (`tool/catalogo/cobertura.py`). Amostras de sites de terceiros não são usadas.
 4. **Levar ao claude.ai** as mudanças de 28/10 nas cópias do protótipo e do design system.
 5. **Também:** a migração para o Kotlin embutido e o teste no aparelho (acima).
 
