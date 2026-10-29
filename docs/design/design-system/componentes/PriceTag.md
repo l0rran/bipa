@@ -23,6 +23,10 @@ O Bipa mostra o **preço que você realmente vai pagar**, e o OCR lê todas essa
 
 - Preço sempre com algarismos tabulares e "R$" a 55% do tamanho dos números.
 - O preço por unidade (kg, L, un) aparece sempre que o tamanho da embalagem for conhecido.
+- A unidade se escreve com barra, como nas linhas de preço e na bandeja: "R$ 15,56/kg" e, quando o valor grande já é o preço por kg, "/kg · Camil 10 kg" embaixo. O leitor de tela ouve "o quilo" no lugar de "/kg".
+- O furo, os cantos de 8 do lado dele e de 14 do outro e a `shadow-raised` valem também na variante em destaque (`--hero`), em qualquer tela: é a mesma etiqueta do ícone do app.
+
+> **Pendente no design system publicado.** As duas últimas regras entraram nesta cópia em 28/10/2026, com a decisão P1 do [README do protótipo](../../prototipo/README.md#divergências-resolvidas). A página publicada no claude.ai precisa receber a mesma mudança, e os quadros do produto no protótipo publicado ainda dizem "o kg".
 - A etiqueta fica sempre reta; o destaque vem do tamanho do preço.
 
 ## Movimento
