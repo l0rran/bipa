@@ -296,6 +296,13 @@
       "w": 390,
       "h": 844,
       "title": "Proposta: Casa no celular novo, backup encontrado"
+    },
+    "AjustesBackupPendente.dc.html": {
+      "x": 3890,
+      "y": 7200,
+      "w": 1160,
+      "h": 970,
+      "title": "Proposta: Ajustes com o backup de outro celular pendente"
     }
   },
   "order": [
@@ -339,7 +346,8 @@
     "AjustesBackup.dc.html",
     "RestaurarBackup.dc.html",
     "RestaurarBackupResultado.dc.html",
-    "InicioBackupEncontrado.dc.html"
+    "InicioBackupEncontrado.dc.html",
+    "AjustesBackupPendente.dc.html"
   ],
   "notes": {
     "titulo": {
