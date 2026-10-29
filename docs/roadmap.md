@@ -149,6 +149,15 @@ Os achados da [análise do lote 13](ux/analise-ux-2026-10-29-lote13.md), feita d
 - [ ] Redesenhar os quadros InicioBackupPendente e AjustesBackupPendente com os textos novos (BK6 e BK9)
 - [ ] Revisar a tabela de marcas do catálogo: "Ninho Fases 1+" ainda casa com "Ninho"; a linha da lista de Produtos ainda usa a unidade do produto, não a grandeza da maioria
 
+### Ajustes de UX (análise do lote 14, 29/10/2026)
+
+Os achados da [análise do lote 14](ux/analise-ux-2026-10-29-lote14.md), feita depois de BK5 a BK9, G16 e G17. Nenhum bloqueia o teste no aparelho.
+
+- [ ] BK10 (alto): o backup diário não grava enquanto o Desfazer da restauração está na tela, e um backup manual feito com o aviso na tela encerra o Desfazer. Antes de qualquer build para outras pessoas
+- [ ] BK11: um texto de origem que sirva à reinstalação, ao backup do Google e à transferência por cabo; depois, refazer os quadros AjustesBackupPendente e InicioBackupPendente
+- [ ] G18: catálogo sem tamanho (metade das linhas): conferir a grandeza que a pessoa digita e contar só a grandeza principal do produto
+- [ ] G19: linhas da marca sem palavra de tipo ("Ninho Fases 1+", "Ninho Nutrigold", filtro de papel Melitta) não entram no produto da marca; decidir se "instantâneo" bloqueia produto de marca
+
 ## Fase 2: base comunitária
 
 - [ ] ADR de sincronização (servidor, autenticação, conflitos)
