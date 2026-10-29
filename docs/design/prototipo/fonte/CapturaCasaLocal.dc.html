@@ -28,14 +28,17 @@ a{color:#1C1B22}a:hover{color:#B00E28}
 .pack::before{content:"";position:absolute;left:0;right:0;top:0;height:54px;border-radius:10px 10px 0 0;background:#3E6FB4}
 .pack i{position:absolute;left:34px;right:34px;bottom:26px;height:46px;background:repeating-linear-gradient(90deg,#1C1B1F 0 2px,transparent 2px 4px,#1C1B1F 4px 5px,transparent 5px 8px)}
 .below{position:absolute;left:16px;right:16px;top:364px;display:grid;justify-items:center;gap:10px;z-index:3}
-/* O aviso do visor (LiveReadChip no app): ícone, o número em destaque, o texto e a ação. */
-.read-chip{max-width:100%;box-sizing:border-box;border:0;cursor:pointer}
+/* O aviso do visor (LiveReadChip no app): ícone, o número em destaque, o texto e a ação.
+   Com o item novo, o texto diz o local e é um botão com a seta para baixo (abre a escolha),
+   e o Desfazer é outro botão no mesmo aviso: um sinal só, sem chip separado (AB9). */
+.read-chip{max-width:100%;box-sizing:border-box;border:0;padding:0;gap:0}
 .read-chip b{font:800 16px/20px var(--font-display);font-variant-numeric:tabular-nums}
 .read-chip .bipa-chip__meta{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.read-chip .act{margin-left:4px;font:700 14px/18px var(--font-body);color:var(--on-camera)}
+.read-chip button{display:inline-flex;align-items:center;min-width:0;height:48px;margin:-4px 0;padding:0;border:0;background:none;color:inherit;font:inherit;cursor:pointer}
+.read-chip .place{gap:var(--space-2);padding-left:var(--space-3);padding-right:4px}
+.read-chip .place .down{width:16px;height:16px;margin-left:-6px}
+.read-chip .act{padding:0 var(--space-4) 0 var(--space-2);font:700 14px/18px var(--font-body);color:var(--on-camera)}
 .hint{font:700 14px/18px var(--font-body);color:var(--on-camera);text-align:center}
-
-.place-chip{border:0;cursor:pointer;font:700 14px/18px var(--font-body)}
 </style>
 </helmet>
 <div class="screen bipa-root" style="background: var(--camera);">
@@ -47,8 +50,7 @@ a{color:#1C1B22}a:hover{color:#B00E28}
     <button class="glass-btn" type="button" aria-label="Lanterna"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3h8l-1.5 6h-5zM9.5 9l1 12h3l1-12"/></svg></button>
   </div>
   <div class="below">
-    <button class="bipa-chip bipa-chip--glass read-chip" type="button" role="status" aria-label="+1, Leite integral 1 L · 1 em casa, Desfazer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><b>+1</b><span class="bipa-chip__meta">Leite integral 1&nbsp;L · 1 em casa</span><span class="act">Desfazer</span></button>
-    <button class="bipa-chip bipa-chip--glass place-chip" type="button" aria-label="Leite integral 1 L está na Despensa. Trocar o local"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V8l8-4 8 4v12M4 13h16M4 17h16"/></svg>Despensa <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+    <div class="bipa-chip bipa-chip--glass read-chip" role="status"><button class="place" type="button" aria-label="+1, Leite integral 1 L · 1 na Despensa, trocar o local"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><b>+1</b><span class="bipa-chip__meta">Leite integral 1&nbsp;L · 1 na Despensa</span><svg class="down" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button><button class="act" type="button">Desfazer</button></div>
   </div>
 </div>
 </x-dc>
