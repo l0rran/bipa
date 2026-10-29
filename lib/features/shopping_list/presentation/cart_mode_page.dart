@@ -24,6 +24,7 @@ import 'package:bipa/features/shopping_list/domain/record_trip_price.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
 import 'package:bipa/features/shopping_list/domain/trip_price.dart';
+import 'package:bipa/features/shopping_list/domain/weighing.dart';
 import 'package:bipa/features/shopping_list/presentation/change_trip_market.dart';
 import 'package:bipa/features/shopping_list/presentation/finish_shopping.dart';
 import 'package:bipa/features/shopping_list/presentation/live_camera.dart';
@@ -607,8 +608,13 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     final summary = ref.watch(shoppingTripSummaryProvider);
     final taken = ref.watch(takenInCartProvider);
     final perKilo = ref.watch(activeCartPerKiloEstimatesProvider);
+    final tripPrices = ref.watch(activeTripPricesProvider).value ?? const <TripPrice>[];
     final weighed = ref.watch(weighedProductIdsProvider).value ?? const <String>{};
     bool isWeighed(CartEntry entry) => entry.item.packageId == null && weighed.contains(entry.product.id);
+    // A linha do valor pago pelo peso (a pesagem e o granel): uma só, sem
+    // quantidade (ADR 0018).
+    bool isWeighing(CartEntry entry) =>
+        isWeighingLine(packageId: entry.item.packageId, shelfPrice: shelfPriceOf(tripPrices, entry.product.id));
     // Com duas embalagens do mesmo produto, "2 de 3" em cada linha confunde.
     final rows = <String, int>{};
     for (final entry in cart) {
@@ -618,6 +624,13 @@ class _CartModePageState extends ConsumerState<CartModePage> {
     final wanted = {
       for (final ShoppingListEntry(:item) in ref.watch(shoppingListProvider).value ?? const <ShoppingListEntry>[])
         if (item.productId case final productId? when !item.isChecked) productId: item.quantity,
+    };
+    // "1 de 3 Leite" enquanto o carrinho não alcança a lista.
+    String nameOf(CartEntry entry) => switch ((wanted[entry.product.id], taken[entry.product.id] ?? 0)) {
+      (final want?, final got) when entry.item.take && got < want && rows[entry.product.id] == 1 =>
+        l10n.cartQuantityPartial(got, want, entry.name),
+      _ when entry.item.quantity > 1 => l10n.cartQuantity(entry.item.quantity, entry.name),
+      _ => entry.name,
     };
     final marketName = ref.watch(activeTripMarketNameProvider);
     final notice = _notice;
@@ -690,30 +703,39 @@ class _CartModePageState extends ConsumerState<CartModePage> {
             for (final entry in cart)
               ScanTrayItem(
                 key: ValueKey(entry.item.id),
-                // "1 de 3 Leite" enquanto o carrinho não alcança a lista.
-                name: switch ((wanted[entry.product.id], taken[entry.product.id] ?? 0)) {
-                  (final want?, final got) when entry.item.take && got < want && rows[entry.product.id] == 1 =>
-                    l10n.cartQuantityPartial(got, want, entry.name),
-                  _ when entry.item.quantity > 1 => l10n.cartQuantity(entry.item.quantity, entry.name),
-                  _ => entry.name,
-                },
-                // O estimado se distingue só pela etiqueta vazada: um sinal só.
-                // O granel que espera a pesagem mostra o preço por kg lido na
-                // gôndola, também vazado, e fica fora do total (D3).
-                price: switch ((entry.item.price, perKilo[entry.item.key])) {
-                  (final price?, _) => price.format(),
-                  (null, final kilo?) => l10n.pricePerKilo(kilo.format()),
-                  (null, null) => null,
-                },
-                priceEstimated: entry.item.priceEstimated || perKilo.containsKey(entry.item.key),
-                priceSemanticsLabel: switch ((entry.item.price, perKilo[entry.item.key])) {
-                  (final price?, _) when entry.item.priceEstimated => l10n.cartPriceEstimated(price.format()),
-                  (null, final kilo?) => l10n.cartPricePerKiloEstimated(kilo.format()),
+                name: nameOf(entry),
+                // A etiqueta é o valor da linha: o preço firmado cheio, o do
+                // histórico vazado (um sinal só) ou o traço para digitar. O
+                // granel que espera a pesagem fica com o traço: o preço por
+                // quilo lido na gôndola desce para a segunda linha, com a
+                // balança, e fica fora do total (D9).
+                price: entry.item.price?.format(),
+                priceEstimated: entry.item.priceEstimated,
+                priceSemanticsLabel: switch (entry.item.price) {
+                  final price? when entry.item.priceEstimated => l10n.cartPriceEstimated(price.format()),
                   _ => null,
                 },
-                // A pesagem troca o produto; as outras linhas, a quantidade.
-                onNameTap: isWeighed(entry) ? () => _swapWeighed(entry) : () => _setQuantity(entry),
-                nameTapLabel: isWeighed(entry) ? l10n.cartSwapWeighed(entry.name) : l10n.cartQuantityOf(entry.name),
+                meta: switch (perKilo[entry.item.key]) {
+                  final kilo? => l10n.pricePerKilo(kilo.format()),
+                  null => null,
+                },
+                metaIcon: perKilo.containsKey(entry.item.key) ? Icons.scale_outlined : null,
+                nameSemanticsLabel: switch (perKilo[entry.item.key]) {
+                  final kilo? => l10n.cartGranelRowLabel(nameOf(entry), kilo.format()),
+                  null => null,
+                },
+                // A pesagem troca o produto; o granel não tem toque no nome
+                // (uma pesagem é sempre uma); as outras linhas, a quantidade.
+                onNameTap: isWeighed(entry)
+                    ? () => _swapWeighed(entry)
+                    : isWeighing(entry)
+                    ? null
+                    : () => _setQuantity(entry),
+                nameTapLabel: isWeighed(entry)
+                    ? l10n.cartSwapWeighed(entry.name)
+                    : isWeighing(entry)
+                    ? null
+                    : l10n.cartQuantityOf(entry.name),
                 justRead: entry.item.key == _justReadKey,
                 take: entry.item.take,
                 takeLabel: l10n.cartTake(entry.name),

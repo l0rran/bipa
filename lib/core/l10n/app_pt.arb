@@ -1162,10 +1162,13 @@
       }
     }
   },
-  "cartPricePerKiloEstimated": "{price} por quilo, estimado",
-  "@cartPricePerKiloEstimated": {
-    "description": "Rótulo acessível da mini etiqueta do granel que espera a pesagem na bandeja: o preço por kg lido na gôndola, como estimativa (D3).",
+  "cartGranelRowLabel": "{name}, {price} o quilo, de referência; falta o valor da pesagem",
+  "@cartGranelRowLabel": {
+    "description": "Rótulo acessível do nome e da segunda linha do granel que espera a pesagem na bandeja: o preço por quilo lido na gôndola é só referência, e a linha está sem valor (D9).",
     "placeholders": {
+      "name": {
+        "type": "String"
+      },
       "price": {
         "type": "String"
       }
