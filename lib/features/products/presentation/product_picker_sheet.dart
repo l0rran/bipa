@@ -1,4 +1,3 @@
-import 'package:bipa/core/catalog/text_fold.dart';
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
@@ -6,6 +5,7 @@ import 'package:bipa/core/design_system/components/product_category_icon.dart';
 import 'package:bipa/core/design_system/components/product_thumb.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/products/domain/product_search.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -118,7 +118,10 @@ class _ProductPickerSheetState extends ConsumerState<ProductPickerSheet> {
                     for (final product in snapshot.data ?? const <Product>[])
                       if (product.id != widget.excludeId) product,
                   ];
-                  final exact = items.any((p) => foldText(p.name) == foldText(_query));
+                  // Sem "Cadastrar" quando já há um produto com as mesmas palavras
+                  // ("FEIJAO CARIOCA" da etiqueta e "Feijão carioca" do cadastro):
+                  // o atalho que cria um duplicado não pode ser o mais à mão.
+                  final exact = items.any((p) => sameSearchWords(p.name, _query));
                   final canCreate = widget.allowCreate && _query.isNotEmpty && !exact;
                   if (snapshot.hasData && items.isEmpty && !canCreate) {
                     return Padding(
@@ -134,6 +137,14 @@ class _ProductPickerSheetState extends ConsumerState<ProductPickerSheet> {
                     shrinkWrap: true,
                     padding: const EdgeInsets.only(bottom: BipaSpacing.s4),
                     children: [
+                      for (final product in items)
+                        ListTile(
+                          leading: ProductThumb(fallbackIcon: productCategoryIcon(product.name), size: 40),
+                          title: Text(product.name),
+                          onTap: () => Navigator.of(context).pop(ExistingProduct(product)),
+                        ),
+                      // Com resultados, criar vem depois deles: quem procurava um que
+                      // já existe o vê antes de cadastrar outro.
                       if (canCreate)
                         ListTile(
                           leading: CircleAvatar(
@@ -143,12 +154,6 @@ class _ProductPickerSheetState extends ConsumerState<ProductPickerSheet> {
                           ),
                           title: Text(l10n.productPickCreate(_query)),
                           onTap: () => Navigator.of(context).pop(NewProduct(_query)),
-                        ),
-                      for (final product in items)
-                        ListTile(
-                          leading: ProductThumb(fallbackIcon: productCategoryIcon(product.name), size: 40),
-                          title: Text(product.name),
-                          onTap: () => Navigator.of(context).pop(ExistingProduct(product)),
                         ),
                     ],
                   );

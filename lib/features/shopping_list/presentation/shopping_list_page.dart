@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:bipa/core/catalog/text_fold.dart';
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
@@ -102,10 +103,10 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
   }
 
   /// O produto cadastrado com exatamente esse nome, sem diferenciar
-  /// maiúsculas.
+  /// maiúsculas nem acento.
   static Future<Product?> _productNamed(ProductRepository products, String name) async {
     final matches = await products.watchAll(query: name).first;
-    return matches.where((p) => p.name.toLowerCase() == name.toLowerCase()).firstOrNull;
+    return matches.where((p) => foldText(p.name) == foldText(name)).firstOrNull;
   }
 
   void _clearInput() {
