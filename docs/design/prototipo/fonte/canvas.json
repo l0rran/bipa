@@ -170,6 +170,20 @@
       "w": 390,
       "h": 844,
       "title": "Modo carrinho: quanto deu o granel"
+    },
+    "CapturaCasaLocal.dc.html": {
+      "x": 1410,
+      "y": 3700,
+      "w": 390,
+      "h": 844,
+      "title": "Guardar em casa: local do item novo"
+    },
+    "CapturaCasaLocalEscolha.dc.html": {
+      "x": 1880,
+      "y": 3700,
+      "w": 390,
+      "h": 844,
+      "title": "Guardar em casa: escolher o local"
     }
   },
   "order": [
@@ -195,7 +209,9 @@
     "ProdutoJuntarConfirmar.dc.html",
     "ArrumarEntrou.dc.html",
     "ModoCarrinhoGranelBandeja.dc.html",
-    "ModoCarrinhoGranelValor.dc.html"
+    "ModoCarrinhoGranelValor.dc.html",
+    "CapturaCasaLocal.dc.html",
+    "CapturaCasaLocalEscolha.dc.html"
   ],
   "notes": {
     "titulo": {

@@ -184,6 +184,21 @@ O problema: **o preço por kg do granel não pode parecer o valor da linha** (D9
 - **Um sinal por sentido.** Etiqueta cheia é preço de hoje, vazada é preço do histórico (no total com "≈"), traço é sem preço. O preço por kg sai da etiqueta e vira uma linha discreta sob o nome, com o ícone da balança.
 - O título do diálogo pergunta o que se pagou ("Quanto deu o Tomate italiano?"), para não confundir com o preço da gôndola.
 
+### Trocar o local no aviso da câmera (outubro de 2026)
+
+O problema: **corrigir o local de um item novo na hora do bipe**, quando a sugestão erra e a pessoa ainda está com a embalagem na mão (AB9).
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **Spotify** (botão "+", nas [discussões da comunidade](https://community.spotify.com/t5/Live-Ideas/Ability-to-Change-the-Default-Playlist-for-button/idi-p/5678036/page/3)) | O "+" salva direto nas Curtidas, e o aviso traz "Alterar" para escolher outra playlist | Salvar no destino provável e oferecer a troca no próprio aviso | A troca é um chip à parte, com o local à vista, e não um botão "Alterar" ao lado do "Desfazer" |
+| **Material Design** ([snackbars](https://m3.material.io/components/snackbar/guidelines)) | Uma ação por aviso, reversível; um aviso novo substitui o anterior | O aviso fica com uma ação só (Desfazer) | O local não cabe como segunda ação: vai num controle próprio, que também some com o aviso |
+
+**Do nosso jeito:**
+
+- **Um sinal por informação:** o aviso diz o estoque, e o chip diz o local. O local não se repete no texto do aviso.
+- O chip é o mesmo chip de vidro do mercado, com a seta, e só aparece quando o item nasce no bipe, a hora em que a sugestão pode errar.
+- A escolha usa os chips de local de "Arrumar o que entrou". Tocar escolhe e fecha, sem botão de salvar.
+
 ## Fontes
 
 - [Menor Preço Brasil (Olhar Digital)](https://olhardigital.com.br/2025/08/03/dicas-e-tutoriais/quer-economizar-na-farmacia-e-supermercado-conheca-o-app-menor-preco-brasil/)
@@ -215,3 +230,5 @@ O problema: **o preço por kg do granel não pode parecer o valor da linha** (D9
 - [Adobe Scan: modificar as capturas antes de salvar](https://www.adobe.com/devnet-docs/adobescan/ios/en/modify.html)
 - [Grocy 3.3.1: local padrão e local de consumo](https://newreleases.io/project/github/grocy/grocy/release/v3.3.1)
 - [Instacart: preços e itens vendidos por peso](https://instacart.com/help/section/pricing)
+- [Spotify: pedidos sobre o "+" e a playlist padrão (comunidade)](https://community.spotify.com/t5/Live-Ideas/Ability-to-Change-the-Default-Playlist-for-button/idi-p/5678036/page/3)
+- [Material Design: snackbars](https://m3.material.io/components/snackbar/guidelines)
