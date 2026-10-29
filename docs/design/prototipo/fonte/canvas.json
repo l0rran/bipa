@@ -149,6 +149,13 @@
       "w": 390,
       "h": 844,
       "title": "Produto: folha do preço (corrigir)"
+    },
+    "ArrumarEntrou.dc.html": {
+      "x": 0,
+      "y": 3700,
+      "w": 390,
+      "h": 844,
+      "title": "Guardar em casa: arrumar o que entrou"
     }
   },
   "order": [
@@ -171,7 +178,8 @@
     "EmbalagemNova.dc.html",
     "ProdutoEmbalagens.dc.html",
     "ProdutoJuntar.dc.html",
-    "ProdutoJuntarConfirmar.dc.html"
+    "ProdutoJuntarConfirmar.dc.html",
+    "ArrumarEntrou.dc.html"
   ],
   "notes": {
     "titulo": {
@@ -185,6 +193,13 @@
       "x": 0,
       "y": 1590,
       "text": "Bipa · produto, mercados e lista (v5)",
+      "kind": "title1",
+      "maxW": 3680
+    },
+    "titulo3": {
+      "x": 0,
+      "y": 3400,
+      "text": "Bipa · quadros que faltavam (aguardam revisão)",
       "kind": "title1",
       "maxW": 3680
     }

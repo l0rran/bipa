@@ -27,10 +27,17 @@ Cada tela tem uma imagem (390 px de largura, em 2x) e o HTML de origem em [`font
 | **Folha do preço**: tocar num preço de "Nos mercados" (produto) ou de "Preços recentes" (mercado) abre o valor, a idade e "Corrigir o preço", que grava a correção na data do preço (ADR 0017); o outro botão leva ao mercado ou ao produto. | [PrecoFolha.png](telas/PrecoFolha.png) | Feita (ADR 0017) |
 | **Lista**: a prévia da lista, adicionar item (com foto de lista de papel e voz), os itens de sempre e a lista na ordem dos corredores. Um item com mais de uma embalagem mostra a quantidade antes do nome ("3× Leite"), com o preço da unidade; tocar nela a muda, e na compra ela vira "1 de 3" até o carrinho alcançar a lista. A estimativa da prévia diz quantos itens ficaram de fora por falta de preço ("2 sem preço"). | [Lista.png](telas/Lista.png) | Feita, sem foto e voz; as seções seguem a ordem aprendida no mercado (ADR 0014) |
 | **Notificação ao vivo**: a compra em andamento na tela de bloqueio e na barra de status (Android 16). | [Notificacao.png](telas/Notificacao.png) | Feita (ADR 0015), sem o número do corredor ao lado da seção: o app ainda não sabe o número |
+| **Arrumar o que entrou** (AB5): ao fechar a câmera de "Guardar em casa" depois da primeira carga, uma folha lista o que entrou, agrupado pelo local em que cada item nasceu (o sugerido). Tocar num item abre a escolha do local, com o sugerido já marcado, e o "ter sempre". Cada toque salva na hora, então não há "Salvar": "Pronto" ou arrastar para baixo fecha a folha, e fechar é pular. | [ArrumarEntrou.png](telas/ArrumarEntrou.png) | Aguarda revisão. O protótipo publicado precisa receber o quadro |
 
 ## Ainda não desenhado
 
 - **Confirmação com mais de um preço** (ADR 0011): varejo, cartão da loja e atacado da mesma etiqueta. Hoje a captura mostra os outros preços como chips provisórios. A variante "no app" do [PriceTag](../design-system/componentes/PriceTag.png) é um ponto de partida.
+
+## Variantes de componente desenhadas fora do design system
+
+Os quadros que aguardam revisão usam variantes que o design system publicado ainda não tem. Aprovadas, elas entram no guia do componente.
+
+- **FilterChips como escolha** ([ArrumarEntrou.png](telas/ArrumarEntrou.png)): os chips compactos escolhem o local de um item (`role="radio"`), sem contagem, em `surface-sunken` para aparecerem sobre a folha clara.
 
 ## Como exportar de novo
 

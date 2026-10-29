@@ -154,6 +154,22 @@ O problema: **reconhecer o Bipa em 48 px numa tela inicial cheia de amarelo**, n
 | **Vizinhos amarelos** (Mercado Livre, Banco do Brasil, Google Keep) | Branco ou azul sobre o amarelo | Uma silhueta sólida sobre fundo chapado | Ink sobre o amarelo, como na etiqueta de gôndola |
 | **Leitores de código genéricos** | Código de barras com linha vermelha | — | O furo da etiqueta como assinatura, no lugar do laser |
 
+### Arrumar o que entrou (outubro de 2026)
+
+O problema: **conferir onde cada coisa ficou depois da primeira carga, sem abrir item por item** (AB5). O local sugerido pela categoria acerta quase sempre, e o "ter sempre" fica vazio.
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **Pantry Check** ([App Store](https://apps.apple.com/us/app/pantry-check-grocery-list/id966702368)) | Bipa vários itens em sequência e depois pede quantidade, validade e local | Bipar tudo primeiro e arrumar depois, numa tela só | Nada a preencher: o local sugerido já vem marcado e o "ter sempre" é opcional |
+| **Adobe Scan** ([revisar antes de salvar](https://www.adobe.com/devnet-docs/adobescan/ios/en/modify.html)) | Depois de várias capturas, uma tela de revisão para cortar e reordenar | Uma revisão do lote ao fechar a câmera | A revisão não segura nada: cada item já está salvo, e fechar a folha é pular |
+| **Grocy** ([local padrão do produto](https://newreleases.io/project/github/grocy/grocy/release/v3.3.1)) | Cada produto tem um local padrão, usado na compra | O local escolhido aqui vale para as próximas vezes (ADR 0021) | Sem configurar antes: a sugestão vem da categoria |
+
+**Do nosso jeito:**
+
+- Os itens vêm agrupados pelo local em que nasceram, com o cabeçalho de corredor da lista. O leite na "Despensa" se vê sem um selo por linha.
+- A linha é a do estoque (miniatura, nome e medidor). Tocar abre o local e o "ter sempre", como o editor da linha do Início, um item por vez.
+- Cada escolha salva na hora, por isso não há "Salvar": "Pronto" fecha, e arrastar para baixo também.
+
 ## Fontes
 
 - [Menor Preço Brasil (Olhar Digital)](https://olhardigital.com.br/2025/08/03/dicas-e-tutoriais/quer-economizar-na-farmacia-e-supermercado-conheca-o-app-menor-preco-brasil/)
@@ -182,3 +198,5 @@ O problema: **reconhecer o Bipa em 48 px numa tela inicial cheia de amarelo**, n
 - [Grocy 3.1.3: juntar tarefas (linuxserver/docker-grocy)](https://newreleases.io/project/github/linuxserver/docker-grocy/release/v3.1.3-ls128)
 - [Juntar produtos no Readysell](https://readysell.atlassian.net/wiki/spaces/RSELL7/pages/107945786/Merging+products+through+the+products+module)
 - [Ícones adaptativos (Android Developers)](https://developer.android.com/develop/ui/views/launch/icon_design_adaptive)
+- [Adobe Scan: modificar as capturas antes de salvar](https://www.adobe.com/devnet-docs/adobescan/ios/en/modify.html)
+- [Grocy 3.3.1: local padrão e local de consumo](https://newreleases.io/project/github/grocy/grocy/release/v3.3.1)
