@@ -112,12 +112,20 @@ Os achados da [análise do lote 9](ux/analise-ux-2026-10-28-lote9.md), feita dep
 
 Os achados da [análise do lote 10](ux/analise-ux-2026-10-28-lote10.md), feita depois da busca sem acento, dos avisos que esperam a pessoa, de AB12, AB13, H12, H16 e de Ajustes.
 
-- [ ] G6 (alto) e G7: o recorte da etiqueta guarda a variedade do granel ("Banana prata" não vira "Banana") e oferece "Cadastrar" quando a etiqueta tem palavra a mais; o nome novo ganha os acentos comuns; a busca do Início usa a mesma regra da aba Produtos
-- [ ] H17 e H18: o texto do cartão do relatório de falhas diz tudo o que vai (como os Ajustes), com link para eles, e o cartão fica depois de "Acabando" e só na abertura seguinte à compra. Antes do primeiro build com DSN
+- [x] G6 (alto) e G7: o recorte da etiqueta guarda a variedade do granel ("Banana prata" não vira "Banana") e oferece "Cadastrar" quando a etiqueta tem palavra a mais; o nome novo ganha os acentos comuns; a busca do Início usa a mesma regra da aba Produtos
+- [x] H17 e H18: o texto do cartão do relatório de falhas diz tudo o que vai (como os Ajustes), com link para eles, e o cartão fica depois de "Acabando" e só na abertura seguinte à compra. Antes do primeiro build com DSN
 - [ ] AB14: escolher o local no aviso da câmera não pode tirar a pergunta do "ter sempre" (quadro "CapturaCasaLocal" antes)
-- [ ] G8: o Desfazer depois de mover para um produto novo volta para a origem, não para "Produto não encontrado"
+- [x] G8: o Desfazer depois de mover para um produto novo volta para a origem, não para "Produto não encontrado"
 - [ ] H19: o anel do bipar não volta a respirar a cada volta de tela cheia (regra no design system antes)
-- [ ] H1 (resto) inclui a escolha de produto (`product_picker_sheet.dart`, ainda com `TextField`, `ListTile` e `CircleAvatar`)
+- [ ] H1 (resto) inclui a escolha de produto (`product_picker_sheet.dart`, ainda com `TextField`, `ListTile` e `CircleAvatar`), com quadro da dica "Na etiqueta" e dos dois caminhos (produto achado e "Criar" a variedade)
+
+### Ajustes de UX (análise do lote 11, 29/10/2026)
+
+Os achados da [análise do lote 11](ux/analise-ux-2026-10-29-lote11.md), feita depois de G6, G7, H17, H18 e G8.
+
+- [ ] G9 e G11: uma palavra diferente na etiqueta ("LIMAO TAITI" com "Limão tahiti") não pode esconder o produto que existe (abrir a busca com a primeira palavra e manter o recorte como nome a criar); acentos das palavras de balança que faltam (francês, grão, linguiça, abóbora, suíno, parmesão)
+- [ ] G10 e H18 (resto): o aviso "ficou sem embalagem" espera o Desfazer fechar, e o cartão do relatório de falhas some durante a busca e o filtro de local
+- [ ] Redesenhar a cópia do quadro InicioRelatorioFalhas com o texto novo do cartão e a posição depois de "Acabando"
 
 ## Fase 2: base comunitária
 

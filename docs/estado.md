@@ -1,6 +1,6 @@
 # Estado do trabalho
 
-Retrato de 28/10/2026, para quem continua o trabalho (pessoa ou agente). Leia antes de mexer no código. Atualize esta página quando o retrato mudar: um item verificado, uma decisão tomada, um próximo passo feito.
+Retrato de 29/10/2026, para quem continua o trabalho (pessoa ou agente). Leia antes de mexer no código. Atualize esta página quando o retrato mudar: um item verificado, uma decisão tomada, um próximo passo feito.
 
 ## Onde estamos
 
@@ -13,9 +13,9 @@ Retrato de 28/10/2026, para quem continua o trabalho (pessoa ou agente). Leia an
 
 ## Compilado e testado
 
-Em 28/10, no Windows (Flutter 3.47.8, Dart 3.13.7): `flutter analyze` sem problemas, `flutter test` com 804 testes passando, `flutter build apk --debug` passando e o banco do OCR passando. No Windows, o banco do OCR roda com `py -3 tool/ocr_bench/testes.py`, porque não há `python3`, e `dart format .` falha depois de um build por causa de um caminho longo dentro de `build/`: use `dart format lib test tool`.
+Em 28/10, no Windows (Flutter 3.47.8, Dart 3.13.7): `flutter analyze` sem problemas, `flutter test` com 829 testes passando, `flutter build apk --debug` passando e o banco do OCR passando. No Windows, o banco do OCR roda com `py -3 tool/ocr_bench/testes.py`, porque não há `python3`, e `dart format .` falha depois de um build por causa de um caminho longo dentro de `build/`: use `dart format lib test tool`.
 
-Os lotes 8, 9 e 10 foram feitos por agentes em paralelo, cada um num worktree, e juntados em `main` com merges. Cada lote terminou com uma revisão de UX: [lote 8](ux/analise-ux-2026-10-28-lote8.md), [lote 9](ux/analise-ux-2026-10-28-lote9.md) e [lote 10](ux/analise-ux-2026-10-28-lote10.md), cujos achados estão no roadmap.
+Os lotes 8 a 11 foram feitos por agentes em paralelo, cada um num worktree, e juntados em `main` com merges. Cada lote terminou com uma revisão de UX: [lote 8](ux/analise-ux-2026-10-28-lote8.md), [lote 9](ux/analise-ux-2026-10-28-lote9.md) , [lote 10](ux/analise-ux-2026-10-28-lote10.md) e [lote 11](ux/analise-ux-2026-10-29-lote11.md), cujos achados estão no roadmap.
 
 Falta o teste no aparelho, de antes e de agora:
 - compra: "3× Leite" bipando um de cada vez, cancelar pela folha "Fim da compra", trocar o produto de uma pesagem, o granel na bandeja (traço, preço por kg e "Quanto deu…");
@@ -41,13 +41,11 @@ Achados "prováveis" das revisões que ficaram como estão, por serem raros ou p
 
 Os detalhes de cada código estão nas análises de UX (em `ux/`) e no [roadmap](roadmap.md).
 
-1. **Lote 11, interrompido em 29/10 a pedido do mantenedor:** três agentes começaram e foram parados no meio. O trabalho parcial de cada um está num commit `wip:` numa branch própria, fora de `main`, **não revisado e talvez sem compilar**:
-   - `refs/heads/worktree-agent-adef0b77079ea79ca`: G6 (alto: o recorte da etiqueta mistura variedades do granel) e G7 (busca do Início);
-   - `refs/heads/worktree-agent-a3da908b52c2e90a4`: H17 e H18 (texto e posição do cartão do relatório de falhas; antes do primeiro build com DSN);
-   - `refs/heads/worktree-agent-aebd54aa797f584d2`: G8 (Desfazer de mover que volta à origem).
-   Para retomar: ler o diff de cada branch contra `main`, terminar ou refazer, rodar format, analyze e test, e juntar. Depois, com quadro ou regra antes: AB14 e H19.
-2. **Levar ao claude.ai** as mudanças de 28/10 nas cópias do protótipo e do design system.
-4. **Maiores:** o backup e a restauração (B5), o catálogo pronto (script e cobertura), a migração para o Kotlin embutido e o teste no aparelho (acima).
+1. **Achados do lote 11** (pequenos, sem quadro): G9 e G11 (escolha de produto e acentos de balança), G10 e H18 (resto). O texto do cartão do relatório de falhas está honesto: nada bloqueia o build com DSN.
+2. **Com quadro ou regra antes:** AB14, H19, a escolha de produto no design system (H1) e o quadro InicioRelatorioFalhas com o texto novo.
+3. **Maiores:** o backup e a restauração (B5) e o catálogo pronto (ADR 0024).
+4. **Levar ao claude.ai** as mudanças de 28/10 nas cópias do protótipo e do design system.
+5. **Também:** a migração para o Kotlin embutido e o teste no aparelho (acima).
 
 ## Decisões do mantenedor em 28/10
 

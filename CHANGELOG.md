@@ -92,7 +92,8 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - Os avisos pausam enquanto o dedo está sobre eles, ficam 10 s em ações grandes ("Tirar comprados", "Terminar compra", mover e apagar embalagem), seguem o "Tempo para agir" do Android, aparecem por cima das folhas e, com TalkBack, esperam a pessoa também na câmera de casa; com "Remover animações", a linha do tempo some.
 - O aviso da câmera de casa com local usa duas linhas (o nome em cima, "1 na Despensa ▾" embaixo), e a folha "Arrumar o que entrou" lista só o que ninguém conferiu no aviso, sem mínimo de itens.
 - Com letra acima de 160% durante a compra, a barra da compra assume o lugar do bipar flutuante e abre o menu no toque longo. O anel do bipar respira duas vezes e para (sem fim só com a casa e a lista vazias; parado na compra).
-- Tela de Ajustes, pela engrenagem do Início, com o interruptor do relatório de falhas e a versão; depois da primeira compra terminada, o Início pergunta uma vez se a pessoa quer mandar relatórios de falha (só em builds com o Sentry configurado).
+- O nome lido da etiqueta guarda a variedade do granel ("Banana prata" não vira "Banana") e ganha os acentos comuns ("Feijão"); a escolha de produto mostra o texto da etiqueta e oferece criar a variedade quando ela tem palavra a mais. A busca do Início também ignora acento e a ordem das palavras.
+- Tela de Ajustes, pela engrenagem do Início, com o interruptor do relatório de falhas e a versão; numa abertura do app depois da primeira compra terminada, o Início pergunta uma vez, abaixo de "Acabando", se a pessoa quer mandar relatórios de falha, dizendo o que vai e com link para os Ajustes (só em builds com o Sentry configurado).
 - Os erros de regra de negócio (preço zerado, código repetido, código da balança...) vêm dos textos do app, e não mais escritos no código.
 
 ### Corrigido
@@ -109,6 +110,8 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - O app voltou a compilar com o Dart 3.13 (Desfazer da câmera e "Terminei").
 - Os avisos com Desfazer não sumiam nunca (no Flutter 3.47, aviso com ação persiste por padrão); a linha do "Usei um" ficava parada até alguém tocar.
 - A lista de produtos não manda mais os nomes com acento para o fim ("Açúcar" vem antes de "Arroz").
+- O recorte da etiqueta não junta mais variedades do granel num produto só, o que misturava os preços.
+- O Desfazer de mover uma embalagem para um produto criado na hora volta ao produto de origem, em vez de deixar a pessoa em "Produto não encontrado".
 - Compra sem lista mostra "8 no carrinho" em vez de "0 de 0 itens".
 - "a menos que no Padaria Real" virou "a menos que em Padaria Real".
 - As barras da comparação e o número do stepper respeitam o movimento reduzido do aparelho, e o stepper cresce com a fonte grande.
