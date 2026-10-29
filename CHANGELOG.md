@@ -70,8 +70,22 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - Na compra, o marcado à mão entra no total pelo preço esperado, com "≈", ou conta como sem preço, na barra e na folha "Fim da compra"; a prévia da lista diz quantos itens ficaram fora da estimativa ("2 sem preço").
 - O item novo do estoque nasce no local sugerido pela categoria do produto (leite na Geladeira, congelados no Freezer, leite de caixinha e enlatados na Despensa, sabão em Limpeza, xampu no Banheiro); na dúvida, Despensa. O "Comprei" da câmera diz onde o item novo ficou ("Leite · 1 na Geladeira"), e a folha do item mostra esse local antes de ele existir. A categoria nova "mercearia" também dá ícone e seção a enlatados e longa vida.
 - "Tirar de casa" lembra o local do item, e ele volta a nascer ali quando entra de novo; juntar produtos leva o local lembrado (ADR 0021). O esquema vai à versão 14.
+- Folha "Arrumar o que entrou": ao fechar a câmera de casa depois de entrarem 3 ou mais produtos novos, os itens aparecem agrupados pelo local, com a escolha do local e o "ter sempre"; cada toque salva, e fechar é pular.
+- O aviso da câmera de casa diz onde o item novo ficou ("Leite · 1 na Despensa ▾"), e tocar nele troca o local. Nos modos de casa, um chip no topo diz em que modo a câmera está.
+- Mover uma embalagem para outro produto (com os preços, o estoque e a compra em andamento) e apagar uma embalagem, os dois com Desfazer; quando o produto fica sem embalagem, preço nem estoque, o app oferece apagá-lo (ADR 0022).
+- No carrinho, tocar no traço da linha do granel pergunta "Quanto deu o Tomate italiano?" e mostra o peso que o valor paga ("1,38 kg a R$ 8,99/kg").
+- Ícone do app: a etiqueta amarela com o "b", também na notificação da compra.
+- Relatório de falhas com Sentry, só com consentimento e sem dados pessoais (ADR 0025). A pergunta ainda não tem tela, então nada é enviado.
+- Modelo de dados fechado antes do backup (ADR 0023) e catálogo de produtos decidido (ADR 0024). O Auto Backup do Android guarda só o arquivo de backup do app, o esquema 14 fica guardado com teste de migração, e apagar ou juntar produtos apaga a foto.
 - A linha do granel na bandeja mostra o preço por kg como estimativa ("R$ 8,99/kg"), sem entrar no total; a etiqueta da balança firma o valor na mesma linha, e uma etiqueta sem código lida em seguida não vira o preço dela.
-- A barra de navegação encolhe ao rolar a aba para baixo (rótulos somem, bipar menor) e volta ao rolar para cima, ao chegar ao topo e ao trocar de aba; com movimento reduzido, troca sem animar.
+- A barra de navegação encolhe ao rolar a aba para baixo (rótulos somem, bipar menor) e volta ao rolar para cima, ao chegar ao topo e ao trocar de aba; com movimento reduzido, troca sem animar. Ficou como no design system (68 px, desfoque 18 e o anel que respira no bipar, parado com movimento reduzido).
+- Com letra grande, a barra mantém os rótulos inteiros: até 160%, eles encolhem até caber e segurar um destino mostra o nome grande; acima disso, o bipar flutua acima da barra, à direita. Com letra grande ou TalkBack, a barra não encolhe ao rolar.
+- Com letra grande, o nome do produto fica inteiro na bandeja, na Lista, no estoque e nos cartões, e o preço desce para a linha de baixo.
+- A aba Produtos usa os componentes de Mercados: busca com o bipar dentro, a lista em ordem alfabética com o preço da embalagem (ou por kg, quando há várias) e "Cadastrar produto" no fim.
+- A linha do granel na bandeja mostra o traço até a pesagem e o preço por kg sob o nome, com o ícone da balança; a etiqueta vazada fica só para o preço estimado pelo histórico.
+- Os avisos seguem o do design system, com a linha do tempo, e o Desfazer some sozinho depois de alguns segundos; com TalkBack, fica até a pessoa agir.
+- A etiqueta em destaque do produto ganhou o furo e a sombra do design system, e "Editar embalagem" usa os mesmos campos da "Embalagem nova".
+- O app pede Android 8.0 ou mais novo (minSdk 26).
 - Os erros de regra de negócio (preço zerado, código repetido, código da balança...) vêm dos textos do app, e não mais escritos no código.
 
 ### Corrigido
@@ -86,6 +100,8 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - Uma falha ao mudar a quantidade pelo stepper (na tela do produto, na linha do Início e na folha do item) agora avisa, em vez de passar calada.
 - O valor digitado numa linha de granel ou pesagem do carrinho não entra mais no histórico como preço do produto; vale só para o carrinho (ADR 0018).
 - O app voltou a compilar com o Dart 3.13 (Desfazer da câmera e "Terminei").
+- Os avisos com Desfazer não sumiam nunca (no Flutter 3.47, aviso com ação persiste por padrão); a linha do "Usei um" ficava parada até alguém tocar.
+- A lista de produtos não manda mais os nomes com acento para o fim ("Açúcar" vem antes de "Arroz").
 - Compra sem lista mostra "8 no carrinho" em vez de "0 de 0 itens".
 - "a menos que no Padaria Real" virou "a menos que em Padaria Real".
 - As barras da comparação e o número do stepper respeitam o movimento reduzido do aparelho, e o stepper cresce com a fonte grande.
