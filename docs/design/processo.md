@@ -317,6 +317,30 @@ O problema: **o anel do bipar respira sem fim, em todas as abas** (H16). É a as
 
 **Do nosso jeito:** dois ciclos quando a barra aparece, sem fim só com a casa e a lista vazias, parado durante a compra e com movimento reduzido. **Decidido em 28/10/2026**, e a regra está no guia [`ScanNavBar.md`](design-system/componentes/ScanNavBar.md) e no app. O design system publicado no claude.ai ainda tem o anel `infinite` e precisa da mesma mudança.
 
+### Backup e restauração (outubro de 2026)
+
+O problema: **não perder a casa e os preços ao trocar ou perder o celular, sem conta nem servidor** ([ADR 0023](../adr/0023-modelo-de-dados-antes-do-backup.md), seção 5). O Bipa é offline: o estoque, a lista e o histórico de preços só existem no aparelho. E restaurar substitui tudo, então a pessoa precisa saber o que está trocando pelo quê.
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **WhatsApp** (Backup de conversas) | Em Ajustes, a data e o tamanho do último backup no topo, "Fazer backup" e a frequência do automático. Só o último backup fica guardado. Restaurar só acontece ao instalar | A **data do último backup** como a primeira coisa da seção, com "Fazer backup agora" logo embaixo; **um backup só**, que o seguinte substitui (`ultimo.bipa`) | Restaurar também com o app instalado, de um arquivo, porque o Bipa não tem conta para achar o backup sozinho. Sem escolher a frequência: um por dia |
+| **Backup do Google** (Android) | Em Configurações, a hora do último backup e "Fazer backup agora". A restauração vem na configuração do aparelho novo, e um backup de um Android mais novo não volta num mais antigo | O backup do Google como **o caminho para o celular novo**, sem a pessoa fazer nada (B1) | O Android traz o arquivo, mas o Bipa não restaura sozinho: na primeira abertura, ele oferece |
+| **Android Developers** ([Auto Backup](https://developer.android.com/identity/data/autobackup)) | Os arquivos voltam na instalação, antes de o app abrir, e o app não é avisado (sem um `BackupAgent`); até 25 MB por app | Perceber a restauração **na primeira abertura**: banco vazio e o `ultimo.bipa` presente | — |
+| **Signal** (backups no aparelho) | Um arquivo numa pasta escolhida, com a hora do último backup ("nunca" quando não houve), e restaurar só na instalação, com o arquivo e uma senha de 30 dígitos | O arquivo como **a cópia que a pessoa leva** para onde quiser | Sem senha, como no ADR 0023: perder a senha seria perder o backup |
+| **Money Manager** (Realbyte) | Backup e restauração no menu "Mais": o arquivo vai para a pasta Download do aparelho, e restaurar é escolher o arquivo | "Salvar uma cópia…" e "Restaurar de um arquivo…", **pelo seletor do Android** | A cópia vai para onde a pessoa escolher (Drive, computador), não para uma pasta fixa que se perde com o celular |
+| **Anki e AnkiDroid** (pacote da coleção) | Importar um `.colpkg` substitui a coleção inteira, e o Anki faz um backup logo antes. Nos fóruns, quem perdeu dados não sabia que importar substituía, e a saída foi achar esse backup | A folha diz com texto que **tudo é substituído**, e o que estava aqui fica de reserva | A reserva volta pelo **Desfazer no aviso**, sem procurar um backup antigo |
+| **Mihon** (backup e restauração) | Backup manual e automático no mesmo lugar; antes de restaurar, a tela lista o que falta para o backup funcionar | **Conferir antes de pedir a confirmação**, e dizer o problema no lugar dela | — |
+| **Apps de despensa locais** (Smart Meal and Pantry, entre outros) | O backup é um arquivo que a pessoa escolhe onde guardar, e nunca passa pelo servidor do app | O backup privado, que não vai para servidor nosso (ADR 0023) | — |
+
+**Do nosso jeito:** quatro quadros no [protótipo](prototipo/README.md), da linha "Backup em Ajustes" em diante.
+
+- **"Backup", o primeiro grupo de Ajustes.** O último backup como número (o dia grande, a hora embaixo) e três ações em linhas com ícone e texto: "Fazer backup agora", "Salvar uma cópia…" e "Restaurar de um arquivo…". O "…" diz que abre o seletor do Android. Nenhuma cor de destaque: Ajustes continua neutro.
+- **Um backup por dia, sozinho**, em `backup/ultimo.bipa`, que o Android leva para o Google. "Fazer backup agora" grava na hora, e "Salvar uma cópia…" grava e abre o seletor para guardar o arquivo fora do celular.
+- **Conferir antes de perguntar.** Escolhido o arquivo, o Bipa faz numa cópia os passos 1 a 3 do ADR 0023, com a folha em "Conferindo o arquivo". Um arquivo que não abre, ou de um Bipa mais novo, para ali, com o que fazer, e nada muda no celular.
+- **Números na confirmação:** a data e as contagens do arquivo (produtos, preços, itens em casa) e, numa linha, as deste celular, para ninguém trocar uma casa mais nova por um backup velho sem ver. O texto diz que tudo é substituído, e o botão é o neutro, com verbo e objeto ("Substituir pelo backup"), como "Apagar mercado".
+- **Desfazer no aviso.** O banco de antes fica de reserva (passo 4), e o aviso "Backup de 12/10 restaurado" traz o Desfazer por 10 s, o tempo longo do [`BipFeedback`](design-system/componentes/BipFeedback.md) para ação que mexe em muitos registros.
+- **Celular novo:** com o banco vazio e um `ultimo.bipa` trazido pelo Android, o Início oferece restaurar num cartão, sem restaurar sozinho. Enquanto a pessoa não responde, o backup automático não grava por cima dele.
+
 ## Fontes
 
 - [Menor Preço Brasil (Olhar Digital)](https://olhardigital.com.br/2025/08/03/dicas-e-tutoriais/quer-economizar-na-farmacia-e-supermercado-conheca-o-app-menor-preco-brasil/)
@@ -354,3 +378,12 @@ O problema: **o anel do bipar respira sem fim, em todas as abas** (H16). É a as
 - [Flutter: código do NavigationBar (escala máxima do rótulo)](https://codebrowser.dev/flutter/flutter/packages/flutter/lib/src/material/navigation_bar.dart.html)
 - [Apple, WWDC 2019: Large Content Viewer](https://developer.apple.com/videos/play/wwdc2019/261/)
 - [W3C: Understanding SC 1.4.4 Resize Text](https://www.w3.org/WAI/WCAG21/Understanding/resize-text.html)
+- [WhatsApp: como fazer backup das conversas (Central de Ajuda)](https://faq.whatsapp.com/481135090640375/)
+- [Google: fazer backup ou restaurar dados no Android (Ajuda do Android)](https://support.google.com/android/answer/2819582)
+- [Android Developers: backup automático dos dados do app](https://developer.android.com/identity/data/autobackup)
+- [Signal: o que são os backups no aparelho](https://support.signal.org/hc/articles/10066926526362)
+- [Money Manager: backup e restauração (Realbyte)](https://help.realbyteapps.com/hc/en-us/articles/360042747934-How-to-backup-and-restore-data)
+- [Anki: manual dos backups](https://docs.ankiweb.net/manual/backups)
+- [Anki: importar um .colpkg apagou os baralhos (fórum)](https://forums.ankiweb.net/t/imported-colpkg-deleted-all-existing-decks/50282)
+- [Mihon: backups](https://mihon.app/docs/guides/backups)
+- [Smart Meal and Pantry: privacidade (Vamit)](https://sites.google.com/vamit.net/vamit)
