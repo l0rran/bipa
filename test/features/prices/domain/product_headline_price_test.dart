@@ -41,7 +41,7 @@ void main() {
       history: [_price('vila', 'tio-joao', 2790), _price('centro', 'tio-joao', 2490)],
     );
 
-    expect(price, (price: const Money.cents(2490), perUnit: null));
+    expect((price?.price, price?.perUnit), (const Money.cents(2490), null));
   });
 
   test('uma embalagem: vale o preço mais recente de cada mercado, não o menor de todos', () {
@@ -62,7 +62,7 @@ void main() {
     );
 
     // 49,90 / 10 kg = 4,99 o kg, contra 5,58 do pacote de 5 kg.
-    expect(price, (price: const Money.cents(499), perUnit: MeasureUnit.kilogram));
+    expect((price?.price, price?.perUnit), (const Money.cents(499), MeasureUnit.kilogram));
   });
 
   test('várias embalagens em gramas: o preço é normalizado para o kg', () {
@@ -76,7 +76,7 @@ void main() {
     );
 
     // 18,99 / 0,5 kg = 37,98 o kg; 11,00 / 0,25 kg = 44,00 o kg.
-    expect(price, (price: const Money.cents(3798), perUnit: MeasureUnit.kilogram));
+    expect((price?.price, price?.perUnit), (const Money.cents(3798), MeasureUnit.kilogram));
   });
 
   test('várias embalagens: só uma com tamanho e preço ainda dá o preço por kg dela', () {
@@ -86,7 +86,7 @@ void main() {
       history: [_price('vila', 'tio-joao', 2790), _price('vila', 'sem-tamanho', 100)],
     );
 
-    expect(price, (price: const Money.cents(558), perUnit: MeasureUnit.kilogram));
+    expect((price?.price, price?.perUnit), (const Money.cents(558), MeasureUnit.kilogram));
   });
 
   test('várias embalagens, nenhuma com tamanho: sem preço, que não seria comparável', () {
@@ -109,7 +109,7 @@ void main() {
       history: [_price('vila', 'leite', 549), _price('vila', 'ovos', 1200)],
     );
 
-    expect(price, (price: const Money.cents(549), perUnit: MeasureUnit.liter));
+    expect((price?.price, price?.perUnit), (const Money.cents(549), MeasureUnit.liter));
   });
 
   test('sem embalagem (granel): o menor preço sem embalagem, por kg', () {
@@ -119,7 +119,7 @@ void main() {
       history: [_price('vila', null, 899), _price('centro', null, 999)],
     );
 
-    expect(price, (price: const Money.cents(899), perUnit: MeasureUnit.kilogram));
+    expect((price?.price, price?.perUnit), (const Money.cents(899), MeasureUnit.kilogram));
   });
 
   test('sem preço nenhum: nulo', () {
@@ -135,5 +135,24 @@ void main() {
     );
 
     expect(price, isNull);
+  });
+
+  test('devolve o dia em que o preço escolhido foi visto', () {
+    final one = headlinePrice(
+      product: kilo,
+      packages: [_package('tio-joao', 5)],
+      history: [_price('vila', 'tio-joao', 2490, day: 3), _price('centro', 'tio-joao', 2790, day: 20)],
+    );
+    expect(one?.observedAt, DateTime(2026, 10, 3));
+
+    final many = headlinePrice(
+      product: kilo,
+      packages: [_package('tio-joao', 5), _package('camil', 10)],
+      history: [_price('vila', 'tio-joao', 2790, day: 20), _price('vila', 'camil', 4990, day: 7)],
+    );
+    expect(many?.observedAt, DateTime(2026, 10, 7));
+
+    final loose = headlinePrice(product: kilo, packages: const [], history: [_price('vila', null, 899, day: 12)]);
+    expect(loose?.observedAt, DateTime(2026, 10, 12));
   });
 }

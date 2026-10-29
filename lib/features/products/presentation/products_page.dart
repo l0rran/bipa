@@ -4,7 +4,10 @@ import 'package:bipa/core/design_system/bipa_typography.dart';
 import 'package:bipa/core/design_system/components/bipa_search_bar.dart';
 import 'package:bipa/core/design_system/components/price_rows.dart';
 import 'package:bipa/core/design_system/components/product_category_icon.dart';
+import 'package:bipa/core/di/core_providers.dart';
+import 'package:bipa/core/formatting/calendar_days.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
+import 'package:bipa/core/l10n/meta_join.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
 import 'package:bipa/core/widgets/empty_state.dart';
@@ -29,6 +32,7 @@ class ProductsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final rows = ref.watch(productRowsProvider);
+    final now = ref.watch(clockProvider)();
     final searching = ref.watch(productSearchQueryProvider).trim().isNotEmpty;
 
     final addRow = PriceRowData(
@@ -88,7 +92,7 @@ class ProductsPage extends ConsumerWidget {
                         style: BipaText.body.copyWith(color: context.colors.inkMuted),
                       ),
                     ),
-                  PriceRowList(rows: [for (final row in items) _row(context, l10n, row), addRow]),
+                  PriceRowList(rows: [for (final row in items) _row(context, l10n, row, now), addRow]),
                 ],
               );
             },
@@ -98,17 +102,31 @@ class ProductsPage extends ConsumerWidget {
     );
   }
 
-  static PriceRowData _row(BuildContext context, AppLocalizations l10n, ProductRow row) {
+  static PriceRowData _row(BuildContext context, AppLocalizations l10n, ProductRow row, DateTime now) {
     final price = row.price;
-    final perUnit = price?.perUnit;
     return PriceRowData(
       icon: productCategoryIcon(row.product.name),
       title: row.product.name,
       meta: _meta(l10n, row),
       value: price?.price.format(),
-      valueNote: perUnit == null ? null : l10n.productsPerUnit(perUnit.name),
+      valueNote: _valueNote(l10n, row, now),
       onTap: () => context.push(Routes.productDetail(row.product.id)),
     );
+  }
+
+  /// "o kg" quando o preço é por unidade; e, a partir de 30 dias, a idade dele
+  /// ("há 41 dias"), porque uma promoção velha não pode passar por preço de hoje
+  /// (F5). Preço recente não ganha texto.
+  static String? _valueNote(AppLocalizations l10n, ProductRow row, DateTime now) {
+    final price = row.price;
+    if (price == null) return null;
+    final perUnit = price.perUnit;
+    final days = calendarDaysSince(price.observedAt, now);
+    final note = l10n.joinMeta([
+      if (perUnit != null) l10n.productsPerUnit(perUnit.name),
+      if (days >= priceStaleAfterDays) l10n.priceAge(days),
+    ]);
+    return note.isEmpty ? null : note;
   }
 
   /// A embalagem quando há uma ("União · 1 kg"), quantas são quando há
