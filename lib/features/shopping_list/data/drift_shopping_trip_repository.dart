@@ -66,9 +66,9 @@ final class DriftShoppingTripRepository implements ShoppingTripRepository {
   }
 
   @override
-  Stream<bool> watchAnyFinished() {
+  Stream<bool> watchAnyFinished({DateTime? before}) {
     final query = _db.select(_db.shoppingTrips)
-      ..where((t) => t.finishedAt.isNotNull())
+      ..where((t) => before == null ? t.finishedAt.isNotNull() : t.finishedAt.isSmallerThanValue(before))
       ..limit(1);
     return query.watch().map((rows) => rows.isNotEmpty);
   }

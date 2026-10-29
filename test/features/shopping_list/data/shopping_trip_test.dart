@@ -533,4 +533,13 @@ void main() {
     await trips.cancel(trip.id);
     expect(await trips.watchAnyFinished().first, isFalse);
   });
+
+  test('"alguma compra terminada antes de" só conta o fim anterior ao instante dado', () async {
+    final trip = await trips.start();
+    await trips.finish(trip.id);
+
+    expect(await trips.watchAnyFinished(before: now).first, isFalse);
+    expect(await trips.watchAnyFinished(before: now.subtract(const Duration(minutes: 1))).first, isFalse);
+    expect(await trips.watchAnyFinished(before: now.add(const Duration(minutes: 1))).first, isTrue);
+  });
 }

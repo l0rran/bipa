@@ -373,7 +373,11 @@ void _tests() {
           final trips = container.read(shoppingTripRepositoryProvider);
           await trips.finish((await trips.start()).id);
         },
-        overrides: [crashReporterProvider.overrideWithValue(FakeCrashReporter())],
+        overrides: [
+          crashReporterProvider.overrideWithValue(FakeCrashReporter()),
+          // O app foi aberto de novo depois da compra.
+          appSessionStartProvider.overrideWithValue(DateTime(2100)),
+        ],
       );
       expect(find.text('Se o Bipa travar, mandar um relatório?'), findsOneWidget);
       expect(find.text('Mandar'), findsOneWidget);

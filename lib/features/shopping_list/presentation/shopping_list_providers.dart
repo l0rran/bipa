@@ -160,9 +160,13 @@ final lastMarketIdProvider = StreamProvider.autoDispose<String?>(
   (ref) => ref.watch(shoppingTripRepositoryProvider).watchLastMarketId(),
 );
 
-/// Se alguma compra já terminou.
-final hasFinishedTripProvider = StreamProvider.autoDispose<bool>(
-  (ref) => ref.watch(shoppingTripRepositoryProvider).watchAnyFinished(),
+/// Quando esta abertura do app começou: lido uma vez e nunca mais muda.
+final appSessionStartProvider = Provider<DateTime>((ref) => ref.read(clockProvider)());
+
+/// Se alguma compra já tinha terminado quando esta abertura do app começou.
+/// Uma compra que termina agora só conta na próxima abertura.
+final finishedTripBeforeSessionProvider = StreamProvider.autoDispose<bool>(
+  (ref) => ref.watch(shoppingTripRepositoryProvider).watchAnyFinished(before: ref.watch(appSessionStartProvider)),
 );
 
 /// O mercado da lista: o da compra em andamento; fora dela, o escolhido no
