@@ -1400,5 +1400,70 @@
   "packageEditTitle": "Editar embalagem",
   "@packageEditTitle": {
     "description": "Título da folha de edição de uma embalagem."
-  }
+  },
+  "productMovePackage": "Mover embalagem…",
+  "@productMovePackage": {
+    "description": "Item do menu da tela do produto: passa uma embalagem posta no produto errado para outro (ADR 0022)."
+  },
+  "packageMovePick": "Mover para outro produto",
+  "@packageMovePick": {
+    "description": "Título da escolha do produto para onde a embalagem vai."
+  },
+  "packageMoveTitle": "Mover {package} para {into}?",
+  "@packageMoveTitle": {
+    "placeholders": {
+      "package": {
+        "type": "String"
+      },
+      "into": {
+        "type": "String"
+      }
+    }
+  },
+  "packageMovePrices": "{count, plural, =0{Ela ainda não tem preço.} =1{O preço dela vai junto.} other{Os {count} preços dela vão junto.}}",
+  "@packageMovePrices": {
+    "description": "Na confirmação de mover a embalagem: quantos preços vão para o outro produto.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "packageMoveAtHome": "O que está em casa dela também vai.",
+  "@packageMoveAtHome": {
+    "description": "Na confirmação de mover a embalagem, quando há lotes dela em casa."
+  },
+  "packageMoveConfirm": "Mover",
+  "packageMoved": "Embalagem movida para {name}.",
+  "@packageMoved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "packageMoveFailed": "Não deu para mover a embalagem. Tente de novo.",
+  "productDeletePackage": "Apagar embalagem",
+  "@productDeletePackage": {
+    "description": "Item do menu da tela do produto e botão da confirmação: apaga uma embalagem e os preços dela (ADR 0022)."
+  },
+  "packageDeleteTitle": "Apagar {package}?",
+  "@packageDeleteTitle": {
+    "placeholders": {
+      "package": {
+        "type": "String"
+      }
+    }
+  },
+  "packageDeleteBody": "{count, plural, =0{Ela ainda não tem preço. O que está em casa continua no produto.} =1{O preço dela também é apagado. O que está em casa continua no produto.} other{Os {count} preços dela também são apagados. O que está em casa continua no produto.}}",
+  "@packageDeleteBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "packageDeleted": "Embalagem apagada.",
+  "packageDeleteFailed": "Não deu para apagar a embalagem. Tente de novo.",
+  "packageRestoreFailed": "Não deu para trazer a embalagem de volta."
 }
