@@ -6,6 +6,8 @@ import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
+import 'package:bipa/features/settings/presentation/settings_providers.dart';
+import 'package:bipa/features/stock/domain/stock_location.dart';
 import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
 import 'package:bipa/features/stock/presentation/home_page.dart';
 import 'package:bipa/features/stock/presentation/stock_providers.dart';
@@ -189,6 +191,78 @@ void main() {
     expect(find.textContaining('Feijão carioca'), findsWidgets);
     expect(find.textContaining('Açúcar refinado'), findsNothing);
     // O teste não pode terminar com relógios da tela rodando.
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('o cartão do relatório de falhas some durante a busca e o filtro de local (H18)', (tester) async {
+    final AppDatabase db = createTestDatabase();
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        clockProvider.overrideWithValue(() => _now),
+        idGeneratorProvider.overrideWithValue(SequentialIdGenerator()),
+        askCrashReportingProvider.overrideWithValue(true),
+      ],
+    );
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox());
+      container.dispose();
+      await tester.runAsync(db.close);
+    });
+    await tester.runAsync(() async {
+      for (final (id, name, place) in [
+        ('arroz', 'Arroz branco', StockLocation.pantry),
+        ('leite', 'Leite integral', StockLocation.fridge),
+      ]) {
+        await container
+            .read(productRepositoryProvider)
+            .save(Product(id: id, name: name, unit: MeasureUnit.kilogram, createdAt: _now, updatedAt: _now));
+        await container
+            .read(stockRepositoryProvider)
+            .adjust(productId: id, delta: 2, reason: StockMovementReason.purchase);
+        await container.read(stockRepositoryProvider).setLocation(id, place);
+      }
+    });
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: BipaTheme.light,
+          locale: const Locale('pt', 'BR'),
+          supportedLocales: const [Locale('pt', 'BR')],
+          localizationsDelegates: const [AppLocalizations.delegate, ...GlobalMaterialLocalizations.delegates],
+          home: const Scaffold(body: HomePage()),
+        ),
+      ),
+    );
+    await _settle(tester);
+    final card = find.text('Se o Bipa travar, mandar um relatório?');
+    await tester.scrollUntilVisible(card, 200, scrollable: find.byType(Scrollable).first);
+    expect(card, findsOneWidget);
+
+    // Com busca, o cartão sai e os resultados ficam no lugar dele.
+    await tester.enterText(find.byType(TextField), 'arroz');
+    await _settle(tester);
+    expect(card, findsNothing);
+    expect(find.textContaining('Arroz branco'), findsWidgets);
+
+    // Esvaziando a busca, ele volta.
+    await tester.enterText(find.byType(TextField), '');
+    await _settle(tester);
+    await tester.scrollUntilVisible(card, 200, scrollable: find.byType(Scrollable).first);
+    expect(card, findsOneWidget);
+
+    // Com um local escolhido, também sai.
+    await tester.tap(find.text('Geladeira').first);
+    await _settle(tester);
+    expect(card, findsNothing);
+
+    await tester.tap(find.text('Tudo').first);
+    await _settle(tester);
+    await tester.scrollUntilVisible(card, 200, scrollable: find.byType(Scrollable).first);
+    expect(card, findsOneWidget);
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 1));
   });
