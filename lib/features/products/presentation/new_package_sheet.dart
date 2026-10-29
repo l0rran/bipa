@@ -45,8 +45,14 @@ Future<NewPackage?> showNewPackageSheet(
   String? nameHint,
   Money? price,
 }) async {
-  final products = await ref.read(productRepositoryProvider).watchAll().first;
+  final repository = ref.read(productRepositoryProvider);
+  final products = await repository.watchAll().first;
   final fromCatalog = await _findInCatalog(ref, barcode);
+  // As embalagens dizem em que grandeza cada produto se mede (G16): só
+  // importam para o catálogo.
+  final packages = fromCatalog == null
+      ? const <ProductPackage>[]
+      : await repository.watchPackagesOfProducts({for (final product in products) product.id}).first;
   if (!context.mounted) return null;
   return showModalBottomSheet<NewPackage>(
     context: context,
@@ -56,7 +62,7 @@ Future<NewPackage?> showNewPackageSheet(
         barcode: barcode,
         suggestion: fromCatalog == null
             ? PackageSuggestion.from(nameHint, products: products)
-            : PackageSuggestion.fromCatalog(fromCatalog, products: products),
+            : PackageSuggestion.fromCatalog(fromCatalog, products: products, packages: packages),
         price: price,
       ),
     ),

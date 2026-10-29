@@ -4,6 +4,7 @@ import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/package_origin.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_catalog.dart';
+import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/product_search.dart';
 import 'package:meta/meta.dart';
 
@@ -75,10 +76,16 @@ final class PackageSuggestion {
   /// da embalagem ([_catalogProductName]), e a pessoa ainda pode trocar.
   /// Sem tamanho no catálogo, ele vem da quantidade em texto ("5 kg") ou do
   /// fim do nome.
-  factory PackageSuggestion.fromCatalog(CatalogPackage package, {required List<Product> products}) {
+  ///
+  /// [packages] são as embalagens que a pessoa já tem, de qualquer produto:
+  /// dizem em que grandeza cada produto se mede (G16).
+  factory PackageSuggestion.fromCatalog(
+    CatalogPackage package, {
+    required List<Product> products,
+    Iterable<ProductPackage> packages = const [],
+  }) {
     final brand = _catalogBrand(package.brand);
     final newName = _catalogProductName(package.name, brand: brand);
-    final match = _catalogProductIn(package, newName: newName, products: products);
 
     var (size, unit) = (package.size, package.unit);
     if (size == null || unit == null) {
@@ -86,6 +93,7 @@ final class PackageSuggestion {
       final (parsedSize, parsedUnit, _) = _size(foldText('${package.name} ${package.quantity ?? ''}'));
       if (parsedSize != null && parsedUnit != null) (size, unit) = (parsedSize, parsedUnit);
     }
+    final match = _catalogProductIn(package, unit: unit, newName: newName, products: products, packages: packages);
     return PackageSuggestion(
       product: match,
       newProductName: match == null ? newName : null,
@@ -146,14 +154,25 @@ final class PackageSuggestion {
 ///    marca que ficou no nome. Versão e linha não contam: "integral", "em
 ///    pó", "desnatado", "Lavagem Perfeita", "Cristal";
 /// 4. o tipo dele, pelo nome, combina com a categoria do catálogo
-///    ([_kindsAgree]): "Laranja" não recebe um refrigerante de laranja.
+///    ([_kindsAgree]): "Laranja" não recebe um refrigerante de laranja;
+/// 5. a grandeza combina ([_measuresOf], G16): massa com massa (g e kg),
+///    volume com volume (ml e L), unidade com unidade. O leite em pó, em
+///    gramas, não entra no "Leite" de caixinha, em litros, porque o preço por
+///    kg e o por litro não se comparam. Um produto que ainda não se mede em
+///    nada aceita qualquer uma.
 ///
 /// Um produto com a marca no nome passa pelos passos 2 e 3: "Coca-cola" fica
 /// com "Refrigerante Coca-Cola", e "Nescau" com "Achocolatado Pó Nescau".
 /// Entre os que passam, vence o de mais palavras, depois o do tipo da
 /// categoria. Na dúvida, nenhum: a folha sugere o produto novo, e a escolha
 /// de produto mostra os parecidos a um toque.
-Product? _catalogProductIn(CatalogPackage package, {required String newName, required List<Product> products}) {
+Product? _catalogProductIn(
+  CatalogPackage package, {
+  required MeasureUnit? unit,
+  required String newName,
+  required List<Product> products,
+  required Iterable<ProductPackage> packages,
+}) {
   final words = _words(foldText(package.name));
   final available = words.toSet();
   final named = _significantWords(_words(foldText(newName)));
@@ -162,6 +181,7 @@ Product? _catalogProductIn(CatalogPackage package, {required String newName, req
     for (final brand in package.brand?.split(',') ?? const <String>[]) ..._words(foldText(brand)),
     for (final i in _brandPositions(words)) words[i],
   };
+  final measures = _measuresOf(packages);
 
   Product? best;
   var (bestLength, bestKind) = (0, false);
@@ -170,6 +190,7 @@ Product? _catalogProductIn(CatalogPackage package, {required String newName, req
     if (productWords.isEmpty || !available.containsAll(productWords)) continue;
     final productKind = ProductKind.of(product.name);
     if (!_kindsAgree(package.kind, productKind)) continue;
+    if (unit != null && !_measureAgrees(unit, product, measures[product.id])) continue;
 
     if (!productWords.any(brandWords.contains)) {
       if (head != null && !productWords.contains(head)) continue;
@@ -193,6 +214,29 @@ List<String> _significantWords(Iterable<String> words) => [
   for (final word in words)
     if (!_isNumber(word) && !_connectors.contains(word) && !_packaging.contains(word) && !_units.contains(word)) word,
 ];
+
+/// As grandezas em que cada produto já se mede, pelas embalagens dele: a
+/// unidade base (kg, L ou un) de cada uma. Conta a embalagem com tamanho, ou
+/// com uma unidade que não é "un": sem tamanho, "un" é só a unidade de quem
+/// não disse nenhuma.
+Map<String, Set<MeasureUnit>> _measuresOf(Iterable<ProductPackage> packages) {
+  final measures = <String, Set<MeasureUnit>>{};
+  for (final package in packages) {
+    if (package.size == null && package.unit == MeasureUnit.unit) continue;
+    measures.putIfAbsent(package.productId, () => {}).add(package.unit.baseUnit);
+  }
+  return measures;
+}
+
+/// A embalagem do catálogo, em [unit], cabe em [product] pela grandeza
+/// (G16): é a de alguma das embalagens dele ([measures]); sem nenhuma, a do
+/// produto, quando ele diz uma além de "un", que é a unidade de quem não
+/// escolheu. Um produto sem embalagem e sem unidade aceita qualquer uma.
+bool _measureAgrees(MeasureUnit unit, Product product, Set<MeasureUnit>? measures) {
+  if (measures != null && measures.isNotEmpty) return measures.contains(unit.baseUnit);
+  if (product.unit == MeasureUnit.unit) return true;
+  return product.unit.baseUnit == unit.baseUnit;
+}
 
 /// A categoria do catálogo e o tipo do produto da pessoa, deduzido do nome,
 /// combinam: são o mesmo, ou um deles não diz (sem categoria, "outros"), ou

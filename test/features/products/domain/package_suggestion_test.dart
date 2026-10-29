@@ -4,6 +4,7 @@ import 'package:bipa/features/products/domain/package_origin.dart';
 import 'package:bipa/features/products/domain/package_suggestion.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_catalog.dart';
+import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/product_search.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -411,6 +412,78 @@ void main() {
     test('o produto que cobre o nome continua sendo escolhido', () {
       expect(of('7895000318629', 'Arroz Branco Qualita 1kg', brand: 'QUALITA').product?.name, 'Arroz');
       expect(of('1', 'Leite UHT', brand: 'Italac', kind: ProductKind.shelfStable).product?.name, 'Leite');
+    });
+  });
+
+  group('o catálogo só põe a embalagem num produto da mesma grandeza (G16)', () {
+    const powder = CatalogPackage(
+      barcode: '7891000101506',
+      name: 'Leite em pó desnatado',
+      brand: 'Nestlé Molico',
+      size: 280,
+      unit: MeasureUnit.gram,
+      kind: ProductKind.dairy,
+      source: PackageOrigin.openFoodFacts,
+    );
+    Product milk({MeasureUnit unit = MeasureUnit.unit}) =>
+        Product(id: 'leite', name: 'Leite', unit: unit, createdAt: _now, updatedAt: _now);
+    ProductPackage packageOf(String productId, MeasureUnit unit, {double? size}) => ProductPackage(
+      id: '$productId-${unit.name}',
+      productId: productId,
+      size: size,
+      unit: unit,
+      createdAt: _now,
+      updatedAt: _now,
+    );
+    Product? productFor(CatalogPackage package, Product product, [List<ProductPackage> packages = const []]) =>
+        PackageSuggestion.fromCatalog(package, products: [product], packages: packages).product;
+
+    test('o leite em pó, em gramas, não entra no leite em litros e vira produto próprio', () {
+      final suggestion = PackageSuggestion.fromCatalog(
+        powder,
+        products: [milk()],
+        packages: [packageOf('leite', MeasureUnit.liter, size: 1)],
+      );
+
+      expect(suggestion.product, isNull);
+      expect(suggestion.newProductName, startsWith('Leite em pó'));
+    });
+
+    test('a grandeza é a das embalagens; sem elas, a do produto', () {
+      expect(productFor(powder, milk(), [packageOf('leite', MeasureUnit.kilogram, size: 0.4)]), isNotNull);
+      expect(productFor(powder, milk(unit: MeasureUnit.liter)), isNull);
+      expect(productFor(powder, milk(unit: MeasureUnit.kilogram)), isNotNull);
+      // As embalagens valem mais que a unidade do produto.
+      expect(
+        productFor(powder, milk(unit: MeasureUnit.kilogram), [packageOf('leite', MeasureUnit.liter, size: 1)]),
+        isNull,
+      );
+    });
+
+    test('o produto sem embalagem e sem unidade aceita qualquer grandeza', () {
+      expect(productFor(powder, milk()), isNotNull);
+      // Uma embalagem sem tamanho em "un" não disse grandeza nenhuma.
+      expect(productFor(powder, milk(), [packageOf('leite', MeasureUnit.unit)]), isNotNull);
+    });
+
+    test('unidade só com unidade', () {
+      const eggs = CatalogPackage(
+        barcode: '1',
+        name: 'Ovos brancos',
+        size: 12,
+        unit: MeasureUnit.unit,
+        source: PackageOrigin.openFoodFacts,
+      );
+      final product = Product(id: 'ovos', name: 'Ovos', unit: MeasureUnit.unit, createdAt: _now, updatedAt: _now);
+
+      expect(productFor(eggs, product, [packageOf('ovos', MeasureUnit.unit, size: 30)]), isNotNull);
+      expect(productFor(eggs, product, [packageOf('ovos', MeasureUnit.kilogram, size: 1)]), isNull);
+    });
+
+    test('sem tamanho no catálogo, a grandeza não decide', () {
+      const noSize = CatalogPackage(barcode: '1', name: 'Leite em pó', source: PackageOrigin.openFoodFacts);
+
+      expect(productFor(noSize, milk(), [packageOf('leite', MeasureUnit.liter, size: 1)]), isNotNull);
     });
   });
 

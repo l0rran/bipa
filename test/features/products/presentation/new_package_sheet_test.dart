@@ -104,7 +104,12 @@ Future<ProviderContainer> _pump(
     ),
   );
   await tester.tap(find.text('bipar'));
-  await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+  // Os produtos, o catálogo e, achado nele, as embalagens (G16) são lidos
+  // antes da folha: duas idas ao banco.
+  for (var i = 0; i < 2; i++) {
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+    await tester.pump();
+  }
   await tester.pumpAndSettle();
   return container;
 }
