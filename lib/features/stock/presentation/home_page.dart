@@ -305,11 +305,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ),
                   ),
                 ),
-              // A pergunta do relatório de falhas: aparece só uma vez (ADR 0025).
-              const SliverPadding(
-                padding: EdgeInsets.symmetric(horizontal: BipaSpacing.s4),
-                sliver: SliverToBoxAdapter(child: CrashReportingAskCard()),
-              ),
               if (entries.isNotEmpty && visible.isEmpty)
                 SliverPadding(
                   padding: const EdgeInsets.all(BipaSpacing.s8),
@@ -355,6 +350,12 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                 ),
               ],
+              // A pergunta do relatório de falhas: depois de "Acabando", que é
+              // o que o Início existe para mostrar, e só uma vez (ADR 0025).
+              const SliverPadding(
+                padding: EdgeInsets.symmetric(horizontal: BipaSpacing.s4),
+                sliver: SliverToBoxAdapter(child: CrashReportingAskCard()),
+              ),
               if (atHome.isNotEmpty) ...[
                 _sectionHeader(SectionHeader(title: l10n.sectionAtHome, count: atHome.length)),
                 SliverPadding(

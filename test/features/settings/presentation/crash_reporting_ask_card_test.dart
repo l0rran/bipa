@@ -5,6 +5,15 @@ import 'package:bipa/core/database/database_provider.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/di/core_providers.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
+import 'package:bipa/core/navigation/routes.dart';
+import 'package:bipa/features/settings/presentation/settings_page.dart';
+import 'package:bipa/features/settings/presentation/settings_providers.dart';
+import 'package:go_router/go_router.dart';
+import 'package:bipa/features/products/domain/measure_unit.dart';
+import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/products/presentation/products_providers.dart';
+import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
+import 'package:bipa/features/stock/presentation/stock_providers.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:bipa/features/stock/presentation/home_page.dart';
 import 'package:flutter/material.dart';
@@ -31,6 +40,10 @@ Future<({MemoryConsentStore store, FakeCrashReporter reporter, ProviderContainer
   _Trip trip = _Trip.finished,
   CrashReportingConsent consent = CrashReportingConsent.unasked,
   bool available = true,
+  bool lowStock = false,
+  // Quanto depois do fim da compra esta abertura do app começou. Positivo é
+  // "abri o app de novo"; negativo, "a compra terminou nesta abertura".
+  Duration sessionStartsAfterTrip = const Duration(hours: 1),
 }) async {
   // Um celular alto, para o cartão e os botões ficarem à vista.
   tester.view
@@ -44,6 +57,8 @@ Future<({MemoryConsentStore store, FakeCrashReporter reporter, ProviderContainer
     overrides: [
       appDatabaseProvider.overrideWithValue(db),
       clockProvider.overrideWithValue(() => _now),
+      appVersionProvider.overrideWith((ref) async => '0.1.0'),
+      appSessionStartProvider.overrideWithValue(_now.add(sessionStartsAfterTrip)),
       idGeneratorProvider.overrideWithValue(SequentialIdGenerator()),
       crashReportingConsentStoreProvider.overrideWithValue(store),
       crashReporterProvider.overrideWithValue(reporter),
@@ -57,6 +72,18 @@ Future<({MemoryConsentStore store, FakeCrashReporter reporter, ProviderContainer
   });
 
   await tester.runAsync(() async {
+    if (lowStock) {
+      // Um item abaixo do "ter sempre" (vai para "Acabando") e outro em dia.
+      for (final (id, name, quantity) in [('leite', 'Leite integral', 1.0), ('arroz', 'Arroz', 5.0)]) {
+        await container
+            .read(productRepositoryProvider)
+            .save(Product(id: id, name: name, unit: MeasureUnit.liter, createdAt: _now, updatedAt: _now));
+        await container
+            .read(stockRepositoryProvider)
+            .adjust(productId: id, delta: quantity, reason: StockMovementReason.purchase);
+      }
+      await container.read(stockRepositoryProvider).setTargetQuantity('leite', 3);
+    }
     final trips = container.read(shoppingTripRepositoryProvider);
     if (trip == _Trip.none) return;
     final started = await trips.start();
@@ -73,12 +100,20 @@ Future<({MemoryConsentStore store, FakeCrashReporter reporter, ProviderContainer
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
-      child: MaterialApp(
+      child: MaterialApp.router(
         theme: BipaTheme.light,
         locale: const Locale('pt', 'BR'),
         supportedLocales: const [Locale('pt', 'BR')],
         localizationsDelegates: const [AppLocalizations.delegate, ...GlobalMaterialLocalizations.delegates],
-        home: const Scaffold(body: HomePage()),
+        routerConfig: GoRouter(
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (_, _) => const Scaffold(body: HomePage()),
+            ),
+            GoRoute(path: Routes.settings, builder: (_, _) => const SettingsPage()),
+          ],
+        ),
       ),
     ),
   );
@@ -136,8 +171,12 @@ void main() {
       expect(find.text(_question), findsNothing);
     });
 
-    testWidgets('aparece quando a primeira compra termina com o Início aberto', (tester) async {
-      final (:store, :reporter, :container) = await _pump(tester, trip: _Trip.active);
+    testWidgets('não aparece na mesma abertura do app em que a compra termina', (tester) async {
+      final (:store, :reporter, :container) = await _pump(
+        tester,
+        trip: _Trip.active,
+        sessionStartsAfterTrip: const Duration(minutes: -1),
+      );
       expect(find.text(_question), findsNothing);
 
       await tester.runAsync(() async {
@@ -146,9 +185,48 @@ void main() {
       });
       await _settle(tester);
 
-      expect(find.text(_question), findsOneWidget);
+      expect(find.text(_question), findsNothing);
       expect(store.value, CrashReportingConsent.unasked);
       expect(reporter.calls, isEmpty);
+    });
+
+    testWidgets('não aparece quando a compra terminou depois do início desta abertura', (tester) async {
+      await _pump(tester, sessionStartsAfterTrip: const Duration(minutes: -1));
+      expect(find.text(_question), findsNothing);
+    });
+
+    testWidgets('aparece na abertura seguinte, com a compra de antes já terminada', (tester) async {
+      await _pump(tester, sessionStartsAfterTrip: const Duration(minutes: 1));
+      expect(find.text(_question), findsOneWidget);
+    });
+
+    testWidgets('fica depois de "Acabando" e antes de "Em casa"', (tester) async {
+      await _pump(tester, lowStock: true);
+
+      final running = tester.getTopLeft(find.text('Acabando')).dy;
+      final card = tester.getTopLeft(find.text(_question)).dy;
+      final atHome = tester.getTopLeft(find.text('Em casa')).dy;
+      expect(running, lessThan(card));
+      expect(card, lessThan(atHome));
+    });
+  });
+
+  group('o texto do consentimento', () {
+    testWidgets('não promete menos do que vai e não diz "só"', (tester) async {
+      await _pump(tester);
+
+      expect(find.textContaining('Vão o erro e dados do celular, como modelo e versão.'), findsOneWidget);
+      expect(find.textContaining('Seus produtos, preços e lugares ficam aqui.'), findsOneWidget);
+      expect(find.textContaining('Vai só'), findsNothing);
+    });
+
+    testWidgets('o link "O que vai" abre os Ajustes', (tester) async {
+      await _pump(tester);
+
+      await tester.tap(find.text('O que vai'));
+      await _settle(tester);
+
+      expect(find.byType(SettingsPage), findsOneWidget);
     });
   });
 

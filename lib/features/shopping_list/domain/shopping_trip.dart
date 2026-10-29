@@ -59,7 +59,10 @@ abstract interface class ShoppingTripRepository {
   /// Se alguma compra já terminou (tem fim registrado). Compra desfeita ou
   /// cancelada não conta: ela some ou volta a estar em andamento. É o que a
   /// pergunta do relatório de falhas espera (ADR 0025).
-  Stream<bool> watchAnyFinished();
+  ///
+  /// Com [before], só conta a compra que terminou antes desse instante: é
+  /// como a pergunta espera a abertura seguinte do app.
+  Stream<bool> watchAnyFinished({DateTime? before});
 }
 
 /// O que a barra da compra mostra: quantos itens da lista já foram e quanto

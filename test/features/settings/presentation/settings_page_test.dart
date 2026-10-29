@@ -18,6 +18,11 @@ Future<({MemoryConsentStore store, FakeCrashReporter reporter})> _pump(
   CrashReportingConsent consent = CrashReportingConsent.unasked,
   bool available = true,
 }) async {
+  // Um celular alto, para a tela inteira ficar à vista.
+  tester.view
+    ..physicalSize = const Size(411, 1400)
+    ..devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
   final store = MemoryConsentStore(consent);
   final reporter = FakeCrashReporter(isAvailable: available);
   await tester.pumpWidget(
@@ -51,6 +56,8 @@ void main() {
     expect(tester.widget<Switch>(_switch).value, isFalse);
     expect(find.text('Relatório de falhas'), findsOneWidget);
     expect(find.text('O que vai'), findsOneWidget);
+    expect(find.textContaining('Versão do app, do Android e do Flutter'), findsOneWidget);
+    expect(find.textContaining('Os últimos passos do app'), findsOneWidget);
     expect(find.text('O que nunca vai'), findsOneWidget);
     expect(find.text('Produtos, preços, estoque e lista'), findsOneWidget);
     expect(find.text('0.1.0'), findsOneWidget);
