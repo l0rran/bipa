@@ -132,7 +132,7 @@ void main() {
     test('põe o acento das palavras comuns, sem inventar nas outras', () {
       expect(productNameFromLabel('MACARRAO PARAFUSO RENATA 500G'), 'Macarrão parafuso');
       expect(productNameFromLabel('ACUCAR REFINADO UNIAO 1KG'), 'Açúcar refinado');
-      expect(productNameFromLabel('PAO FRANCES KG'), 'Pão frances');
+      expect(productNameFromLabel('PAO FRANCES KG'), 'Pão francês');
       expect(productNameFromLabel('LIMAO TAHITI KG'), 'Limão tahiti');
       expect(productNameFromLabel('MAMAO PAPAYA KG'), 'Mamão papaya');
       expect(productNameFromLabel('MELAO AMARELO KG'), 'Melão amarelo');
@@ -142,6 +142,28 @@ void main() {
       expect(productNameFromLabel('ACAI NA TIGELA 500ML'), 'Açaí na tigela');
       // "carioca", "batata" e "tahiti" não têm acento na tabela: ficam como vieram.
       expect(productNameFromLabel('BATATA LAVADA KG'), 'Batata lavada');
+    });
+
+    test('põe o acento das palavras de balança e de gôndola de granel (G11)', () {
+      for (final (hint, name) in [
+        ('PAO FRANCES KG', 'Pão francês'),
+        ('GRAO DE BICO KG', 'Grão de bico'),
+        ('LINGUICA TOSCANA KG', 'Linguiça toscana'),
+        ('ABOBORA CABOTIA KG', 'Abóbora cabotia'),
+        ('LOMBO SUINO KG', 'Lombo suíno'),
+        ('COSTELA SUINA KG', 'Costela suína'),
+        ('QUEIJO PARMESAO KG', 'Queijo parmesão'),
+        ('QUEIJO MINAS PADRAO KG', 'Queijo minas padrão'),
+        ('FILE DE SALMAO KG', 'Filé de salmão'),
+        ('FILE DE TILAPIA KG', 'Filé de tilápia'),
+        ('RUCULA MACO', 'Rúcula maco'),
+        ('AGRIAO KG', 'Agrião'),
+        ('JILO KG', 'Jiló'),
+        ('CONTRAFILE KG', 'Contrafilé'),
+        ('ALMONDEGA BOVINA KG', 'Almôndega bovina'),
+      ]) {
+        expect(productNameFromLabel(hint), name, reason: hint);
+      }
     });
 
     test('o acento que a etiqueta tem fica', () {
