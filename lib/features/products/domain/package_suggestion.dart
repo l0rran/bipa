@@ -136,29 +136,141 @@ final class PackageSuggestion {
 }
 
 /// A marca do catálogo, que pode vir com várias separadas por vírgula
-/// ("Tio João, Josapar") ou em caixa alta ("TIO JOÃO"): fica a primeira, e
-/// a caixa alta vira só a inicial maiúscula.
+/// ("Tio João, Josapar") ou em caixa alta ("TIO JOÃO"): fica a primeira.
+/// Uma marca conhecida sem acento ("NESTLE", "Tio Joao") ganha a grafia de
+/// [_brandSpellings] ("Nestlé", "Tio João", G13); outra em caixa alta vira
+/// só a inicial maiúscula.
 String? _catalogBrand(String? brand) {
   final first = brand?.split(',').first.trim() ?? '';
   if (first.isEmpty) return null;
+  final folded = foldText(first);
+  final hasAccent = folded != first.toLowerCase();
+  if (!hasAccent) {
+    if (_brandSpellings[_words(folded).join(' ')] case final spelling?) return spelling;
+  }
   final shouting = first == first.toUpperCase() && first != first.toLowerCase();
   if (!shouting) return first;
   return first.toLowerCase().split(' ').map(_capitalize).join(' ');
 }
 
-/// O nome do produto novo sugerido pelo nome do catálogo: sem a marca, e
-/// com o recorte das etiquetas ([productNameFromLabel]). Se só sobra a marca
-/// ("Nescau"), ela é o nome.
+/// O nome do produto novo sugerido pelo nome do catálogo: sem a marca
+/// ([_withoutBrand]), e com o recorte das etiquetas ([productNameFromLabel]).
+/// Se só sobra a marca ("Nescau"), ela é o nome.
+///
+/// Se sem a marca sobra só um sabor, uma linha ou uma palavra que não é de
+/// produto ("Fanta Uva" daria "Uva", "Heineken Original", "Original"), a
+/// marca fica: "Fanta uva", "Heineken" (G13). A fruta "Uva" com o preço de
+/// um refrigerante é pior que um nome com marca. Uma palavra que é produto
+/// ("Arroz Tio João") fica sozinha.
 String _catalogProductName(String name, {required String? brand}) {
-  final brandWords = brand == null ? const <String>{} : _words(foldText(brand)).toSet();
-  final tokens = _tokens(name);
-  final withoutBrand = [
-    for (final token in tokens)
-      if (!brandWords.contains(token.word)) token.text,
-  ].join(' ');
-  final cut = productNameFromLabel(withoutBrand);
-  return cut.isNotEmpty ? cut : productNameFromLabel(name);
+  final rest = _withoutBrand(name, brand: brand);
+  final cut = productNameFromLabel(rest);
+  if (cut.isEmpty) return productNameFromLabel(name);
+  if (rest == name || !_isHalfName(cut)) return cut;
+  final withBrand = _labelName(name, keepBrands: true, skip: _plainVariants);
+  return withBrand.isNotEmpty ? withBrand : cut;
 }
+
+/// [name] sem a [brand]: a marca inteira, onde ela aparece junta ("Café
+/// Torrado Café Brasileiro" perde só o segundo "Café"); senão, cada palavra
+/// dela, menos a primeira do nome, que costuma ser o produto ("Feijão
+/// Carioca Camil", marca "Camil Alimentos").
+String _withoutBrand(String name, {required String? brand}) {
+  final brandWords = brand == null ? const <String>[] : _words(foldText(brand));
+  final tokens = _tokens(name);
+  if (brandWords.isEmpty) return name;
+  final words = [for (final token in tokens) token.word];
+  var drop = <int>{};
+  for (var i = 0; i + brandWords.length <= words.length && drop.isEmpty; i++) {
+    var same = true;
+    for (var j = 0; j < brandWords.length && same; j++) {
+      same = words[i + j] == brandWords[j];
+    }
+    if (same) drop = {for (var j = i; j < i + brandWords.length; j++) j};
+  }
+  if (drop.isEmpty) {
+    final set = brandWords.toSet();
+    drop = {
+      for (var i = 1; i < words.length; i++)
+        if (set.contains(words[i])) i,
+    };
+  }
+  if (drop.isEmpty) return name;
+  return [
+    for (var i = 0; i < tokens.length; i++)
+      if (!drop.contains(i)) tokens[i].text,
+  ].join(' ');
+}
+
+/// O recorte [cut] diz só a metade do nome (G13): uma palavra só que é
+/// sabor, linha ou desconhecida ("Uva", "Original", "Dark"), ou só sabores e
+/// linhas ("Uva zero"). Uma palavra de produto ("Arroz", "Refrigerante")
+/// basta.
+bool _isHalfName(String cut) {
+  final words = _words(foldText(cut)).where((word) => !_connectors.contains(word)).toList();
+  if (words.isEmpty) return false;
+  if (words.every((word) => _flavors.contains(word) || _variants.contains(word))) return true;
+  return words.length == 1 && ProductKind.of(words.single) == ProductKind.other;
+}
+
+/// Sabores, que sozinhos não nomeiam o produto da marca ("Fanta Uva"). Fica
+/// de fora o que também é produto de prateleira ("chocolate", "banana").
+const _flavors = {
+  'uva',
+  'morango',
+  'abacaxi',
+  'maracuja',
+  'pessego',
+  'manga',
+  'goiaba',
+  'caju',
+  'cereja',
+  'framboesa',
+  'amora',
+  'limao',
+  'laranja',
+  'tangerina',
+  'mexerica',
+  'coco',
+  'baunilha',
+  'menta',
+  'hortela',
+  'canela',
+  'cola',
+  'guarana',
+  'tutti',
+  'frutti',
+  'caramelo',
+  'frutas',
+  'vermelhas',
+};
+
+/// Linhas e versões de um produto de marca ("Heineken Original", "Kit Kat
+/// Dark"), que sozinhas não nomeiam nada.
+const _variants = {
+  ..._plainVariants,
+  'zero',
+  'light',
+  'diet',
+  'dark',
+  'extra',
+  'forte',
+  'extraforte',
+  'suave',
+  'intenso',
+  'gold',
+  'premium',
+  'black',
+  'white',
+  'puro',
+  'plus',
+  'max',
+};
+
+/// As linhas que são o próprio produto da marca, sem nada a mais: com a
+/// marca no nome, elas saem ("Heineken Original" é "Heineken"). "Sabor"
+/// também sai ("Fanta sabor laranja" é "Fanta laranja").
+const _plainVariants = {'original', 'tradicional', 'classico', 'classic', 'sabor'};
 
 final _wordPattern = RegExp('[a-z0-9]+(?:[.,][0-9]+)?');
 
@@ -269,63 +381,89 @@ const _traits = {
 /// Palavras que descrevem o produto, não a marca.
 const _descriptors = {..._connectors, ..._packaging, ..._units, ..._traits};
 
-/// Marcas comuns no mercado, sem acento e em minúsculas. O recorte da
-/// etiqueta só tira uma palavra como marca se ela estiver aqui: uma marca
-/// que fica no nome custa menos que uma variedade que some (G6). Ficam de
-/// fora as marcas que também são palavras de produto ("prato", "galo").
+/// Marcas comuns no mercado, sem acento e em minúsculas, com a grafia
+/// delas. O recorte da etiqueta só tira uma palavra como marca se ela
+/// estiver aqui: uma marca que fica no nome custa menos que uma variedade
+/// que some (G6). Ficam de fora as marcas que também são palavras de produto
+/// ("prato", "galo").
 const _knownBrands = {
-  'adria',
-  'aurora',
-  'barilla',
-  'batavo',
-  'bauducco',
-  'camil',
-  'catupiry',
-  'coqueiro',
-  'danone',
-  'dona benta',
-  'elege',
-  'fugini',
-  'friboi',
-  'gomes da costa',
-  'heinz',
-  'hellmanns',
-  'italac',
-  'itambe',
-  'kicaldo',
-  'knorr',
-  'liza',
-  'maggi',
-  'marilan',
-  'melitta',
-  'moca',
-  'nescau',
-  'nestle',
-  'ninho',
-  'omo',
-  'parmalat',
-  'perdigao',
-  'pilao',
-  'piracanjuba',
-  'piraque',
-  'polenghi',
-  'pomarola',
-  'qualy',
-  'renata',
-  'sadia',
-  'santa clara',
-  'seara',
-  'soya',
-  'swift',
-  'tio joao',
-  'tres coracoes',
-  'uniao',
-  'vitarella',
-  'yoki',
-  'ype',
+  'adria': 'Adria',
+  'aurora': 'Aurora',
+  'barilla': 'Barilla',
+  'batavo': 'Batavo',
+  'bauducco': 'Bauducco',
+  'camil': 'Camil',
+  'catupiry': 'Catupiry',
+  'coqueiro': 'Coqueiro',
+  'danone': 'Danone',
+  'dona benta': 'Dona Benta',
+  'elege': 'Elegê',
+  'fugini': 'Fugini',
+  'friboi': 'Friboi',
+  'gomes da costa': 'Gomes da Costa',
+  'heinz': 'Heinz',
+  'hellmanns': "Hellmann's",
+  'italac': 'Italac',
+  'itambe': 'Itambé',
+  'kicaldo': 'Kicaldo',
+  'knorr': 'Knorr',
+  'liza': 'Liza',
+  'maggi': 'Maggi',
+  'marilan': 'Marilan',
+  'melitta': 'Melitta',
+  'moca': 'Moça',
+  'nescau': 'Nescau',
+  'nestle': 'Nestlé',
+  'ninho': 'Ninho',
+  'omo': 'Omo',
+  'parmalat': 'Parmalat',
+  'perdigao': 'Perdigão',
+  'pilao': 'Pilão',
+  'piracanjuba': 'Piracanjuba',
+  'piraque': 'Piraquê',
+  'polenghi': 'Polenghi',
+  'pomarola': 'Pomarola',
+  'qualy': 'Qualy',
+  'renata': 'Renata',
+  'sadia': 'Sadia',
+  'santa clara': 'Santa Clara',
+  'seara': 'Seara',
+  'soya': 'Soya',
+  'swift': 'Swift',
+  'tio joao': 'Tio João',
+  'tres coracoes': 'Três Corações',
+  'uniao': 'União',
+  'vitarella': 'Vitarella',
+  'yoki': 'Yoki',
+  'ype': 'Ypê',
 };
 
-final _knownBrandWords = [for (final brand in _knownBrands) brand.split(' ')];
+/// A grafia das marcas que o catálogo escreve sem acento ("NESTLE", "TIO
+/// JOAO"), para a embalagem não nascer com "Nestle" (G13): as de
+/// [_knownBrands] e outras que o catálogo traz em caixa alta, com a grafia
+/// mais comum nele mesmo. Estas não saem do nome da etiqueta, por serem
+/// também palavras comuns ("leão", "américa").
+const _brandSpellings = {
+  ..._knownBrands,
+  '3 coracoes': '3 Corações',
+  'casa suica': 'Casa Suíça',
+  'cepera': 'Cepêra',
+  'cha leao': 'Chá Leão',
+  'dalia': 'Dália',
+  'jundia': 'Jundiá',
+  'leao': 'Leão',
+  'mae terra': 'Mãe Terra',
+  'matte leao': 'Matte Leão',
+  'nescafe': 'Nescafé',
+  'nescafe dolce gusto': 'Nescafé Dolce Gusto',
+  'president': 'Président',
+  'qualita': 'Qualitá',
+  'sazon': 'Sazón',
+  'vale fertil': 'Vale Fértil',
+  'xando': 'Xandô',
+};
+
+final _knownBrandWords = [for (final brand in _knownBrands.keys) brand.split(' ')];
 
 /// O acento das palavras de mercado mais comuns, que a etiqueta escreve sem
 /// ("FEIJAO"), para o nome do produto novo não nascer "Feijao" (G6). Só
@@ -356,6 +494,7 @@ const _accents = {
   'frances': 'francês',
   'fuba': 'fubá',
   'grao': 'grão',
+  'guarana': 'guaraná',
   'graos': 'grãos',
   'hamburguer': 'hambúrguer',
   'higienico': 'higiênico',
@@ -438,13 +577,18 @@ Set<int> _brandPositions(List<String> words) {
 /// etiqueta tiver fica. Uma palavra que liga outras ("de", "em") só fica
 /// entre duas que ficam ("Sabão em pó"). Se só sobra a marca ("NESCAU
 /// 400G"), ela é o nome.
-String productNameFromLabel(String? nameHint) {
+String productNameFromLabel(String? nameHint) => _labelName(nameHint);
+
+/// O recorte de [productNameFromLabel]. Com [keepBrands], as marcas de
+/// [_knownBrands] ficam, com a grafia de [_brandSpellings] ("Nescafe" é
+/// "Nescafé"), e as palavras de [skip] saem.
+String _labelName(String? nameHint, {bool keepBrands = false, Set<String> skip = const {}}) {
   final hint = nameHint?.trim() ?? '';
   if (hint.isEmpty) return '';
   final tokens = _tokens(hint);
   final words = [for (final token in tokens) token.word];
   final (_, _, sizeWords) = _size(foldText(hint));
-  final brands = _brandPositions(words);
+  final brands = keepBrands ? const <int>{} : _brandPositions(words);
 
   bool content(int i) {
     final word = words[i];
@@ -453,7 +597,8 @@ String productNameFromLabel(String? nameHint) {
         sizeWords.contains(word) ||
         _units.contains(word) ||
         _packaging.contains(word) ||
-        _connectors.contains(word);
+        _connectors.contains(word) ||
+        skip.contains(word);
     return !noise;
   }
 
@@ -466,7 +611,8 @@ String productNameFromLabel(String? nameHint) {
     if (!kept[i] && !connectsKept) continue;
     final token = tokens[i];
     final hasAccent = token.text.toLowerCase() != token.word;
-    name.add(hasAccent ? token.text : _accentWord(token.word));
+    final brand = keepBrands ? _brandSpellings[token.word] : null;
+    name.add(hasAccent ? token.text : brand ?? _accentWord(token.word));
   }
   if (name.isEmpty) return '';
   final text = name.join(' ').toLowerCase();

@@ -351,4 +351,62 @@ void main() {
       expect(PackageSuggestion.fromCatalog(onlyBrand, products: const []).newProductName, 'Camil');
     });
   });
+
+  group('nome novo do catálogo inteiro, com a marca quando sem ela sobra metade (G13)', () {
+    String? nameOf(String name, {String? brand}) => PackageSuggestion.fromCatalog(
+      CatalogPackage(barcode: '1', name: name, brand: brand, source: PackageOrigin.openFoodFacts),
+      products: const [],
+    ).newProductName;
+
+    test('sem a marca, só o sabor: a marca fica no lugar dela', () {
+      expect(nameOf('Fanta Uva', brand: 'Fanta'), 'Fanta uva');
+      expect(nameOf('Fanta sabor laranja', brand: 'Fanta'), 'Fanta laranja');
+      expect(nameOf('Guaraná Antarctica zero', brand: 'Antarctica'), 'Guaraná antarctica zero');
+    });
+
+    test('sem a marca, só a linha: a linha comum sai, as outras ficam', () {
+      expect(nameOf('Heineken Original 600ml', brand: 'Heineken'), 'Heineken');
+      expect(nameOf('Nescafe Classic', brand: 'Nescafe'), 'Nescafé');
+      expect(nameOf('Kit Kat Dark', brand: 'Kit Kat'), 'Kit kat dark');
+    });
+
+    test('uma palavra de produto basta, sem a marca', () {
+      expect(nameOf('Arroz Tio João 5kg', brand: 'Tio João'), 'Arroz');
+      expect(nameOf('Refrigerante Coca-Cola 2Lt', brand: 'Coca-Cola'), 'Refrigerante');
+    });
+
+    test('a marca sai onde ela aparece inteira, e a primeira palavra do nome fica', () {
+      expect(
+        nameOf('Café Torrado E Moído Extraforte Café Brasileiro Pacote 500g', brand: 'CAFE BRASILEIRO'),
+        'Café torrado e moído extraforte',
+      );
+      expect(nameOf('Feijão Carioca Camil 1Kg', brand: 'Camil Alimentos'), 'Feijão carioca');
+    });
+
+    test('nome em espanhol fica como veio', () {
+      expect(nameOf('Leche Condensada', brand: 'Nestlé'), 'Leche condensada');
+    });
+  });
+
+  group('grafia da marca do catálogo (G13)', () {
+    String? brandOf(String brand) => PackageSuggestion.fromCatalog(
+      CatalogPackage(barcode: '1', name: 'Leite', brand: brand, source: PackageOrigin.openFoodFacts),
+      products: const [],
+    ).brand;
+
+    test('a marca conhecida sem acento ganha a grafia dela', () {
+      expect(brandOf('NESTLE'), 'Nestlé');
+      expect(brandOf('TIO JOAO'), 'Tio João');
+      expect(brandOf('Tio Joao, Josapar'), 'Tio João');
+      expect(brandOf('QUALITA'), 'Qualitá');
+      expect(brandOf('3 CORACOES'), '3 Corações');
+      expect(brandOf('MOCA'), 'Moça');
+    });
+
+    test('o acento que a marca tem fica, e a desconhecida em caixa alta vira só a inicial', () {
+      expect(brandOf('NESTLÉ'), 'Nestlé');
+      expect(brandOf('Piracanjuba'), 'Piracanjuba');
+      expect(brandOf('CASA DE BENTO'), 'Casa De Bento');
+    });
+  });
 }
