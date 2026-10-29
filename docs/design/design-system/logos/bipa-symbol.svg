@@ -1,10 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Bipa">
-  <rect width="96" height="96" rx="24" fill="#F6C445"/>
-  <g fill="#1C1B1F">
-    <rect x="21" y="25" width="8" height="46" rx="3"/>
-    <rect x="34" y="25" width="13" height="46" rx="3"/>
-    <rect x="52" y="25" width="6" height="46" rx="3"/>
-    <rect x="63" y="25" width="12" height="46" rx="3"/>
+  <!-- Fundo ink arredondado; a etiqueta brand com o furo à esquerda (o da PriceTag) e o "b" em ink, desenhado em formas.
+       É o mesmo desenho do ícone do app (docs/design/icone/1-etiqueta), na grade de 96 -->
+  <rect width="96" height="96" rx="24" fill="#1C1B1F"/>
+  <g transform="translate(-6 -6)">
+    <path fill="#F6C445" fill-rule="evenodd" d="M34 33h40a10 10 0 0 1 10 10v22a10 10 0 0 1-10 10H34a10 10 0 0 1-10-10V43a10 10 0 0 1 10-10Z M34 50a4 4 0 1 0 0 8a4 4 0 1 0 0-8Z"/>
+    <path fill="#1C1B1F" fill-rule="evenodd" d="M48.5 70V41.5a3.5 3.5 0 0 1 7 0v11.89a10 10 0 1 1 0 13.22V70Z M63 55.5a4.5 4.5 0 1 0 0 9a4.5 4.5 0 1 0 0-9Z"/>
   </g>
-  <rect x="12" y="45" width="72" height="6" rx="3" fill="#E8573A"/>
 </svg>

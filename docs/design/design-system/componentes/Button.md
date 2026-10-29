@@ -1,6 +1,6 @@
 # Button
 
-> Referência: Material 3 Expressive (botões que mudam de forma ao pressionar e alternar, grupos conectados, indicador de carregamento que se transforma). Do jeito do Bipa: a pílula vira um retângulo arredondado ao pressionar, e o carregamento são as quatro barras do símbolo pulsando.
+> Referência: Material 3 Expressive (botões que mudam de forma ao pressionar e alternar, grupos conectados, indicador de carregamento que se transforma). Do jeito do Bipa: a pílula vira um retângulo arredondado ao pressionar, e o carregamento são as quatro barras de código pulsando.
 
 Botões em pílula para ações; o principal é amarelo (`brand`) com texto escuro e levemente elevado. O neutro (`--neutral`, em `ink`) é o das ações comuns.
 
@@ -30,7 +30,7 @@ Botões em pílula para ações; o principal é amarelo (`brand`) com texto escu
 
 ## Carregando
 
-As quatro barras do símbolo pulsam em sequência (`.bipa-loader`), em vez de um círculo girando. O mesmo indicador serve para qualquer espera curta no app.
+As quatro barras de código (o símbolo antigo) pulsam em sequência (`.bipa-loader`), em vez de um círculo girando. O mesmo indicador serve para qualquer espera curta no app.
 
 ## Seletor segmentado
 
