@@ -32,6 +32,8 @@ import 'package:bipa/features/shopping_list/presentation/live_camera.dart';
 import 'package:bipa/features/shopping_list/presentation/photograph_tag.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:bipa/features/shopping_list/presentation/start_shopping.dart';
+import 'package:bipa/features/stock/domain/stock_location.dart';
+import 'package:bipa/features/stock/presentation/place_choice_sheet.dart';
 import 'package:bipa/features/stock/presentation/stock_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -176,11 +178,13 @@ class _CameraPageState extends ConsumerState<CameraPage> {
 
   /// [onTap] faz do aviso um botão (com a seta): o granel a escolher, ou a
   /// leitura pela metade a completar. Com [actionLabel], o botão diz o que
-  /// faz no lugar da seta ("Desfazer").
+  /// faz no lugar da seta ("Desfazer"). [onDetailTap] faz do texto um botão
+  /// à parte: o local do item novo (AB9).
   void _showNotice(
     _Notice notice, {
     VoidCallback? onTap,
     String? actionLabel,
+    VoidCallback? onDetailTap,
     Duration duration = const Duration(milliseconds: 2500),
   }) {
     if (!mounted) return;
@@ -188,6 +192,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
       _notice = notice;
       _noticeTap = onTap;
       _noticeAction = actionLabel;
+      _noticeDetailTap = onDetailTap;
     });
     _noticeTimer?.cancel();
     _noticeTimer = Timer(duration, _clearNotice);
@@ -200,6 +205,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
       _notice = null;
       _noticeTap = null;
       _noticeAction = null;
+      _noticeDetailTap = null;
     });
   }
 
@@ -210,6 +216,9 @@ class _CameraPageState extends ConsumerState<CameraPage> {
 
   /// O que o aviso diz que o toque faz, no lugar da seta.
   String? _noticeAction;
+
+  /// O que tocar no texto do aviso faz, quando ele é um botão à parte.
+  VoidCallback? _noticeDetailTap;
 
   /// Tocou no aviso do granel: escolhe o produto pelo nome lido (ADR 0018).
   Future<void> _chooseGranel(TagPriceRead read) async {
@@ -524,8 +533,6 @@ class _CameraPageState extends ConsumerState<CameraPage> {
     final record = ref.read(recordAtHomeProvider);
     final stock = ref.read(stockRepositoryProvider);
     final HomeChange? change;
-    // O local só é dito quando o item nasce neste bipe (AB9): é a hora em que
-    // a sugestão pode estar errada e a pessoa ainda lembra do que bipou.
     final wasNew = bought && await stock.findByProduct(product.id) == null;
     if (!mounted) return;
     try {
@@ -554,36 +561,71 @@ class _CameraPageState extends ConsumerState<CameraPage> {
     final item = await stock.findByProduct(product.id);
     if (!mounted) return;
     final atHome = item?.quantity ?? 0;
-    final placed = wasNew ? item?.location : null;
     final amount = Formatters.quantity(applied.abs());
-    final notice = (
-      icon: applied > 0 ? Icons.add_rounded : Icons.remove_rounded,
-      value: applied > 0 ? l10n.cameraDeltaUp(amount) : l10n.cameraDeltaDown(amount),
-      detail: placed == null
-          ? l10n.cameraAtHome(product.name, Formatters.quantity(atHome))
-          : l10n.cameraAtHomePlaced(product.name, Formatters.quantity(atHome), placed.name),
-      waiting: false,
-    );
-    if (change.list is ListUnchanged) {
-      // Só o estoque mudou, e o aviso já diz isso: o Desfazer fica nele, sem
-      // repetir o fato num snackbar que esconderia o do bipe anterior (D7).
-      final homeChange = change;
-      Future<void> undo() async {
-        _clearNotice();
-        try {
-          await record.undo(homeChange);
-        } on Exception {
-          messenger.showSnackBar(SnackBar(content: Text(l10n.cameraAdjustFailed)));
-        }
+    final homeChange = change;
+    Future<void> undo() async {
+      _clearNotice();
+      try {
+        await record.undo(homeChange);
+      } on Exception {
+        messenger.showSnackBar(SnackBar(content: Text(l10n.cameraAdjustFailed)));
       }
-
-      _showNotice(notice, onTap: () => unawaited(undo()), actionLabel: l10n.undo, duration: _undoFor);
-      return;
     }
-    _showNotice(notice);
+
+    // Só o estoque mudou, e o aviso já diz isso: o Desfazer fica nele, sem
+    // repetir o fato num snackbar que esconderia o do bipe anterior (D7).
+    final undoInNotice = change.list is ListUnchanged;
+
+    // O aviso do bipe. Com o local, o item nasceu agora: o texto diz onde
+    // ele ficou e é um botão que troca o local (AB9), e o aviso volta com o
+    // local novo depois da escolha.
+    void show(StockLocation? place) => _showNotice(
+      (
+        icon: applied > 0 ? Icons.add_rounded : Icons.remove_rounded,
+        value: applied > 0 ? l10n.cameraDeltaUp(amount) : l10n.cameraDeltaDown(amount),
+        detail: place == null
+            ? l10n.cameraAtHome(product.name, Formatters.quantity(atHome))
+            : l10n.cameraAtHomePlaced(product.name, Formatters.quantity(atHome), place.name),
+        waiting: false,
+      ),
+      onTap: undoInNotice ? () => unawaited(undo()) : null,
+      actionLabel: undoInNotice ? l10n.undo : null,
+      onDetailTap: place == null ? null : () => unawaited(_choosePlace(product, place, show)),
+      duration: undoInNotice || place != null ? _undoFor : const Duration(milliseconds: 2500),
+    );
+
+    // O local só é dito quando o item nasce neste bipe (AB9): é a hora em que
+    // a sugestão pode estar errada e a pessoa ainda lembra do que bipou.
+    show(wasNew ? item?.location : null);
+    if (undoInNotice) return;
     // O aviso mostra o estoque; o snackbar diz o que mudou na lista, que é o
     // que o Desfazer também volta.
     showHomeChangeSnackBar(messenger, l10n: l10n, record: record, product: product, change: change);
+  }
+
+  /// Tocou no local do aviso: o tempo do aviso para, a folha "Onde fica"
+  /// abre com o local atual marcado, e o aviso volta com o escolhido. O
+  /// local fica no item (ADR 0021).
+  Future<void> _choosePlace(Product product, StockLocation current, void Function(StockLocation) show) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final stock = ref.read(stockRepositoryProvider);
+    _noticeTimer?.cancel();
+    final chosen = await _withAnalysisPaused(
+      () => pickStockLocation(context, productName: product.name, current: current),
+    );
+    if (!mounted) return;
+    var place = current;
+    if (chosen != null && chosen != current) {
+      try {
+        await stock.setLocation(product.id, chosen);
+        place = chosen;
+      } on Exception {
+        messenger.showSnackBar(SnackBar(content: Text(l10n.stockAdjustFailed)));
+      }
+    }
+    if (!mounted) return;
+    show(place);
   }
 
   /// Quanto tempo o Desfazer fica no aviso do visor, como num snackbar.
@@ -648,6 +690,8 @@ class _CameraPageState extends ConsumerState<CameraPage> {
             countdown: waiting ? _waitFor : null,
             onTap: noticeTap,
             actionLabel: _notice == null ? null : _noticeAction,
+            onDetailTap: _notice == null ? null : _noticeDetailTap,
+            detailActionLabel: l10n.cameraChangePlace,
           ),
           null => null,
         },

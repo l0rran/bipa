@@ -73,6 +73,15 @@
   "placeCleaning": "Limpeza",
   "placeOther": "Outros",
   "stockSheetWhere": "Onde fica guardado",
+  "stockPlaceQuestion": "Onde fica {name}?",
+  "@stockPlaceQuestion": {
+    "description": "Título da folha que escolhe o local de um item de casa (AB9), e nome do grupo de locais em \"Arrumar o que entrou\". Sem artigo, porque o gênero do produto não é conhecido.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "stockSheetTarget": "Ter sempre",
   "stockSheetTargetHelp": "Abaixo disso, o item aparece em \"Acabando\"",
   "stockSheetSeeProduct": "Ver produto e preços",
@@ -1005,6 +1014,10 @@
         "type": "String"
       }
     }
+  },
+  "cameraChangePlace": "trocar o local",
+  "@cameraChangePlace": {
+    "description": "Leitor de tela: o que faz o toque no texto do aviso da câmera que diz onde o item novo ficou (AB9)."
   },
   "cameraNotAtHome": "{name} não está em casa",
   "@cameraNotAtHome": {
