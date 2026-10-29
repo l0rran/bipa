@@ -1541,6 +1541,19 @@
   "@packageMoveAtHome": {
     "description": "Na confirmação de mover a embalagem, quando há lotes dela em casa."
   },
+  "packageByBarcode": "a embalagem de código final {last}",
+  "@packageByBarcode": {
+    "description": "Como a confirmação de mover ou apagar chama uma embalagem sem marca nem tamanho, em vez do código de barras inteiro (G5): \"Mover a embalagem de código final 4321 para Leite Ninho?\".",
+    "placeholders": {
+      "last": {
+        "type": "String"
+      }
+    }
+  },
+  "packageNameless": "a embalagem sem nome",
+  "@packageNameless": {
+    "description": "Como a confirmação de mover ou apagar chama uma embalagem sem marca, tamanho nem código de barras (G5)."
+  },
   "packageMoveConfirm": "Mover",
   "packageMoved": "Embalagem movida para {name}.",
   "@packageMoved": {

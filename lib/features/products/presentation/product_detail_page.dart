@@ -178,6 +178,10 @@ class _ProductView extends ConsumerWidget {
         offerDelete: moved.sourceEmpty,
         navigatorContext: context.mounted ? context : null,
         ref: ref,
+        // Um produto criado agora, só para receber a embalagem, é o que a
+        // pessoa quer ver a seguir (preços, foto): abre-o, sem pôr outro botão
+        // no aviso. Um que já existia ela escolheu na lista e conhece.
+        openProductId: choice is NewProduct ? moved.into.id : null,
       );
     } on DomainException catch (error) {
       showBipaToast(messenger, domainErrorText(l10n, error));
@@ -198,6 +202,7 @@ class _ProductView extends ConsumerWidget {
     required bool offerDelete,
     required BuildContext? navigatorContext,
     required WidgetRef ref,
+    String? openProductId,
   }) async {
     var undone = false;
     // O aviso sai sozinho (com o leitor de tela, quando a pessoa o dispensa),
@@ -211,9 +216,15 @@ class _ProductView extends ConsumerWidget {
         unawaited(undo());
       },
     );
-    if (!offerDelete || navigatorContext == null) return;
-    await controller.closed;
-    if (undone || !navigatorContext.mounted) return;
+    if (navigatorContext == null) return;
+    if (openProductId != null) {
+      // A oferta de apagar o produto vazio espera a volta: quem foi ver o
+      // destino ainda não terminou aqui.
+      await GoRouter.of(navigatorContext).push<void>(Routes.productDetail(openProductId));
+    } else if (offerDelete) {
+      await controller.closed;
+    }
+    if (!offerDelete || undone || !navigatorContext.mounted) return;
     // O produto pode ter ganhado preço ou estoque enquanto o aviso estava na tela.
     if (!await ref.read(productRepositoryProvider).isProductEmpty(product.id)) return;
     if (!navigatorContext.mounted) return;
@@ -275,8 +286,16 @@ class _ProductView extends ConsumerWidget {
     }
   }
 
-  static String _packageName(AppLocalizations l10n, ProductPackage package) =>
-      package.label ?? package.barcode ?? l10n.packageTitle;
+  /// Como a confirmação chama a embalagem: marca e tamanho; sem eles, "a
+  /// embalagem de código final 4321" (o código inteiro é longo demais para
+  /// ler numa frase); sem nada, "a embalagem sem nome" (G5).
+  static String _packageName(AppLocalizations l10n, ProductPackage package) {
+    final label = package.label;
+    if (label != null) return label;
+    final barcode = package.barcode;
+    if (barcode == null) return l10n.packageNameless;
+    return l10n.packageByBarcode(barcode.length > 4 ? barcode.substring(barcode.length - 4) : barcode);
+  }
 
   /// Com mais de uma embalagem, pergunta qual; com uma, é ela.
   static Future<ProductPackage?> _choosePackage(BuildContext context, List<ProductPackage> packages) async {

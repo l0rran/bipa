@@ -21,6 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../helpers/fakes.dart';
 import '../../../helpers/test_database.dart';
@@ -28,7 +29,11 @@ import '../../../helpers/test_database.dart';
 final _now = DateTime(2026, 10, 28, 9);
 
 /// O Leite Ninho bipado no Leite integral, com um preço.
-Future<ProviderContainer> _pumpProduct(WidgetTester tester) async {
+///
+/// Com [withRouter], a tela fica num roteador que mostra "destino" e o id nas
+/// rotas de produto abertas por cima; com [nameless], a embalagem não tem marca
+/// nem tamanho, só o código de barras.
+Future<ProviderContainer> _pumpProduct(WidgetTester tester, {bool withRouter = false, bool nameless = false}) async {
   tester.view
     ..physicalSize = const Size(411, 2000)
     ..devicePixelRatio = 1;
@@ -58,7 +63,7 @@ Future<ProviderContainer> _pumpProduct(WidgetTester tester) async {
         id: 'ninho-400',
         productId: 'integral',
         barcode: '7891000100101',
-        brand: 'Ninho',
+        brand: nameless ? null : 'Ninho',
         unit: MeasureUnit.unit,
         createdAt: _now,
         updatedAt: _now,
@@ -82,16 +87,41 @@ Future<ProviderContainer> _pumpProduct(WidgetTester tester) async {
           ),
         );
   });
+  const supportedLocales = [Locale('pt', 'BR')];
+  const delegates = [AppLocalizations.delegate, ...GlobalMaterialLocalizations.delegates];
+  final router = withRouter
+      ? GoRouter(
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (_, _) => const ProductDetailPage(productId: 'integral'),
+            ),
+            GoRoute(
+              path: '/produto/:id',
+              builder: (_, state) => Scaffold(body: Text('destino ${state.pathParameters['id']}')),
+            ),
+          ],
+        )
+      : null;
+  addTearDown(() => router?.dispose());
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
-      child: MaterialApp(
-        theme: BipaTheme.light,
-        locale: const Locale('pt', 'BR'),
-        supportedLocales: const [Locale('pt', 'BR')],
-        localizationsDelegates: const [AppLocalizations.delegate, ...GlobalMaterialLocalizations.delegates],
-        home: const ProductDetailPage(productId: 'integral'),
-      ),
+      child: router == null
+          ? MaterialApp(
+              theme: BipaTheme.light,
+              locale: const Locale('pt', 'BR'),
+              supportedLocales: supportedLocales,
+              localizationsDelegates: delegates,
+              home: const ProductDetailPage(productId: 'integral'),
+            )
+          : MaterialApp.router(
+              routerConfig: router,
+              theme: BipaTheme.light,
+              locale: const Locale('pt', 'BR'),
+              supportedLocales: supportedLocales,
+              localizationsDelegates: delegates,
+            ),
     ),
   );
   await _settle(tester);
@@ -163,10 +193,11 @@ void main() {
   });
 
   /// Escolhe "Leite Ninho" no "Mover embalagem…" e confirma.
-  Future<void> moveToNinho(WidgetTester tester) async {
+  Future<void> moveToNinho(WidgetTester tester, {bool confirm = true}) async {
     await _openMenuItem(tester, 'Mover embalagem…');
     await tester.tap(find.widgetWithText(ListTile, 'Leite Ninho'));
     await _settle(tester);
+    if (!confirm) return;
     await tester.tap(find.widgetWithText(FilledButton, 'Mover'));
     await _settle(tester);
   }
@@ -218,5 +249,52 @@ void main() {
     await _letSnackBarGo(tester);
     expect(find.text('Leite integral ficou sem embalagem, preço e estoque.'), findsOneWidget);
     expect(find.text('Apagar produto'), findsOneWidget);
+  });
+
+  testWidgets('sem marca nem tamanho, a confirmação chama a embalagem pelo fim do código, não pelo código cru', (
+    tester,
+  ) async {
+    await _pumpProduct(tester, nameless: true);
+
+    await moveToNinho(tester, confirm: false);
+
+    expect(find.text('Mover a embalagem de código final 0101 para Leite Ninho?'), findsOneWidget);
+    expect(find.descendant(of: find.byType(AlertDialog), matching: find.textContaining('7891000100101')), findsNothing);
+  });
+
+  testWidgets('apagar embalagem sem nome também usa o fim do código', (tester) async {
+    await _pumpProduct(tester, nameless: true);
+
+    await _openMenuItem(tester, 'Apagar embalagem');
+
+    expect(find.text('Apagar a embalagem de código final 0101?'), findsOneWidget);
+  });
+
+  testWidgets('mover para um produto novo abre o destino, e a oferta de apagar espera a volta', (tester) async {
+    final container = await _pumpProduct(tester, withRouter: true);
+    final products = container.read(productRepositoryProvider);
+
+    await _openMenuItem(tester, 'Mover embalagem…');
+    await tester.enterText(find.byType(TextField), 'Leite em pó');
+    await _settle(tester);
+    await tester.tap(find.textContaining('Criar'));
+    await _settle(tester);
+    await tester.tap(find.widgetWithText(FilledButton, 'Mover'));
+    await _settle(tester);
+
+    // O destino abre por cima; o aviso continua com um botão só, o "Desfazer".
+    expect(find.textContaining('destino '), findsOneWidget);
+    expect(find.text('Embalagem movida para Leite em pó.'), findsOneWidget);
+    expect(find.text('Desfazer'), findsOneWidget);
+    final moved = await tester.runAsync(() => products.findPackageById('ninho-400'));
+    expect(moved?.productId, isNot('integral'));
+    await _letSnackBarGo(tester);
+    expect(find.text('Apagar produto'), findsNothing);
+
+    // Na volta, o produto vazio ganha a oferta de apagar.
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator).first);
+    navigator.pop();
+    await _settle(tester);
+    expect(find.text('Leite integral ficou sem embalagem, preço e estoque.'), findsOneWidget);
   });
 }
