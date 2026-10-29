@@ -113,6 +113,8 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - Os avisos com Desfazer não sumiam nunca (no Flutter 3.47, aviso com ação persiste por padrão); a linha do "Usei um" ficava parada até alguém tocar.
 - A lista de produtos não manda mais os nomes com acento para o fim ("Açúcar" vem antes de "Arroz").
 - O recorte da etiqueta não junta mais variedades do granel num produto só, o que misturava os preços.
+- Restaurar outro arquivo, ou desfazer uma restauração, não faz mais o backup diário gravar por cima do backup trazido de outro aparelho; "Deixar de lado" só libera essa gravação no dia seguinte, e o backup trazido aparece como "Veio do backup do Google" em vez de afirmar que é de outro celular.
+- A embalagem do catálogo só entra num produto da mesma grandeza (o leite em pó não vai para o "Leite" em litros), um produto com nome de marca ("Ninho", "Nescau") não recebe mais produtos de outro tipo, e o destaque e o "Mais barato" do produto não comparam mais kg com litro.
 - O Desfazer de mover uma embalagem para um produto criado na hora volta ao produto de origem, em vez de deixar a pessoa em "Produto não encontrado".
 - Uma palavra diferente na etiqueta ("LIMAO TAITI" com "Limão tahiti") não esconde mais o produto que já existe; os nomes sugeridos ganham os acentos das palavras de balança ("Pão francês"); o aviso "ficou sem embalagem" espera o Desfazer fechar; e o cartão do relatório de falhas some durante a busca e o filtro do Início.
 - Compra sem lista mostra "8 no carrinho" em vez de "0 de 0 itens".

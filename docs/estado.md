@@ -13,7 +13,7 @@ Retrato de 29/10/2026, para quem continua o trabalho (pessoa ou agente). Leia an
 
 ## Compilado e testado
 
-Em 28/10, no Windows (Flutter 3.47.8, Dart 3.13.7): `flutter analyze` sem problemas, `flutter test` com 1067 testes passando, `flutter build apk --debug` passando e o banco do OCR passando. No Windows, o banco do OCR roda com `py -3 tool/ocr_bench/testes.py`, porque não há `python3`, e `dart format .` falha depois de um build por causa de um caminho longo dentro de `build/`: use `dart format lib test tool`.
+Em 28/10, no Windows (Flutter 3.47.8, Dart 3.13.7): `flutter analyze` sem problemas, `flutter test` com 1130 testes passando, `flutter build apk --debug` passando e o banco do OCR passando. No Windows, o banco do OCR roda com `py -3 tool/ocr_bench/testes.py`, porque não há `python3`, e `dart format .` falha depois de um build por causa de um caminho longo dentro de `build/`: use `dart format lib test tool`.
 
 Os lotes 8 a 12 foram feitos por agentes em paralelo, cada um num worktree, e juntados em `main` com merges. Cada lote terminou com uma revisão de UX: [lote 8](ux/analise-ux-2026-10-28-lote8.md), [lote 9](ux/analise-ux-2026-10-28-lote9.md) , [lote 10](ux/analise-ux-2026-10-28-lote10.md) [lote 11](ux/analise-ux-2026-10-29-lote11.md) e [lote 12](ux/analise-ux-2026-10-29-lote12.md), cujos achados estão no roadmap.
 
@@ -43,7 +43,7 @@ Achados "prováveis" das revisões que ficaram como estão, por serem raros ou p
 
 Os detalhes de cada código estão nas análises de UX (em `ux/`) e no [roadmap](roadmap.md).
 
-1. **Teste no aparelho pelo mantenedor** (lista acima): BK1, BK2, BK3, BK4, G12 e G13 foram corrigidos em 29/10, antes dele. A [revisão do lote 13](ux/analise-ux-2026-10-29-lote13.md) roda em paralelo.
+1. **Teste no aparelho pelo mantenedor** (lista acima), depois das correções da [revisão do lote 13](ux/analise-ux-2026-10-29-lote13.md) (BK5 a BK9, G16 e G17, feitas em 29/10) e da [revisão do lote 14](ux/analise-ux-2026-10-29-lote14.md).
 2. **Depois:** BK3, G13, G14, H20 e G15; AB14, H19 e a escolha de produto no design system (H1), com quadro ou regra antes; o quadro InicioRelatorioFalhas com o texto novo.
 3. **Cobertura do catálogo:** medir com os cupons reais do mantenedor (`tool/catalogo/cobertura.py`). Amostras de sites de terceiros não são usadas.
 4. **Levar ao claude.ai** as mudanças de 28/10 nas cópias do protótipo e do design system.

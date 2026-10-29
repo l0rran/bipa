@@ -138,6 +138,17 @@ Os achados da [análise do lote 12](ux/analise-ux-2026-10-29-lote12.md), feita d
 - [ ] G14 e o resto do G12: o gerador fica só com nomes em português, a grafia da marca e o tamanho por massa ("1 u, 120 g"); a folha mostra "No catálogo: …" (quadro antes)
 - [ ] H20 e G15: atribuição com link, com o texto de "Sobre" no ARB citando as três bases, e a linha "Dados do Open Food Facts" como link para a ficha (quadros antes)
 
+### Ajustes de UX (análise do lote 13, 29/10/2026)
+
+Os achados da [análise do lote 13](ux/analise-ux-2026-10-29-lote13.md), feita depois de BK1 a BK4, G12 e G13.
+
+- [x] BK5 (crítico) e BK7: restaurar e desfazer não adotam o backup pendente de outro aparelho; "Deixar de lado" confere que ainda é o mesmo arquivo
+- [x] BK6: depois de "Deixar de lado", o backup diário só grava por cima no dia seguinte, e o aviso diz isso
+- [x] BK8 e BK9: o toque duplo do TalkBack na linha "Último backup"; o texto "Veio do backup do Google" no lugar de "De outro celular", que errava depois de reinstalar
+- [x] G16 e G17: a embalagem do catálogo só entra num produto da mesma grandeza (leite em pó não vai para "Leite" em litros); o destaque e o "Mais barato" comparam só dentro da grandeza da maioria; produto com nome de marca passa pelas mesmas verificações
+- [ ] Redesenhar os quadros InicioBackupPendente e AjustesBackupPendente com os textos novos (BK6 e BK9)
+- [ ] Revisar a tabela de marcas do catálogo: "Ninho Fases 1+" ainda casa com "Ninho"; a linha da lista de Produtos ainda usa a unidade do produto, não a grandeza da maioria
+
 ## Fase 2: base comunitária
 
 - [ ] ADR de sincronização (servidor, autenticação, conflitos)
