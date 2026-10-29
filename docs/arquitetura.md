@@ -92,7 +92,7 @@ class StockController extends _$StockController {
 ## Erros
 
 - Regras de negócio violadas lançam subclasses de `DomainException`, com mensagem pronta para o usuário.
-- Erros inesperados (banco, câmera, ML Kit) são capturados no controller, viram uma mensagem genérica na tela e são registrados no log. Um serviço de relatório de falhas entra antes da publicação na loja.
+- Erros inesperados (banco, câmera, ML Kit) são capturados no controller, viram uma mensagem genérica na tela e são registrados no log. Falhas não tratadas vão para o Sentry só se a pessoa aceitar, e passam antes por um filtro que tira todo dado dela ([ADR 0025](adr/0025-relatorio-de-falhas-com-sentry-e-consentimento.md)).
 
 ## Interface
 
