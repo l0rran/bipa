@@ -275,6 +275,20 @@
       "w": 390,
       "h": 1040,
       "title": "Proposta: Ajustes, backup"
+    },
+    "RestaurarBackup.dc.html": {
+      "x": 470,
+      "y": 7200,
+      "w": 1160,
+      "h": 970,
+      "title": "Proposta: restaurar um backup (conferir, confirmar, restaurar)"
+    },
+    "RestaurarBackupResultado.dc.html": {
+      "x": 1710,
+      "y": 7200,
+      "w": 1160,
+      "h": 970,
+      "title": "Proposta: restaurar um backup (pronto e erros)"
     }
   },
   "order": [
@@ -315,7 +329,9 @@
     "NavLetraGrandeCompra.dc.html",
     "InicioRelatorioFalhas.dc.html",
     "Ajustes.dc.html",
-    "AjustesBackup.dc.html"
+    "AjustesBackup.dc.html",
+    "RestaurarBackup.dc.html",
+    "RestaurarBackupResultado.dc.html"
   ],
   "notes": {
     "titulo": {

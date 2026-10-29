@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Restaurar um backup: resultado</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="styles/tokens.css">
+<link rel="stylesheet" href="ds/bipa/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600..800&amp;family=Figtree:wght@400..700&amp;family=JetBrains+Mono:wght@500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1C1B22}a:hover{color:#B00E28}
+.screen{position:relative;width:1160px;height:970px;box-sizing:border-box;overflow:hidden;background:var(--surface-sunken);display:grid;grid-template-columns:repeat(3,360px);gap:20px;padding:20px 20px 0}
+.col{display:grid;align-content:start;grid-template-rows:118px auto auto;gap:10px}
+.note h2{margin:0;font:800 18px/24px var(--font-display);color:var(--ink)}
+.note p{margin:4px 0 0;font:500 13px/18px var(--font-body);color:var(--ink-muted)}
+.measure{margin:0;padding:10px 14px;border-radius:14px;background:var(--surface);font:500 13px/18px var(--font-body);color:var(--ink)}
+.measure b{font-weight:700}
+.phone{position:relative;height:700px;border-radius:28px;overflow:hidden;background:var(--ground)}
+
+/* Ajustes, como no quadro AjustesBackup. */
+.behind{display:flex;flex-direction:column;gap:20px;padding:16px}
+.round-btn{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:var(--surface);color:var(--ink)}
+.title{margin:0;font:800 28px/34px var(--font-display);letter-spacing:-0.01em;color:var(--ink)}
+.group{display:grid;gap:8px}
+.group-label{padding:0 4px;font:700 12px/16px var(--font-body);letter-spacing:0.04em;text-transform:uppercase;color:var(--ink-muted)}
+.card{display:grid;border-radius:var(--radius-lg);background:var(--surface)}
+.row{display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:center;gap:16px;min-height:56px;padding:10px 16px;font:600 16px/22px var(--font-body);color:var(--ink)}
+.row + .row{border-top:1px solid var(--line)}
+.row > svg{color:var(--ink)}
+.row-value{text-align:right;white-space:nowrap}
+.row-value strong{display:block;font:800 17px/22px var(--font-display);color:var(--ink)}
+.row-value small{display:block;font:500 13px/18px var(--font-body);color:var(--ink-muted)}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:2}
+
+/* O aviso do app (bipa-toast), como em CapturaUsei: ink, a ação em price e a linha do tempo. Aqui, 10 s. */
+.snack-wrap{position:absolute;left:16px;right:16px;bottom:24px;z-index:4}
+.snack{position:relative;overflow:hidden;display:flex;align-items:center;gap:12px;min-height:48px;padding:6px 8px 6px 16px;border-radius:var(--radius-lg);background:var(--ink);color:var(--ground);box-shadow:var(--shadow-float);font:600 14px/20px var(--font-body)}
+.snack span{flex:1;min-width:0}
+.snack button{min-height:48px;padding:0 12px;border:0;border-radius:var(--radius-pill);background:none;color:var(--price);font:800 14px/18px var(--font-body)}
+.snack i{position:absolute;left:0;bottom:0;width:80%;height:3px;background:var(--price)}
+
+/* A folha do erro: a mesma folha, com o ícone em alert-text antes do título (erro com ícone e mensagem). */
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:4;display:grid;gap:16px;padding:12px 16px 20px;border-radius:28px 28px 0 0;background:var(--surface);box-shadow:var(--shadow-float)}
+.handle{justify-self:center;width:40px;height:5px;border-radius:3px;background:var(--line)}
+.err{display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;align-items:start}
+.err > svg{margin-top:-1px;color:var(--alert-text)}
+.sheet h2{margin:0;font:700 20px/26px var(--font-display);color:var(--ink);text-wrap:balance}
+.sheet p{margin:6px 0 0;font:500 15px/22px var(--font-body);color:var(--ink-muted)}
+.actions{display:grid;gap:4px}
+.actions .bipa-btn{width:100%}
+/* .bipa-root button herda a fonte; os botões daqui voltam ao rótulo do Button (700 15). */
+.bipa-root button.bipa-btn{font:700 15px/1 var(--font-body)}
+.bipa-root .text-btn{height:48px;border:0;border-radius:999px;background:none;font:700 15px/20px var(--font-body);color:var(--ink)}
+</style>
+</helmet>
+<div class="screen bipa-root">
+
+  <!-- Pronto -->
+  <section class="col" aria-labelledby="t-1">
+    <header class="note"><h2 id="t-1">Pronto · o aviso com Desfazer</h2><p>A folha fecha e os dados do arquivo já estão no app. O aviso diz qual backup entrou e traz o Desfazer por 10 s, o tempo longo de ação que mexe em muitos registros: ele volta a reserva do passo 4.</p></header>
+    <div class="phone">
+      <div class="behind">
+        <span class="round-btn" aria-label="Voltar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></span>
+        <h1 class="title">Ajustes</h1>
+        <section class="group" aria-labelledby="g1">
+          <span class="group-label" id="g1">Backup</span>
+          <div class="card">
+            <div class="row" role="group" aria-label="Último backup: hoje, 08:40"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.5"/><path d="M4 4v4.5h4.5"/><path d="M12 8v4l2.8 1.8"/></svg><span>Último backup</span><span class="row-value"><strong>hoje</strong><small>08:40</small></span></div>
+            <div class="row"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18.5a4.5 4.5 0 0 1-.7-8.95 6 6 0 0 1 11.5 1.45A3.75 3.75 0 0 1 17.25 18.5"/><path d="M12 20v-7M9 15.5l3-3 3 3"/></svg><span>Fazer backup agora</span><span></span></div>
+            <div class="row"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 12v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg><span>Salvar uma cópia…</span><span></span></div>
+            <div class="row"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17.5v-6M9.5 14l2.5 2.5 2.5-2.5"/></svg><span>Restaurar de um arquivo…</span><span></span></div>
+          </div>
+        </section>
+      </div>
+      <div class="snack-wrap"><div class="snack" role="status"><span>Backup de 12/10 restaurado</span><button type="button">Desfazer</button><i aria-hidden="true"></i></div></div>
+    </div>
+    <p class="measure"><b>O último backup</b> não muda: o automático seguinte grava o que entrou. Com leitor de tela, o aviso fica até o toque, como todo aviso com Desfazer.</p>
+  </section>
+
+  <!-- Arquivo que não abre -->
+  <section class="col" aria-labelledby="t-2">
+    <header class="note"><h2 id="t-2">Arquivo que não abre</h2><p>Não é um <code>.bipa</code>, falta o manifesto, o hash não bate, ou a integridade, a migração ou o estoque falham na cópia. Uma mensagem só, no lugar da confirmação, com o que fazer.</p></header>
+    <div class="phone">
+      <div class="behind" aria-hidden="true">
+        <span class="round-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span>
+        <h1 class="title">Ajustes</h1>
+        <span class="group-label">Backup</span>
+        <div class="card"><div class="row"><span></span><span>Último backup</span><span class="row-value"><strong>hoje</strong></span></div><div class="row"><span></span><span>Fazer backup agora</span><span></span></div><div class="row"><span></span><span>Salvar uma cópia…</span><span></span></div><div class="row"><span></span><span>Restaurar de um arquivo…</span><span></span></div></div>
+      </div>
+      <div class="dim"></div>
+      <section class="sheet" role="alertdialog" aria-labelledby="s2" aria-describedby="d2">
+        <span class="handle" aria-hidden="true"></span>
+        <div class="err">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M10 12.5l4 4M14 12.5l-4 4"/></svg>
+          <div><h2 id="s2">Não deu para abrir este backup</h2><p id="d2">O arquivo não é um backup do Bipa ou está incompleto. Nada mudou neste celular.</p></div>
+        </div>
+        <div class="actions">
+          <button class="bipa-btn bipa-btn--secondary" type="button"><span>Escolher outro arquivo</span></button>
+          <button class="text-btn" type="button">Fechar</button>
+        </div>
+      </section>
+    </div>
+    <p class="measure"><b>Incompleto</b> é o caso comum: a cópia que não terminou de subir para o Drive. Escolher outro abre de novo o seletor do Android.</p>
+  </section>
+
+  <!-- Bipa mais novo -->
+  <section class="col" aria-labelledby="t-3">
+    <header class="note"><h2 id="t-3">Backup de um Bipa mais novo</h2><p>O <code>schemaVersion</code> do manifesto, ou o <code>user_version</code> do banco, é maior que o do app: a restauração recusa antes de abrir (ADR 0023). A saída é atualizar.</p></header>
+    <div class="phone">
+      <div class="behind" aria-hidden="true">
+        <span class="round-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span>
+        <h1 class="title">Ajustes</h1>
+        <span class="group-label">Backup</span>
+        <div class="card"><div class="row"><span></span><span>Último backup</span><span class="row-value"><strong>hoje</strong></span></div><div class="row"><span></span><span>Fazer backup agora</span><span></span></div><div class="row"><span></span><span>Salvar uma cópia…</span><span></span></div><div class="row"><span></span><span>Restaurar de um arquivo…</span><span></span></div></div>
+      </div>
+      <div class="dim"></div>
+      <section class="sheet" role="alertdialog" aria-labelledby="s3" aria-describedby="d3">
+        <span class="handle" aria-hidden="true"></span>
+        <div class="err">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v10M7.5 8.5L12 13l4.5-4.5"/><rect x="4" y="15" width="16" height="6" rx="2"/></svg>
+          <div><h2 id="s3">Este backup é de um Bipa mais novo</h2><p id="d3">Atualize o Bipa neste celular e escolha o arquivo de novo. Nada mudou aqui.</p></div>
+        </div>
+        <div class="actions">
+          <button class="bipa-btn bipa-btn--secondary" type="button"><span>Atualizar o Bipa</span></button>
+          <button class="text-btn" type="button">Fechar</button>
+        </div>
+      </section>
+    </div>
+    <p class="measure"><b>"Atualizar o Bipa"</b> abre a página do app na loja de onde ele veio. O mesmo vale para um backup com um valor gravado que esta versão não conhece (B4).</p>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1160,"height":970}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

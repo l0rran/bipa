@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Restaurar um backup</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="styles/tokens.css">
+<link rel="stylesheet" href="ds/bipa/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600..800&amp;family=Figtree:wght@400..700&amp;family=JetBrains+Mono:wght@500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1C1B22}a:hover{color:#B00E28}
+.screen{position:relative;width:1160px;height:970px;box-sizing:border-box;overflow:hidden;background:var(--surface-sunken);display:grid;grid-template-columns:repeat(3,360px);gap:20px;padding:20px 20px 0}
+.col{display:grid;align-content:start;grid-template-rows:118px auto auto;gap:10px}
+.note h2{margin:0;font:800 18px/24px var(--font-display);color:var(--ink)}
+.note p{margin:4px 0 0;font:500 13px/18px var(--font-body);color:var(--ink-muted)}
+.measure{margin:0;padding:10px 14px;border-radius:14px;background:var(--surface);font:500 13px/18px var(--font-body);color:var(--ink)}
+.measure b{font-weight:700}
+.phone{position:relative;height:700px;border-radius:28px;overflow:hidden;background:var(--ground)}
+
+/* Ajustes ao fundo, como no quadro AjustesBackup. */
+.behind{display:flex;flex-direction:column;gap:20px;padding:16px}
+.round-btn{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:var(--surface);color:var(--ink)}
+.title{margin:0;font:800 28px/34px var(--font-display);letter-spacing:-0.01em;color:var(--ink)}
+.group-label{padding:0 4px;font:700 12px/16px var(--font-body);letter-spacing:0.04em;text-transform:uppercase;color:var(--ink-muted)}
+.card{display:grid;border-radius:var(--radius-lg);background:var(--surface)}
+.row{display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:center;gap:16px;min-height:56px;padding:10px 16px;font:600 16px/22px var(--font-body);color:var(--ink)}
+.row + .row{border-top:1px solid var(--line)}
+.row b{font:800 17px/22px var(--font-display)}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:2}
+
+/* A folha: a mesma das outras folhas do protótipo (raio 28 em cima, alça, título 20/26). */
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:4;display:grid;gap:16px;padding:12px 16px 20px;border-radius:28px 28px 0 0;background:var(--surface);box-shadow:var(--shadow-float)}
+.handle{justify-self:center;width:40px;height:5px;border-radius:3px;background:var(--line)}
+.sheet h2{margin:0;display:flex;align-items:center;gap:10px;font:700 20px/26px var(--font-display);color:var(--ink);text-wrap:balance}
+.sheet h2 .bipa-loader{height:18px;color:var(--ink-muted)}
+.file{margin:-10px 0 0;font:500 14px/20px var(--font-body);color:var(--ink-muted);overflow-wrap:anywhere}
+.sheet .bipa-facts{--facts:3;padding-top:12px}
+.here{margin:-4px 0 0;font:500 14px/20px var(--font-body);color:var(--ink-muted)}
+.here b{font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.warn{margin:0;font:500 15px/22px var(--font-body);color:var(--ink)}
+.actions{display:grid;gap:4px}
+.actions .bipa-btn{width:100%}
+/* .bipa-root button herda a fonte; os botões daqui voltam ao rótulo do Button (700 15). */
+.bipa-root button.bipa-btn{font:700 15px/1 var(--font-body)}
+.bipa-root .text-btn{height:48px;border:0;border-radius:999px;background:none;font:700 15px/20px var(--font-body);color:var(--ink)}
+/* O botão neutro carregando: as quatro barras do design system no lugar do rótulo, sem mudar de largura. */
+.bipa-btn--neutral .bipa-loader{height:20px;color:var(--ground)}
+.bipa-btn--neutral[aria-busy="true"]{cursor:default}
+/* Esqueleto dos números enquanto o arquivo é conferido (só depois de 200 ms). */
+.sk{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding-top:12px;border-top:1px solid var(--line)}
+.sk div{display:grid;gap:6px}
+.sk i{display:block;height:22px}
+.sk i + i{height:12px;width:70%}
+</style>
+</helmet>
+<div class="screen bipa-root">
+
+  <!-- 1 · Conferindo o arquivo -->
+  <section class="col" aria-labelledby="t-1">
+    <header class="note"><h2 id="t-1">1 · Conferindo o arquivo</h2><p>Depois do seletor de arquivos do Android, a folha abre e o Bipa confere tudo numa cópia, antes de perguntar: manifesto, hash, integridade, migração e estoque (passos 1 a 3 do ADR 0023). Nada muda no celular.</p></header>
+    <div class="phone">
+      <div class="behind" aria-hidden="true">
+        <span class="round-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span>
+        <h1 class="title">Ajustes</h1>
+        <span class="group-label">Backup</span>
+        <div class="card"><div class="row"><span></span><span>Último backup</span><b>hoje</b></div><div class="row"><span></span><span>Fazer backup agora</span><span></span></div><div class="row"><span></span><span>Salvar uma cópia…</span><span></span></div><div class="row"><span></span><span>Restaurar de um arquivo…</span><span></span></div></div>
+      </div>
+      <div class="dim"></div>
+      <section class="sheet" role="dialog" aria-labelledby="s1" aria-busy="true">
+        <span class="handle" aria-hidden="true"></span>
+        <h2 id="s1">Conferindo o arquivo <span class="bipa-loader" aria-hidden="true"><i></i><i></i><i></i><i></i></span></h2>
+        <p class="file">bipa-2026-10-12.bipa</p>
+        <div class="sk" aria-hidden="true"><div><i class="bipa-skeleton"></i><i class="bipa-skeleton"></i></div><div><i class="bipa-skeleton"></i><i class="bipa-skeleton"></i></div><div><i class="bipa-skeleton"></i><i class="bipa-skeleton"></i></div></div>
+        <div class="actions">
+          <button class="bipa-btn bipa-btn--neutral" type="button" disabled><span>Substituir pelo backup</span></button>
+          <button class="text-btn" type="button">Cancelar</button>
+        </div>
+      </section>
+    </div>
+    <p class="measure"><b>Leva</b> um ou dois segundos, mais com muitas fotos. O esqueleto só aparece depois de 200 ms; o leitor de tela ouve "Conferindo o arquivo". Cancelar apaga a cópia e não muda nada.</p>
+  </section>
+
+  <!-- 2 · Confirmar -->
+  <section class="col" aria-labelledby="t-2">
+    <header class="note"><h2 id="t-2">2 · O que tem no arquivo</h2><p>Os números do arquivo, conferidos, e numa linha os deste celular, para ver se o backup é mais velho que a casa. O texto diz que tudo é trocado, e o botão é o neutro, com verbo e objeto, como "Apagar mercado".</p></header>
+    <div class="phone">
+      <div class="behind" aria-hidden="true">
+        <span class="round-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span>
+        <h1 class="title">Ajustes</h1>
+        <span class="group-label">Backup</span>
+        <div class="card"><div class="row"><span></span><span>Último backup</span><b>hoje</b></div><div class="row"><span></span><span>Fazer backup agora</span><span></span></div><div class="row"><span></span><span>Salvar uma cópia…</span><span></span></div><div class="row"><span></span><span>Restaurar de um arquivo…</span><span></span></div></div>
+      </div>
+      <div class="dim"></div>
+      <section class="sheet" role="dialog" aria-labelledby="s2" aria-describedby="w2">
+        <span class="handle" aria-hidden="true"></span>
+        <h2 id="s2">Restaurar o backup de 12/10?</h2>
+        <div class="bipa-facts">
+          <div class="bipa-fact"><span class="bipa-fact__value">214</span><span class="bipa-fact__label">produtos</span></div>
+          <div class="bipa-fact"><span class="bipa-fact__value">1.380</span><span class="bipa-fact__label">preços</span></div>
+          <div class="bipa-fact"><span class="bipa-fact__value">56</span><span class="bipa-fact__label">itens em casa</span></div>
+        </div>
+        <p class="here">Neste celular agora: <b>230</b> produtos e <b>1.452</b> preços.</p>
+        <p class="warn" id="w2">Tudo o que está neste celular (produtos, preços, estoque, lista e compras) é trocado pelo que está no arquivo.</p>
+        <div class="actions">
+          <a class="bipa-btn bipa-btn--neutral" href="RestaurarBackupResultado.dc.html"><span>Substituir pelo backup</span></a>
+          <button class="text-btn" type="button">Cancelar</button>
+        </div>
+      </section>
+    </div>
+    <p class="measure"><b>Leitor de tela:</b> o título, os três números com o rótulo ("214 produtos"), a linha deste celular e o aviso, nessa ordem. Arrastar para baixo ou voltar é Cancelar.</p>
+  </section>
+
+  <!-- 3 · Restaurando -->
+  <section class="col" aria-labelledby="t-3">
+    <header class="note"><h2 id="t-3">3 · Restaurando</h2><p>Só a troca dos arquivos (passos 4 e 5): o banco de agora vira a reserva, e o do arquivo entra no lugar. O botão vira o carregando do design system, sem mudar de largura; a folha não fecha e o Cancelar sai.</p></header>
+    <div class="phone">
+      <div class="behind" aria-hidden="true">
+        <span class="round-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span>
+        <h1 class="title">Ajustes</h1>
+        <span class="group-label">Backup</span>
+        <div class="card"><div class="row"><span></span><span>Último backup</span><b>hoje</b></div><div class="row"><span></span><span>Fazer backup agora</span><span></span></div><div class="row"><span></span><span>Salvar uma cópia…</span><span></span></div><div class="row"><span></span><span>Restaurar de um arquivo…</span><span></span></div></div>
+      </div>
+      <div class="dim"></div>
+      <section class="sheet" role="dialog" aria-labelledby="s3" aria-busy="true">
+        <span class="handle" aria-hidden="true" style="visibility:hidden"></span>
+        <h2 id="s3">Restaurar o backup de 12/10?</h2>
+        <div class="bipa-facts">
+          <div class="bipa-fact"><span class="bipa-fact__value">214</span><span class="bipa-fact__label">produtos</span></div>
+          <div class="bipa-fact"><span class="bipa-fact__value">1.380</span><span class="bipa-fact__label">preços</span></div>
+          <div class="bipa-fact"><span class="bipa-fact__value">56</span><span class="bipa-fact__label">itens em casa</span></div>
+        </div>
+        <p class="here">Neste celular agora: <b>230</b> produtos e <b>1.452</b> preços.</p>
+        <p class="warn">Tudo o que está neste celular (produtos, preços, estoque, lista e compras) é trocado pelo que está no arquivo.</p>
+        <div class="actions">
+          <button class="bipa-btn bipa-btn--neutral" type="button" aria-busy="true" aria-label="Restaurando"><span class="bipa-loader" aria-hidden="true"><i></i><i></i><i></i><i></i></span></button>
+          <span style="height:48px" aria-hidden="true"></span>
+        </div>
+      </section>
+    </div>
+    <p class="measure"><b>Se a troca falhar</b>, a reserva volta, a folha fecha e o aviso diz "Não deu para restaurar. Seus dados continuam como estavam."</p>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1160,"height":970}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
