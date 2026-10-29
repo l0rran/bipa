@@ -11,6 +11,20 @@ import 'package:drift/drift.dart';
 // * IDs são UUIDs gerados no aparelho, para sincronizar sem colisões.
 // * `syncedAt` marca o que já foi enviado à base comunitária (nulo = pendente).
 //   Só dados compartilháveis têm essa coluna: estoque é sempre privado.
+// * O banco é o formato do backup `.bipa` (ADR 0023): o que está gravado
+//   nele precisa abrir em qualquer versão futura do app. Por isso:
+//   - as colunas `textEnum` gravam o nome do valor do enum: `products.unit`,
+//     `product_packages.unit`, `price_observations.condition_kind` e
+//     `source`, `trip_prices.source`, `stock_items.location`,
+//     `stock_movements.reason`, `market_aisles.aisle` e
+//     `remembered_locations.location`. Acrescentar um valor não exige
+//     migração (mas um app mais antigo não lê o valor novo); renomear ou
+//     tirar um exige uma migração que reescreva as linhas;
+//   - o JSON de `trip_prices.other_offers` (`PriceOffersConverter`) segue a
+//     mesma regra: acrescentar uma chave opcional é livre; renomear ou tirar
+//     uma chave, ou um valor de `condition`, exige migração;
+//   - o teste `test/core/database/stored_names_test.dart` fixa esses nomes
+//     e falha quando um deles muda.
 
 /// O que se usa em casa (ADR 0013). Até o esquema v6, código, marca e
 /// tamanho ficavam aqui; no v7 passaram para [ProductPackages].
@@ -205,7 +219,7 @@ class CartItems extends Table {
 
 /// A ordem das seções em cada mercado, aprendida com as compras (ADR 0014,
 /// esquema v8). Privada, como a lista. A seção é gravada pelo nome do
-/// [Aisle]: renomear um valor do enum exige migração.
+/// [Aisle], como os outros enums (veja as convenções no começo do arquivo).
 @DataClassName('MarketAisleRow')
 class MarketAisles extends Table {
   TextColumn get marketId => text().references(Markets, #id, onDelete: KeyAction.cascade)();
