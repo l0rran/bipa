@@ -117,6 +117,17 @@ class FakeBackupController extends BackupController {
     return (onUndo ?? () async => true)();
   }
 
+  /// Quantas vezes a reserva do "Desfazer" foi descartada (o aviso saiu sem
+  /// o "Desfazer"). Fora de [calls], para não mudar o que os testes já
+  /// conferem.
+  var discarded = 0;
+
+  @override
+  Future<void> discardRestoreUndo(int epoch) async {
+    discarded++;
+    state = AsyncData((state.value ?? initial).copyWith(canUndoRestore: false));
+  }
+
   @override
   Future<void> dismissRestoreOffer([BackupInfo? offer]) async {
     calls.add('dismiss');

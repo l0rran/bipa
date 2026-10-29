@@ -44,9 +44,6 @@ final backupAppVersionProvider = Provider<Future<String> Function()>(
   },
 );
 
-/// Quanto tempo o "Desfazer" de uma restauração fica disponível.
-final restoreUndoWindowProvider = Provider<Duration>((ref) => RestoreBackup.undoWindow);
-
 final createBackupProvider = Provider<CreateBackup>(
   (ref) => CreateBackup(
     database: ref.watch(backupDatabaseProvider),
@@ -112,13 +109,11 @@ class BackupController extends AsyncNotifier<BackupState> {
   /// A operação em andamento; a próxima espera por ela.
   Future<void> _running = Future.value();
   var _busy = false;
-  Timer? _undoTimer;
+  var _restoreEpoch = 0;
 
   @override
-  Future<BackupState> build() async {
-    ref.onDispose(() => _undoTimer?.cancel());
-    return BackupState(lastBackup: await ref.read(readLatestBackupProvider)(), restoreOffer: await _offer());
-  }
+  Future<BackupState> build() async =>
+      BackupState(lastBackup: await ref.read(readLatestBackupProvider)(), restoreOffer: await _offer());
 
   /// O `ultimo.bipa` mais recente, ou `null`.
   BackupInfo? get lastBackupInfo => state.value?.lastBackup;
@@ -171,25 +166,47 @@ class BackupController extends AsyncNotifier<BackupState> {
   Future<void> cancelRestore(PreparedRestore prepared) =>
       _serial(() => ref.read(restoreBackupProvider).cancel(prepared));
 
-  /// "Substituir pelo backup": troca os dados e abre o prazo do "Desfazer".
+  /// "Substituir pelo backup": troca os dados e guarda a reserva do
+  /// "Desfazer". A reserva vale enquanto o aviso da restauração vale: quem
+  /// mostra o aviso chama [discardRestoreUndo] quando ele sai sem o
+  /// "Desfazer" (ou, se o app fechar antes, a abertura seguinte a apaga).
+  /// Não há relógio aqui: o aviso espera a pessoa com leitor de tela, estica
+  /// com o "Tempo para agir" e para com o dedo em cima (BK2).
   Future<void> applyRestore(PreparedRestore prepared) => _serial(() async {
     final restore = ref.read(restoreBackupProvider);
     await restore.apply(prepared);
-    _undoTimer?.cancel();
-    _undoTimer = Timer(ref.read(restoreUndoWindowProvider), () => unawaited(_closeUndo()));
+    _restoreEpoch++;
     await _refresh(canUndoRestore: true);
   });
+
+  /// Qual restauração guarda a reserva de agora. Quem mostra o aviso lê o
+  /// número depois de [applyRestore] e o devolve em [discardRestoreUndo].
+  int get restoreEpoch => _restoreEpoch;
 
   /// Confere e restaura [file] de uma vez (sem a folha no meio).
   Future<void> restore(File file) async => applyRestore(await prepareRestore(file));
 
   /// "Desfazer": volta os dados de antes da restauração. Devolve `false` se
-  /// o prazo já passou.
+  /// a reserva já não existe.
   Future<bool> undoRestore() => _serial(() async {
-    _undoTimer?.cancel();
     final undone = await ref.read(restoreBackupProvider).undo();
     await _refresh(canUndoRestore: false);
     return undone;
+  });
+
+  /// O aviso da restauração [epoch] saiu sem o "Desfazer" (ou não havia
+  /// "Desfazer" a oferecer): a reserva é descartada. Não faz nada se outra
+  /// restauração já tomou o lugar dela, porque o aviso novo cobre a reserva
+  /// nova. Uma falha fica só no log: a abertura seguinte a apaga.
+  Future<void> discardRestoreUndo(int epoch) => _serial(() async {
+    if (epoch != _restoreEpoch) return;
+    try {
+      await ref.read(restoreBackupProvider).discardUndo();
+    } on Exception catch (error) {
+      debugPrint('Descartar a reserva da restauração falhou: $error');
+      return;
+    }
+    await _update((current) => current.copyWith(canUndoRestore: false));
   });
 
   /// "Começar do zero", na tela: o cartão do celular novo some na hora, mas
@@ -214,11 +231,6 @@ class BackupController extends AsyncNotifier<BackupState> {
     final dismissed = offer ?? pendingRestoreOffer;
     if (dismissed != null) await ref.read(restoreOfferProvider).dismiss(dismissed);
     await _update((current) => current.copyWith(clearOffer: true));
-  });
-
-  Future<void> _closeUndo() => _serial(() async {
-    await ref.read(restoreBackupProvider).discardUndo();
-    await _update((current) => current.copyWith(canUndoRestore: false));
   });
 
   Future<BackupInfo?> _offer() => ref.read(restoreOfferProvider)();

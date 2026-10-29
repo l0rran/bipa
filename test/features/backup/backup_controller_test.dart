@@ -56,7 +56,6 @@ void main() {
         backupAppVersionProvider.overrideWithValue(() async => '0.1.0+1'),
         clockProvider.overrideWithValue(() => at),
         idGeneratorProvider.overrideWithValue(SequentialIdGenerator()),
-        restoreUndoWindowProvider.overrideWithValue(const Duration(milliseconds: 50)),
       ],
     );
   });
@@ -121,17 +120,51 @@ void main() {
     names.close();
   });
 
-  test('depois do prazo, o desfazer não vale mais', () async {
+  test('o desfazer não tem relógio próprio: vale enquanto o aviso não o descarta', () async {
     await addProduct('arroz', 'Arroz');
     final backup = (await controller().createBackup())!;
     await addProduct('feijao', 'Feijão');
 
     await controller().restore(File(backup.path));
+    // Muito além dos 10 s do aviso: quem decide é o aviso (BK2).
     await Future<void>.delayed(const Duration(milliseconds: 200));
+
+    expect(container.read(backupProvider).value?.canUndoRestore, isTrue);
+    expect(await controller().undoRestore(), isTrue);
+    final db = container.read(appDatabaseProvider);
+    expect((await db.select(db.products).get()).map((row) => row.name), ['Arroz', 'Feijão']);
+  });
+
+  test('o aviso saiu sem o desfazer: a reserva é descartada', () async {
+    await addProduct('arroz', 'Arroz');
+    final backup = (await controller().createBackup())!;
+    await addProduct('feijao', 'Feijão');
+
+    await controller().restore(File(backup.path));
+    await controller().discardRestoreUndo(controller().restoreEpoch);
 
     expect(container.read(backupProvider).value?.canUndoRestore, isFalse);
     expect(await controller().undoRestore(), isFalse);
     final db = container.read(appDatabaseProvider);
     expect((await db.select(db.products).get()).map((row) => row.name), ['Arroz']);
+  });
+
+  test('o aviso de uma restauração antiga não descarta a reserva da nova', () async {
+    await addProduct('arroz', 'Arroz');
+    final backup = (await controller().createBackup())!;
+    await addProduct('feijao', 'Feijão');
+
+    await controller().restore(File(backup.path));
+    final first = controller().restoreEpoch;
+    await addProduct('leite', 'Leite');
+    await controller().restore(File(backup.path));
+
+    // O aviso novo tira o antigo, que avisa que saiu.
+    await controller().discardRestoreUndo(first);
+
+    expect(container.read(backupProvider).value?.canUndoRestore, isTrue);
+    expect(await controller().undoRestore(), isTrue);
+    final db = container.read(appDatabaseProvider);
+    expect((await db.select(db.products).get()).map((row) => row.name), unorderedEquals(['Arroz', 'Leite']));
   });
 }

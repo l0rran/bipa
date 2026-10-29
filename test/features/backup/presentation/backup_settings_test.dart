@@ -259,6 +259,27 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
       expect(find.text('Desfazer'), findsNothing);
       expect(backup.calls, isNot(contains('undo')));
+      expect(backup.discarded, 1, reason: 'o aviso saiu sem o Desfazer: a reserva sai');
+    });
+
+    testWidgets('desfazer não descarta a reserva', (tester) async {
+      final backup = FakeBackupController();
+      await pumpSettings(
+        tester,
+        backup: backup,
+        files: FakeBackupFiles(picked: picked()),
+      );
+
+      await chooseFile(tester);
+      await tester.pump();
+      await tester.tap(find.text('Substituir pelo backup'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.tap(find.text('Desfazer'));
+      await finishToasts(tester);
+
+      expect(backup.calls, contains('undo'));
+      expect(backup.discarded, 0);
     });
 
     testWidgets('avisa quantos itens tiveram a quantidade acertada pelos lotes', (tester) async {

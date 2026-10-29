@@ -51,9 +51,11 @@ final class PreparedRestore {
 /// 4. só em [apply] o banco do app fecha, o banco e as fotos de agora vão
 ///    para uma reserva, os do backup entram no lugar e o banco reabre.
 ///
-/// A reserva permite [undo] por [undoWindow] (o "Desfazer" do aviso); depois
-/// dele, [discardUndo] a apaga. Se o app fechar antes, a próxima abertura a
-/// apaga. O `synced_at` fica como estava no backup.
+/// A reserva permite [undo] (o "Desfazer" do aviso) até [discardUndo] a
+/// apagar, o que quem mostra o aviso faz quando ele sai sem o "Desfazer". O
+/// prazo é o do aviso, não um relógio daqui: com leitor de tela, o aviso
+/// espera a pessoa. Se o app fechar antes, a próxima abertura a apaga. O
+/// `synced_at` fica como estava no backup.
 final class RestoreBackup {
   const RestoreBackup({
     required BackupDatabase database,
@@ -62,11 +64,6 @@ final class RestoreBackup {
   }) : _database = database,
        _archive = archive,
        _storage = storage;
-
-  /// Quanto tempo o "Desfazer" da restauração fica no aviso: o tempo longo
-  /// de uma ação que mexe em muitos registros (protótipo
-  /// RestaurarBackupResultado).
-  static const undoWindow = Duration(seconds: 10);
 
   final BackupDatabase _database;
   final BackupArchive _archive;
@@ -150,6 +147,6 @@ final class RestoreBackup {
   /// Devolve `false` se a reserva já não existe.
   Future<bool> undo() => _storage.undoReplace();
 
-  /// Fim do prazo do "Desfazer": apaga a reserva.
+  /// Fim do "Desfazer" (o aviso saiu sem ele): apaga a reserva.
   Future<void> discardUndo() => _storage.discardReserve();
 }

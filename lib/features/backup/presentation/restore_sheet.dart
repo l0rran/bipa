@@ -65,7 +65,7 @@ Future<void> _discard(PickedBackup? picked) async {
 /// celular antes de "Substituir pelo backup".
 ///
 /// Restaurado, a folha fecha e o aviso "Backup de 12/10 restaurado" traz o
-/// "Desfazer" por 10 s, se [offerUndo].
+/// "Desfazer" enquanto o aviso fica na tela, se [offerUndo].
 Future<void> showRestoreSheet(
   BuildContext context, {
   required Future<PreparedRestore> preparing,
@@ -110,6 +110,12 @@ void clearProductImageCache() {
 
 /// Troca os dados pelos de [prepared] e avisa, com o "Desfazer" se
 /// [offerUndo]. Devolve `false` se a troca falhou (já avisado).
+///
+/// A reserva do "Desfazer" vive enquanto o aviso vive (BK2): o aviso segue a
+/// regra do tempo do `bipa-toast` (espera a pessoa com leitor de tela, estica
+/// com o "Tempo para agir" e para com o dedo em cima), e a reserva só é
+/// descartada quando ele sai sem o "Desfazer". Sem "Desfazer" a oferecer, ela
+/// é descartada na hora.
 Future<bool> applyRestoreAndNotify({
   required BackupController backup,
   required PreparedRestore prepared,
@@ -123,25 +129,40 @@ Future<bool> applyRestoreAndNotify({
     showBipaToast(messenger, l10n.backupRestoreFailed);
     return false;
   }
+  final epoch = backup.restoreEpoch;
   clearProductImageCache();
-  showBipaToast(
+  if (!offerUndo) {
+    showBipaToast(
+      messenger,
+      l10n.backupRestored(BackupLabels.date(prepared.manifest.createdAt)),
+      duration: BipaToastDuration.long,
+    );
+    unawaited(backup.discardRestoreUndo(epoch));
+    return true;
+  }
+  final notice = showBipaToast(
     messenger,
     l10n.backupRestored(BackupLabels.date(prepared.manifest.createdAt)),
-    actionLabel: offerUndo ? l10n.undo : null,
-    onAction: offerUndo
-        ? () => unawaited(() async {
-            final bool undone;
-            try {
-              undone = await backup.undoRestore();
-            } on Exception {
-              showBipaToast(messenger, l10n.backupRestoreFailed);
-              return;
-            }
-            clearProductImageCache();
-            if (!undone) showBipaToast(messenger, l10n.backupUndoExpired);
-          }())
-        : null,
+    actionLabel: l10n.undo,
+    onAction: () => unawaited(() async {
+      final bool undone;
+      try {
+        undone = await backup.undoRestore();
+      } on Exception {
+        showBipaToast(messenger, l10n.backupRestoreFailed);
+        return;
+      }
+      clearProductImageCache();
+      if (!undone) showBipaToast(messenger, l10n.backupUndoExpired);
+    }()),
     duration: BipaToastDuration.long,
+  );
+  // O aviso saiu sem o "Desfazer" (o tempo acabou, a pessoa o dispensou ou
+  // outro aviso tomou o lugar): ninguém mais pode desfazer.
+  unawaited(
+    notice.closed.then((reason) {
+      if (reason != SnackBarClosedReason.action) unawaited(backup.discardRestoreUndo(epoch));
+    }),
   );
   return true;
 }

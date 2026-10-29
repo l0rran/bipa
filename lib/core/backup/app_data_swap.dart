@@ -40,8 +40,9 @@ String joinPath(String first, String second, [String? third, String? fourth]) =>
 /// [recover], chamado antes de abrir o banco, devolve os arquivos antigos.
 ///
 /// Terminada a troca, a reserva fica, para o "Desfazer" da restauração
-/// ([undo]), até [discardReserve]: no fim do prazo do aviso, ou na primeira
-/// abertura do banco depois de o app fechar ([AppDataSwap.atStartup]).
+/// ([undo]), até [discardReserve]: quando o aviso da restauração sai sem o
+/// "Desfazer", ou na primeira abertura do banco depois de o app fechar
+/// ([AppDataSwap.atStartup]).
 ///
 /// O banco precisa estar fechado durante a troca e o [undo].
 final class AppDataSwap {
