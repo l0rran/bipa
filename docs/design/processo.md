@@ -170,6 +170,23 @@ O problema: **conferir onde cada coisa ficou depois da primeira carga, sem abrir
 - A linha é a do estoque (miniatura, nome e medidor). Tocar abre o local e o "ter sempre", como o editor da linha do Início, um item por vez.
 - Cada escolha salva na hora, por isso não há "Salvar": "Pronto" fecha, e arrastar para baixo também.
 
+### Quando aparece "Arrumar o que entrou" (outubro de 2026)
+
+O problema: **a folha só aparece com três ou mais itens novos** (AB13). Com bipes rápidos, o aviso de cada item novo dura até o bipe seguinte, uns 2 s; com um ou dois novos, nada confere o local ao fechar. E, no caso oposto, a folha mostra também os itens cujo local a pessoa já trocou no aviso.
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **Adobe Scan** (no benchmark de "Arrumar o que entrou") | A revisão do lote aparece ao terminar as capturas, com o que foi capturado | A revisão ao fechar a câmera | Ela só mostra o que ninguém conferiu, e não aparece quando não há nada (proposta A) |
+| **Material Design** ([folhas inferiores](https://m3.material.io/components/bottom-sheets/guidelines) e [snackbars](https://m3.material.io/components/snackbar/guidelines)) | A folha modal interrompe e pede atenção; o snackbar informa sem interromper, com uma ação | Para pouca coisa, um aviso com uma ação; para muita, a folha (proposta B) | O aviso diz os nomes e o local, para a pessoa decidir sem abrir nada |
+| **Pantry Check** (no benchmark de "Arrumar o que entrou") | Pede local e validade depois de bipar vários itens, sempre | — | Não perguntar o que já foi respondido: o item com o local escolhido no aviso sai da conta |
+
+**Do nosso jeito:** duas propostas, no quadro [ArrumarEntrouRegra](prototipo/telas/ArrumarEntrouRegra.png). Nas duas, o item cujo local foi escolhido no aviso sai da conta, e um bipe desfeito também, como hoje.
+
+- **A, a folha só com o que ninguém conferiu:** entra o item novo cujo aviso foi trocado por outro bipe antes dos 4 s e cujo local ninguém tocou, sem mínimo. Sem nada assim, a câmera fecha direto. Uma superfície só, e a regra diz quando a pessoa provavelmente não viu o local.
+- **B, um aviso para poucos e a folha para muitos:** com um ou dois itens novos sem o local escolhido, a câmera fecha e o Início mostra o `bipa-toast` "Atum e Lasanha ficaram na Despensa", com "Conferir", que abre a escolha. Com três ou mais, a folha de hoje. Interrompe menos, mas o aviso também some em 4 s.
+
+Recomendação: A, porque não depende de a pessoa ver mais um aviso que some.
+
 ### Granel na bandeja (outubro de 2026)
 
 O problema: **o preço por kg do granel não pode parecer o valor da linha** (D9). Na bandeja, "R$ 8,99/kg" ocupava a etiqueta com o contorno do preço estimado, que entra no total, e ficava fora dele.
