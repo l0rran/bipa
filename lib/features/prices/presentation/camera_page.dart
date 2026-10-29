@@ -112,7 +112,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
   ({Product product, ProductPackage? package})? _held;
 
   _Notice? _notice;
-  Timer? _noticeTimer;
+  final _noticeTimer = BipaNoticeTimer();
 
   /// Os produtos que nasceram em casa nesta câmera de "Comprei", para a
   /// folha "Arrumar o que entrou" ao fechar (AB5).
@@ -152,7 +152,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
 
   @override
   void dispose() {
-    _noticeTimer?.cancel();
+    _noticeTimer.cancel();
     super.dispose();
   }
 
@@ -202,12 +202,19 @@ class _CameraPageState extends ConsumerState<CameraPage> {
       _noticeAction = actionLabel;
       _noticeDetailTap = onDetailTap;
     });
-    _noticeTimer?.cancel();
-    _noticeTimer = Timer(duration, _clearNotice);
+    // A mesma regra do bipa-toast (AB11): com o leitor de tela, o aviso com
+    // botão espera a pessoa. A espera do par (o anel) é o prazo da leitura,
+    // não o tempo de ler: não estica.
+    _noticeTimer.start(
+      context,
+      hasAction: !notice.waiting && (onTap != null || onDetailTap != null),
+      duration: duration,
+      onTimeout: _clearNotice,
+    );
   }
 
   void _clearNotice() {
-    _noticeTimer?.cancel();
+    _noticeTimer.cancel();
     if (!mounted) return;
     setState(() {
       _notice = null;
@@ -598,7 +605,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
       onTap: undoInNotice ? () => unawaited(undo()) : null,
       actionLabel: undoInNotice ? l10n.undo : null,
       onDetailTap: place == null ? null : () => unawaited(_choosePlace(product, place, show)),
-      duration: undoInNotice || place != null ? _undoFor : const Duration(milliseconds: 2500),
+      duration: undoInNotice || place != null ? bipaToastDuration : const Duration(milliseconds: 2500),
     );
 
     // Antes do aviso, que redesenha a tela: fechar já sabe que há o que
@@ -620,7 +627,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final stock = ref.read(stockRepositoryProvider);
-    _noticeTimer?.cancel();
+    _noticeTimer.cancel();
     final chosen = await _withAnalysisPaused(
       () => pickStockLocation(context, productName: product.name, current: current),
     );
@@ -637,9 +644,6 @@ class _CameraPageState extends ConsumerState<CameraPage> {
     if (!mounted) return;
     show(place);
   }
-
-  /// Quanto tempo o Desfazer fica no aviso do visor, como num snackbar.
-  static const _undoFor = Duration(seconds: 4);
 
   /// Fechar pode mostrar "Arrumar o que entrou" antes (AB5): só em
   /// "Comprei", e só quando já entraram produtos novos suficientes.

@@ -139,6 +139,80 @@ void main() {
     expect(find.text('Aviso 2'), findsOneWidget);
   });
 
+  group('aviso que não é snackbar (o do visor da câmera)', () {
+    /// Um contexto com o leitor de tela ligado ou não.
+    Future<BuildContext> contextWith(WidgetTester tester, {required bool screenReader}) async {
+      late BuildContext captured;
+      await tester.pumpWidget(
+        MediaQuery(
+          data: MediaQueryData(accessibleNavigation: screenReader),
+          child: Builder(
+            builder: (context) {
+              captured = context;
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+      return captured;
+    }
+
+    testWidgets('sem leitor de tela, o aviso com botão sai no tempo pedido', (tester) async {
+      final context = await contextWith(tester, screenReader: false);
+      final timer = BipaNoticeTimer();
+      var cleared = 0;
+
+      final timed = timer.start(context, hasAction: true, duration: bipaToastDuration, onTimeout: () => cleared++);
+
+      expect(timed, isTrue);
+      await tester.pump(bipaToastDuration - const Duration(milliseconds: 1));
+      expect(cleared, 0);
+      await tester.pump(const Duration(milliseconds: 1));
+      expect(cleared, 1);
+    });
+
+    testWidgets('com o leitor de tela, o aviso com botão ("trocar o local", "Desfazer") espera a pessoa', (
+      tester,
+    ) async {
+      final context = await contextWith(tester, screenReader: true);
+      final timer = BipaNoticeTimer();
+      var cleared = 0;
+
+      final timed = timer.start(context, hasAction: true, duration: bipaToastDuration, onTimeout: () => cleared++);
+
+      expect(timed, isFalse);
+      expect(bipaToastTimeout(context, hasAction: true), isNull);
+      await tester.pump(const Duration(minutes: 1));
+      expect(cleared, 0);
+    });
+
+    testWidgets('com o leitor de tela, o aviso só de texto ainda sai sozinho', (tester) async {
+      final context = await contextWith(tester, screenReader: true);
+      final timer = BipaNoticeTimer();
+      var cleared = 0;
+
+      timer.start(context, hasAction: false, duration: const Duration(milliseconds: 2500), onTimeout: () => cleared++);
+
+      await tester.pump(const Duration(milliseconds: 2500));
+      expect(cleared, 1);
+    });
+
+    testWidgets('um aviso novo recomeça o relógio, e cancelar o para', (tester) async {
+      final context = await contextWith(tester, screenReader: false);
+      final timer = BipaNoticeTimer();
+      var cleared = 0;
+
+      timer.start(context, hasAction: false, duration: const Duration(seconds: 2), onTimeout: () => cleared++);
+      await tester.pump(const Duration(seconds: 1));
+      timer.start(context, hasAction: false, duration: const Duration(seconds: 2), onTimeout: () => cleared++);
+      await tester.pump(const Duration(seconds: 1));
+      expect(cleared, 0);
+      timer.cancel();
+      await tester.pump(const Duration(seconds: 5));
+      expect(cleared, 0);
+    });
+  });
+
   testWidgets('o aviso tem o raio de cartão do design system, não a pílula', (tester) async {
     await tester.pumpWidget(_app((m) => showBipaToast(m, 'Bipou!')));
     await _show(tester);

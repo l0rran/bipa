@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
@@ -8,6 +10,49 @@ import 'package:flutter/material.dart';
 /// `bipa-toast` esvazia em 4 s, e depois disso o registro fica.
 const bipaToastDuration = Duration(seconds: 4);
 
+/// A regra do tempo do `bipa-toast`: quanto tempo um aviso fica antes de sair
+/// sozinho, ou `null` quando ele espera a pessoa. Vale para o
+/// [showBipaToast] e para os avisos que não são snackbar, como o do visor da
+/// câmera ([BipaNoticeTimer]).
+///
+/// Com o TalkBack ou outro leitor de tela
+/// ([MediaQueryData.accessibleNavigation]), o aviso com ação não sai
+/// sozinho: fica até a pessoa agir, dispensá-lo ou outro aviso tomar o
+/// lugar, para dar tempo de chegar até a ação (WCAG 2.2.1).
+Duration? bipaToastTimeout(BuildContext context, {required bool hasAction, Duration duration = bipaToastDuration}) {
+  final screenReader = MediaQuery.maybeAccessibleNavigationOf(context) ?? false;
+  if (hasAction && screenReader) return null;
+  return duration;
+}
+
+/// O relógio de um aviso que não é snackbar (o do visor da câmera), com a
+/// mesma regra do `bipa-toast` ([bipaToastTimeout]).
+final class BipaNoticeTimer {
+  Timer? _timer;
+
+  /// Começa a contar de novo para o aviso que acabou de aparecer e chama
+  /// [onTimeout] quando ele deve sair. Devolve `false` quando o aviso espera
+  /// a pessoa e não sai sozinho.
+  bool start(
+    BuildContext context, {
+    required bool hasAction,
+    required Duration duration,
+    required VoidCallback onTimeout,
+  }) {
+    cancel();
+    final timeout = bipaToastTimeout(context, hasAction: hasAction, duration: duration);
+    if (timeout == null) return false;
+    _timer = Timer(timeout, onTimeout);
+    return true;
+  }
+
+  /// Para de contar: o aviso saiu, ou a pessoa está agindo nele.
+  void cancel() {
+    _timer?.cancel();
+    _timer = null;
+  }
+}
+
 /// Mostra o aviso do design system (`bipa-toast`, o mesmo do "Bipou!") no
 /// lugar do que estiver na tela: [message] em `ground` sobre `ink`, com raio
 /// `radius-lg`, e, com [actionLabel] e [onAction], a ação ("Desfazer") em
@@ -15,10 +60,9 @@ const bipaToastDuration = Duration(seconds: 4);
 ///
 /// No Flutter 3.47 um `SnackBar` com ação fica na tela até alguém tocar
 /// (`persist` vem verdadeiro). Aqui o aviso com ação some sozinho depois de
-/// [duration], como no design system, exceto com o TalkBack ou outro leitor
-/// de tela ([MediaQueryData.accessibleNavigation]): aí ele fica até a pessoa
-/// tocar na ação, dispensar o aviso ou outro aviso tomar o lugar, para dar
-/// tempo de chegar até a ação (WCAG 2.2.1), e a linha do tempo não aparece.
+/// [duration], como no design system, exceto quando a regra de
+/// [bipaToastTimeout] pede que ele espere a pessoa (com leitor de tela); aí
+/// a linha do tempo não aparece.
 ///
 /// Devolve o controle do aviso, para quem precisa saber quando ele sai.
 ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showBipaToast(
@@ -29,14 +73,14 @@ ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showBipaToast(
   Duration duration = bipaToastDuration,
 }) {
   final hasAction = actionLabel != null && onAction != null;
-  final screenReader = MediaQuery.maybeAccessibleNavigationOf(messenger.context) ?? false;
+  final timeout = bipaToastTimeout(messenger.context, hasAction: hasAction, duration: duration);
   final started = ValueNotifier(false);
   messenger.hideCurrentSnackBar();
   final controller = messenger.showSnackBar(
     SnackBar(
       padding: EdgeInsets.zero,
-      duration: duration,
-      persist: hasAction && screenReader,
+      duration: timeout ?? duration,
+      persist: timeout == null,
       // A linha do tempo anda junto com o relógio do ScaffoldMessenger, que
       // só começa a contar quando o aviso termina de entrar.
       onVisible: () => started.value = true,
@@ -49,7 +93,7 @@ ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showBipaToast(
                 onAction();
               }
             : null,
-        timer: hasAction && !screenReader ? duration : null,
+        timer: hasAction ? timeout : null,
         started: started,
       ),
     ),
