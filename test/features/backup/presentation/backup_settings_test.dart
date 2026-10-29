@@ -197,6 +197,25 @@ void main() {
       );
     });
 
+    testWidgets('com TalkBack, o toque duplo na linha abre a folha (BK8)', (tester) async {
+      final handle = tester.ensureSemantics();
+      final backup = FakeBackupController(initial: pendingState());
+      await pumpSettings(tester, backup: backup);
+      const label = 'Último backup: de outro celular, 12 de outubro de 2026. Restaurar';
+
+      expect(
+        tester.getSemantics(find.bySemanticsLabel(label)),
+        isSemantics(isButton: true, isEnabled: true, hasTapAction: true),
+      );
+      tester.semantics.tap(find.semantics.byLabel(label));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(backup.calls, ['prepare']);
+      expect(find.text('Restaurar o backup de 12/10/2026?'), findsOneWidget);
+      handle.dispose();
+    });
+
     testWidgets('tocar na linha abre a folha com esse arquivo, sem o seletor do Android', (tester) async {
       final backup = FakeBackupController(initial: pendingState());
       final files = FakeBackupFiles();

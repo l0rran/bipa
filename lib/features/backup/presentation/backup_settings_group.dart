@@ -271,6 +271,9 @@ class _PendingBackupRow extends StatelessWidget {
       button: true,
       enabled: onTap != null,
       label: l10n.backupLastPendingSemantics(BackupLabels.spokenDate(createdAt)),
+      // O `excludeSemantics` tira da árvore a ação do `InkWell`: o toque vai
+      // aqui, para o toque duplo do TalkBack abrir a folha (BK8).
+      onTap: onTap,
       excludeSemantics: true,
       child: InkWell(
         onTap: onTap,
