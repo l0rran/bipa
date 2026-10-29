@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:bipa/core/crash_reporting/crash_reporting_providers.dart';
@@ -26,6 +27,11 @@ import 'package:bipa/core/location/location_service.dart';
 import 'package:bipa/core/money/money.dart';
 import 'package:bipa/core/permissions/permission_access.dart';
 import 'package:bipa/core/widgets/weighed_value_dialog.dart';
+import 'package:bipa/features/backup/domain/backup_exception.dart';
+import 'package:bipa/features/backup/domain/restore_backup.dart';
+import 'package:bipa/features/backup/presentation/backup_providers.dart';
+import 'package:bipa/features/backup/presentation/restore_offer_card.dart';
+import 'package:bipa/features/backup/presentation/restore_sheet.dart';
 import 'package:bipa/features/markets/domain/market.dart';
 import 'package:bipa/features/markets/presentation/market_form_page.dart';
 import 'package:bipa/features/markets/presentation/market_page.dart';
@@ -63,6 +69,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 
+import '../helpers/backup_fakes.dart';
 import '../helpers/crash_reporting_fakes.dart';
 import '../helpers/fakes.dart';
 import '../helpers/test_database.dart';
@@ -435,10 +442,25 @@ void _tests() {
         overrides: [
           crashReporterProvider.overrideWithValue(FakeCrashReporter()),
           appVersionProvider.overrideWith((ref) async => '0.1.0'),
+          backupProvider.overrideWith(
+            () => FakeBackupController(
+              initial: BackupState(
+                lastBackup: fakeBackupInfo(createdAt: _now, size: 30 * 1024 * 1024),
+              ),
+            ),
+          ),
         ],
       );
+      // O grupo "Backup", com a frase mais longa: a do tamanho acima de 25 MB.
+      expect(find.text('Último backup'), findsOneWidget);
+      expect(find.textContaining('Com 30 MB'), findsOneWidget);
+      expect(find.text('Salvar uma cópia…'), findsOneWidget);
       expect(find.text('Relatório de falhas'), findsOneWidget);
       expect(find.text('O que nunca vai'), findsOneWidget);
+      // Com o grupo do backup, a versão fica abaixo da dobra mesmo aqui.
+      await tester.scrollUntilVisible(find.text('0.1.0'), 400);
+      await tester.pump();
+      _expectReadable(tester);
       expect(find.text('0.1.0'), findsOneWidget);
     });
 
@@ -477,6 +499,57 @@ void _tests() {
       expect(find.byType(TripReviewSheet), findsOneWidget);
     });
 
+    /// A folha de restaurar um backup, com a conferência de [preparing].
+    Future<void> openRestoreSheet(WidgetTester tester, Future<PreparedRestore> Function() preparing) async {
+      await _pumpScreen(
+        tester,
+        Builder(
+          builder: (context) => Scaffold(
+            body: Center(
+              child: TextButton(
+                onPressed: () => showRestoreSheet(
+                  context,
+                  preparing: preparing(),
+                  fileName: 'bipa-2026-10-12.bipa',
+                  onPickAnother: () {},
+                ),
+                child: const Text('abrir'),
+              ),
+            ),
+          ),
+        ),
+        overrides: [backupProvider.overrideWith(FakeBackupController.new)],
+      );
+      await tester.tap(find.text('abrir'));
+      await _settle(tester);
+    }
+
+    testWidgets('folha "Restaurar o backup", conferindo', (tester) async {
+      await openRestoreSheet(tester, () => Completer<PreparedRestore>().future);
+      expect(find.text('Conferindo o arquivo'), findsOneWidget);
+      expect(find.text('Substituir pelo backup'), findsOneWidget);
+    });
+
+    testWidgets('folha "Restaurar o backup", com os números', (tester) async {
+      await openRestoreSheet(tester, () async => fakePrepared(createdAt: DateTime(2026, 10, 12, 21), adjustedItems: 2));
+      expect(find.text('Restaurar o backup de 12/10?'), findsOneWidget);
+      expect(find.text('Neste celular agora: 230 produtos e 1.452 preços.'), findsOneWidget);
+      expect(find.textContaining('quantidade acertada'), findsOneWidget);
+      expect(find.text('Cancelar'), findsOneWidget);
+    });
+
+    testWidgets('folha de backup que não abre', (tester) async {
+      await openRestoreSheet(tester, () async => throw const BackupException.notRecognized());
+      expect(find.text('Não deu para abrir este backup'), findsOneWidget);
+      expect(find.text('Escolher outro arquivo'), findsOneWidget);
+    });
+
+    testWidgets('folha de backup de um Bipa mais novo', (tester) async {
+      await openRestoreSheet(tester, () async => throw const BackupException.fromNewerApp());
+      expect(find.text('Este backup é de um Bipa mais novo'), findsOneWidget);
+      expect(find.text('Atualizar o Bipa'), findsOneWidget);
+    });
+
     testWidgets('folha do item do estoque', (tester) async {
       await _pumpScreen(
         tester,
@@ -497,6 +570,25 @@ void _tests() {
       await tester.tap(find.text('abrir'));
       await _settle(tester);
       expect(find.byType(StockItemSheet), findsOneWidget);
+    });
+
+    testWidgets('cartão "Backup encontrado" do celular novo', (tester) async {
+      // O Início do [_pumpScreen] tem dados, e o cartão só aparece com o banco
+      // vazio: ele é montado sozinho, como o Início o mostra.
+      final offer = fakeBackupInfo(createdAt: DateTime(2026, 10, 12, 21), madeHere: false);
+      await _pumpComponent(
+        tester,
+        ProviderScope(
+          overrides: [
+            backupProvider.overrideWith(() => FakeBackupController(initial: BackupState(restoreOffer: offer))),
+          ],
+          child: RestoreOfferCard(offer: offer),
+        ),
+      );
+      _expectReadable(tester);
+      expect(find.text('Restaurar o backup de 12/10?'), findsOneWidget);
+      expect(find.text('Restaurar'), findsOneWidget);
+      expect(find.text('Começar do zero'), findsOneWidget);
     });
 
     testWidgets('bandeja do modo carrinho', (tester) async {

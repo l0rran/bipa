@@ -5,12 +5,14 @@ import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
 import 'package:bipa/core/design_system/components/bipa_toast.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
+import 'package:bipa/features/backup/presentation/backup_settings_group.dart';
 import 'package:bipa/features/settings/presentation/settings_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Os Ajustes (protótipo "Ajustes", ADR 0025): a tela mínima, aberta pela
-/// engrenagem do Início. "Privacidade" tem o interruptor do relatório de
+/// engrenagem do Início. "Backup" vem primeiro (protótipo AjustesBackup,
+/// ADR 0023, seção 5). "Privacidade" tem o interruptor do relatório de
 /// falhas, o único lugar para mudar de ideia nos dois sentidos, com o que vai
 /// e o que nunca vai logo abaixo; "Sobre o Bipa" traz a versão.
 ///
@@ -53,6 +55,8 @@ class SettingsPage extends ConsumerWidget {
             header: true,
             child: Text(l10n.settingsTitle, style: BipaText.headline.copyWith(color: colors.ink)),
           ),
+          const SizedBox(height: BipaSpacing.s6),
+          _Group(label: l10n.settingsBackup, child: const BackupSettingsCard()),
           if (available) ...[
             const SizedBox(height: BipaSpacing.s6),
             _Group(label: l10n.settingsPrivacy, child: const _CrashReportingCard()),

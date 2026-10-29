@@ -92,9 +92,14 @@ final class BackupState {
   /// Se o "Desfazer" do aviso de restauração ainda vale.
   final bool canUndoRestore;
 
-  BackupState copyWith({BackupInfo? lastBackup, bool clearOffer = false, bool? canUndoRestore}) => BackupState(
+  BackupState copyWith({
+    BackupInfo? lastBackup,
+    BackupInfo? restoreOffer,
+    bool clearOffer = false,
+    bool? canUndoRestore,
+  }) => BackupState(
     lastBackup: lastBackup ?? this.lastBackup,
-    restoreOffer: clearOffer ? null : restoreOffer,
+    restoreOffer: clearOffer ? null : restoreOffer ?? this.restoreOffer,
     canUndoRestore: canUndoRestore ?? this.canUndoRestore,
   );
 }
@@ -187,10 +192,27 @@ class BackupController extends AsyncNotifier<BackupState> {
     return undone;
   });
 
-  /// "Começar do zero": a oferta do celular novo some.
-  Future<void> dismissRestoreOffer() => _serial(() async {
-    final offer = pendingRestoreOffer;
-    if (offer != null) await ref.read(restoreOfferProvider).dismiss(offer);
+  /// "Começar do zero", na tela: o cartão do celular novo some na hora, mas
+  /// o arquivo só é adotado em [dismissRestoreOffer], quando o aviso com
+  /// "Desfazer" sai. Devolve a oferta escondida, ou `null`.
+  BackupInfo? hideRestoreOffer() {
+    final current = state.value;
+    final offer = current?.restoreOffer;
+    if (current != null && offer != null) state = AsyncData(current.copyWith(clearOffer: true));
+    return offer;
+  }
+
+  /// O "Desfazer" de "Começar do zero": o cartão volta.
+  void bringBackRestoreOffer(BackupInfo offer) {
+    final current = state.value;
+    if (current != null) state = AsyncData(current.copyWith(restoreOffer: offer));
+  }
+
+  /// "Começar do zero" valendo: adota [offer] (ou a oferta pendente), que
+  /// deixa de ser oferecida, e o backup diário volta a substituí-lo.
+  Future<void> dismissRestoreOffer([BackupInfo? offer]) => _serial(() async {
+    final dismissed = offer ?? pendingRestoreOffer;
+    if (dismissed != null) await ref.read(restoreOfferProvider).dismiss(dismissed);
     await _update((current) => current.copyWith(clearOffer: true));
   });
 

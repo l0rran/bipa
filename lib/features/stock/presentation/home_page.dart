@@ -19,6 +19,8 @@ import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
 import 'package:bipa/core/widgets/empty_state.dart';
+import 'package:bipa/features/backup/presentation/backup_providers.dart';
+import 'package:bipa/features/backup/presentation/restore_offer_card.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_search.dart';
 import 'package:bipa/features/products/presentation/product_photos.dart';
@@ -208,6 +210,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     final listSummary = ref.watch(shoppingListSummaryProvider);
     // Durante a compra, a prévia dá lugar à barra da compra.
     final shopping = ref.watch(activeTripProvider).value != null;
+    final restoreOffer = ref.watch(backupProvider.select((state) => state.value?.restoreOffer));
 
     return Scaffold(
       body: AsyncValueView(
@@ -281,9 +284,17 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                 ),
               ),
+              // Celular novo, com o backup do antigo trazido pelo Android: o
+              // cartão "Backup encontrado" fica no lugar do convite da casa
+              // vazia (ADR 0023, B1).
+              if (entries.isEmpty && restoreOffer != null)
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(BipaSpacing.s4, BipaSpacing.s6, BipaSpacing.s4, 0),
+                  sliver: SliverToBoxAdapter(child: RestoreOfferCard(offer: restoreOffer)),
+                )
               // Casa vazia: a busca e a prévia da lista continuam, e o convite
               // a bipar o que há em casa fica embaixo.
-              if (entries.isEmpty)
+              else if (entries.isEmpty)
                 SliverToBoxAdapter(
                   child: EmptyState(
                     icon: Icons.kitchen_outlined,

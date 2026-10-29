@@ -2,6 +2,7 @@ import 'package:bipa/core/crash_reporting/crash_reporting.dart';
 import 'package:bipa/core/crash_reporting/crash_reporting_providers.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
+import 'package:bipa/features/backup/presentation/backup_providers.dart';
 import 'package:bipa/features/settings/presentation/settings_page.dart';
 import 'package:bipa/features/settings/presentation/settings_providers.dart';
 import 'dart:ui' show Tristate;
@@ -11,6 +12,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/backup_fakes.dart';
 import '../../../helpers/crash_reporting_fakes.dart';
 
 Future<({MemoryConsentStore store, FakeCrashReporter reporter})> _pump(
@@ -20,7 +22,7 @@ Future<({MemoryConsentStore store, FakeCrashReporter reporter})> _pump(
 }) async {
   // Um celular alto, para a tela inteira ficar à vista.
   tester.view
-    ..physicalSize = const Size(411, 1400)
+    ..physicalSize = const Size(411, 2000)
     ..devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   final store = MemoryConsentStore(consent);
@@ -32,6 +34,7 @@ Future<({MemoryConsentStore store, FakeCrashReporter reporter})> _pump(
         crashReporterProvider.overrideWithValue(reporter),
         initialCrashReportingConsentProvider.overrideWithValue(consent),
         appVersionProvider.overrideWith((ref) async => '0.1.0'),
+        backupProvider.overrideWith(FakeBackupController.new),
       ],
       child: MaterialApp(
         theme: BipaTheme.light,

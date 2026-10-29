@@ -8,7 +8,13 @@ import 'package:meta/meta.dart';
 /// confirmar.
 @immutable
 final class PreparedRestore {
-  const PreparedRestore({required this.manifest, required this.backup, required this.current, required this.workspace});
+  const PreparedRestore({
+    required this.manifest,
+    required this.backup,
+    required this.current,
+    required this.workspace,
+    this.adjustedItems = 0,
+  });
 
   final BackupManifest manifest;
 
@@ -20,6 +26,10 @@ final class PreparedRestore {
 
   /// Onde o banco e as fotos do backup esperam a confirmação.
   final RestoreWorkspace workspace;
+
+  /// Quantos itens em casa tiveram a quantidade acertada pela soma dos
+  /// lotes, para a folha avisar.
+  final int adjustedItems;
 }
 
 /// Restaura um backup `.bipa` (ADR 0023, seção 5), em dois tempos, como na
@@ -35,7 +45,9 @@ final class PreparedRestore {
 /// 2. o banco e as fotos, extraídos numa pasta de trabalho, contra o tamanho
 ///    e o SHA-256 do manifesto;
 /// 3. o banco extraído, pelo [BackupDatabase.check]: integridade, contagens,
-///    migração, chaves estrangeiras, soma dos lotes e a leitura de cada linha;
+///    migração, chaves estrangeiras e a leitura de cada linha. Um item cuja
+///    quantidade não é a soma dos lotes não recusa o backup: a quantidade
+///    passa a ser a soma, e a folha avisa ([PreparedRestore.adjustedItems]);
 /// 4. só em [apply] o banco do app fecha, o banco e as fotos de agora vão
 ///    para uma reserva, os do backup entram no lugar e o banco reabre.
 ///
@@ -76,12 +88,13 @@ final class RestoreBackup {
         databasePath: workspace.databasePath,
         photosPath: workspace.photosPath,
       );
-      final backup = await _database.check(workspace.databasePath, manifest);
+      final checked = await _database.check(workspace.databasePath, manifest);
       return PreparedRestore(
         manifest: manifest,
-        backup: backup,
+        backup: checked.summary,
         current: await _database.currentSummary(),
         workspace: workspace,
+        adjustedItems: checked.adjustedItems,
       );
     } on Object {
       await _storage.discard(workspace.path);
