@@ -112,7 +112,7 @@ O símbolo é a etiqueta de gôndola: uma etiqueta `brand` (o amarelo do preço)
 | --- | --- |
 | Button | Ações: principal (amarelo com texto escuro, com carregando e concluído), neutro (`ink`), secundário e tonal; seletor segmentado. |
 | PriceTag | O preço, sempre: normal com preço por unidade, de/por, no app/clube, leve X pague Y e menor preço; histórico de preço. |
-| StockStepper | Lista do estoque: miniatura, nome e medidor de nível; tocar abre −/+ e "Pôr na lista"; deslizar dá baixa ou põe na lista. |
+| StockStepper | Lista do estoque: miniatura, nome e medidor de nível; tocar abre −/+, a lista (só o ícone), o "Ter sempre" e o "⋯"; deslizar dá baixa ou põe na lista. |
 | ProductCard | Prateleira de produtos (Acabando): imagem, medidor no canto e "+" para pôr na lista. |
 | SearchBar | Busca no topo com o botão de bipar dentro. |
 | ListPreview | A lista no Início: miniaturas do que tem nela, quantidade, total estimado e "Ir às compras"; cabeçalho de seção. |

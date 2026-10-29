@@ -18,8 +18,13 @@ A lista do estoque. Cada linha mostra uma miniatura, o nome e o medidor de níve
   - **Em dia** (no "ter sempre" ou acima): anel fechado em `line`, número em `ink`.
   - **Acabando** (abaixo do "ter sempre"): o arco em `alert` mostra a fração, e o número fica em `alert-text`.
   - **Acabou:** anel tracejado em coral (`alert`) com "0", e a miniatura esmaece.
-- **Editor** (`.bipa-shelf__editor`): o stepper −/+ e "Pôr na lista", só no item aberto.
+- **Editor** (`.bipa-shelf__editor`), só no item aberto: o stepper −/+ (com fundo `alert-soft` abaixo do "ter sempre") e, ao lado ou na linha de baixo quando não cabe, três controles neutros:
+  - **Lista:** um botão só com o ícone da lista, que ganha o check quando o item está nela, como o "+" do `ProductCard`. O rótulo acessível diz a ação ("Pôr na lista" ou "Tirar da lista").
+  - **"Ter sempre N":** um chip com o valor à vista, que abre a folha do item.
+  - **"⋯" (Mais do item):** a mesma folha, com o local, "Tirar de casa" e o produto, sem passar pelo chip.
 - **Local:** não se repete em cada linha. Ele vira o filtro por categorias no topo (FilterChips).
+
+> **Pendente no design system publicado.** O editor de uma linha só, com "Pôr na lista" escrito, mudou nesta cópia em 28/10/2026 para o editor do app (decisão M1 do [README do protótipo](../../prototipo/README.md#divergências-resolvidas)). A página publicada no claude.ai, com a prévia `.bipa-shelf__editor`, precisa receber a mesma mudança.
 
 ## Regras
 
@@ -46,4 +51,4 @@ A lista do estoque. Cada linha mostra uma miniatura, o nome e o medidor de níve
 
 ## Markup
 
-`.bipa-shelf` > `.bipa-shelf__item[data-value][data-min][data-unit][data-place]` com `.bipa-swipe__under` (opcional), `button.bipa-shelf__row` (`.bipa-thumb` com `__badge`, `.bipa-shelf__name` e `.bipa-gauge[style="--p: N"]` com o `svg` de dois círculos e `__value`) e `.bipa-shelf__editor` > `div` > `.bipa-stepper` + `button.bipa-shelf__list`. Ligue com `Bipa.StockStepper.enhance(shelf)` e `Bipa.SwipeRow.enhance(item)`. Os eventos são `bipa:change`, `bipa:list` e `bipa:swipe`.
+`.bipa-shelf` > `.bipa-shelf__item[data-value][data-min][data-unit][data-place]` com `.bipa-swipe__under` (opcional), `button.bipa-shelf__row` (`.bipa-thumb` com `__badge`, `.bipa-shelf__name` e `.bipa-gauge[style="--p: N"]` com o `svg` de dois círculos e `__value`) e `.bipa-shelf__editor` > `div` (com `flex-wrap`) > `.bipa-stepper` + `button.bipa-shelf__list` (só o ícone, com `aria-label` e `aria-pressed`) + `.bipa-chip` ("Ter sempre N") + o botão "⋯" (`aria-label="Mais do item"`). O quadro [MainEditor](../../prototipo/telas/MainEditor.png) do protótipo mostra o editor aberto. Ligue com `Bipa.StockStepper.enhance(shelf)` e `Bipa.SwipeRow.enhance(item)`. Os eventos são `bipa:change`, `bipa:list` e `bipa:swipe`.
