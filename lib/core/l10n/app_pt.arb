@@ -154,6 +154,21 @@
   "backupNewerMessage": "Atualize o Bipa neste celular e escolha o arquivo de novo. Nada mudou neste celular.",
   "backupUpdateApp": "Atualizar o Bipa",
   "backupClose": "Fechar",
+  "backupOfferEyebrow": "Backup do Google",
+  "@backupOfferEyebrow": {
+    "description": "Rótulo do cartão do Início no celular novo, quando o Android trouxe o backup do celular antigo."
+  },
+  "backupOfferRestore": "Restaurar",
+  "backupOfferFresh": "Começar do zero",
+  "backupOfferDismissed": "Backup de {date} deixado de lado",
+  "@backupOfferDismissed": {
+    "description": "Aviso de \"Começar do zero\", com Desfazer, que traz o cartão de volta.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "settingsPrivacy": "Privacidade",
   "settingsCrashTitle": "Relatório de falhas",
   "settingsCrashSubtitle": "Se o Bipa travar, manda o erro para ser corrigido.",

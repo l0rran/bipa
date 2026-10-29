@@ -30,6 +30,7 @@ import 'package:bipa/core/widgets/weighed_value_dialog.dart';
 import 'package:bipa/features/backup/domain/backup_exception.dart';
 import 'package:bipa/features/backup/domain/restore_backup.dart';
 import 'package:bipa/features/backup/presentation/backup_providers.dart';
+import 'package:bipa/features/backup/presentation/restore_offer_card.dart';
 import 'package:bipa/features/backup/presentation/restore_sheet.dart';
 import 'package:bipa/features/markets/domain/market.dart';
 import 'package:bipa/features/markets/presentation/market_form_page.dart';
@@ -569,6 +570,25 @@ void _tests() {
       await tester.tap(find.text('abrir'));
       await _settle(tester);
       expect(find.byType(StockItemSheet), findsOneWidget);
+    });
+
+    testWidgets('cartão "Backup encontrado" do celular novo', (tester) async {
+      // O Início do [_pumpScreen] tem dados, e o cartão só aparece com o banco
+      // vazio: ele é montado sozinho, como o Início o mostra.
+      final offer = fakeBackupInfo(createdAt: DateTime(2026, 10, 12, 21), madeHere: false);
+      await _pumpComponent(
+        tester,
+        ProviderScope(
+          overrides: [
+            backupProvider.overrideWith(() => FakeBackupController(initial: BackupState(restoreOffer: offer))),
+          ],
+          child: RestoreOfferCard(offer: offer),
+        ),
+      );
+      _expectReadable(tester);
+      expect(find.text('Restaurar o backup de 12/10?'), findsOneWidget);
+      expect(find.text('Restaurar'), findsOneWidget);
+      expect(find.text('Começar do zero'), findsOneWidget);
     });
 
     testWidgets('bandeja do modo carrinho', (tester) async {
