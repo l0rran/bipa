@@ -352,6 +352,68 @@ void main() {
     });
   });
 
+  group('o catálogo não põe a embalagem num produto mais genérico (G12)', () {
+    // A casa que o ADR 0013 sugere, com nomes genéricos.
+    final products = [_product('Leite'), _product('Arroz'), _product('Feijão'), _product('Uva')];
+
+    PackageSuggestion of(String barcode, String name, {String? brand, ProductKind? kind}) =>
+        PackageSuggestion.fromCatalog(
+          CatalogPackage(barcode: barcode, name: name, brand: brand, kind: kind, source: PackageOrigin.openFoodFacts),
+          products: products,
+        );
+
+    test('o leite condensado não vira embalagem de leite', () {
+      final suggestion = of(
+        '7890000110266',
+        'Leite Condensado Semidesnatado ITALAC',
+        brand: 'Italac',
+        kind: ProductKind.sweets,
+      );
+      expect((suggestion.product, suggestion.newProductName), (null, 'Leite condensado semidesnatado'));
+    });
+
+    test('o arroz carreteiro pronto não vira embalagem de arroz', () {
+      final suggestion = of('7893500012672', 'Arroz Carreteiro Tio João Cozinha Sabor 175g', brand: 'TIO JOAO');
+      expect((suggestion.product, suggestion.brand), (null, 'Tio João'));
+      expect(suggestion.newProductName, 'Arroz carreteiro cozinha sabor');
+    });
+
+    test('o feijão pronto não vira embalagem de feijão', () {
+      final suggestion = of(
+        '0004932000060',
+        'Feijão Preto Pronto Camil Temperado e Cozido',
+        brand: 'Camil',
+        kind: ProductKind.grains,
+      );
+      expect(suggestion.product, isNull);
+    });
+
+    test('a Fanta Uva não vira embalagem da fruta', () {
+      final suggestion = of('78909052', 'Fanta Uva', brand: 'Fanta');
+      expect((suggestion.product, suggestion.newProductName), (null, 'Fanta uva'));
+    });
+
+    test('a categoria do catálogo recusa o produto de outro tipo', () {
+      final orange = _product('Laranja');
+      final suggestion = PackageSuggestion.fromCatalog(
+        const CatalogPackage(
+          barcode: '1',
+          name: 'Laranja',
+          brand: 'Fanta',
+          kind: ProductKind.drinks,
+          source: PackageOrigin.openFoodFacts,
+        ),
+        products: [orange],
+      );
+      expect(suggestion.product, isNull);
+    });
+
+    test('o produto que cobre o nome continua sendo escolhido', () {
+      expect(of('7895000318629', 'Arroz Branco Qualita 1kg', brand: 'QUALITA').product?.name, 'Arroz');
+      expect(of('1', 'Leite UHT', brand: 'Italac', kind: ProductKind.shelfStable).product?.name, 'Leite');
+    });
+  });
+
   group('nome novo do catálogo inteiro, com a marca quando sem ela sobra metade (G13)', () {
     String? nameOf(String name, {String? brand}) => PackageSuggestion.fromCatalog(
       CatalogPackage(barcode: '1', name: name, brand: brand, source: PackageOrigin.openFoodFacts),
