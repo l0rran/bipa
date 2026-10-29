@@ -121,10 +121,14 @@ class BipaToast extends StatefulWidget {
 }
 
 class _BipaToastState extends State<BipaToast> with SingleTickerProviderStateMixin {
+  /// A linha é um relógio, não decoração: com "Remover animações", o
+  /// Flutter encurtaria a animação comum para uma fração do tempo, e ela
+  /// esvaziaria antes do aviso sair (H14).
   late final AnimationController _timeLeft = AnimationController(
     vsync: this,
     value: 1,
     duration: widget.timer ?? Duration.zero,
+    animationBehavior: AnimationBehavior.preserve,
   );
   var _acted = false;
 
@@ -167,6 +171,9 @@ class _BipaToastState extends State<BipaToast> with SingleTickerProviderStateMix
     final colors = context.colors;
     final actionLabel = widget.actionLabel;
     final hasAction = actionLabel != null && widget.onAction != null;
+    // Com "Remover animações", a linha sai, como o anel do bipar: o estado
+    // final de algo que esvazia é não estar lá. O tempo continua valendo.
+    final showTimer = widget.timer != null && !MediaQuery.disableAnimationsOf(context);
     return Stack(
       children: [
         Padding(
@@ -202,7 +209,7 @@ class _BipaToastState extends State<BipaToast> with SingleTickerProviderStateMix
             ],
           ),
         ),
-        if (widget.timer != null)
+        if (showTimer)
           PositionedDirectional(
             start: 0,
             end: 0,

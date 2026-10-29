@@ -5,12 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Uma tela com um botão que mostra o aviso. [screenReader] liga o
-/// `accessibleNavigation`, como o TalkBack.
-Widget _app(void Function(ScaffoldMessengerState messenger) show, {bool screenReader = false}) => MaterialApp(
+/// `accessibleNavigation`, como o TalkBack; [reduceMotion], o
+/// `disableAnimations`, como o "Remover animações" do Android.
+Widget _app(
+  void Function(ScaffoldMessengerState messenger) show, {
+  bool screenReader = false,
+  bool reduceMotion = false,
+}) => MaterialApp(
   theme: BipaTheme.light,
   home: Builder(
     builder: (context) => MediaQuery(
-      data: MediaQuery.of(context).copyWith(accessibleNavigation: screenReader),
+      data: MediaQuery.of(context).copyWith(accessibleNavigation: screenReader, disableAnimations: reduceMotion),
       child: ScaffoldMessenger(
         child: Builder(
           builder: (context) => Scaffold(
@@ -97,6 +102,40 @@ void main() {
     await tester.pumpAndSettle();
     expect(undone, 1);
     expect(find.text('Leite foi para a lista'), findsNothing);
+  });
+
+  testWidgets('com "Remover animações", a linha do tempo não aparece, e o tempo continua valendo (H14)', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(
+        (m) => showBipaToast(m, 'Leite foi para a lista', actionLabel: 'Desfazer', onAction: () {}),
+        reduceMotion: true,
+      ),
+    );
+    await _show(tester);
+
+    expect(_timer, findsNothing);
+    await tester.pump(bipaToastDuration - const Duration(milliseconds: 100));
+    expect(find.text('Desfazer'), findsOneWidget, reason: 'o Desfazer vale os 4 s inteiros');
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pumpAndSettle();
+    expect(find.text('Leite foi para a lista'), findsNothing);
+  });
+
+  testWidgets('a linha do tempo é um relógio: não encurta quando o sistema pede menos animação', (tester) async {
+    await tester.pumpWidget(
+      _app((m) => showBipaToast(m, 'Leite foi para a lista', actionLabel: 'Desfazer', onAction: () {})),
+    );
+    final binding = tester.binding;
+    binding.platformDispatcher.accessibilityFeaturesTestValue = const FakeAccessibilityFeatures(
+      disableAnimations: true,
+    );
+    addTearDown(binding.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    await _show(tester);
+
+    await tester.pump(const Duration(seconds: 2));
+    expect(_timeLeft(tester), closeTo(0.5, 0.05));
   });
 
   testWidgets('Desfazer chama a ação uma vez só e fecha o aviso', (tester) async {

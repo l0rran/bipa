@@ -23,5 +23,5 @@ A confirmação de que um preço foi salvo: um círculo verde aparece com mola, 
 - O mesmo aviso (`bipa-toast`) serve para todo snackbar do app, com ou sem ação; só o que tem ação leva a linha do tempo. No Flutter é o `showBipaToast`.
 
 > **Pendente no design system publicado.** As duas regras acima entraram nesta cópia em 28/10/2026, com a decisão S1 do [README do protótipo](../../prototipo/README.md#divergências-resolvidas). A página publicada no claude.ai precisa receber a mesma mudança.
-- Com "reduzir movimento", tudo aparece já no estado final.
+- Com "reduzir movimento", tudo aparece já no estado final. A linha do tempo do aviso não aparece (o estado final de algo que esvazia é não estar lá), e o tempo do Desfazer continua o mesmo.
 - O contêiner tem `role="status"` para leitores de tela anunciarem o resumo.
