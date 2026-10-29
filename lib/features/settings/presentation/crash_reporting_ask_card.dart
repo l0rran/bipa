@@ -3,13 +3,16 @@ import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
+import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/features/settings/presentation/settings_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 /// A pergunta do relatório de falhas no Início (protótipo
-/// "InicioRelatorioFalhas", ADR 0025): um cartão neutro, uma vez só, depois
-/// da primeira compra terminada e só em build com DSN.
+/// "InicioRelatorioFalhas", ADR 0025): um cartão neutro, uma vez só, na
+/// abertura do app seguinte à primeira compra terminada e só em build com
+/// DSN. Fica depois de "Acabando".
 ///
 /// "Mandar" e "Não mandar" têm o mesmo peso e nada vem marcado. O × fecha e
 /// conta como "não", então o cartão não volta. Quem muda de ideia depois usa
@@ -88,7 +91,21 @@ class _CrashReportingAskCardState extends ConsumerState<CrashReportingAskCard> {
                   style: BipaText.label.copyWith(fontWeight: FontWeight.w400, height: 20 / 14, color: colors.inkMuted),
                 ),
               ),
-              const SizedBox(height: BipaSpacing.s4),
+              // O link para a lista completa nos Ajustes: o consentimento só
+              // vale com tudo o que vai à vista (LGPD, art. 9º, § 1º).
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: TextButton(
+                  onPressed: () => context.push(Routes.settings),
+                  style: TextButton.styleFrom(
+                    foregroundColor: colors.ink,
+                    minimumSize: const Size(48, 48),
+                    padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s2),
+                    textStyle: BipaText.label.copyWith(decoration: TextDecoration.underline),
+                  ),
+                  child: Text(l10n.crashAskDetails),
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.only(right: BipaSpacing.s3),
                 child: Row(

@@ -184,7 +184,7 @@ class _CrashReportingCard extends ConsumerWidget {
                 _Sent(
                   title: l10n.settingsCrashSentTitle,
                   icon: Icons.check_rounded,
-                  lines: [l10n.settingsCrashSent1, l10n.settingsCrashSent2],
+                  lines: [l10n.settingsCrashSent1, l10n.settingsCrashSent2, l10n.settingsCrashSent3],
                 ),
                 const SizedBox(height: BipaSpacing.s3),
                 _Sent(
