@@ -71,13 +71,17 @@
   "backupChecking": "Conferindo o arquivo",
   "backupRestoreTitle": "Restaurar o backup de {date}?",
   "@backupRestoreTitle": {
-    "description": "Título da folha de confirmação e do cartão do celular novo.",
+    "description": "Título da folha de confirmação e dos cartões do Início, com o ano (\"12/10/2025\"); para o leitor de tela, com a data por extenso.",
     "placeholders": {
       "date": {
         "type": "String",
-        "example": "12/10"
+        "example": "12/10/2025"
       }
     }
+  },
+  "backupFromOtherPhone": "De outro celular",
+  "@backupFromOtherPhone": {
+    "description": "Embaixo do título da folha de confirmação, no lugar do nome do arquivo, quando o backup é o do outro celular (Ajustes ou Início)."
   },
   "backupProducts": "{count, plural, =1{produto} other{produtos}}",
   "@backupProducts": {
@@ -104,9 +108,9 @@
       }
     }
   },
-  "backupCurrent": "Neste celular agora: {productsText} {products, plural, =1{produto} other{produtos}} e {pricesText} {prices, plural, =1{preço} other{preços}}.",
+  "backupCurrent": "Neste celular agora: {productsText} {products, plural, =1{produto} other{produtos}}, {pricesText} {prices, plural, =1{preço} other{preços}} e {itemsText} {items, plural, =1{item em casa} other{itens em casa}}.",
   "@backupCurrent": {
-    "description": "A linha deste celular na folha de confirmação; os números já formatados vão em negrito.",
+    "description": "A linha deste celular na folha de confirmação, com os mesmos três números do arquivo, na mesma ordem (BK3); os números já formatados vão em negrito.",
     "placeholders": {
       "productsText": {
         "type": "String"
@@ -119,6 +123,22 @@
       },
       "prices": {
         "type": "int"
+      },
+      "itemsText": {
+        "type": "String"
+      },
+      "items": {
+        "type": "int"
+      }
+    }
+  },
+  "backupLosesNewer": "Os preços e as compras depois de {date} saem deste celular.",
+  "@backupLosesNewer": {
+    "description": "Na folha de confirmação, quando o backup é mais velho que o último preço ou compra deste celular (BK3).",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "12/10/2025"
       }
     }
   },

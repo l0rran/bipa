@@ -505,6 +505,55 @@ void main() {
       expect(items, {'arroz': (1.0, StockLocation.pantry), 'feijao': (3.0, StockLocation.pantry)});
     });
 
+    test('um backup mais velho que o último preço ou compra daqui avisa o que sai (BK3)', () async {
+      await seed();
+      final backup = (await app.create()())!;
+      // Um preço anotado um dia depois do backup.
+      await app.db
+          .into(app.db.priceObservations)
+          .insert(
+            PriceObservationsCompanion.insert(
+              id: 'p2',
+              productId: 'arroz',
+              marketId: 'vila',
+              priceCents: 2999,
+              source: PriceSource.priceTag,
+              observedAt: at.add(const Duration(days: 1)),
+              createdAt: at.add(const Duration(days: 1)),
+            ),
+          );
+
+      final prepared = await app.restore().prepare(backup.path);
+
+      expect(prepared.currentLatestActivity, at.add(const Duration(days: 1)));
+      expect(prepared.losesNewerData, isTrue);
+      await app.restore().cancel(prepared);
+    });
+
+    test('um backup feito depois de tudo o que há aqui não avisa nada', () async {
+      await seed();
+      final backup = (await app.create(now: at.add(const Duration(hours: 1)))())!;
+
+      final prepared = await app.restore().prepare(backup.path);
+
+      expect(prepared.currentLatestActivity, at);
+      expect(prepared.losesNewerData, isFalse);
+      await app.restore().cancel(prepared);
+    });
+
+    test('uma ida ao mercado depois do backup também conta como compra', () async {
+      await seed();
+      final backup = (await app.create()())!;
+      await app.db
+          .into(app.db.shoppingTrips)
+          .insert(ShoppingTripsCompanion.insert(id: 't1', startedAt: at.add(const Duration(hours: 2))));
+
+      final prepared = await app.restore().prepare(backup.path);
+
+      expect(prepared.losesNewerData, isTrue);
+      await app.restore().cancel(prepared);
+    });
+
     test('um backup que chega como fluxo de bytes também se restaura', () async {
       await seed();
       await app.create()();
@@ -858,6 +907,9 @@ final class _LiveDatabase implements BackupDatabase {
 
   @override
   Future<bool> isEmpty() => _current.isEmpty();
+
+  @override
+  Future<DateTime?> latestActivity() => _current.latestActivity();
 }
 
 /// Um zip que falha no meio da gravação.

@@ -209,12 +209,12 @@ void main() {
       preparing.complete(fakePrepared(createdAt: backupDay));
       await tester.pump();
       await tester.pump();
-      expect(find.text('Restaurar o backup de 12/10?'), findsOneWidget);
+      expect(find.text('Restaurar o backup de 12/10/2026?'), findsOneWidget);
       expect(find.text('214'), findsOneWidget);
       expect(find.text('1.380'), findsOneWidget);
       expect(find.text('itens em casa'), findsOneWidget);
       expect(find.bySemanticsLabel('214 produtos'), findsOneWidget);
-      expect(find.text('Neste celular agora: 230 produtos e 1.452 preços.'), findsOneWidget);
+      expect(find.text('Neste celular agora: 230 produtos, 1.452 preços e 60 itens em casa.'), findsOneWidget);
       expect(find.textContaining('é trocado pelo que está no arquivo'), findsOneWidget);
       expect(find.textContaining('quantidade acertada'), findsNothing);
 
@@ -223,12 +223,12 @@ void main() {
       // Restaurando: o botão vira o indicador, a folha fica e o Cancelar sai.
       expect(find.bySemanticsLabel('Restaurando'), findsOneWidget);
       expect(find.text('Cancelar'), findsNothing);
-      expect(find.text('Restaurar o backup de 12/10?'), findsOneWidget);
+      expect(find.text('Restaurar o backup de 12/10/2026?'), findsOneWidget);
 
       applying.complete();
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
-      expect(find.text('Restaurar o backup de 12/10?'), findsNothing);
+      expect(find.text('Restaurar o backup de 12/10/2026?'), findsNothing);
       expect(find.text('Backup de 12/10 restaurado'), findsOneWidget);
       expect(backup.calls, ['prepare', 'apply']);
 
@@ -296,6 +296,44 @@ void main() {
       expect(find.text('2 itens tiveram a quantidade acertada pela soma das compras.'), findsOneWidget);
     });
 
+    testWidgets('um backup mais velho que o último preço ou compra diz o que sai (BK3)', (tester) async {
+      final backup = FakeBackupController(
+        onPrepare: () async => fakePrepared(createdAt: DateTime(2025, 10, 12, 21), currentLatestActivity: _now),
+      );
+      await pumpSettings(
+        tester,
+        backup: backup,
+        files: FakeBackupFiles(picked: picked()),
+      );
+
+      await chooseFile(tester);
+      await tester.pump();
+
+      expect(find.text('Restaurar o backup de 12/10/2025?'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('Restaurar o backup de 12 de outubro de 2025?'),
+        findsOneWidget,
+        reason: 'o leitor de tela ouve a data por extenso',
+      );
+      expect(find.text('Os preços e as compras depois de 12/10/2025 saem deste celular.'), findsOneWidget);
+    });
+
+    testWidgets('um backup mais novo que tudo o que há aqui não tem a linha do que sai', (tester) async {
+      final backup = FakeBackupController(
+        onPrepare: () async => fakePrepared(createdAt: backupDay, currentLatestActivity: DateTime(2026, 10, 1)),
+      );
+      await pumpSettings(
+        tester,
+        backup: backup,
+        files: FakeBackupFiles(picked: picked()),
+      );
+
+      await chooseFile(tester);
+      await tester.pump();
+
+      expect(find.textContaining('saem deste celular'), findsNothing);
+    });
+
     testWidgets('Cancelar apaga a cópia conferida e não restaura', (tester) async {
       final backup = FakeBackupController();
       await pumpSettings(
@@ -310,7 +348,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
-      expect(find.text('Restaurar o backup de 12/10?'), findsNothing);
+      expect(find.text('Restaurar o backup de 12/10/2026?'), findsNothing);
       expect(backup.calls, ['prepare', 'cancel']);
     });
 
@@ -380,7 +418,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
-      expect(find.text('Restaurar o backup de 12/10?'), findsNothing);
+      expect(find.text('Restaurar o backup de 12/10/2026?'), findsNothing);
       expect(find.text('Não deu para restaurar. Seus dados continuam como estavam.'), findsOneWidget);
       await finishToasts(tester);
     });

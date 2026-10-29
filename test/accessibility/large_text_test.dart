@@ -531,9 +531,13 @@ void _tests() {
     });
 
     testWidgets('folha "Restaurar o backup", com os números', (tester) async {
-      await openRestoreSheet(tester, () async => fakePrepared(createdAt: DateTime(2026, 10, 12, 21), adjustedItems: 2));
-      expect(find.text('Restaurar o backup de 12/10?'), findsOneWidget);
-      expect(find.text('Neste celular agora: 230 produtos e 1.452 preços.'), findsOneWidget);
+      await openRestoreSheet(
+        tester,
+        () async => fakePrepared(createdAt: DateTime(2026, 10, 12, 21), adjustedItems: 2, currentLatestActivity: _now),
+      );
+      expect(find.text('Restaurar o backup de 12/10/2026?'), findsOneWidget);
+      expect(find.textContaining('saem deste celular'), findsOneWidget);
+      expect(find.text('Neste celular agora: 230 produtos, 1.452 preços e 60 itens em casa.'), findsOneWidget);
       expect(find.textContaining('quantidade acertada'), findsOneWidget);
       expect(find.text('Cancelar'), findsOneWidget);
     });

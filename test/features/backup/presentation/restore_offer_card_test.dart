@@ -155,7 +155,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('Substituir pelo backup'), findsOneWidget);
-    expect(find.text('Neste celular agora: 230 produtos e 1.452 preços.'), findsOneWidget);
+    expect(find.text('Neste celular agora: 230 produtos, 1.452 preços e 60 itens em casa.'), findsOneWidget);
     expect(backup.calls, ['prepare']);
   });
 

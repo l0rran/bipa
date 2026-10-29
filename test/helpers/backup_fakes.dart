@@ -45,6 +45,7 @@ PreparedRestore fakePrepared({
   BackupSummary current = const BackupSummary(products: 230, prices: 1452, itemsAtHome: 60),
   bool currentIsEmpty = false,
   int adjustedItems = 0,
+  DateTime? currentLatestActivity,
 }) => PreparedRestore(
   manifest: fakeManifest(createdAt: createdAt),
   backup: const BackupSummary(products: 214, prices: 1380, itemsAtHome: 56),
@@ -52,6 +53,7 @@ PreparedRestore fakePrepared({
   currentIsEmpty: currentIsEmpty,
   workspace: const RestoreWorkspace(path: 'novo', databasePath: 'novo/bipa.sqlite', photosPath: 'novo/fotos'),
   adjustedItems: adjustedItems,
+  currentLatestActivity: currentLatestActivity,
 );
 
 /// O `backupProvider` sem arquivos: começa em [initial] e anota o que a tela
