@@ -1629,5 +1629,17 @@
     }
   },
   "packageDeleteFailed": "Não deu para apagar a embalagem. Tente de novo.",
-  "packageRestoreFailed": "Não deu para trazer a embalagem de volta."
+  "packageRestoreFailed": "Não deu para trazer a embalagem de volta.",
+  "backupNotRecognized": "Esse arquivo não é um backup do Bipa.",
+  "@backupNotRecognized": {
+    "description": "Erro ao restaurar um arquivo que não é um .bipa (ADR 0023). Nada mudou no aparelho."
+  },
+  "backupDamaged": "Esse backup está danificado e não foi restaurado. Seus dados continuam como estavam.",
+  "@backupDamaged": {
+    "description": "Erro ao restaurar um .bipa cujo conteúdo não confere com o manifesto ou não passa nas conferências do banco (ADR 0023)."
+  },
+  "backupFromNewerApp": "Esse backup foi feito numa versão mais nova do Bipa. Atualize o app para restaurá-lo.",
+  "@backupFromNewerApp": {
+    "description": "Erro ao restaurar um .bipa de um formato, esquema ou valor que esta versão do app não conhece (ADR 0023)."
+  }
 }

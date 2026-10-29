@@ -16,8 +16,14 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
+  # O zip do backup .bipa (ADR 0023). Puro Dart, o pacote de zip mais usado
+  # do pub.dev; nenhuma dependência nativa nova no Android.
+  archive: ^4.5.2
   # Quadros da câmera no modo carrinho, para ler código e etiqueta juntos (ADR 0012).
   camera: ^0.12.2
+  # SHA-256 do banco e das fotos no manifesto do backup. Já vinha com outros
+  # pacotes; aqui passa a ser dependência direta.
+  crypto: ^3.0.8
   # Banco de dados local (SQLite) com consultas tipadas e streams reativas.
   drift: ^2.26.0
   drift_flutter: ^0.2.4

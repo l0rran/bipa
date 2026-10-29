@@ -12,4 +12,7 @@ String domainErrorText(AppLocalizations l10n, DomainException error) => switch (
   DomainErrorCode.packageNotFound => l10n.packageNotFound,
   DomainErrorCode.packageInOpenTrip => l10n.packageInOpenTrip,
   DomainErrorCode.duplicateBarcode => l10n.packageDuplicate(error.args[0], error.args[1]),
+  DomainErrorCode.backupNotRecognized => l10n.backupNotRecognized,
+  DomainErrorCode.backupDamaged => l10n.backupDamaged,
+  DomainErrorCode.backupFromNewerApp => l10n.backupFromNewerApp,
 };
