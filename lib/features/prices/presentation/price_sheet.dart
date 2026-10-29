@@ -29,7 +29,9 @@ Future<void> showPriceSheet(
   context: context,
   isScrollControlled: true,
   useSafeArea: true,
-  builder: (_) => PriceSheet(observation: observation, title: title, openLabel: openLabel, onOpen: onOpen),
+  builder: (_) => BipaSheetToasts(
+    child: PriceSheet(observation: observation, title: title, openLabel: openLabel, onOpen: onOpen),
+  ),
 );
 
 class PriceSheet extends ConsumerStatefulWidget {

@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:bipa/core/accessibility/recommended_timeouts.dart';
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 /// Quanto tempo o aviso fica na tela antes de sair sozinho.
 enum BipaToastDuration {
@@ -189,6 +191,96 @@ final class BipaToastClock extends ChangeNotifier {
   }
 }
 
+/// Faz os avisos aparecerem por cima de uma folha modal, e não atrás dela
+/// (H15). Vai em volta do conteúdo da folha, no `builder` do
+/// `showModalBottomSheet`.
+///
+/// O aviso é desenhado pelo `Scaffold` da tela; uma folha aberta sobre a
+/// tela o cobre. Aqui, um `Scaffold` transparente do tamanho da folha, por
+/// cima dela, se registra no `ScaffoldMessenger` do app e desenha uma cópia
+/// do aviso no pé da folha. Quem chama continua usando
+/// `ScaffoldMessenger.of(context)`, e o aviso continua na tela quando a
+/// folha fecha. Os toques passam direto para a folha, exceto os que caem no
+/// aviso.
+///
+/// Numa folha aberta dentro de uma aba, o `Scaffold` da casca (o da
+/// navegação) já desenha o aviso por cima da folha, e o daqui fica quieto: o
+/// `ScaffoldMessenger` só desenha no `Scaffold` de fora.
+class BipaSheetToasts extends StatelessWidget {
+  const BipaSheetToasts({required this.child, super.key});
+
+  final Widget child;
+
+  /// A altura mínima do Scaffold da folha: o bastante para o aviso, com letra
+  /// grande, sem o Flutter acusar o aviso fora da tela.
+  static const _minToastRoom = 200.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.passthrough,
+      children: [
+        child,
+        Positioned.fill(
+          child: _ToastHitsOnly(
+            // Numa folha baixa, o Scaffold sobra para cima, para o aviso
+            // caber; ele fica no pé, dentro da folha.
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final height = math.max(constraints.maxHeight, _minToastRoom);
+                return OverflowBox(
+                  minHeight: height,
+                  maxHeight: height,
+                  alignment: Alignment.bottomCenter,
+                  // A folha já sobe com o teclado: o Scaffold não sobe de novo.
+                  child: MediaQuery.removeViewInsets(
+                    context: context,
+                    removeBottom: true,
+                    child: const Scaffold(backgroundColor: Colors.transparent, resizeToAvoidBottomInset: false),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Só aceita o toque que cai num aviso ([_ToastMarker]); o resto passa para o
+/// que está embaixo.
+class _ToastHitsOnly extends SingleChildRenderObjectWidget {
+  const _ToastHitsOnly({required super.child});
+
+  @override
+  RenderObject createRenderObject(BuildContext context) => _RenderToastHitsOnly();
+}
+
+class _RenderToastHitsOnly extends RenderProxyBox {
+  @override
+  bool hitTest(BoxHitTestResult result, {required Offset position}) {
+    final child = this.child;
+    if (child == null || !size.contains(position)) return false;
+    // Testa à parte para decidir; só então testa de verdade, com as
+    // transformações de cada nível no resultado.
+    final probe = BoxHitTestResult();
+    if (!child.hitTest(probe, position: position)) return false;
+    if (!probe.path.any((entry) => entry.target is _RenderToastMarker)) return false;
+    return super.hitTest(result, position: position);
+  }
+}
+
+/// Marca a área do aviso, para o [_ToastHitsOnly].
+class _ToastMarker extends SingleChildRenderObjectWidget {
+  const _ToastMarker({required super.child});
+
+  @override
+  RenderObject createRenderObject(BuildContext context) => _RenderToastMarker();
+}
+
+class _RenderToastMarker extends RenderProxyBox {}
+
 /// O conteúdo do aviso: o texto, a ação e, embaixo, a linha do tempo.
 /// O fundo, o raio e a sombra vêm do `snackBarTheme` do [BipaTheme].
 class BipaToast extends StatefulWidget {
@@ -279,68 +371,74 @@ class _BipaToastState extends State<BipaToast> with SingleTickerProviderStateMix
     // Com "Remover animações", a linha sai, como o anel do bipar: o estado
     // final de algo que esvazia é não estar lá. O tempo continua valendo.
     final showTimer = widget.clock != null && !MediaQuery.disableAnimationsOf(context);
-    return Listener(
-      // O dedo sobre o aviso para o tempo, inclusive no caminho até o
-      // Desfazer ou ao arrastar para dispensar.
-      behavior: HitTestBehavior.opaque,
-      onPointerDown: (_) => _hold(),
-      onPointerUp: (_) => _release(),
-      onPointerCancel: (_) => _release(),
-      child: Stack(
-        children: [
-          Padding(
-            padding: EdgeInsetsDirectional.fromSTEB(
-              BipaSpacing.s4,
-              BipaSpacing.s3,
-              hasAction ? BipaSpacing.s2 : BipaSpacing.s4,
-              BipaSpacing.s3,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    widget.message,
-                    style: BipaText.label.copyWith(fontWeight: FontWeight.w600, height: 20 / 14, color: colors.ground),
-                  ),
-                ),
-                if (hasAction) ...[
-                  const SizedBox(width: BipaSpacing.s3),
-                  TextButton(
-                    onPressed: onAction,
-                    style: TextButton.styleFrom(
-                      foregroundColor: colors.price,
-                      textStyle: BipaText.label.copyWith(fontWeight: FontWeight.w800),
-                      shape: const StadiumBorder(),
-                      // O alvo de toque tem 48 de altura, mesmo com o aviso baixo.
-                      minimumSize: const Size(48, 48),
-                      padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s3),
+    return _ToastMarker(
+      child: Listener(
+        // O dedo sobre o aviso para o tempo, inclusive no caminho até o
+        // Desfazer ou ao arrastar para dispensar.
+        behavior: HitTestBehavior.opaque,
+        onPointerDown: (_) => _hold(),
+        onPointerUp: (_) => _release(),
+        onPointerCancel: (_) => _release(),
+        child: Stack(
+          children: [
+            Padding(
+              padding: EdgeInsetsDirectional.fromSTEB(
+                BipaSpacing.s4,
+                BipaSpacing.s3,
+                hasAction ? BipaSpacing.s2 : BipaSpacing.s4,
+                BipaSpacing.s3,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.message,
+                      style: BipaText.label.copyWith(
+                        fontWeight: FontWeight.w600,
+                        height: 20 / 14,
+                        color: colors.ground,
+                      ),
                     ),
-                    child: Text(actionLabel),
                   ),
+                  if (hasAction) ...[
+                    const SizedBox(width: BipaSpacing.s3),
+                    TextButton(
+                      onPressed: onAction,
+                      style: TextButton.styleFrom(
+                        foregroundColor: colors.price,
+                        textStyle: BipaText.label.copyWith(fontWeight: FontWeight.w800),
+                        shape: const StadiumBorder(),
+                        // O alvo de toque tem 48 de altura, mesmo com o aviso baixo.
+                        minimumSize: const Size(48, 48),
+                        padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s3),
+                      ),
+                      child: Text(actionLabel),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-          if (showTimer)
-            PositionedDirectional(
-              start: 0,
-              end: 0,
-              bottom: 0,
-              child: ExcludeSemantics(
-                child: AnimatedBuilder(
-                  animation: _timeLeft,
-                  builder: (context, _) => Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: FractionallySizedBox(
-                      key: const ValueKey('bipa-toast-timer'),
-                      widthFactor: _timeLeft.value,
-                      child: SizedBox(height: 3, child: ColoredBox(color: colors.price)),
+            if (showTimer)
+              PositionedDirectional(
+                start: 0,
+                end: 0,
+                bottom: 0,
+                child: ExcludeSemantics(
+                  child: AnimatedBuilder(
+                    animation: _timeLeft,
+                    builder: (context, _) => Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: FractionallySizedBox(
+                        key: const ValueKey('bipa-toast-timer'),
+                        widthFactor: _timeLeft.value,
+                        child: SizedBox(height: 3, child: ColoredBox(color: colors.price)),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

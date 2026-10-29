@@ -428,4 +428,178 @@ void main() {
     );
     expect(material.shape, RoundedRectangleBorder(borderRadius: BorderRadius.circular(BipaRadius.lg)));
   });
+
+  group('aviso disparado de dentro de uma folha (H15)', () {
+    /// O conteúdo da folha: um botão que mostra o aviso e outro que só conta
+    /// os toques, para ver que a folha continua tocável embaixo da camada.
+    Widget sheet(BuildContext context, {required VoidCallback onOther, VoidCallback? onUndo}) => Column(
+      mainAxisSize: MainAxisSize.min,
+      // Como as folhas do app, que ocupam a largura toda.
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextButton(
+          onPressed: () => showBipaToast(
+            ScaffoldMessenger.of(context),
+            'Não deu para salvar',
+            actionLabel: onUndo == null ? null : 'Desfazer',
+            onAction: onUndo,
+          ),
+          child: const Text('falhar'),
+        ),
+        const SizedBox(height: 60),
+        TextButton(onPressed: onOther, child: const Text('outro')),
+        const SizedBox(height: 60),
+      ],
+    );
+
+    /// Uma tela de cima (como a câmera ou o produto) com uma folha.
+    Future<void> openSheet(
+      WidgetTester tester, {
+      required bool layer,
+      VoidCallback? onOther,
+      VoidCallback? onUndo,
+    }) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: BipaTheme.light,
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Center(
+                child: TextButton(
+                  onPressed: () => showModalBottomSheet<void>(
+                    context: context,
+                    builder: (context) {
+                      final content = sheet(context, onOther: onOther ?? () {}, onUndo: onUndo);
+                      return layer ? BipaSheetToasts(child: content) : content;
+                    },
+                  ),
+                  child: const Text('abrir'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('abrir'));
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> fail(WidgetTester tester) async {
+      await tester.tap(find.text('falhar'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+    }
+
+    testWidgets('sem a camada, o aviso fica atrás da folha', (tester) async {
+      await openSheet(tester, layer: false);
+      await fail(tester);
+
+      expect(find.text('Não deu para salvar'), findsOneWidget);
+      expect(find.text('Não deu para salvar').hitTestable(), findsNothing);
+    });
+
+    testWidgets('com a camada, o aviso aparece por cima da folha, e a folha continua tocável', (tester) async {
+      var others = 0;
+      await openSheet(tester, layer: true, onOther: () => others++);
+      await fail(tester);
+
+      final onTop = find.descendant(of: find.byType(BottomSheet), matching: find.text('Não deu para salvar'));
+      expect(onTop, findsOneWidget);
+      expect(find.text('Não deu para salvar').hitTestable(), findsOneWidget);
+
+      await tester.tap(find.text('outro'));
+      expect(others, 1);
+    });
+
+    testWidgets('o Desfazer do aviso por cima da folha recebe o toque', (tester) async {
+      var undone = 0;
+      await openSheet(tester, layer: true, onUndo: () => undone++);
+      await fail(tester);
+
+      await tester.tap(find.text('Desfazer').hitTestable());
+      await tester.pumpAndSettle();
+      expect(undone, 1);
+    });
+
+    testWidgets('fechar a folha não leva o aviso junto', (tester) async {
+      await openSheet(tester, layer: true);
+      await fail(tester);
+
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(find.text('Não deu para salvar').hitTestable(), findsOneWidget);
+    });
+
+    testWidgets('numa folha baixa, o aviso ainda cabe', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: BipaTheme.light,
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Center(
+                child: TextButton(
+                  onPressed: () => showModalBottomSheet<void>(
+                    context: context,
+                    builder: (context) => BipaSheetToasts(
+                      child: TextButton(
+                        onPressed: () => showBipaToast(
+                          ScaffoldMessenger.of(context),
+                          'Não deu para salvar o local da geladeira de baixo',
+                        ),
+                        child: const Text('falhar'),
+                      ),
+                    ),
+                  ),
+                  child: const Text('abrir'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('abrir'));
+      await tester.pumpAndSettle();
+      await fail(tester);
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Não deu para salvar o local da geladeira de baixo').hitTestable(), findsOneWidget);
+    });
+
+    testWidgets('numa folha dentro de uma aba, o Scaffold da casca já mostra o aviso por cima', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: BipaTheme.light,
+          // A casca com a navegação, e cada aba com o seu Navigator, como o
+          // StatefulShellRoute.
+          home: Scaffold(
+            bottomNavigationBar: const SizedBox(height: 56),
+            body: Navigator(
+              onGenerateRoute: (_) => MaterialPageRoute<void>(
+                builder: (context) => Scaffold(
+                  body: Center(
+                    child: TextButton(
+                      onPressed: () => showModalBottomSheet<void>(
+                        context: context,
+                        builder: (context) => BipaSheetToasts(child: sheet(context, onOther: () {})),
+                      ),
+                      child: const Text('abrir'),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('abrir'));
+      await tester.pumpAndSettle();
+      await fail(tester);
+
+      expect(find.text('Não deu para salvar'), findsOneWidget, reason: 'uma cópia só, a da casca');
+      expect(find.text('Não deu para salvar').hitTestable(), findsOneWidget);
+    });
+  });
 }

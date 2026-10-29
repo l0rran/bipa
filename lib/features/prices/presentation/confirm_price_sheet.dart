@@ -1,6 +1,7 @@
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/bipa_toast.dart';
 import 'package:bipa/core/design_system/components/error_line.dart';
 import 'package:bipa/core/design_system/components/price_tag.dart';
 import 'package:bipa/core/design_system/components/product_category_icon.dart';
@@ -56,7 +57,9 @@ Future<SavedPrice?> showConfirmPriceSheet(
   context: context,
   isScrollControlled: true,
   useSafeArea: true,
-  builder: (_) => ConfirmPriceSheet(reading: reading, market: market, chooseMarket: chooseMarket),
+  builder: (_) => BipaSheetToasts(
+    child: ConfirmPriceSheet(reading: reading, market: market, chooseMarket: chooseMarket),
+  ),
 );
 
 /// A folha de conferir o preço: o produto (que dá para trocar), o preço em

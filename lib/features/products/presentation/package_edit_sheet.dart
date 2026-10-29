@@ -18,7 +18,7 @@ Future<void> showPackageEditSheet(BuildContext context, ProductPackage package) 
   context: context,
   isScrollControlled: true,
   useSafeArea: true,
-  builder: (_) => PackageEditSheet(package: package),
+  builder: (_) => BipaSheetToasts(child: PackageEditSheet(package: package)),
 );
 
 class PackageEditSheet extends ConsumerStatefulWidget {

@@ -131,25 +131,29 @@ void main() {
   group('falhas do banco avisam (H11)', () {
     const failed = 'Não deu para atualizar o estoque. Tente de novo.';
 
+    // O aviso aparece por cima da folha, onde dá para ver e tocar (H15); a
+    // cópia da tela fica atrás.
+    final onTop = find.text(failed).hitTestable();
+
     testWidgets('o stepper de "Em casa" mostra o aviso', (tester) async {
       await _openSheet(tester, _product('leite', 'Leite integral 1 L'), failingWrites: true);
       await tester.tap(find.bySemanticsLabel('Uma embalagem a mais'));
       await _settle(tester);
-      expect(find.text(failed), findsOneWidget);
+      expect(onTop, findsOneWidget);
     });
 
     testWidgets('o stepper do "ter sempre" mostra o aviso', (tester) async {
       await _openSheet(tester, _product('leite', 'Leite integral 1 L'), failingWrites: true);
       await tester.tap(find.bySemanticsLabel('Ter sempre mais'));
       await _settle(tester);
-      expect(find.text(failed), findsOneWidget);
+      expect(onTop, findsOneWidget);
     });
 
     testWidgets('trocar o local mostra o aviso', (tester) async {
       await _openSheet(tester, _product('leite', 'Leite integral 1 L'), failingWrites: true);
       await tester.tap(find.widgetWithText(ChoiceChip, 'Despensa'));
       await _settle(tester);
-      expect(find.text(failed), findsOneWidget);
+      expect(onTop, findsOneWidget);
     });
 
     testWidgets('sem falha, nenhum aviso aparece', (tester) async {
