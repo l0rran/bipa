@@ -18,6 +18,8 @@ void main() {
       const MissingPackageProductException(): l10n.packageProductMissing,
       const InvalidPackageSizeException(): l10n.packageSizeNotPositive,
       const ScaleBarcodeException(): l10n.barcodeScale,
+      const PackageNotFoundException(): l10n.packageNotFound,
+      const PackageInOpenTripException(): l10n.packageInOpenTrip,
     };
     cases.forEach((error, text) {
       expect(domainErrorText(l10n, error), text);
@@ -31,9 +33,9 @@ void main() {
     expect(domainErrorText(l10n, error), contains('Arroz'));
   });
 
-  test('o enum tem os sete códigos mapeados', () {
+  test('o enum tem os nove códigos mapeados', () {
     // O switch de domainErrorText é exaustivo; um código novo quebra a
     // compilação lá e lembra de cobrir aqui.
-    expect(DomainErrorCode.values, hasLength(7));
+    expect(DomainErrorCode.values, hasLength(9));
   });
 }

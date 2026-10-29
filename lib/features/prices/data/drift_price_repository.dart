@@ -17,26 +17,8 @@ final class DriftPriceRepository implements PriceRepository {
 
   @override
   Future<void> addAll(Iterable<PriceObservation> observations) => _db.batch((batch) {
-    batch.insertAll(_db.priceObservations, [for (final observation in observations) _toCompanion(observation)]);
+    batch.insertAll(_db.priceObservations, [for (final observation in observations) observation.toCompanion()]);
   });
-
-  static PriceObservationsCompanion _toCompanion(PriceObservation observation) => PriceObservationsCompanion.insert(
-    id: observation.id,
-    productId: observation.productId,
-    packageId: Value(observation.packageId),
-    marketId: observation.marketId,
-    priceCents: observation.price.cents,
-    regularPriceCents: Value(observation.regularPrice?.cents),
-    conditionKind: Value(observation.condition.kind),
-    minimumQuantity: Value(switch (observation.condition) {
-      Wholesale(:final minimumQuantity) => minimumQuantity,
-      AnyCustomer() || LoyaltyMembers() => null,
-    }),
-    source: observation.source,
-    observedAt: observation.observedAt,
-    createdAt: observation.createdAt,
-    supersedesId: Value(observation.supersedes),
-  );
 
   @override
   Stream<List<PriceHistoryEntry>> watchHistory(String productId) =>
@@ -126,4 +108,25 @@ extension PriceObservationRowMapper on PriceObservationRow {
       supersedes: supersedesId,
     );
   }
+}
+
+extension PriceObservationCompanionMapper on PriceObservation {
+  /// Uma observação gravada agora está pendente de sincronização.
+  PriceObservationsCompanion toCompanion() => PriceObservationsCompanion.insert(
+    id: id,
+    productId: productId,
+    packageId: Value(packageId),
+    marketId: marketId,
+    priceCents: price.cents,
+    regularPriceCents: Value(regularPrice?.cents),
+    conditionKind: Value(condition.kind),
+    minimumQuantity: Value(switch (condition) {
+      Wholesale(:final minimumQuantity) => minimumQuantity,
+      AnyCustomer() || LoyaltyMembers() => null,
+    }),
+    source: source,
+    observedAt: observedAt,
+    createdAt: createdAt,
+    supersedesId: Value(supersedes),
+  );
 }

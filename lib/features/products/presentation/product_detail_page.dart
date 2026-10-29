@@ -12,14 +12,17 @@ import 'package:bipa/core/design_system/components/quantity_stepper.dart';
 import 'package:bipa/core/design_system/components/scan_menu.dart';
 import 'package:bipa/core/design_system/components/section_header.dart';
 import 'package:bipa/core/di/core_providers.dart';
+import 'package:bipa/core/errors/domain_exception.dart';
 import 'package:bipa/core/formatting/calendar_days.dart';
 import 'package:bipa/core/formatting/formatters.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
+import 'package:bipa/core/l10n/domain_error_text.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
 import 'package:bipa/core/widgets/confirm_destructive.dart';
 import 'package:bipa/core/widgets/empty_state.dart';
 import 'package:bipa/features/prices/domain/package_prices.dart';
+import 'package:bipa/features/prices/domain/price_observation.dart';
 import 'package:bipa/features/prices/domain/price_trend.dart';
 import 'package:bipa/features/prices/presentation/price_sheet.dart';
 import 'package:bipa/features/prices/presentation/prices_providers.dart';
@@ -117,6 +120,103 @@ class _ProductView extends ConsumerWidget {
     await showPackageEditSheet(context, package);
   }
 
+  /// "Mover embalagem…": a embalagem posta no produto errado vai para outro,
+  /// que já existe ou é criado na hora, com os preços e o que está em casa
+  /// dela (G2, ADR 0022). Mover de volta desfaz.
+  Future<void> _movePackage(
+    BuildContext context,
+    WidgetRef ref,
+    List<ProductPackage> packages,
+    List<PriceHistoryEntry> history,
+    List<StockLot> lots,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final move = ref.read(movePackageProvider);
+    final package = await _choosePackage(context, packages);
+    if (package == null || !context.mounted) return;
+    final choice = await pickProduct(context, excludeId: product.id, title: l10n.packageMovePick);
+    if (choice == null || !context.mounted) return;
+    final intoName = switch (choice) {
+      ExistingProduct(:final product) => product.name,
+      NewProduct(:final name) => name,
+    };
+    final prices = history.where((entry) => entry.observation.packageId == package.id).length;
+    final atHome = lots.any((lot) => lot.packageId == package.id);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.packageMoveTitle(_packageName(l10n, package), intoName)),
+        content: Text([l10n.packageMovePrices(prices), if (atHome) l10n.packageMoveAtHome].join(' ')),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.packageMoveConfirm)),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      final into = await switch (choice) {
+        ExistingProduct(:final product) => move(packageId: package.id, intoProductId: product.id),
+        NewProduct(:final name) => move(packageId: package.id, newProductName: name),
+      };
+      if (into != null) messenger.showSnackBar(SnackBar(content: Text(l10n.packageMoved(into.name))));
+    } on DomainException catch (error) {
+      messenger.showSnackBar(SnackBar(content: Text(domainErrorText(l10n, error))));
+    } on Exception {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.packageMoveFailed)));
+    }
+  }
+
+  /// "Apagar embalagem": confirma dizendo quantos preços vão junto e oferece
+  /// "Desfazer" (G2, ADR 0022). O que está em casa fica, sem embalagem.
+  Future<void> _deletePackage(
+    BuildContext context,
+    WidgetRef ref,
+    List<ProductPackage> packages,
+    List<PriceHistoryEntry> history,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final delete = ref.read(deletePackageProvider);
+    final package = await _choosePackage(context, packages);
+    if (package == null || !context.mounted) return;
+    final prices = history.where((entry) => entry.observation.packageId == package.id).length;
+    final confirmed = await confirmDestructive(
+      context,
+      title: l10n.packageDeleteTitle(_packageName(l10n, package)),
+      body: l10n.packageDeleteBody(prices),
+      confirmLabel: l10n.productDeletePackage,
+    );
+    if (!confirmed) return;
+    try {
+      final deleted = await delete(package.id);
+      Future<void> undo() async {
+        try {
+          await delete.undo(deleted);
+        } on Exception {
+          messenger.showSnackBar(SnackBar(content: Text(l10n.packageRestoreFailed)));
+        }
+      }
+
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(l10n.packageDeleted),
+            action: SnackBarAction(label: l10n.undo, onPressed: () => unawaited(undo())),
+          ),
+        );
+    } on DomainException catch (error) {
+      messenger.showSnackBar(SnackBar(content: Text(domainErrorText(l10n, error))));
+    } on Exception {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.packageDeleteFailed)));
+    }
+  }
+
+  static String _packageName(AppLocalizations l10n, ProductPackage package) =>
+      package.label ?? package.barcode ?? l10n.packageTitle;
+
   /// Com mais de uma embalagem, pergunta qual; com uma, é ela.
   static Future<ProductPackage?> _choosePackage(BuildContext context, List<ProductPackage> packages) async {
     if (packages.length < 2) return packages.firstOrNull;
@@ -200,7 +300,8 @@ class _ProductView extends ConsumerWidget {
     final packages = ref.watch(productPackagesProvider(product.id)).value ?? const <ProductPackage>[];
     final history = ref.watch(priceHistoryProvider(product.id)).value ?? const [];
     final stock = ref.watch(stockProvider).value?.where((e) => e.item.productId == product.id).firstOrNull;
-    final amount = homeAmount(ref.watch(stockLotsProvider(product.id)).value ?? const <StockLot>[]);
+    final lots = ref.watch(stockLotsProvider(product.id)).value ?? const <StockLot>[];
+    final amount = homeAmount(lots);
     final onList = ref.watch(productsOnListProvider).contains(product.id);
     final photos = ref.watch(productPhotosDirectoryProvider).value;
     final now = ref.watch(clockProvider)();
@@ -259,11 +360,20 @@ class _ProductView extends ConsumerWidget {
                         value: () => _registerPrice(context, packages),
                         child: Text(l10n.productRegisterPrice),
                       ),
-                      if (packages.isNotEmpty)
+                      if (packages.isNotEmpty) ...[
                         PopupMenuItem(
                           value: () => _editPackage(context, packages),
                           child: Text(l10n.productEditPackage),
                         ),
+                        PopupMenuItem(
+                          value: () => _movePackage(context, ref, packages, history, lots),
+                          child: Text(l10n.productMovePackage),
+                        ),
+                        PopupMenuItem(
+                          value: () => _deletePackage(context, ref, packages, history),
+                          child: Text(l10n.productDeletePackage),
+                        ),
+                      ],
                       PopupMenuItem(value: () => _merge(context, ref), child: Text(l10n.productMerge)),
                       PopupMenuItem(value: () => _delete(context, ref), child: Text(l10n.productDelete)),
                     ],
