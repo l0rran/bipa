@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
+import 'package:bipa/core/design_system/components/bipa_toast.dart';
 import 'package:bipa/core/design_system/components/camera_mode_switch.dart';
 import 'package:bipa/core/design_system/components/scan_menu.dart';
 import 'package:bipa/core/design_system/components/scan_tray.dart';
@@ -248,7 +249,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
         NewProduct(:final name) => await createProduct(name),
       };
     } on Exception {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.capturePriceFailed)));
+      showBipaToast(messenger, l10n.capturePriceFailed);
       return;
     }
     await _confirmTag(product, null, read);
@@ -548,9 +549,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
           : await record.used(product, packageId: package?.id);
     } on Exception {
       if (mounted) {
-        messenger
-          ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(l10n.cameraAdjustFailed)));
+        showBipaToast(messenger, l10n.cameraAdjustFailed);
       }
       return;
     }
@@ -575,7 +574,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
       try {
         await record.undo(homeChange);
       } on Exception {
-        messenger.showSnackBar(SnackBar(content: Text(l10n.cameraAdjustFailed)));
+        showBipaToast(messenger, l10n.cameraAdjustFailed);
       }
     }
 
@@ -631,7 +630,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
         await stock.setLocation(product.id, chosen);
         place = chosen;
       } on Exception {
-        messenger.showSnackBar(SnackBar(content: Text(l10n.stockAdjustFailed)));
+        showBipaToast(messenger, l10n.stockAdjustFailed);
       }
     }
     if (!mounted) return;

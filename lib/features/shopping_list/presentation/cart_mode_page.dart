@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
+import 'package:bipa/core/design_system/components/bipa_toast.dart';
 import 'package:bipa/core/design_system/components/scan_tray.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/money/money.dart';
@@ -182,7 +183,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
         waiting: false,
       ));
     } on Exception {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.cartPriceFailed)));
+      showBipaToast(messenger, l10n.cartPriceFailed);
     }
   }
 
@@ -474,7 +475,7 @@ class _CartModePageState extends ConsumerState<CartModePage> {
       await cart.setPrice(entry.item.id, price);
       _settledItems.add(entry.item.key);
     } on Exception {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.cartPriceFailed)));
+      showBipaToast(messenger, l10n.cartPriceFailed);
     }
   }
 
