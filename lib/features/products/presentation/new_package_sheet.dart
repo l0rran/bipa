@@ -115,8 +115,24 @@ class _NewPackageSheetState extends ConsumerState<NewPackageSheet> {
       ? size.toStringAsFixed(0)
       : '$size'.replaceAll('.', ',');
 
+  /// Com um produto novo sugerido ("Leite condensado semidesnatado", do
+  /// catálogo), a busca por todas as palavras não acharia o "Leite" que a
+  /// pessoa tem: a escolha abre com o produto parecido, como a da etiqueta
+  /// ([productQueryFromLabel]), e "Criar" segue propondo o nome novo (G12).
   Future<void> _chooseProduct() async {
-    final choice = await pickProduct(context, initialQuery: _productName ?? '');
+    var query = _productName ?? '';
+    final newName = _product == null ? _newName : null;
+    if (newName != null && newName.isNotEmpty) {
+      try {
+        final products = await ref.read(productRepositoryProvider).watchAll().first;
+        query = productQueryFromLabel(newName, products: products);
+      } on Exception catch (error, stack) {
+        // Sem a lista, abre com o nome novo, como antes.
+        FlutterError.reportError(FlutterErrorDetails(exception: error, stack: stack, library: 'products'));
+      }
+      if (!mounted) return;
+    }
+    final choice = await pickProduct(context, initialQuery: query, newName: newName);
     if (choice == null || !mounted) return;
     setState(() {
       switch (choice) {

@@ -351,4 +351,124 @@ void main() {
       expect(PackageSuggestion.fromCatalog(onlyBrand, products: const []).newProductName, 'Camil');
     });
   });
+
+  group('o catálogo não põe a embalagem num produto mais genérico (G12)', () {
+    // A casa que o ADR 0013 sugere, com nomes genéricos.
+    final products = [_product('Leite'), _product('Arroz'), _product('Feijão'), _product('Uva')];
+
+    PackageSuggestion of(String barcode, String name, {String? brand, ProductKind? kind}) =>
+        PackageSuggestion.fromCatalog(
+          CatalogPackage(barcode: barcode, name: name, brand: brand, kind: kind, source: PackageOrigin.openFoodFacts),
+          products: products,
+        );
+
+    test('o leite condensado não vira embalagem de leite', () {
+      final suggestion = of(
+        '7890000110266',
+        'Leite Condensado Semidesnatado ITALAC',
+        brand: 'Italac',
+        kind: ProductKind.sweets,
+      );
+      expect((suggestion.product, suggestion.newProductName), (null, 'Leite condensado semidesnatado'));
+    });
+
+    test('o arroz carreteiro pronto não vira embalagem de arroz', () {
+      final suggestion = of('7893500012672', 'Arroz Carreteiro Tio João Cozinha Sabor 175g', brand: 'TIO JOAO');
+      expect((suggestion.product, suggestion.brand), (null, 'Tio João'));
+      expect(suggestion.newProductName, 'Arroz carreteiro cozinha sabor');
+    });
+
+    test('o feijão pronto não vira embalagem de feijão', () {
+      final suggestion = of(
+        '0004932000060',
+        'Feijão Preto Pronto Camil Temperado e Cozido',
+        brand: 'Camil',
+        kind: ProductKind.grains,
+      );
+      expect(suggestion.product, isNull);
+    });
+
+    test('a Fanta Uva não vira embalagem da fruta', () {
+      final suggestion = of('78909052', 'Fanta Uva', brand: 'Fanta');
+      expect((suggestion.product, suggestion.newProductName), (null, 'Fanta uva'));
+    });
+
+    test('a categoria do catálogo recusa o produto de outro tipo', () {
+      final orange = _product('Laranja');
+      final suggestion = PackageSuggestion.fromCatalog(
+        const CatalogPackage(
+          barcode: '1',
+          name: 'Laranja',
+          brand: 'Fanta',
+          kind: ProductKind.drinks,
+          source: PackageOrigin.openFoodFacts,
+        ),
+        products: [orange],
+      );
+      expect(suggestion.product, isNull);
+    });
+
+    test('o produto que cobre o nome continua sendo escolhido', () {
+      expect(of('7895000318629', 'Arroz Branco Qualita 1kg', brand: 'QUALITA').product?.name, 'Arroz');
+      expect(of('1', 'Leite UHT', brand: 'Italac', kind: ProductKind.shelfStable).product?.name, 'Leite');
+    });
+  });
+
+  group('nome novo do catálogo inteiro, com a marca quando sem ela sobra metade (G13)', () {
+    String? nameOf(String name, {String? brand}) => PackageSuggestion.fromCatalog(
+      CatalogPackage(barcode: '1', name: name, brand: brand, source: PackageOrigin.openFoodFacts),
+      products: const [],
+    ).newProductName;
+
+    test('sem a marca, só o sabor: a marca fica no lugar dela', () {
+      expect(nameOf('Fanta Uva', brand: 'Fanta'), 'Fanta uva');
+      expect(nameOf('Fanta sabor laranja', brand: 'Fanta'), 'Fanta laranja');
+      expect(nameOf('Guaraná Antarctica zero', brand: 'Antarctica'), 'Guaraná antarctica zero');
+    });
+
+    test('sem a marca, só a linha: a linha comum sai, as outras ficam', () {
+      expect(nameOf('Heineken Original 600ml', brand: 'Heineken'), 'Heineken');
+      expect(nameOf('Nescafe Classic', brand: 'Nescafe'), 'Nescafé');
+      expect(nameOf('Kit Kat Dark', brand: 'Kit Kat'), 'Kit kat dark');
+    });
+
+    test('uma palavra de produto basta, sem a marca', () {
+      expect(nameOf('Arroz Tio João 5kg', brand: 'Tio João'), 'Arroz');
+      expect(nameOf('Refrigerante Coca-Cola 2Lt', brand: 'Coca-Cola'), 'Refrigerante');
+    });
+
+    test('a marca sai onde ela aparece inteira, e a primeira palavra do nome fica', () {
+      expect(
+        nameOf('Café Torrado E Moído Extraforte Café Brasileiro Pacote 500g', brand: 'CAFE BRASILEIRO'),
+        'Café torrado e moído extraforte',
+      );
+      expect(nameOf('Feijão Carioca Camil 1Kg', brand: 'Camil Alimentos'), 'Feijão carioca');
+    });
+
+    test('nome em espanhol fica como veio', () {
+      expect(nameOf('Leche Condensada', brand: 'Nestlé'), 'Leche condensada');
+    });
+  });
+
+  group('grafia da marca do catálogo (G13)', () {
+    String? brandOf(String brand) => PackageSuggestion.fromCatalog(
+      CatalogPackage(barcode: '1', name: 'Leite', brand: brand, source: PackageOrigin.openFoodFacts),
+      products: const [],
+    ).brand;
+
+    test('a marca conhecida sem acento ganha a grafia dela', () {
+      expect(brandOf('NESTLE'), 'Nestlé');
+      expect(brandOf('TIO JOAO'), 'Tio João');
+      expect(brandOf('Tio Joao, Josapar'), 'Tio João');
+      expect(brandOf('QUALITA'), 'Qualitá');
+      expect(brandOf('3 CORACOES'), '3 Corações');
+      expect(brandOf('MOCA'), 'Moça');
+    });
+
+    test('o acento que a marca tem fica, e a desconhecida em caixa alta vira só a inicial', () {
+      expect(brandOf('NESTLÉ'), 'Nestlé');
+      expect(brandOf('Piracanjuba'), 'Piracanjuba');
+      expect(brandOf('CASA DE BENTO'), 'Casa De Bento');
+    });
+  });
 }
