@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Auto Backup até o Android 11 (ADR 0023, lacuna B1). As mesmas regras de
+     data_extraction_rules.xml: só o backup .bipa mais recente, e nada do
+     banco nem das fotos. -->
+<full-backup-content>
+    <include
+        domain="file"
+        path="backup/ultimo.bipa" />
+</full-backup-content>

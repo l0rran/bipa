@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Auto Backup do Android 12 em diante (ADR 0023, lacuna B1): só o backup
+     .bipa mais recente vai para a nuvem e para o aparelho novo, e a
+     restauração passa pela validação do nosso formato. Com um <include>, o
+     Android deixa de fora todo o resto: o banco (app_flutter/bipa.sqlite) e
+     as fotos (app_flutter/fotos/) não saem do aparelho por aqui.
+     O caminho é o de `latestBackupPath` (lib/core/backup/latest_backup.dart),
+     dentro de files/. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include
+            domain="file"
+            path="backup/ultimo.bipa" />
+    </cloud-backup>
+    <device-transfer>
+        <include
+            domain="file"
+            path="backup/ultimo.bipa" />
+    </device-transfer>
+</data-extraction-rules>
