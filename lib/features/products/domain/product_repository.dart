@@ -37,11 +37,12 @@ abstract interface class ProductRepository {
   Future<void> savePackage(ProductPackage package);
 
   /// Apaga o produto e, junto, as embalagens, os preços, o estoque, a lista
-  /// e o carrinho dele (ADR 0016).
+  /// e o carrinho dele (ADR 0016), e o arquivo da foto (ADR 0023).
   Future<void> delete(String id);
 
   /// Junta o produto [fromId] em [intoId], que fica com as embalagens, os
-  /// preços, o estoque, a lista e o carrinho dele; [fromId] deixa de existir.
+  /// preços, o estoque, a lista e o carrinho dele; [fromId] deixa de existir,
+  /// com o arquivo da foto dele.
   /// É o caminho para quem cadastrou o mesmo produto uma vez por marca.
   Future<void> merge({required String fromId, required String intoId});
 

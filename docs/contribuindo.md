@@ -28,6 +28,23 @@ flutter test
 
 Os três precisam passar. Código gerado (`*.g.dart`, `*.freezed.dart` e os arquivos do `gen-l10n`) não é versionado.
 
+## Mudança no esquema do banco
+
+Um backup `.bipa` é o próprio banco, então todo esquema que já existiu precisa continuar abrindo (ADR 0023). Do esquema 14 em diante, o esquema de cada versão fica guardado em `drift_schemas/`, e o teste de migração parte dele. Ao mudar as tabelas:
+
+1. suba o `schemaVersion` em `lib/core/database/app_database.dart` e escreva o passo em `onUpgrade`;
+2. rode `dart run build_runner build -d`;
+3. guarde o esquema novo e gere as classes de teste (as duas saídas são versionadas):
+
+```bash
+dart run drift_dev schema dump lib/core/database/app_database.dart drift_schemas/drift_schema_v15.json
+dart run drift_dev schema generate drift_schemas/ test/core/database/schemas/
+```
+
+4. em `test/core/database/migration_test.dart`, escreva um teste que grave dados no esquema anterior e confira o que eles viram no novo, como o `v14 → atual`.
+
+Sem o passo 3, o teste "o esquema que o app cria é o guardado para a versão atual" falha. Um esquema guardado nunca é editado nem apagado.
+
 ## Design system no código
 
 - **Cores, espaçamentos, raios e movimento** vêm de `design/tokens.json`, a mesma fonte do design system no Claude. Depois de mudar o arquivo, rode `dart run tool/generate_tokens.dart`, que reescreve `lib/core/design_system/bipa_palette.dart` e `bipa_metrics.dart`. Não edite esses dois à mão. O teste `test/core/design_system/bipa_palette_test.dart` falha se algum par de texto ficar abaixo de 4,5:1.

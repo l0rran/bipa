@@ -15,8 +15,15 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
 
+    <!-- Auto Backup ligado, mas só com o backup .bipa mais recente: o banco e
+         as fotos ficam de fora (ADR 0023, lacuna B1). As regras estão em
+         res/xml/: data_extraction_rules no Android 12 em diante,
+         backup_rules nos anteriores. -->
     <application
         android:name="${applicationName}"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:label="Bipa">

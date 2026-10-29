@@ -51,6 +51,9 @@ class AppDatabase extends _$AppDatabase {
   // v12: itens da balança de cada mercado (ADR 0018).
   // v13: preços da compra guardados com ela (ADR 0020).
   // v14: o local do item que saiu de casa (ADR 0021).
+  //
+  // Do 14 em diante, cada versão tem o esquema guardado em drift_schemas/
+  // (ADR 0023): subir este número pede um dump novo (docs/contribuindo.md).
   int get schemaVersion => 14;
 
   @override

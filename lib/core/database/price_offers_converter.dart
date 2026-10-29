@@ -11,6 +11,9 @@ import 'package:drift/drift.dart';
 ///
 /// `[{"cents": 499, "condition": "loyaltyMembers"},
 ///   {"cents": 459, "condition": "wholesale", "minimumQuantity": 3}]`
+///
+/// As chaves e os nomes das condições fazem parte do formato do backup
+/// (ADR 0023): renomear um deles exige migração (convenções em `tables.dart`).
 final class PriceOffersConverter extends TypeConverter<List<PriceOffer>, String> {
   const PriceOffersConverter();
 
