@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/error_line.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/money/money.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +18,7 @@ typedef WeighedBack = ({String text, String spoken});
 /// quilo), para conferir de cabeça. Devolve o valor digitado (maior que
 /// zero), ou `null` em "Cancelar".
 ///
-/// O [title] pergunta ("Quanto deu o Tomate italiano?"), para separar do
+/// O [title] pergunta ("Quanto deu Tomate italiano?"), para separar do
 /// preço da gôndola. [backFor] devolve `null` quando não há conta a fazer (o
 /// valor ainda não vale ou o produto não tem preço por quilo).
 Future<Money?> showWeighedValueDialog(
@@ -42,17 +45,57 @@ class _WeighedValueDialog extends StatefulWidget {
 }
 
 class _WeighedValueDialogState extends State<_WeighedValueDialog> {
+  /// Quanto tempo a conta de volta fica parada para o leitor de tela falar:
+  /// sem isso ele leria uma conta a cada tecla.
+  static const _announceDelay = Duration(milliseconds: 700);
+
   late final _controller = TextEditingController(text: widget.initial?.formatDecimal() ?? '');
+  Timer? _announceTimer;
+
+  /// A conta de volta como o leitor de tela a ouve: só muda depois de uma
+  /// pausa na digitação.
+  String? _spoken;
+
+  /// "Salvar" foi tocado com um valor que não vale: o erro fica à vista até o
+  /// valor passar a valer.
+  bool _showError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _spoken = _backNow()?.spoken;
+  }
 
   @override
   void dispose() {
+    _announceTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
 
+  WeighedBack? _backNow() {
+    final value = Money.tryParse(_controller.text);
+    return value == null ? null : widget.backFor(value);
+  }
+
+  void _onChanged() {
+    _announceTimer?.cancel();
+    _announceTimer = Timer(_announceDelay, () {
+      if (mounted) setState(() => _spoken = _backNow()?.spoken);
+    });
+    setState(() {
+      final money = Money.tryParse(_controller.text);
+      if (money != null && money.isPositive) _showError = false;
+    });
+  }
+
   void _submit() {
     final money = Money.tryParse(_controller.text);
-    if (money != null && money.isPositive) Navigator.of(context).pop(money);
+    if (money != null && money.isPositive) {
+      Navigator.of(context).pop(money);
+    } else {
+      setState(() => _showError = true);
+    }
   }
 
   @override
@@ -105,7 +148,7 @@ class _WeighedValueDialogState extends State<_WeighedValueDialog> {
                         cursorHeight: 30,
                         style: BipaText.headline.copyWith(fontSize: 30, height: 36 / 30, color: colors.ink),
                         decoration: const InputDecoration.collapsed(hintText: null),
-                        onChanged: (_) => setState(() {}),
+                        onChanged: (_) => _onChanged(),
                         onSubmitted: (_) => _submit(),
                       ),
                     ),
@@ -113,6 +156,11 @@ class _WeighedValueDialogState extends State<_WeighedValueDialog> {
                 ],
               ),
             ),
+            if (_showError)
+              Padding(
+                padding: const EdgeInsets.only(top: BipaSpacing.s2),
+                child: ErrorLine(l10n.cartWeighingInvalid),
+              ),
             _back(context),
             const SizedBox(height: BipaSpacing.s4),
             OverflowBar(
@@ -146,13 +194,15 @@ class _WeighedValueDialogState extends State<_WeighedValueDialog> {
   /// A conta de volta, com a balança: some enquanto não há conta a fazer.
   Widget _back(BuildContext context) {
     final colors = context.colors;
-    final value = Money.tryParse(_controller.text);
-    final back = value == null ? null : widget.backFor(value);
+    final back = _backNow();
     if (back == null) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(top: BipaSpacing.s2),
+      // Região viva: o leitor de tela fala a conta nova sozinho, mas só quando
+      // a digitação pára (D10); o texto da tela acompanha cada tecla.
       child: Semantics(
-        label: back.spoken,
+        liveRegion: true,
+        label: _spoken ?? back.spoken,
         excludeSemantics: true,
         child: Row(
           children: [
