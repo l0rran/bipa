@@ -1,6 +1,7 @@
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/text_scale.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 
@@ -89,8 +90,9 @@ class StockRow extends StatelessWidget {
                 Expanded(
                   child: Text(
                     name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                    // Com letra grande o nome não é cortado (H9).
+                    maxLines: isLargeText(context) ? null : 2,
+                    overflow: isLargeText(context) ? TextOverflow.visible : TextOverflow.ellipsis,
                     style: BipaText.bodyLarge.copyWith(color: colors.ink),
                   ),
                 ),

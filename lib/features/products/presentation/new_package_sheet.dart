@@ -7,6 +7,7 @@ import 'package:bipa/core/design_system/components/error_line.dart';
 import 'package:bipa/core/design_system/components/price_tag.dart';
 import 'package:bipa/core/design_system/components/product_category_icon.dart';
 import 'package:bipa/core/design_system/components/product_thumb.dart';
+import 'package:bipa/core/design_system/text_scale.dart';
 import 'package:bipa/core/errors/domain_exception.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/l10n/domain_error_text.dart';
@@ -188,8 +189,9 @@ class _NewPackageSheetState extends ConsumerState<NewPackageSheet> {
                             ),
                           Text(
                             name ?? l10n.packageChooseProduct,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                            // Com letra grande o nome não é cortado (H9).
+                            maxLines: isLargeText(context) ? null : 2,
+                            overflow: isLargeText(context) ? TextOverflow.visible : TextOverflow.ellipsis,
                             style: BipaText.title.copyWith(color: name == null ? colors.inkMuted : colors.ink),
                           ),
                           Text(widget.barcode, style: BipaText.barcode.copyWith(color: colors.inkMuted)),

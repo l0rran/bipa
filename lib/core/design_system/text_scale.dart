@@ -11,3 +11,7 @@ extension ScaledLineHeight on TextStyle {
     return MediaQuery.textScalerOf(context).scale(fontSize) * (height ?? 1.2) * lines;
   }
 }
+
+/// A letra do aparelho passou de 130%: as linhas com nome e valor empilham,
+/// em vez de espremer o nome ao lado do preço (H9).
+bool isLargeText(BuildContext context) => MediaQuery.textScalerOf(context).scale(1) > 1.3;

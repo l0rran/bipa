@@ -313,7 +313,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                 SliverToBoxAdapter(
                   child: SizedBox(
                     // O cartão e a folga para a sombra do "+".
-                    height: ProductCard.heightFor(context) + BipaSpacing.s3,
+                    height:
+                        ProductCard.heightFor(context, names: [for (final entry in low) entry.product.name]) +
+                        BipaSpacing.s3,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s4),

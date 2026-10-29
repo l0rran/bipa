@@ -57,34 +57,43 @@ class QuantityStepper extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           _RepeatButton(icon: Icons.remove_rounded, label: decrementLabel, onStep: onDecrement),
-          Semantics(
-            label: valueSpoken,
-            excludeSemantics: valueSpoken != null,
-            // Largura mínima, não fixa: com fonte grande, um número de dois ou
-            // três dígitos cabe em vez de quebrar a linha (H3).
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 48),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  AnimatedSwitcher(
-                    duration: duration,
-                    switchInCurve: BipaMotion.spring,
-                    transitionBuilder: (child, animation) => FadeTransition(
-                      opacity: animation,
-                      child: SlideTransition(
-                        position: Tween(begin: const Offset(0, 0.4), end: Offset.zero).animate(animation),
-                        child: child,
+          Flexible(
+            child: Semantics(
+              label: valueSpoken,
+              excludeSemantics: valueSpoken != null,
+              // Largura mínima, não fixa: com fonte grande, um número de dois ou
+              // três dígitos cabe em vez de quebrar a linha (H3). Se nem assim
+              // couber entre os botões, o número encolhe.
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 48),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AnimatedSwitcher(
+                        duration: duration,
+                        switchInCurve: BipaMotion.spring,
+                        transitionBuilder: (child, animation) => FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(
+                            position: Tween(begin: const Offset(0, 0.4), end: Offset.zero).animate(animation),
+                            child: child,
+                          ),
+                        ),
+                        child: Text(
+                          value,
+                          key: ValueKey(value),
+                          style: BipaText.number.copyWith(
+                            fontSize: 20,
+                            color: highlighted ? colors.alertText : colors.ink,
+                          ),
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      value,
-                      key: ValueKey(value),
-                      style: BipaText.number.copyWith(fontSize: 20, color: highlighted ? colors.alertText : colors.ink),
-                    ),
+                      Text(unit.toUpperCase(), style: BipaText.caption.copyWith(fontSize: 10, color: colors.inkMuted)),
+                    ],
                   ),
-                  Text(unit.toUpperCase(), style: BipaText.caption.copyWith(fontSize: 10, color: colors.inkMuted)),
-                ],
+                ),
               ),
             ),
           ),
