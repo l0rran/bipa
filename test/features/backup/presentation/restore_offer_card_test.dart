@@ -262,7 +262,7 @@ void main() {
 
       expect(backup.calls, ['prepare'], reason: 'nada foi restaurado sem a confirmação');
       expect(find.text('Substituir pelo backup'), findsOneWidget);
-      expect(find.text('De outro celular'), findsOneWidget);
+      expect(find.text('Veio do backup do Google'), findsOneWidget);
     });
 
     testWidgets('"Deixar de lado" diz o que vem depois, e o Desfazer traz o cartão de volta', (tester) async {

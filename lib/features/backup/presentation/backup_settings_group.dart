@@ -254,8 +254,9 @@ class _LastBackupRow extends StatelessWidget {
 
 /// A linha do último backup quando ele é de outro celular e espera resposta
 /// (protótipo AjustesBackupPendente): a mesma linha, agora botão, com o
-/// ícone do celular com a seta, a origem na frase ("De outro celular. Toque
-/// para restaurar.") e o dia grande com o ano embaixo.
+/// ícone do celular com a seta, a origem na frase ("Veio do backup do Google.
+/// Toque para restaurar.", sem afirmar outro celular, BK9) e o dia grande
+/// com o ano embaixo.
 class _PendingBackupRow extends StatelessWidget {
   const _PendingBackupRow({required this.last, required this.onTap});
 
@@ -298,7 +299,7 @@ class _PendingBackupRow extends StatelessWidget {
                       Text(l10n.backupLastTitle, style: BipaText.bodyLarge.copyWith(color: colors.ink)),
                       const SizedBox(height: 2),
                       Text(
-                        l10n.backupLastFromOtherPhone,
+                        l10n.backupLastFromGoogle,
                         style: BipaText.label.copyWith(
                           fontWeight: FontWeight.w500,
                           height: 20 / 14,

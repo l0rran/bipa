@@ -479,14 +479,14 @@ void _tests() {
           ),
         ],
       );
-      expect(find.text('De outro celular. Toque para restaurar.'), findsOneWidget);
+      expect(find.text('Veio do backup do Google. Toque para restaurar.'), findsOneWidget);
       expect(find.text('2026'), findsOneWidget);
       expect(find.text('Automático pausado até você decidir'), findsOneWidget);
       _expectReadable(tester);
 
       await tester.tap(find.text('Fazer backup agora'));
       await _settle(tester);
-      expect(find.text('Apagar o backup do outro celular?'), findsOneWidget);
+      expect(find.text('Apagar o backup que veio do Google?'), findsOneWidget);
       expect(find.text('Apagar e fazer backup'), findsOneWidget);
       _expectReadable(tester);
     });

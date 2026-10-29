@@ -44,13 +44,13 @@
   "@backupNever": {
     "description": "O valor do último backup quando nunca houve um."
   },
-  "backupLastFromOtherPhone": "De outro celular. Toque para restaurar.",
-  "@backupLastFromOtherPhone": {
-    "description": "A frase do último backup quando ele veio de outro celular e a pessoa não decidiu sobre ele: a linha restaura ao toque (protótipo AjustesBackupPendente)."
+  "backupLastFromGoogle": "Veio do backup do Google. Toque para restaurar.",
+  "@backupLastFromGoogle": {
+    "description": "A frase do último backup quando ele veio pelo backup do Google (de outro celular, ou deste mesmo antes de reinstalar o app) e a pessoa não decidiu sobre ele: a linha restaura ao toque (protótipo AjustesBackupPendente). Não diz \"de outro celular\": depois de reinstalar, o backup é do mesmo aparelho (BK9)."
   },
-  "backupLastPendingSemantics": "Último backup: de outro celular, {date}. Restaurar",
+  "backupLastPendingSemantics": "Último backup: veio do backup do Google, {date}. Restaurar",
   "@backupLastPendingSemantics": {
-    "description": "Rótulo acessível da linha do último backup de outro celular, que é um botão; a data vai por extenso.",
+    "description": "Rótulo acessível da linha do último backup que veio pelo backup do Google, que é um botão; a data vai por extenso.",
     "placeholders": {
       "date": {
         "type": "String",
@@ -76,7 +76,7 @@
   "@backupMakeNowResumesTomorrow": {
     "description": "Embaixo de \"Fazer backup agora\" no dia em que a pessoa deixou de lado o backup de outro celular: ele ainda se restaura pela linha de cima, e o diário grava por cima a partir de amanhã (BK6)."
   },
-  "backupReplacePendingTitle": "Apagar o backup do outro celular?",
+  "backupReplacePendingTitle": "Apagar o backup que veio do Google?",
   "backupReplacePendingBody": "O backup de {date}, com {productsText} {products, plural, =1{produto} other{produtos}}, {pricesText} {prices, plural, =1{preço} other{preços}} e {itemsText} {items, plural, =1{item em casa} other{itens em casa}}, dá lugar ao deste celular e não volta mais.",
   "@backupReplacePendingBody": {
     "description": "O diálogo de \"Fazer backup agora\" com o backup de outro celular pendente; a data e os números vão em negrito.",
@@ -131,9 +131,9 @@
       }
     }
   },
-  "backupFromOtherPhone": "De outro celular",
-  "@backupFromOtherPhone": {
-    "description": "Embaixo do título da folha de confirmação, no lugar do nome do arquivo, quando o backup é o do outro celular (Ajustes ou Início)."
+  "backupFromGoogle": "Veio do backup do Google",
+  "@backupFromGoogle": {
+    "description": "Embaixo do título da folha de confirmação, no lugar do nome do arquivo, quando o backup é o que veio pelo backup do Google e espera resposta (Ajustes ou Início). Não diz \"de outro celular\", porque depois de reinstalar o app é o mesmo aparelho (BK9)."
   },
   "backupProducts": "{count, plural, =1{produto} other{produtos}}",
   "@backupProducts": {

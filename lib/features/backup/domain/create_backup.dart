@@ -33,7 +33,7 @@ enum BackupTrigger {
 /// * enquanto ele veio de outro aparelho e a pessoa não respondeu
 ///   ([BackupInfo.madeHere], decisão do mantenedor em 29/10, BK1): o diário
 ///   fica pausado, sem prazo; "Fazer backup agora" só grava por cima com a
-///   confirmação ("Apagar o backup do outro celular?", `replacePending`) e
+///   confirmação ("Apagar o backup que veio do Google?", `replacePending`) e
 ///   com algo para guardar; e "Salvar uma cópia…" grava só a cópia. Depois
 ///   de "Deixar de lado" ([BackupInfo.setAsideAt]), o diário volta a gravar
 ///   por cima a partir do dia seguinte (BK6).

@@ -65,8 +65,8 @@ Future<void> _discard(PickedBackup? picked) async {
 /// muda no celular antes de "Substituir pelo backup".
 ///
 /// [fromOtherPhone] é o `ultimo.bipa` do outro celular, aberto pela linha de
-/// Ajustes ou pelo Início (protótipo AjustesBackupPendente): "De outro
-/// celular" fica no lugar do nome do arquivo, e o aviso tem o ano.
+/// Ajustes ou pelo Início (protótipo AjustesBackupPendente): "Veio do
+/// backup do Google" fica no lugar do nome do arquivo, e o aviso tem o ano.
 ///
 /// Restaurado, a folha fecha e o aviso "Backup de 12/10 restaurado" traz o
 /// "Desfazer" enquanto o aviso fica na tela, se [offerUndo].
@@ -185,7 +185,7 @@ class RestoreSheet extends ConsumerStatefulWidget {
   final VoidCallback? onPickAnother;
   final bool offerUndo;
 
-  /// O backup do outro celular: "De outro celular" embaixo do título.
+  /// O backup do outro celular: "Veio do backup do Google" embaixo do título.
   final bool fromOtherPhone;
 
   @override
@@ -316,7 +316,7 @@ class _ConfirmContent extends StatelessWidget {
     final prepared = this.prepared;
     // A origem fica embaixo do título nos dois momentos; o nome do arquivo,
     // só enquanto confere.
-    final source = fromOtherPhone ? l10n.backupFromOtherPhone : (prepared == null ? fileName : null);
+    final source = fromOtherPhone ? l10n.backupFromGoogle : (prepared == null ? fileName : null);
     final body = BipaText.body.copyWith(color: colors.ink);
     final note = BipaText.label.copyWith(fontWeight: FontWeight.w500, height: 20 / 14, color: colors.inkMuted);
 
