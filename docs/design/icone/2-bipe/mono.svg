@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108">
+  <!-- Monocromático: como logos/bipa-symbol-mono.svg, mas com respiro de 4 (não 2) entre barras e laser, para não fechar em 48 px -->
+  <g transform="translate(54 54) scale(0.85) translate(-48 -48)" fill="#000">
+    <rect x="21" y="25" width="8" height="16" rx="3"/>
+    <rect x="34" y="25" width="13" height="16" rx="3"/>
+    <rect x="52" y="25" width="6" height="16" rx="3"/>
+    <rect x="63" y="25" width="12" height="16" rx="3"/>
+    <rect x="12" y="45" width="72" height="6" rx="3"/>
+    <rect x="21" y="55" width="8" height="16" rx="3"/>
+    <rect x="34" y="55" width="13" height="16" rx="3"/>
+    <rect x="52" y="55" width="6" height="16" rx="3"/>
+    <rect x="63" y="55" width="12" height="16" rx="3"/>
+  </g>
+</svg>
