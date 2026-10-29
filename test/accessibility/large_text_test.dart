@@ -24,16 +24,22 @@ import 'package:bipa/core/location/location_service.dart';
 import 'package:bipa/core/money/money.dart';
 import 'package:bipa/core/permissions/permission_access.dart';
 import 'package:bipa/features/markets/domain/market.dart';
+import 'package:bipa/features/markets/presentation/market_form_page.dart';
 import 'package:bipa/features/markets/presentation/market_page.dart';
 import 'package:bipa/features/markets/presentation/markets_page.dart';
 import 'package:bipa/features/markets/presentation/markets_providers.dart';
 import 'package:bipa/features/prices/domain/price_observation.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
+import 'package:bipa/features/prices/presentation/price_sheet.dart';
 import 'package:bipa/features/prices/presentation/prices_providers.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
+import 'package:bipa/features/products/domain/package_suggestion.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
+import 'package:bipa/features/products/presentation/new_package_sheet.dart';
+import 'package:bipa/features/products/presentation/package_edit_sheet.dart';
 import 'package:bipa/features/products/presentation/product_detail_page.dart';
+import 'package:bipa/features/products/presentation/product_form_page.dart';
 import 'package:bipa/features/products/presentation/products_page.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:bipa/features/shopping_list/domain/trip_review.dart';
@@ -516,6 +522,134 @@ void _tests() {
         ),
       );
       expect(find.byType(ScanTrayItem), findsNWidgets(3));
+    });
+  });
+
+  group('formulários e folhas com a letra a 200%', () {
+    /// Abre [sheet] numa folha de baixo, como o app faz. A câmera não monta no
+    /// teste, mas as folhas que ela abre (embalagem nova) montam.
+    Future<void> openSheet(WidgetTester tester, Widget Function(BuildContext context) sheet) async {
+      await _pumpScreen(
+        tester,
+        Builder(
+          builder: (context) => Scaffold(
+            body: Center(
+              child: TextButton(
+                onPressed: () => showModalBottomSheet<void>(context: context, isScrollControlled: true, builder: sheet),
+                child: const Text('abrir'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('abrir'));
+      await _settle(tester);
+    }
+
+    testWidgets('formulário de produto novo', (tester) async {
+      await _pumpScreen(
+        tester,
+        const ProductFormPage(
+          args: ProductFormArgs(barcode: '7891234567890', name: 'Detergente líquido neutro para louças'),
+        ),
+      );
+      expect(find.byType(TextFormField), findsWidgets);
+    });
+
+    testWidgets('formulário de produto existente', (tester) async {
+      await _pumpScreen(tester, const ProductFormPage(productId: _cafe));
+      expect(find.byType(TextFormField), findsWidgets);
+    });
+
+    testWidgets('formulário de mercado novo', (tester) async {
+      await _pumpScreen(tester, const MarketFormPage(here: true));
+      expect(find.byType(TextFormField), findsWidgets);
+    });
+
+    testWidgets('formulário de mercado existente', (tester) async {
+      await _pumpScreen(tester, const MarketFormPage(marketId: _longMarket));
+      expect(find.byType(TextFormField), findsWidgets);
+    });
+
+    testWidgets('folha "Embalagem nova" com produto sugerido', (tester) async {
+      await openSheet(
+        tester,
+        (_) => NewPackageSheet(
+          barcode: '7891234567890',
+          price: const Money.cents(2890),
+          suggestion: PackageSuggestion(
+            product: Product(
+              id: _detergente,
+              name: 'Detergente líquido neutro para louças',
+              unit: MeasureUnit.milliliter,
+              createdAt: _now,
+              updatedAt: _now,
+            ),
+            brand: 'Ypê Premium Maçã Verde',
+            size: 500,
+            unit: MeasureUnit.milliliter,
+          ),
+        ),
+      );
+      expect(find.byType(NewPackageSheet), findsOneWidget);
+    });
+
+    testWidgets('folha "Embalagem nova" com produto novo', (tester) async {
+      await openSheet(
+        tester,
+        (_) => const NewPackageSheet(
+          barcode: '7891234567890',
+          suggestion: PackageSuggestion(
+            newProductName: 'Arroz',
+            brand: 'Tio João Tradicional',
+            size: 5,
+            unit: MeasureUnit.kilogram,
+          ),
+        ),
+      );
+      expect(find.byType(NewPackageSheet), findsOneWidget);
+    });
+
+    testWidgets('folha do preço', (tester) async {
+      final observation = PriceObservation(
+        id: 'o-folha',
+        productId: _cafe,
+        packageId: 'p-cafe',
+        marketId: _longMarket,
+        price: const Money.cents(2890),
+        source: PriceSource.priceTag,
+        observedAt: _now.subtract(const Duration(days: 12)),
+        createdAt: _now.subtract(const Duration(days: 12)),
+      );
+      await openSheet(
+        tester,
+        (_) => PriceSheet(
+          observation: observation,
+          title: 'Supermercado Pão de Açúcar da Avenida Paulista',
+          openLabel: 'Ver o mercado',
+          onOpen: () {},
+        ),
+      );
+      expect(find.byType(PriceSheet), findsOneWidget);
+    });
+
+    testWidgets('folha "Editar embalagem"', (tester) async {
+      await openSheet(
+        tester,
+        (_) => PackageEditSheet(
+          package: ProductPackage(
+            id: 'p-cafe',
+            productId: _cafe,
+            unit: MeasureUnit.gram,
+            size: 500,
+            brand: 'Pilão Tradicional Extraforte',
+            barcode: '789p-cafe',
+            createdAt: _now,
+            updatedAt: _now,
+          ),
+        ),
+      );
+      expect(find.byType(PackageEditSheet), findsOneWidget);
     });
   });
 
