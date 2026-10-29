@@ -156,6 +156,20 @@
       "w": 390,
       "h": 844,
       "title": "Guardar em casa: arrumar o que entrou"
+    },
+    "ModoCarrinhoGranelBandeja.dc.html": {
+      "x": 470,
+      "y": 3700,
+      "w": 390,
+      "h": 844,
+      "title": "Modo carrinho: granel na bandeja"
+    },
+    "ModoCarrinhoGranelValor.dc.html": {
+      "x": 940,
+      "y": 3700,
+      "w": 390,
+      "h": 844,
+      "title": "Modo carrinho: quanto deu o granel"
     }
   },
   "order": [
@@ -179,7 +193,9 @@
     "ProdutoEmbalagens.dc.html",
     "ProdutoJuntar.dc.html",
     "ProdutoJuntarConfirmar.dc.html",
-    "ArrumarEntrou.dc.html"
+    "ArrumarEntrou.dc.html",
+    "ModoCarrinhoGranelBandeja.dc.html",
+    "ModoCarrinhoGranelValor.dc.html"
   ],
   "notes": {
     "titulo": {

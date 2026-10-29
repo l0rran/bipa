@@ -170,6 +170,20 @@ O problema: **conferir onde cada coisa ficou depois da primeira carga, sem abrir
 - A linha é a do estoque (miniatura, nome e medidor). Tocar abre o local e o "ter sempre", como o editor da linha do Início, um item por vez.
 - Cada escolha salva na hora, por isso não há "Salvar": "Pronto" fecha, e arrastar para baixo também.
 
+### Granel na bandeja (outubro de 2026)
+
+O problema: **o preço por kg do granel não pode parecer o valor da linha** (D9). Na bandeja, "R$ 8,99/kg" ocupava a etiqueta com o contorno do preço estimado, que entra no total, e ficava fora dele.
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **Instacart** ([preços e itens por peso](https://instacart.com/help/section/pricing)) | Mostra o preço por unidade de peso e cobra o valor final pela etiqueta da pesagem, que pode mudar o total | Separar o preço por kg (certo) do valor da linha (desconhecido até a pesagem) | Não pedimos o peso para estimar: a linha fica com o traço e o total diz "sem preço de 1 item" |
+| **Etiquetas de balança** (FairPrice, ADR 0018, nas fontes) | O valor pago sai da etiqueta impressa pela balança | O valor da linha é o da pesagem: a etiqueta da balança ou o digitado | Ao digitar, mostramos o peso que o valor dá pelo preço por kg, para pegar um erro de digitação ("124,0") |
+
+**Do nosso jeito:**
+
+- **Um sinal por sentido.** Etiqueta cheia é preço de hoje, vazada é preço do histórico (no total com "≈"), traço é sem preço. O preço por kg sai da etiqueta e vira uma linha discreta sob o nome, com o ícone da balança.
+- O título do diálogo pergunta o que se pagou ("Quanto deu o Tomate italiano?"), para não confundir com o preço da gôndola.
+
 ## Fontes
 
 - [Menor Preço Brasil (Olhar Digital)](https://olhardigital.com.br/2025/08/03/dicas-e-tutoriais/quer-economizar-na-farmacia-e-supermercado-conheca-o-app-menor-preco-brasil/)
@@ -200,3 +214,4 @@ O problema: **conferir onde cada coisa ficou depois da primeira carga, sem abrir
 - [Ícones adaptativos (Android Developers)](https://developer.android.com/develop/ui/views/launch/icon_design_adaptive)
 - [Adobe Scan: modificar as capturas antes de salvar](https://www.adobe.com/devnet-docs/adobescan/ios/en/modify.html)
 - [Grocy 3.3.1: local padrão e local de consumo](https://newreleases.io/project/github/grocy/grocy/release/v3.3.1)
+- [Instacart: preços e itens vendidos por peso](https://instacart.com/help/section/pricing)
