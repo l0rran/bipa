@@ -4,9 +4,8 @@ import 'package:bipa/core/design_system/bipa_typography.dart';
 import 'package:bipa/core/design_system/components/bipa_toast.dart';
 import 'package:bipa/core/di/core_providers.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
-import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
-import 'package:bipa/features/products/presentation/measure_unit_label.dart';
+import 'package:bipa/features/products/presentation/package_fields.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -106,53 +105,23 @@ class _PackageEditSheetState extends ConsumerState<PackageEditSheet> {
                 header: true,
                 child: Text(l10n.packageEditTitle, style: BipaText.headline.copyWith(fontSize: 22, color: colors.ink)),
               ),
-              if (barcode != null)
-                Text(barcode, style: BipaText.body.copyWith(color: colors.inkMuted, letterSpacing: 0.5)),
+              // O código na fonte dos códigos (JetBrains Mono), como na
+              // "Embalagem nova".
+              if (barcode != null) Text(barcode, style: BipaText.barcode.copyWith(color: colors.inkMuted)),
               const SizedBox(height: BipaSpacing.s4),
-              TextFormField(
-                controller: _brand,
-                textCapitalization: TextCapitalization.words,
-                decoration: InputDecoration(labelText: l10n.packageBrand),
-              ),
-              const SizedBox(height: BipaSpacing.s4),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _size,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: InputDecoration(
-                        labelText: l10n.productPackageSize,
-                        helperText: l10n.productPackageSizeHint,
-                      ),
-                      validator: (value) {
-                        final text = value?.trim() ?? '';
-                        if (text.isEmpty) return null;
-                        final size = _parseSize(text);
-                        return size == null || size <= 0 ? l10n.formInvalidValue : null;
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: BipaSpacing.s3),
-                  Expanded(
-                    child: DropdownMenu<MeasureUnit>(
-                      initialSelection: _unit,
-                      label: Text(l10n.packageUnit),
-                      expandedInsets: EdgeInsets.zero,
-                      dropdownMenuEntries: [
-                        for (final unit in MeasureUnit.values)
-                          DropdownMenuEntry(
-                            value: unit,
-                            label: l10n.measureUnitOption(unit.localizedLabel(l10n), unit.symbol),
-                          ),
-                      ],
-                      onSelected: (unit) {
-                        if (unit != null) setState(() => _unit = unit);
-                      },
-                    ),
-                  ),
-                ],
+              // Os mesmos campos da "Embalagem nova", com a unidade dentro do
+              // tamanho.
+              PackageFields(
+                brand: _brand,
+                size: _size,
+                unit: _unit,
+                onUnitChanged: (unit) => setState(() => _unit = unit),
+                sizeValidator: (value) {
+                  final text = value?.trim() ?? '';
+                  if (text.isEmpty) return null;
+                  final size = _parseSize(text);
+                  return size == null || size <= 0 ? l10n.packageSizeInvalid : null;
+                },
               ),
               const SizedBox(height: BipaSpacing.s6),
               FilledButton(
