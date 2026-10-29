@@ -9,6 +9,7 @@ import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:bipa/features/shopping_list/presentation/start_shopping.dart';
 import 'package:bipa/features/shopping_list/presentation/trip_summary_label.dart';
+import 'package:bipa/features/stock/presentation/stock_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,6 +20,10 @@ import 'package:go_router/go_router.dart';
 /// abas, menos na Lista, que já mostra o mesmo progresso. "Continuar" abre o
 /// modo carrinho. Com a letra acima de 160%, ela fica no lugar do bipar
 /// flutuante, que sai, e segurá-la abre o menu do bipar (H12).
+///
+/// O anel do bipar respira duas vezes quando a barra aparece, sem fim
+/// enquanto a casa e a lista estão vazias, e fica parado durante a compra
+/// (H16).
 ///
 /// Rolando o conteúdo de qualquer aba para baixo, a barra encolhe; para cima,
 /// no topo ou ao trocar de aba, ela volta ao normal. Com a letra a partir de
@@ -60,6 +65,10 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     final navigationShell = widget.navigationShell;
     // Com o bipar flutuante, a barra da compra assume o toque longo dele.
     final floatingScan = ScanNavBar.floatsScan(context);
+    // A casa e a lista vazias, já carregadas: o anel do bipar é o convite ao
+    // primeiro bipe (H16). Enquanto carregam, contam como não vazias.
+    final houseEmpty = ref.watch(stockProvider.select((stock) => stock.value?.isEmpty ?? false));
+    final listEmpty = ref.watch(shoppingListProvider.select((list) => list.value?.isEmpty ?? false));
 
     void goBranch(int index) {
       _compact.expand();
@@ -118,6 +127,13 @@ class _HomeShellState extends ConsumerState<HomeShell> {
             _ => null,
           },
           aboveReplacesScan: true,
+          // Parado na compra, sem fim no convite ao primeiro bipe, e duas
+          // respirações quando a barra aparece.
+          ringBreath: trip != null
+              ? ScanRingBreath.still
+              : houseEmpty && listEmpty
+              ? ScanRingBreath.endless
+              : ScanRingBreath.twice,
           selectedIndex: navigationShell.currentIndex,
           onSelected: goBranch,
           // Durante a compra, bipar é o modo carrinho; fora dela, a câmera.

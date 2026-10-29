@@ -4,6 +4,7 @@ import 'dart:ui' show ImageFilter, clampDouble, lerpDouble;
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -14,6 +15,21 @@ class ScanNavDestination {
   final IconData icon;
   final IconData selectedIcon;
   final String label;
+}
+
+/// Quanto o anel do botão de bipar respira (H16, guia `ScanNavBar.md`).
+enum ScanRingBreath {
+  /// Duas respirações (4,8 s) quando a barra aparece: o app abre ou volta, ou
+  /// a pessoa volta da câmera ou de outra tela cheia. Trocar de aba não
+  /// recomeça. Ficam abaixo dos 5 s do WCAG 2.2.2, sem controle para parar.
+  twice,
+
+  /// Sem fim: o convite ao primeiro bipe, enquanto a casa e a lista estão
+  /// vazias e não há nada para ler ao lado.
+  endless,
+
+  /// Parado: durante a compra, a barra da compra é o destaque da tela.
+  still,
 }
 
 /// Barra de navegação de vidro, flutuante, com o botão de bipar no centro em
@@ -46,6 +62,9 @@ class ScanNavDestination {
 /// Segurar um destino mostra o rótulo grande num balão, como o Large Content
 /// Viewer do iOS. O balão é só dos destinos: segurar o bipar abre o menu.
 ///
+/// O anel em volta do bipar respira como [ringBreath] pede, e nunca com
+/// movimento reduzido.
+///
 /// Use com `Scaffold(extendBody: true)` para o conteúdo passar por trás.
 class ScanNavBar extends StatelessWidget {
   const ScanNavBar({
@@ -59,6 +78,7 @@ class ScanNavBar extends StatelessWidget {
     this.compact = false,
     this.above,
     this.aboveReplacesScan = false,
+    this.ringBreath = ScanRingBreath.twice,
     super.key,
   });
 
@@ -89,6 +109,10 @@ class ScanNavBar extends StatelessWidget {
   /// bipar ([floatsScan] diz quando). Sem [above], o bipar flutua como
   /// sempre; até 160%, nada muda.
   final bool aboveReplacesScan;
+
+  /// Quanto o anel do bipar respira. Quem monta a barra decide pelo estado
+  /// do app (compra em andamento, casa e lista vazias); a barra não o conhece.
+  final ScanRingBreath ringBreath;
 
   /// O anel que respira no botão de bipar, para os testes acharem.
   @visibleForTesting
@@ -324,6 +348,7 @@ class ScanNavBar extends StatelessWidget {
               child: _ScanButton(
                 label: scanLabel,
                 size: scanSize,
+                breath: ringBreath,
                 onPressed: onScan,
                 // O menu põe o "×" onde o botão fica na barra normal, que é
                 // como a barra volta ao abrir o menu.
@@ -341,12 +366,13 @@ class ScanNavBar extends StatelessWidget {
     );
 
     final above = this.above;
-    if (above == null) return bar;
+    // Sempre numa coluna: com ou sem [above], a barra é a mesma, e o anel
+    // não recomeça quando a barra da compra entra ou sai.
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         // Só no desenho (e no toque), sem mudar o layout.
-        Transform.translate(offset: Offset(0, _barHeight - barHeight), child: above),
+        if (above != null) Transform.translate(offset: Offset(0, _barHeight - barHeight), child: above),
         bar,
       ],
     );
@@ -375,6 +401,7 @@ class ScanNavBar extends StatelessWidget {
               child: _ScanButton(
                 label: scanLabel,
                 size: _scanSize,
+                breath: ringBreath,
                 onPressed: onScan,
                 onLongPress: onScanLongPress,
                 longPressLabel: scanLongPressLabel,
@@ -696,12 +723,14 @@ class _ScanButton extends StatefulWidget {
   const _ScanButton({
     required this.label,
     required this.size,
+    required this.breath,
     required this.onPressed,
     this.onLongPress,
     this.longPressLabel,
   });
 
   final String label;
+  final ScanRingBreath breath;
 
   /// 64 px, ou 56 na barra compacta.
   final double size;
@@ -716,36 +745,112 @@ class _ScanButton extends StatefulWidget {
 }
 
 class _ScanButtonState extends State<_ScanButton> with SingleTickerProviderStateMixin {
-  /// Um ciclo do anel que respira (`bipa-breathe`: 2,4 s, sem fim).
+  /// Um ciclo do anel que respira (`bipa-breathe`: 2,4 s).
   late final AnimationController _breath = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 2400),
-  );
+  )..addStatusListener(_onBreathStatus);
+
+  /// Quantas respirações quando a barra aparece (H16): 4,8 s.
+  static const _breathsOnAppear = 2;
 
   /// O anel cresce até 1,22 vez o botão enquanto some de 35% a 0 de opacidade.
   static const _ringScale = 1.22;
   static const _ringOpacity = 0.35;
 
-  bool _still = true;
+  /// Movimento reduzido: o anel não respira e nem chega a ser desenhado.
+  bool? _still;
+
+  /// O anel está à vista. Parado, ele sai da árvore e a barra não pede
+  /// quadros.
+  bool _breathing = false;
+
+  /// Os tickers da barra: desligados enquanto outra tela a cobre (a câmera,
+  /// por exemplo). Quando voltam, a barra apareceu de novo.
+  ValueListenable<TickerModeData>? _tickerMode;
+
+  /// O app voltando do fundo também faz a barra aparecer de novo.
+  late final AppLifecycleListener _lifecycle;
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle = AppLifecycleListener(onResume: _onAppear);
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Movimento reduzido: o anel para e nem chega a ser desenhado. Fora da
-    // tela (uma câmera aberta por cima, por exemplo) o ticker se cala sozinho,
-    // então a barra escondida não gasta quadros.
-    _still = MediaQuery.disableAnimationsOf(context);
-    if (_still) {
-      _breath.stop();
-    } else if (!_breath.isAnimating) {
-      _breath.repeat();
+    final tickerMode = TickerMode.getValuesNotifier(context);
+    if (tickerMode != _tickerMode) {
+      _tickerMode?.removeListener(_onTickerModeChanged);
+      _tickerMode = tickerMode..addListener(_onTickerModeChanged);
+    }
+    final still = MediaQuery.disableAnimationsOf(context);
+    if (still != _still) {
+      _still = still;
+      _appear();
+    }
+  }
+
+  @override
+  void didUpdateWidget(_ScanButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.breath == oldWidget.breath || _still!) return;
+    switch (widget.breath) {
+      // A casa e a lista ficaram vazias: o convite começa, ou continua do
+      // ponto em que estava.
+      case ScanRingBreath.endless:
+        _breathing = true;
+        _breath.repeat();
+      // Com o primeiro item, ou com a compra, o ciclo em curso termina e o
+      // anel para, sem sumir no meio da respiração.
+      case ScanRingBreath.twice || ScanRingBreath.still:
+        if (_breath.isAnimating) _breath.forward();
     }
   }
 
   @override
   void dispose() {
+    _tickerMode?.removeListener(_onTickerModeChanged);
+    _lifecycle.dispose();
     _breath.dispose();
     super.dispose();
+  }
+
+  void _onTickerModeChanged() {
+    if (_tickerMode!.value.enabled) _onAppear();
+  }
+
+  /// A barra voltou à vista: o anel respira como se ela tivesse aparecido
+  /// agora.
+  void _onAppear() {
+    if (!mounted) return;
+    setState(_appear);
+  }
+
+  /// Começa como a barra que acaba de aparecer: duas respirações, sem fim ou
+  /// parado. Sem fim, se já respirava, continua de onde estava.
+  void _appear() {
+    final breath = _still! ? ScanRingBreath.still : widget.breath;
+    switch (breath) {
+      case ScanRingBreath.twice:
+        _breathing = true;
+        _breath
+          ..reset()
+          ..repeat(count: _breathsOnAppear);
+      case ScanRingBreath.endless:
+        _breathing = true;
+        if (!_breath.isAnimating) _breath.repeat();
+      case ScanRingBreath.still:
+        _breathing = false;
+        _breath.stop();
+    }
+  }
+
+  /// As respirações acabaram: o anel sai.
+  void _onBreathStatus(AnimationStatus status) {
+    if (status.isCompleted && mounted) setState(() => _breathing = false);
   }
 
   /// O anel em [t], de 0 a 1 no ciclo. Como no CSS, a curva vale para cada
@@ -772,7 +877,7 @@ class _ScanButtonState extends State<_ScanButton> with SingleTickerProviderState
       // O anel passa dos limites do botão.
       clipBehavior: Clip.none,
       children: [
-        if (!_still)
+        if (_breathing)
           Positioned.fill(
             child: IgnorePointer(
               child: ExcludeSemantics(

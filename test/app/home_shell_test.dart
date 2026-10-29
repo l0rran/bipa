@@ -9,8 +9,11 @@ import 'package:bipa/core/design_system/components/scan_nav_bar.dart';
 import 'package:bipa/core/design_system/components/shopping_list.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
+import 'package:bipa/features/shopping_list/domain/shopping_list_item.dart';
 import 'package:bipa/features/shopping_list/domain/shopping_trip.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
+import 'package:bipa/features/stock/domain/stock_item.dart';
+import 'package:bipa/features/stock/presentation/stock_providers.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -43,6 +46,7 @@ Widget _app(
   double textScale = 1,
   bool accessibleNavigation = false,
   ShoppingTripSummary? trip,
+  Stream<List<ShoppingListEntry>>? list,
 }) {
   final router = GoRouter(
     initialLocation: _paths.first,
@@ -87,6 +91,10 @@ Widget _app(
       // Sem banco; fora de uma compra, sem a barra da compra.
       shoppingTripSummaryProvider.overrideWith((ref) => trip),
       activeTripMarketNameProvider.overrideWith((ref) => null),
+      // A casa vazia e, salvo outra [list], um item na lista: o anel do
+      // bipar respira duas vezes e para.
+      stockProvider.overrideWith((ref) => Stream.value(const <StockEntry>[])),
+      shoppingListProvider.overrideWith((ref) => list ?? Stream.value([_listEntry])),
     ],
     child: MaterialApp.router(
       theme: BipaTheme.light,
@@ -164,6 +172,11 @@ Rect _scanRect(WidgetTester tester) => tester.getRect(
 /// A pílula de vidro na tela.
 Rect _pillRect(WidgetTester tester) =>
     tester.getRect(find.descendant(of: find.byType(ScanNavBar), matching: find.byType(BackdropFilter)));
+
+/// Um item na lista: com ele, a casa e a lista não estão vazias.
+final _listEntry = ShoppingListEntry(
+  item: ShoppingListItem(id: 'pao', name: 'Pão', addedAt: DateTime(2026, 10, 28)),
+);
 
 /// Uma compra em andamento: "3 de 7 itens".
 const _trip = ShoppingTripSummary(done: 3, total: 7);
@@ -315,8 +328,8 @@ void main() {
 
   testWidgets('com movimento, a barra anima até o tamanho compacto', (tester) async {
     final semantics = tester.ensureSemantics();
-    // Com movimento, o anel do botão de bipar respira sem parar e o
-    // pumpAndSettle nunca assentaria: os quadros avançam no relógio.
+    // Com movimento, o anel do botão de bipar respira por 4,8 s, e o
+    // pumpAndSettle esperaria por ele: os quadros avançam no relógio.
     await tester.pumpWidget(_app(tabs, reduceMotion: false));
     await tester.pump(const Duration(seconds: 1));
 
@@ -600,6 +613,123 @@ void main() {
 
       await tester.pumpWidget(_app(tabs, textScale: 2));
       await tester.pump(const Duration(seconds: 1));
+      expect(ring, findsNothing);
+      expect(tester.hasRunningAnimations, isFalse);
+    });
+  });
+
+  // H16: o anel respira duas vezes quando a barra aparece, sem fim só com a
+  // casa e a lista vazias, e fica parado na compra e com movimento reduzido.
+  group('anel do bipar', () {
+    final ring = find.byKey(ScanNavBar.ringKey);
+
+    testWidgets('respira duas vezes (4,8 s) e para', (tester) async {
+      await tester.pumpWidget(_app(tabs, reduceMotion: false));
+      await tester.pump();
+      expect(ring, findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 2400));
+      expect(ring, findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 2200));
+      expect(ring, findsOneWidget);
+      // Depois da segunda respiração, o anel sai e a barra não pede quadros.
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump();
+      expect(ring, findsNothing);
+      expect(tester.hasRunningAnimations, isFalse);
+      await tester.pump(const Duration(seconds: 10));
+      expect(ring, findsNothing);
+      expect(tester.hasRunningAnimations, isFalse);
+    });
+
+    testWidgets('trocar de aba não recomeça', (tester) async {
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(_app(tabs, reduceMotion: false));
+      await tester.pump(const Duration(seconds: 6));
+      expect(ring, findsNothing);
+
+      await tester.tap(find.bySemanticsLabel('Produtos'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(ring, findsNothing);
+      semantics.dispose();
+    });
+
+    testWidgets('volta a respirar duas vezes quando a barra reaparece, depois da câmera', (tester) async {
+      await tester.pumpWidget(_app(tabs, reduceMotion: false));
+      await tester.pump(const Duration(seconds: 6));
+      expect(ring, findsNothing);
+
+      final router = GoRouter.of(tester.element(find.byType(HomeShell)));
+      unawaited(router.push('/cobre'));
+      await tester.pumpAndSettle();
+      expect(find.text('cobre'), findsOneWidget);
+
+      router.pop();
+      await tester.pump();
+      expect(ring, findsOneWidget);
+      await tester.pump(const Duration(seconds: 4));
+      expect(ring, findsOneWidget);
+      await tester.pump(const Duration(seconds: 2));
+      expect(ring, findsNothing);
+      expect(tester.hasRunningAnimations, isFalse);
+    });
+
+    testWidgets('com a casa e a lista vazias, respira sem fim', (tester) async {
+      await tester.pumpWidget(_app(tabs, reduceMotion: false, list: Stream.value(const [])));
+      await tester.pump();
+      for (var i = 0; i < 5; i++) {
+        await tester.pump(const Duration(seconds: 3));
+        expect(ring, findsOneWidget);
+        expect(tester.hasRunningAnimations, isTrue);
+      }
+    });
+
+    testWidgets('com o primeiro item, termina a respiração em curso e para', (tester) async {
+      final list = StreamController<List<ShoppingListEntry>>();
+      addTearDown(list.close);
+      await tester.pumpWidget(_app(tabs, reduceMotion: false, list: list.stream));
+      list.add(const []);
+      await tester.pump();
+      // No meio da terceira respiração: o convite já passou das duas.
+      await tester.pump(const Duration(milliseconds: 6000));
+      expect(ring, findsOneWidget);
+
+      list.add([_listEntry]);
+      await tester.pump();
+      // Faltam uns 1,2 s do ciclo: o anel não some no meio dele.
+      await tester.pump(const Duration(milliseconds: 900));
+      expect(ring, findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump();
+      expect(ring, findsNothing);
+      expect(tester.hasRunningAnimations, isFalse);
+    });
+
+    for (final scale in [1.0, 2.0]) {
+      testWidgets('a ${_percent(scale)}, fica parado durante a compra', (tester) async {
+        _usePhone(tester, 360);
+        await tester.pumpWidget(_app(tabs, reduceMotion: false, textScale: scale, trip: _trip));
+        await tester.pump();
+        expect(ring, findsNothing);
+        // A 200%, o bipar da Lista (sem a barra da compra) também.
+        if (scale > 1.6) {
+          await tester.tap(find.descendant(of: find.byType(ScanNavBar), matching: find.text('Lista')));
+          await tester.pump();
+          expect(_scanRect(tester).size, const Size.square(64));
+        }
+        await tester.pump(const Duration(seconds: 1));
+        expect(ring, findsNothing);
+        expect(tester.hasRunningAnimations, isFalse);
+      });
+    }
+
+    testWidgets('com movimento reduzido, fica parado mesmo com a casa e a lista vazias', (tester) async {
+      await tester.pumpWidget(_app(tabs, list: Stream.value(const [])));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      expect(ring, findsNothing);
+      expect(tester.hasRunningAnimations, isFalse);
+      await tester.pump(const Duration(seconds: 10));
       expect(ring, findsNothing);
       expect(tester.hasRunningAnimations, isFalse);
     });
