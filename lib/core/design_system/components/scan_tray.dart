@@ -691,6 +691,12 @@ class CameraGlassChip extends StatelessWidget {
 /// lido"): o preço da etiqueta em destaque e, ao lado, o item que o recebeu
 /// ou o que falta fazer. O leitor de tela anuncia a mudança. Só é tocável com
 /// [onTap] (protótipo "Modo carrinho: granel sem código").
+///
+/// Com [onDetailTap], o texto também é um botão, com a seta para baixo logo
+/// depois dele, e a ação ([actionLabel]) vira um segundo botão no mesmo
+/// aviso: em "Guardar em casa", "Leite · 1 na Geladeira ▾" abre a escolha
+/// do local, e "Desfazer" volta o bipe (protótipo "Guardar em casa, local do
+/// item novo", AB9).
 class LiveReadChip extends StatelessWidget {
   const LiveReadChip({
     required this.icon,
@@ -699,6 +705,8 @@ class LiveReadChip extends StatelessWidget {
     this.countdown,
     this.onTap,
     this.actionLabel,
+    this.onDetailTap,
+    this.detailActionLabel,
     super.key,
   });
 
@@ -722,8 +730,16 @@ class LiveReadChip extends StatelessWidget {
   /// o que faz ("Desfazer").
   final String? actionLabel;
 
+  /// O toque no texto, separado do [onTap]: abre a escolha do que o texto
+  /// diz (o local do item novo).
+  final VoidCallback? onDetailTap;
+
+  /// O que o toque no texto faz, para o leitor de tela ("trocar o local").
+  final String? detailActionLabel;
+
   @override
   Widget build(BuildContext context) {
+    if (onDetailTap case final openDetail?) return _withDetailButton(context, openDetail);
     final colors = context.colors;
     final onTap = this.onTap;
     final chip = Semantics(
@@ -796,6 +812,126 @@ class LiveReadChip extends StatelessWidget {
     );
     // Tocável, a área de toque tem 48 de altura, como a dos outros botões.
     return onTap == null ? chip : TapTarget(onTap: onTap, child: chip);
+  }
+
+  /// O aviso com dois botões: o texto (com a seta para baixo) e a ação. O
+  /// vidro tem 40 de altura, e cada botão ocupa os 48 da área de toque.
+  Widget _withDetailButton(BuildContext context, VoidCallback openDetail) {
+    final colors = context.colors;
+    final onTap = this.onTap;
+    final action = onTap == null ? null : actionLabel;
+    // A folga em cima e embaixo do vidro, dentro da área de toque.
+    const inset = (TapTarget.minSize - 40) / 2;
+
+    return Semantics(
+      liveRegion: true,
+      container: true,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: inset),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(BipaRadius.pill),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                  child: ColoredBox(color: colors.camera.withValues(alpha: 0.55)),
+                ),
+              ),
+            ),
+          ),
+          LayoutBuilder(
+            builder: (context, constraints) => Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Semantics(
+                    button: true,
+                    onTap: openDetail,
+                    label: [?price, detail, ?detailActionLabel].join(', '),
+                    excludeSemantics: true,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: openDetail,
+                      child: ConstrainedBox(
+                        // Pelo menos 48; com letra grande, o aviso cresce em vez de cortar (H3).
+                        constraints: const BoxConstraints(minHeight: TapTarget.minSize),
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            BipaSpacing.s3,
+                            inset,
+                            action == null ? BipaSpacing.s4 : BipaSpacing.s1,
+                            inset,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(icon, size: 18, color: colors.onCamera),
+                              const SizedBox(width: BipaSpacing.s2),
+                              if (price case final price?) ...[
+                                ShrinkToFit(
+                                  maxWidth: constraints.maxWidth * 0.3,
+                                  alignment: AlignmentDirectional.centerStart,
+                                  child: Text(
+                                    price,
+                                    style: BipaText.number.copyWith(
+                                      fontSize: 16,
+                                      height: 20 / 16,
+                                      color: colors.onCamera,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: BipaSpacing.s2),
+                              ],
+                              Flexible(
+                                child: Text(
+                                  detail,
+                                  maxLines: MediaQuery.textScalerOf(context).scale(1) > 1.3 ? 2 : 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: BipaText.caption.copyWith(color: colors.onCamera.withValues(alpha: 0.75)),
+                                ),
+                              ),
+                              const SizedBox(width: 2),
+                              Icon(Icons.expand_more_rounded, size: 16, color: colors.onCamera),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                if (action != null)
+                  Semantics(
+                    button: true,
+                    onTap: onTap,
+                    label: action,
+                    excludeSemantics: true,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: onTap,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: TapTarget.minSize),
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: BipaSpacing.s2, right: BipaSpacing.s4),
+                          child: Center(
+                            widthFactor: 1,
+                            heightFactor: 1,
+                            child: ShrinkToFit(
+                              maxWidth: constraints.maxWidth * 0.3,
+                              alignment: AlignmentDirectional.centerStart,
+                              child: Text(action, style: BipaText.label.copyWith(color: colors.onCamera)),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
