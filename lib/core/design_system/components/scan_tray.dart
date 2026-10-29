@@ -201,6 +201,9 @@ class ScanTrayItem extends StatelessWidget {
     this.price,
     this.priceEstimated = false,
     this.priceSemanticsLabel,
+    this.meta,
+    this.metaIcon,
+    this.nameSemanticsLabel,
     this.justRead = false,
     this.onNameTap,
     this.nameTapLabel,
@@ -221,6 +224,19 @@ class ScanTrayItem extends StatelessWidget {
   /// O que o leitor de tela diz do preço ("R$ 27,90, estimado"); sem ele,
   /// o próprio [price].
   final String? priceSemanticsLabel;
+
+  /// Uma segunda linha sob o nome, discreta, em `inkMuted` ("R$ 8,99/kg" do
+  /// granel que espera a pesagem), com [metaIcon] antes. Não é o valor da
+  /// linha: esse é o [price] (protótipo "granel na bandeja").
+  final String? meta;
+
+  /// O ícone da segunda linha: um sinal próprio, para ela não parecer o preço.
+  final IconData? metaIcon;
+
+  /// O que o leitor de tela diz do nome e da segunda linha juntos, quando
+  /// [meta] pede mais que a soma dos dois textos ("Tomate, 8,99 o quilo, falta
+  /// o valor da pesagem"). Só vale sem [onNameTap], que tem o próprio rótulo.
+  final String? nameSemanticsLabel;
 
   /// Tocar no nome muda a quantidade.
   final VoidCallback? onNameTap;
@@ -249,15 +265,43 @@ class ScanTrayItem extends StatelessWidget {
     final onNameTap = this.onNameTap;
     // Com letra grande o nome ganha a linha inteira e não é cortado (H9).
     final large = isLargeText(context);
+    final meta = this.meta;
+    final metaIcon = this.metaIcon;
+    final nameLabel = Text(
+      name,
+      maxLines: large ? null : 2,
+      overflow: large ? TextOverflow.visible : TextOverflow.ellipsis,
+      style: BipaText.label.copyWith(fontWeight: FontWeight.w600, color: colors.ink),
+    );
     final nameText = AnimatedOpacity(
       opacity: dimmed,
       duration: BipaMotion.base,
-      child: Text(
-        name,
-        maxLines: large ? null : 2,
-        overflow: large ? TextOverflow.visible : TextOverflow.ellipsis,
-        style: BipaText.label.copyWith(fontWeight: FontWeight.w600, color: colors.ink),
-      ),
+      child: meta == null
+          ? nameLabel
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                nameLabel,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (metaIcon != null) ...[
+                      Icon(metaIcon, size: 14, color: colors.inkMuted),
+                      const SizedBox(width: BipaSpacing.s1),
+                    ],
+                    Flexible(
+                      child: Text(
+                        meta,
+                        maxLines: large ? null : 1,
+                        overflow: large ? TextOverflow.visible : TextOverflow.ellipsis,
+                        style: BipaText.caption.copyWith(color: colors.inkMuted),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
     );
     // Preço confirmado: etiqueta cheia; estimado: só o contorno; sem preço:
     // o traço para digitar.
@@ -276,13 +320,18 @@ class ScanTrayItem extends StatelessWidget {
       tagText = colors.onPrice;
     }
 
+    final nameSemanticsLabel = this.nameSemanticsLabel;
     final nameWidget = onNameTap == null
-        ? (large
-              ? Padding(
-                  padding: const EdgeInsets.symmetric(vertical: BipaSpacing.s2),
-                  child: nameText,
-                )
-              : nameText)
+        ? Semantics(
+            label: nameSemanticsLabel,
+            excludeSemantics: nameSemanticsLabel != null,
+            child: large
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(vertical: BipaSpacing.s2),
+                    child: nameText,
+                  )
+                : nameText,
+          )
         : Semantics(
             button: true,
             label: nameTapLabel,
