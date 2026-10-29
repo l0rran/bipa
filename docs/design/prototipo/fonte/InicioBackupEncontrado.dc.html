@@ -25,7 +25,8 @@ a{color:#1C1B22}a:hover{color:#B00E28}
 .enter{animation:bipa-fade-up var(--duration-slow) var(--easing-standard) both}
 /* Backup encontrado (proposta): o cartão de pergunta do InsightCard, neutro, no lugar do convite da casa vazia.
    Os números do arquivo nos bipa-facts; "Restaurar" no botão neutro, porque é a resposta esperada e não apaga
-   nada (a casa está vazia), e "Começar do zero" no secundário, com a mesma largura. Sem ×: a pergunta fica até a resposta. */
+   nada (a casa está vazia), e "Começar do zero" no secundário, com a mesma largura. Sem ×: a pergunta fica até a resposta,
+   mesmo depois do primeiro item em casa (InicioBackupPendente). */
 .ask .bipa-insight__eyebrow{color:var(--ink-muted)}
 .ask .bipa-facts{--facts:3;margin-top:4px}
 .ask .bipa-insight__actions{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2);margin-top:var(--space-2)}
@@ -42,7 +43,7 @@ a{color:#1C1B22}a:hover{color:#B00E28}
 
     <div class="enter" style="animation-delay: 40ms;"><article class="bipa-insight ask" aria-labelledby="ask-title">
       <span class="bipa-insight__eyebrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18.5a4.5 4.5 0 0 1-.7-8.95 6 6 0 0 1 11.5 1.45A3.75 3.75 0 0 1 17.25 18.5z"/></svg>Backup do Google</span>
-      <h2 class="bipa-insight__headline" id="ask-title">Restaurar o backup de 12/10?</h2>
+      <h2 class="bipa-insight__headline" id="ask-title">Restaurar o backup de 12/10/2026?</h2>
       <div class="bipa-facts">
         <div class="bipa-fact"><span class="bipa-fact__value">214</span><span class="bipa-fact__label">produtos</span></div>
         <div class="bipa-fact"><span class="bipa-fact__value">1.380</span><span class="bipa-fact__label">preços</span></div>

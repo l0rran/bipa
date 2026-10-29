@@ -343,6 +343,25 @@ O problema: **não perder a casa e os preços ao trocar ou perder o celular, sem
 
 Aprovados e implementados em 29/10/2026, com as decisões do mantenedor registradas no [README do protótipo](prototipo/README.md): o nome "Backup", os números deste celular na confirmação, "Substituir pelo backup", o cartão "Backup encontrado" e o aviso quando o backup passa dos 25 MB do backup do Google.
 
+### Backup de outro celular ainda sem resposta (outubro de 2026)
+
+O problema: **o backup do celular antigo some sem a pessoa decidir** (BK1 da [análise do lote 12](../ux/analise-ux-2026-10-29-lote12.md)). O `ultimo.bipa` trazido pelo Android só se restaura pelo cartão do Início, que some com o primeiro item em casa; Ajustes não o restaura, porque o seletor do Android não vê a pasta do app; o backup diário para em silêncio enquanto Ajustes diz "Automático, uma vez por dia"; e "Fazer backup agora" grava por cima dele.
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **iCloud** ([backups dos aparelhos](https://support.apple.com/guide/icloud/view-and-manage-backups-mm122d3ef202/icloud)) | Um backup por aparelho, com o nome do aparelho; o de um aparelho que parou de fazer backup fica 180 dias antes de sair | **Dizer de qual aparelho é o backup**, e não tratar o de outro aparelho como o deste | Um arquivo só, por causa dos 25 MB do backup do Google: o de outro celular espera uma resposta em vez de ficar ao lado (pergunta ao mantenedor) |
+| **Backup do Google** ([Ajuda do Android](https://support.google.com/android/answer/2819582)) | Também um backup por aparelho; ao configurar o celular novo, a pessoa escolhe de qual restaurar | **A restauração como uma pergunta**, com o backup nomeado pela origem | A pergunta não some depois da configuração: fica no Início e em Ajustes até a resposta |
+| **Android Developers** ([Auto Backup](https://developer.android.com/identity/data/autobackup)) | Só o backup mais recente de cada app fica guardado, e um novo apaga o anterior | **Gravar por cima é apagar**: o diálogo diz isso com o verbo "Apagar" | — |
+| **As confirmações do próprio Bipa** ("Apagar mercado", "Juntar") | Diálogo com o que some e o botão com verbo e objeto | O mesmo diálogo, com a data e os números do que some | Os botões empilhados, porque "Apagar e fazer backup" não cabe ao lado de "Cancelar" |
+
+**Do nosso jeito:** dois quadros, [AjustesBackupPendente](prototipo/telas/AjustesBackupPendente.png) e [InicioBackupPendente](prototipo/telas/InicioBackupPendente.png), e o [RestaurarBackup](prototipo/telas/RestaurarBackup.png) revisto (BK3). Aguardam revisão.
+
+- **A linha "Último backup" diz a origem e restaura.** "De outro celular", com o dia e o ano, e o toque abre a folha de confirmação com esse arquivo, sem o seletor do Android.
+- **O estado do automático é o real.** "Automático pausado até você decidir", sob "Fazer backup agora", que é onde a decisão pesa.
+- **Gravar por cima pergunta.** "Apagar o backup do outro celular?", com a data, os números e "não volta mais", e o botão neutro "Apagar e fazer backup". "Salvar uma cópia…" grava só a cópia e não toca no backup do outro celular.
+- **O cartão do Início fica até a resposta**, menor quando a casa já tem itens, com "Restaurar" passando pela folha e "Deixar de lado" no lugar de "Começar do zero". O aviso diz o que vem depois: "O próximo grava por cima."
+- **Os mesmos três números dos dois lados e a data com o ano** na confirmação, para um backup velho não parecer recente.
+
 ## Fontes
 
 - [Menor Preço Brasil (Olhar Digital)](https://olhardigital.com.br/2025/08/03/dicas-e-tutoriais/quer-economizar-na-farmacia-e-supermercado-conheca-o-app-menor-preco-brasil/)
@@ -389,3 +408,4 @@ Aprovados e implementados em 29/10/2026, com as decisões do mantenedor registra
 - [Anki: importar um .colpkg apagou os baralhos (fórum)](https://forums.ankiweb.net/t/imported-colpkg-deleted-all-existing-decks/50282)
 - [Mihon: backups](https://mihon.app/docs/guides/backups)
 - [Smart Meal and Pantry: privacidade (Vamit)](https://sites.google.com/vamit.net/vamit)
+- [iCloud: ver e gerenciar os backups dos aparelhos (Suporte da Apple)](https://support.apple.com/guide/icloud/view-and-manage-backups-mm122d3ef202/icloud)
