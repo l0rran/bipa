@@ -59,8 +59,8 @@ Future<void> finishShopping(BuildContext context, WidgetRef ref, String tripId) 
       l10n.tripFinished(finished.stocked.values.fold(0, (sum, count) => sum + count)),
       actionLabel: l10n.undo,
       onAction: () => unawaited(undo()),
-      // A compra inteira volta com o Desfazer: um pouco mais de tempo.
-      duration: const Duration(seconds: 6),
+      // A compra inteira volta com o Desfazer: mais tempo (H13).
+      duration: BipaToastDuration.long,
     );
   } on Exception {
     showBipaToast(messenger, l10n.tripFinishFailed);

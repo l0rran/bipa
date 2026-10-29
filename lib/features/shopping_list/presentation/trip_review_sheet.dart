@@ -1,6 +1,7 @@
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/bipa_toast.dart';
 import 'package:bipa/core/design_system/components/price_tag.dart';
 import 'package:bipa/core/design_system/components/save_badge.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
@@ -17,7 +18,7 @@ Future<TripEnd?> showTripReview(BuildContext context, TripReview review) => show
   context: context,
   isScrollControlled: true,
   useSafeArea: true,
-  builder: (_) => TripReviewSheet(review: review),
+  builder: (_) => BipaSheetToasts(child: TripReviewSheet(review: review)),
 );
 
 /// A folha "Fim da compra" (protótipo "Fim da compra"): o total em

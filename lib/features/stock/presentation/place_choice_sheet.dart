@@ -1,6 +1,7 @@
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/bipa_toast.dart';
 import 'package:bipa/core/design_system/components/choice_chips.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/features/stock/domain/stock_location.dart';
@@ -26,7 +27,9 @@ Future<StockLocation?> pickStockLocation(
   showDragHandle: true,
   useSafeArea: true,
   isScrollControlled: true,
-  builder: (_) => PlaceChoiceSheet(productName: productName, current: current),
+  builder: (_) => BipaSheetToasts(
+    child: PlaceChoiceSheet(productName: productName, current: current),
+  ),
 );
 
 /// O conteúdo da folha de [pickStockLocation].

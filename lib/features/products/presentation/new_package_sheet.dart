@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
+import 'package:bipa/core/design_system/components/bipa_toast.dart';
 import 'package:bipa/core/design_system/components/error_line.dart';
 import 'package:bipa/core/design_system/components/price_tag.dart';
 import 'package:bipa/core/design_system/components/product_category_icon.dart';
@@ -43,10 +44,12 @@ Future<NewPackage?> showNewPackageSheet(
   return showModalBottomSheet<NewPackage>(
     context: context,
     isScrollControlled: true,
-    builder: (_) => NewPackageSheet(
-      barcode: barcode,
-      suggestion: PackageSuggestion.from(nameHint, products: products),
-      price: price,
+    builder: (_) => BipaSheetToasts(
+      child: NewPackageSheet(
+        barcode: barcode,
+        suggestion: PackageSuggestion.from(nameHint, products: products),
+        price: price,
+      ),
     ),
   );
 }

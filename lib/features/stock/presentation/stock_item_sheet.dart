@@ -28,7 +28,9 @@ Future<void> showStockItemSheet(BuildContext context, Product product, {bool fro
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
-    builder: (_) => StockItemSheet(product: product, fromProduct: fromProduct),
+    builder: (_) => BipaSheetToasts(
+      child: StockItemSheet(product: product, fromProduct: fromProduct),
+    ),
   );
 }
 

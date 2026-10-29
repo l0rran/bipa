@@ -215,6 +215,7 @@ class _ProductView extends ConsumerWidget {
         undone = true;
         unawaited(undo());
       },
+      duration: BipaToastDuration.long,
     );
     if (navigatorContext == null) return;
     if (openProductId != null) {

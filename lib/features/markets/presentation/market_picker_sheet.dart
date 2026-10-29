@@ -1,3 +1,4 @@
+import 'package:bipa/core/design_system/components/bipa_toast.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/core/navigation/routes.dart';
 import 'package:bipa/core/widgets/async_value_view.dart';
@@ -15,7 +16,9 @@ Future<Market?> pickMarket(BuildContext context, {String? selectedId, String? ti
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
-    builder: (_) => MarketPickerSheet(selectedId: selectedId, title: title),
+    builder: (_) => BipaSheetToasts(
+      child: MarketPickerSheet(selectedId: selectedId, title: title),
+    ),
   );
 }
 

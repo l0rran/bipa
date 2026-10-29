@@ -132,7 +132,10 @@ void main() {
     expect(find.text('Usei um: Leite integral'), findsOneWidget);
     expect(find.text('Desfazer'), findsOneWidget);
     // No Flutter 3.47 um SnackBar com ação ficaria até alguém tocar.
+    // O relógio do aviso anda por quadros: um quadro o esvazia, o seguinte
+    // começa a saída e o outro a termina.
     await tester.pump(const Duration(seconds: 4));
+    await tester.pump(const Duration(seconds: 1));
     await tester.pump(const Duration(seconds: 1));
     expect(find.text('Usei um: Leite integral'), findsNothing);
   });

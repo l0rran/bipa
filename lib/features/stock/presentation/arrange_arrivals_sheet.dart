@@ -29,7 +29,7 @@ Future<void> showArrangeArrivalsSheet(BuildContext context, List<StockEntry> arr
   showDragHandle: true,
   useSafeArea: true,
   isScrollControlled: true,
-  builder: (_) => ArrangeArrivalsSheet(arrivals: arrivals),
+  builder: (_) => BipaSheetToasts(child: ArrangeArrivalsSheet(arrivals: arrivals)),
 );
 
 /// A folha "Arrumar o que entrou" (protótipo "ArrumarEntrou"): os itens que
