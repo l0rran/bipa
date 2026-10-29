@@ -19,6 +19,7 @@ class PriceRowData {
     this.metaIcon,
     this.metaAlert = false,
     this.badge,
+    this.valueNote,
     this.place = false,
     this.onTap,
     this.tapHint,
@@ -45,6 +46,9 @@ class PriceRowData {
 
   /// Selo em verde sob o valor; só o melhor da lista tem.
   final String? badge;
+
+  /// O que o valor mede, pequeno e neutro embaixo dele ("o kg", "o litro").
+  final String? valueNote;
 }
 
 /// O cartão com as linhas de preço, separadas por um fio.
@@ -84,6 +88,7 @@ class _PriceRow extends StatelessWidget {
     final meta = row.meta;
     final badge = row.badge;
     final value = row.value;
+    final valueNote = row.valueNote;
     final onTap = row.onTap;
     final metaColor = row.metaAlert ? colors.alertText : colors.inkMuted;
     final content = LayoutBuilder(
@@ -136,6 +141,12 @@ class _PriceRow extends StatelessWidget {
                         maxWidth: width / 2,
                         child: Text(value, style: BipaText.number.copyWith(color: colors.ink)),
                       ),
+                      if (valueNote != null)
+                        Text(
+                          valueNote,
+                          textAlign: TextAlign.end,
+                          style: BipaText.body.copyWith(fontSize: 13, color: colors.inkMuted),
+                        ),
                       if (badge != null)
                         Text(
                           badge,
