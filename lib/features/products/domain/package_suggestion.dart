@@ -25,7 +25,7 @@ final class PackageSuggestion {
   /// A partir de [nameHint] ("ARROZ BRANCO TIO JOAO 5KG"), escolhe entre
   /// [products] o que tem todas as palavras do nome na etiqueta (o mais
   /// específico, se houver mais de um). Sem nenhum, sugere a primeira palavra
-  /// como produto novo. Tamanho e unidade vêm do fim do nome ("5KG"); a marca
+  /// como produto novo, com o acento das palavras comuns ("Feijão"). Tamanho e unidade vêm do fim do nome ("5KG"); a marca
   /// é o que sobra, tirando o nome do produto e palavras de descrição
   /// ("branco", "tradicional").
   factory PackageSuggestion.from(String? nameHint, {required List<Product> products}) {
@@ -53,7 +53,7 @@ final class PackageSuggestion {
     final brandWords = words.where(isBrand).toList();
     return PackageSuggestion(
       product: match,
-      newProductName: match == null ? _capitalize(words.first) : null,
+      newProductName: match == null ? _capitalize(_accentWord(words.first)) : null,
       brand: brandWords.isEmpty ? null : brandWords.map(_capitalize).join(' '),
       size: size,
       unit: unit,
@@ -104,10 +104,49 @@ bool _isNumber(String word) => RegExp(r'^[0-9]').hasMatch(word);
 String _capitalize(String word) => word.isEmpty ? word : word[0].toUpperCase() + word.substring(1);
 
 /// Palavras que ligam outras ("sabão em pó"): não são marca nem produto.
-const _connectors = {'de', 'da', 'do', 'com', 'sem', 'e', 'em'};
+const _connectors = {'de', 'da', 'do', 'das', 'dos', 'com', 'sem', 'e', 'em', 'a'};
 
 /// Palavras da embalagem, não do produto: ruído para quem procura.
-const _packaging = {'tipo', 'tp', 'pct', 'pacote', 'cx', 'caixa', 'lata', 'garrafa'};
+const _packaging = {
+  'tipo',
+  'tp',
+  'pct',
+  'pacote',
+  'cx',
+  'caixa',
+  'lata',
+  'garrafa',
+  'bdj',
+  'bandeja',
+  'pote',
+  'frasco',
+  'sache',
+  'saco',
+  'emb',
+  'embalagem',
+  'granel',
+};
+
+/// Unidades soltas, sem número ("BANANA PRATA KG"): é o "por quilo" da
+/// etiqueta, não parte do nome.
+const _units = {
+  'kg',
+  'kgs',
+  'g',
+  'gr',
+  'grs',
+  'ml',
+  'l',
+  'lt',
+  'lts',
+  'litro',
+  'litros',
+  'un',
+  'und',
+  'unid',
+  'unidade',
+  'unidades',
+};
 
 /// Palavras que dizem como é o produto ("branco", "carioca"), não a marca.
 const _traits = {
@@ -144,7 +183,190 @@ const _traits = {
 };
 
 /// Palavras que descrevem o produto, não a marca.
-const _descriptors = {..._connectors, ..._packaging, ..._traits};
+const _descriptors = {..._connectors, ..._packaging, ..._units, ..._traits};
+
+/// Marcas comuns no mercado, sem acento e em minúsculas. O recorte da
+/// etiqueta só tira uma palavra como marca se ela estiver aqui: uma marca
+/// que fica no nome custa menos que uma variedade que some (G6). Ficam de
+/// fora as marcas que também são palavras de produto ("prato", "galo").
+const _knownBrands = {
+  'adria',
+  'aurora',
+  'barilla',
+  'batavo',
+  'bauducco',
+  'camil',
+  'catupiry',
+  'coqueiro',
+  'danone',
+  'dona benta',
+  'elege',
+  'fugini',
+  'friboi',
+  'gomes da costa',
+  'heinz',
+  'hellmanns',
+  'italac',
+  'itambe',
+  'kicaldo',
+  'knorr',
+  'liza',
+  'maggi',
+  'marilan',
+  'melitta',
+  'moca',
+  'nescau',
+  'nestle',
+  'ninho',
+  'omo',
+  'parmalat',
+  'perdigao',
+  'pilao',
+  'piracanjuba',
+  'piraque',
+  'polenghi',
+  'pomarola',
+  'qualy',
+  'renata',
+  'sadia',
+  'santa clara',
+  'seara',
+  'soya',
+  'swift',
+  'tio joao',
+  'tres coracoes',
+  'uniao',
+  'vitarella',
+  'yoki',
+  'ype',
+};
+
+final _knownBrandWords = [for (final brand in _knownBrands) brand.split(' ')];
+
+/// O acento das palavras de mercado mais comuns, que a etiqueta escreve sem
+/// ("FEIJAO"), para o nome do produto novo não nascer "Feijao" (G6). Só
+/// palavras sem outra leitura no mercado: uma palavra fora daqui fica como
+/// veio, sem acento inventado.
+const _accents = {
+  'acai': 'açaí',
+  'acem': 'acém',
+  'acucar': 'açúcar',
+  'agua': 'água',
+  'alcool': 'álcool',
+  'brocolis': 'brócolis',
+  'cafe': 'café',
+  'camarao': 'camarão',
+  'cha': 'chá',
+  'coxao': 'coxão',
+  'feijao': 'feijão',
+  'figado': 'fígado',
+  'file': 'filé',
+  'fuba': 'fubá',
+  'graos': 'grãos',
+  'hamburguer': 'hambúrguer',
+  'higienico': 'higiênico',
+  'limao': 'limão',
+  'maca': 'maçã',
+  'macarrao': 'macarrão',
+  'mamao': 'mamão',
+  'maracuja': 'maracujá',
+  'melao': 'melão',
+  'moida': 'moída',
+  'moido': 'moído',
+  'musculo': 'músculo',
+  'oleo': 'óleo',
+  'pao': 'pão',
+  'pessego': 'pêssego',
+  'pimentao': 'pimentão',
+  'po': 'pó',
+  'pure': 'purê',
+  'requeijao': 'requeijão',
+  'sabao': 'sabão',
+};
+
+/// [word], sem acento e em minúsculas, com o acento de [_accents].
+String _accentWord(String word) => _accents[word] ?? word;
+
+typedef _Token = ({String word, String text});
+
+/// As palavras da etiqueta: `word` sem acento e em minúsculas, para
+/// comparar, e `text` como foi lida, para guardar o acento que a etiqueta
+/// tiver ("FEIJÃO").
+List<_Token> _tokens(String hint) {
+  final folded = foldText(hint);
+  // O fold troca letra por letra: com o mesmo tamanho, cada palavra tem o
+  // trecho original no mesmo lugar.
+  final sameLength = folded.length == hint.length;
+  return [
+    for (final match in _wordPattern.allMatches(folded))
+      (word: match.group(0)!, text: sameLength ? hint.substring(match.start, match.end) : match.group(0)!),
+  ];
+}
+
+/// As posições das palavras que formam uma marca de [_knownBrands], que
+/// pode ter mais de uma palavra ("tio joao").
+Set<int> _brandPositions(List<String> words) {
+  final found = <int>{};
+  for (var i = 0; i < words.length; i++) {
+    for (final brand in _knownBrandWords) {
+      if (i + brand.length > words.length) continue;
+      var same = true;
+      for (var j = 0; j < brand.length && same; j++) {
+        same = words[i + j] == brand[j];
+      }
+      if (same) found.addAll([for (var j = i; j < i + brand.length; j++) j]);
+    }
+  }
+  return found;
+}
+
+/// O nome de produto que a etiqueta sugere (G6): todas as palavras dela,
+/// tirando só o que com certeza não distingue o produto, que é número,
+/// tamanho, unidade, palavra da embalagem e marca de [_knownBrands]. A
+/// variedade fica: "BANANA PRATA KG" é "Banana prata", e "QUEIJO MINAS
+/// FRESCAL KG", "Queijo minas frescal". Uma palavra desconhecida também
+/// fica, porque um nome um pouco mais longo é melhor que dois produtos
+/// fundidos num só, com os preços misturados.
+///
+/// Sai em minúsculas com a primeira maiúscula e com o acento das palavras
+/// comuns ("FEIJAO CARIOCA CAMIL 1KG" é "Feijão carioca"); o acento que a
+/// etiqueta tiver fica. Uma palavra que liga outras ("de", "em") só fica
+/// entre duas que ficam ("Sabão em pó"). Se só sobra a marca ("NESCAU
+/// 400G"), ela é o nome.
+String productNameFromLabel(String? nameHint) {
+  final hint = nameHint?.trim() ?? '';
+  if (hint.isEmpty) return '';
+  final tokens = _tokens(hint);
+  final words = [for (final token in tokens) token.word];
+  final (_, _, sizeWords) = _size(foldText(hint));
+  final brands = _brandPositions(words);
+
+  bool content(int i) {
+    final word = words[i];
+    final noise =
+        _isNumber(word) ||
+        sizeWords.contains(word) ||
+        _units.contains(word) ||
+        _packaging.contains(word) ||
+        _connectors.contains(word);
+    return !noise;
+  }
+
+  var kept = [for (var i = 0; i < words.length; i++) content(i) && !brands.contains(i)];
+  if (!kept.contains(true)) kept = [for (var i = 0; i < words.length; i++) content(i)];
+
+  final name = <String>[];
+  for (var i = 0; i < tokens.length; i++) {
+    final connectsKept = _connectors.contains(words[i]) && name.isNotEmpty && i + 1 < tokens.length && kept[i + 1];
+    if (!kept[i] && !connectsKept) continue;
+    final token = tokens[i];
+    final hasAccent = token.text.toLowerCase() != token.word;
+    name.add(hasAccent ? token.text : _accentWord(token.word));
+  }
+  if (name.isEmpty) return '';
+  final text = name.join(' ').toLowerCase();
+  return text[0].toUpperCase() + text.substring(1);
+}
 
 /// O texto com que a escolha de produto abre a partir do nome lido numa
 /// etiqueta (G4). A etiqueta vem crua ("FEIJAO CARIOCA CAMIL 1KG"), e a busca
@@ -152,52 +374,30 @@ const _descriptors = {..._connectors, ..._packaging, ..._traits};
 /// "Feijão carioca" cadastrado.
 ///
 /// 1. Um produto cujo nome inteiro está na etiqueta (o mesmo critério de
-///    [PackageSuggestion.from]): abre com o nome dele, que a busca acha.
-/// 2. Senão, o recorte da etiqueta: a primeira palavra (o produto) e as que
-///    dizem como ele é ("carioca", "integral"), sem marca, tamanho, números
-///    nem palavras da embalagem, em minúsculas com a primeira maiúscula
-///    ("Feijao carioca"). É também o nome de um produto novo, se a pessoa
-///    cadastrar.
+///    [PackageSuggestion.from]): abre com o nome dele, que a busca acha. Se
+///    a etiqueta tem palavras que ele não tem ("BANANA NANICA KG" e o
+///    produto "Banana"), a escolha oferece também cadastrar o recorte
+///    ([productNameFromLabel]), para a variedade nova não cair nele (G6).
+/// 2. Senão, o recorte da etiqueta ([productNameFromLabel]), que é também o
+///    nome de um produto novo, se a pessoa cadastrar.
 /// 3. Se nenhum produto tem todas as palavras do recorte, e um só tem a
-///    maioria das palavras da etiqueta (sem tamanho nem ruído), abre com o
-///    nome dele: em "NESCAU ACHOC PO 400G", a marca vem primeiro e o nome
-///    vem abreviado, e "achoc" e "po" acham o "Achocolatado em pó". Isso só
-///    vale para o texto inicial: a busca continua pedindo todas as palavras,
-///    e com um empate fica o recorte, sem adivinhar.
+///    maioria delas, abre com o nome dele: em "ACHOC PO MALTADO 400G", o
+///    nome vem abreviado, e "achoc" e "po" acham o "Achocolatado em pó".
+///    Isso só vale para o texto inicial: a busca continua pedindo todas as
+///    palavras, e com um empate fica o recorte, sem adivinhar.
 String productQueryFromLabel(String? nameHint, {required List<Product> products}) {
   final hint = nameHint?.trim() ?? '';
   if (hint.isEmpty) return '';
   if (PackageSuggestion.from(hint, products: products).product case final match?) return match.name;
 
-  final folded = foldText(hint);
-  // O fold troca letra por letra: o trecho original de cada palavra guarda o
-  // acento, se a etiqueta tiver ("FEIJÃO").
-  final sameLength = folded.length == hint.length;
-  final tokens = [
-    for (final match in _wordPattern.allMatches(folded))
-      (word: match.group(0)!, text: sameLength ? hint.substring(match.start, match.end) : match.group(0)!),
-  ];
-  final (_, _, sizeWords) = _size(folded);
-  bool isNoise(String word) =>
-      _isNumber(word) || sizeWords.contains(word) || _connectors.contains(word) || _packaging.contains(word);
-  final head = tokens.indexWhere((token) => !isNoise(token.word));
-  if (head < 0) return '';
-
-  bool kept(int index) => index == head || _traits.contains(tokens[index].word);
-  final core = <String>[];
-  for (var i = 0; i < tokens.length; i++) {
-    final connectsKept =
-        _connectors.contains(tokens[i].word) && core.isNotEmpty && i + 1 < tokens.length && kept(i + 1);
-    if (kept(i) || connectsKept) core.add(tokens[i].text);
-  }
-  final text = core.join(' ').toLowerCase();
-  final query = text[0].toUpperCase() + text.substring(1);
+  final query = productNameFromLabel(hint);
+  if (query.isEmpty) return '';
   if (products.any((product) => matchesProductSearch(query, name: product.name))) return query;
 
   final words = {
-    for (final token in tokens)
+    for (final word in searchWords(query))
       // Uma letra solta ("o", "c") está em quase todo nome: não conta.
-      if (!isNoise(token.word) && token.word.length > 1) token.word,
+      if (word.length > 1 && !_connectors.contains(word)) word,
   };
   Product? best;
   var bestCount = 0;

@@ -43,6 +43,11 @@ void main() {
     expect((eggs.size, eggs.unit), (12, MeasureUnit.unit));
   });
 
+  test('o produto novo ganha o acento das palavras comuns', () {
+    expect(PackageSuggestion.from('FEIJAO CARIOCA CAMIL 1KG', products: const []).newProductName, 'Feijão');
+    expect(PackageSuggestion.from('BISCOITO MAIZENA 200G', products: const []).newProductName, 'Biscoito');
+  });
+
   test('sem nome lido, não sugere nada', () {
     expect(PackageSuggestion.from(null, products: [_product('Arroz')]), PackageSuggestion.empty);
     expect(PackageSuggestion.from('  ', products: const []), PackageSuggestion.empty);
@@ -67,35 +72,118 @@ void main() {
       }
     });
 
-    test('sem o produto, recorta: tira marca, tamanho, números e palavras da embalagem', () {
-      expect(query('FEIJAO CARIOCA CAMIL 1KG', const []), 'Feijao carioca');
-      expect(query('ARROZ BRANCO TIO JOAO 5KG', const []), 'Arroz branco');
-      expect(query('LEITE UHT INTEGRAL ITALAC 1L', const []), 'Leite uht integral');
-      expect(query('PCT FEIJAO PRETO KICALDO 1 KG', const []), 'Feijao preto');
-      // A palavra que liga fica entre as que ficam; o resto sai com a marca.
-      expect(query('SABAO EM PO OMO 1,6KG', const []), 'Sabao em po');
-      // O acento da etiqueta, quando há, fica.
-      expect(query('FEIJÃO CARIOCA CAMIL 1KG', const []), 'Feijão carioca');
+    test('sem o produto, abre com o recorte', () {
+      expect(query('FEIJAO CARIOCA CAMIL 1KG', const []), 'Feijão carioca');
+      expect(query('BANANA PRATA KG', const []), 'Banana prata');
     });
 
     test('o recorte que já acha produtos não é trocado', () {
-      // "Leite" acha os dois: a pessoa escolhe, e nada é adivinhado.
-      expect(query('LEITE COND MOCA 395G', ['Leite condensado', 'Leite integral']), 'Leite');
+      // "Leite cond" acha o condensado pela busca: a pessoa confere e escolhe.
+      expect(query('LEITE COND MOCA 395G', ['Leite condensado', 'Leite integral']), 'Leite cond');
     });
 
     test('sem resultado para o recorte, o único produto com a maioria das palavras', () {
-      // A marca vem primeiro e o nome, abreviado: "achoc" e "po" são 2 de 3.
-      expect(query('NESCAU ACHOC PO 400G', ['Achocolatado em pó', 'Café']), 'Achocolatado em pó');
+      // O nome vem abreviado: "achoc" e "po" são 2 de 3.
+      expect(query('ACHOC PO MALTADO 400G', ['Achocolatado em pó', 'Café']), 'Achocolatado em pó');
       // Metade não é maioria.
-      expect(query('PILAO CAFE 500G', ['Café torrado']), 'Pilao');
+      expect(query('CAFE GOURMET 500G', ['Café torrado']), 'Café gourmet');
       // Empate: fica o recorte, sem adivinhar.
-      expect(query('NESCAU ACHOC PO 400G', ['Achocolatado em pó', 'Achocolatado pó diet']), 'Nescau po');
+      expect(query('ACHOC PO MALTADO 400G', ['Achocolatado em pó', 'Achocolatado pó diet']), 'Achoc pó maltado');
     });
 
     test('sem nome lido, ou só com o tamanho, abre vazio', () {
       expect(query(null, ['Arroz']), '');
       expect(query('  ', ['Arroz']), '');
       expect(query('1KG', ['Arroz']), '');
+    });
+  });
+
+  group('nome do produto a partir da etiqueta (G6)', () {
+    test('tira marca conhecida, tamanho, números e palavras da embalagem', () {
+      expect(productNameFromLabel('FEIJAO CARIOCA CAMIL 1KG'), 'Feijão carioca');
+      expect(productNameFromLabel('ARROZ BRANCO TIO JOAO 5KG'), 'Arroz branco');
+      expect(productNameFromLabel('LEITE UHT INTEGRAL ITALAC 1L'), 'Leite uht integral');
+      expect(productNameFromLabel('PCT FEIJAO PRETO KICALDO 1 KG'), 'Feijão preto');
+      expect(productNameFromLabel('TOMATE CEREJA BDJ 180G'), 'Tomate cereja');
+      // A palavra que liga fica entre as que ficam; o resto sai com a marca.
+      expect(productNameFromLabel('SABAO EM PO OMO 1,6KG'), 'Sabão em pó');
+      expect(productNameFromLabel('MOLHO DE TOMATE POMAROLA 340G'), 'Molho de tomate');
+    });
+
+    test('guarda a variedade do granel', () {
+      expect(productNameFromLabel('BANANA PRATA KG'), 'Banana prata');
+      expect(productNameFromLabel('BANANA NANICA KG'), 'Banana nanica');
+      expect(productNameFromLabel('QUEIJO PRATO KG'), 'Queijo prato');
+      expect(productNameFromLabel('QUEIJO MINAS FRESCAL KG'), 'Queijo minas frescal');
+      expect(productNameFromLabel('QUEIJO MUSSARELA FATIADO KG'), 'Queijo mussarela fatiado');
+      expect(productNameFromLabel('TOMATE ITALIANO KG'), 'Tomate italiano');
+      expect(productNameFromLabel('CARNE MOIDA PATINHO KG'), 'Carne moída patinho');
+      expect(productNameFromLabel('CARNE ACEM KG'), 'Carne acém');
+    });
+
+    test('na dúvida, a palavra fica: uma marca desconhecida entra no nome', () {
+      expect(productNameFromLabel('FEIJAO CARIOCA SAO JORGE 1KG'), 'Feijão carioca sao jorge');
+    });
+
+    test('só com a marca, ela é o nome', () {
+      expect(productNameFromLabel('NESCAU 400G'), 'Nescau');
+    });
+
+    test('põe o acento das palavras comuns, sem inventar nas outras', () {
+      expect(productNameFromLabel('MACARRAO PARAFUSO RENATA 500G'), 'Macarrão parafuso');
+      expect(productNameFromLabel('ACUCAR REFINADO UNIAO 1KG'), 'Açúcar refinado');
+      expect(productNameFromLabel('PAO FRANCES KG'), 'Pão frances');
+      expect(productNameFromLabel('LIMAO TAHITI KG'), 'Limão tahiti');
+      expect(productNameFromLabel('MAMAO PAPAYA KG'), 'Mamão papaya');
+      expect(productNameFromLabel('MELAO AMARELO KG'), 'Melão amarelo');
+      expect(productNameFromLabel('FILE DE PEITO DE FRANGO KG'), 'Filé de peito de frango');
+      expect(productNameFromLabel('PURE DE BATATA 200G'), 'Purê de batata');
+      expect(productNameFromLabel('CAFE TORRADO 500G'), 'Café torrado');
+      expect(productNameFromLabel('ACAI NA TIGELA 500ML'), 'Açaí na tigela');
+      // "carioca", "batata" e "tahiti" não têm acento na tabela: ficam como vieram.
+      expect(productNameFromLabel('BATATA LAVADA KG'), 'Batata lavada');
+    });
+
+    test('o acento que a etiqueta tem fica', () {
+      expect(productNameFromLabel('FEIJÃO CARIOCA CAMIL 1KG'), 'Feijão carioca');
+      expect(productNameFromLabel('Pêra Williams Kg'), 'Pêra williams');
+    });
+
+    test('sem nome lido, ou só com o tamanho, fica vazio', () {
+      expect(productNameFromLabel(null), '');
+      expect(productNameFromLabel('  '), '');
+      expect(productNameFromLabel('1KG'), '');
+    });
+  });
+
+  group('granel: a variedade seguinte não cai no produto da primeira (G6)', () {
+    String query(String hint, List<String> names) =>
+        productQueryFromLabel(hint, products: [for (final name in names) _product(name)]);
+
+    test('com a outra variedade cadastrada, a busca não acha nenhuma das duas', () {
+      for (final (hint, other) in [
+        ('BANANA NANICA KG', 'Banana prata'),
+        ('QUEIJO PRATO KG', 'Queijo mussarela'),
+        ('QUEIJO MINAS KG', 'Queijo prato'),
+        ('TOMATE CEREJA KG', 'Tomate italiano'),
+        ('CARNE ACEM KG', 'Carne moída patinho'),
+      ]) {
+        final text = query(hint, [other]);
+        expect(text, productNameFromLabel(hint), reason: hint);
+        expect(matchesProductSearch(text, name: other), isFalse, reason: '$hint → $text');
+      }
+    });
+
+    test('com só o nome genérico cadastrado, abre com ele e o recorte tem a palavra a mais', () {
+      expect(query('BANANA NANICA KG', ['Banana']), 'Banana');
+      expect(sameSearchWords('Banana', productNameFromLabel('BANANA NANICA KG')), isFalse);
+      expect(query('CARNE MOIDA PATINHO KG', ['Carne']), 'Carne');
+      expect(sameSearchWords('Carne', productNameFromLabel('CARNE MOIDA PATINHO KG')), isFalse);
+    });
+
+    test('a mesma variedade acha o produto dela, com as mesmas palavras', () {
+      expect(query('BANANA PRATA KG', ['Banana prata', 'Banana nanica']), 'Banana prata');
+      expect(sameSearchWords('Banana prata', productNameFromLabel('BANANA PRATA KG')), isTrue);
     });
   });
 }

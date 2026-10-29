@@ -88,8 +88,70 @@ void main() {
   testWidgets('sem o produto, a etiqueta recortada vira o nome do novo (G4)', (tester) async {
     await _pumpPicker(tester, nameHint: 'MACARRAO PARAFUSO RENATA 500G');
 
-    expect(find.widgetWithText(TextField, 'Macarrao'), findsOneWidget);
-    expect(find.text('Criar “Macarrao”'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Macarrão parafuso'), findsOneWidget);
+    expect(find.text('Criar “Macarrão parafuso”'), findsOneWidget);
+  });
+
+  group('granel sem fundir variedades (G6)', () {
+    testWidgets('a variedade nova mostra o produto parecido e oferece criar a variedade', (tester) async {
+      final chosen = await _pumpPicker(tester, nameHint: 'BANANA NANICA KG', names: const ['Banana', 'Arroz branco']);
+      final row = find.descendant(of: find.byType(ListTile), matching: find.text('Banana'));
+      final create = find.text('Criar “Banana nanica”');
+
+      // O texto lido fica à vista, para comparar com a linha que vai tocar.
+      expect(find.text('Na etiqueta: BANANA NANICA KG'), findsOneWidget);
+      expect(find.widgetWithText(TextField, 'Banana'), findsOneWidget);
+      expect(row, findsOneWidget);
+      expect(create, findsOneWidget);
+      expect(tester.getTopLeft(row).dy, lessThan(tester.getTopLeft(create).dy));
+
+      await tester.tap(create);
+      await tester.pumpAndSettle();
+      expect(chosen.value, isA<NewProduct>().having((n) => n.name, 'nome', 'Banana nanica'));
+    });
+
+    testWidgets('a mesma variedade acha o produto dela, sem criar outro', (tester) async {
+      await _pumpPicker(tester, nameHint: 'BANANA PRATA KG', names: const ['Banana prata', 'Banana nanica']);
+
+      expect(find.descendant(of: find.byType(ListTile), matching: find.text('Banana prata')), findsOneWidget);
+      expect(find.textContaining('Criar'), findsNothing);
+    });
+
+    testWidgets('com outra variedade cadastrada, abre com a lida e oferece criá-la', (tester) async {
+      for (final (hint, other, name) in [
+        ('QUEIJO PRATO KG', 'Queijo mussarela', 'Queijo prato'),
+        ('TOMATE CEREJA KG', 'Tomate italiano', 'Tomate cereja'),
+        ('CARNE ACEM KG', 'Carne moída patinho', 'Carne acém'),
+      ]) {
+        await _pumpPicker(tester, nameHint: hint, names: [other]);
+
+        expect(find.widgetWithText(TextField, name), findsOneWidget, reason: hint);
+        expect(find.text('Criar “$name”'), findsOneWidget, reason: hint);
+        expect(find.text(other), findsNothing, reason: hint);
+
+        Navigator.of(tester.element(find.byType(ProductPickerSheet))).pop();
+        await tester.pumpAndSettle();
+      }
+    });
+
+    testWidgets('depois de digitar, "Criar" usa o que a pessoa digitou', (tester) async {
+      final chosen = await _pumpPicker(tester, nameHint: 'BANANA NANICA KG', names: const ['Banana']);
+
+      await tester.enterText(find.byType(TextField), 'banana da terra');
+      await tester.pumpAndSettle();
+      final create = find.text('Criar “banana da terra”');
+      expect(create, findsOneWidget);
+
+      await tester.tap(create);
+      await tester.pumpAndSettle();
+      expect(chosen.value, isA<NewProduct>().having((n) => n.name, 'nome', 'banana da terra'));
+    });
+
+    testWidgets('sem etiqueta, não há dica sob a busca', (tester) async {
+      await _pumpPicker(tester, initialQuery: 'arroz');
+
+      expect(find.textContaining('Na etiqueta'), findsNothing);
+    });
   });
 
   testWidgets('digitar sem acento e em outra ordem também acha', (tester) async {
