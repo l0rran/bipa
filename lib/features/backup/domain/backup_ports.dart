@@ -33,6 +33,11 @@ abstract interface class BackupDatabase {
 
   /// Se o banco do app não tem nenhuma linha: o app acabou de ser instalado.
   Future<bool> isEmpty();
+
+  /// O preço ou a compra mais recente do banco do app (a observação de
+  /// preço, a ida ao mercado ou a entrada em casa), ou `null` sem nenhum. A
+  /// confirmação compara com a data do backup para dizer o que sai (BK3).
+  Future<DateTime?> latestActivity();
 }
 
 /// Um banco de backup conferido por [BackupDatabase.check].

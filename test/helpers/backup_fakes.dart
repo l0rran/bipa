@@ -45,6 +45,7 @@ PreparedRestore fakePrepared({
   BackupSummary current = const BackupSummary(products: 230, prices: 1452, itemsAtHome: 60),
   bool currentIsEmpty = false,
   int adjustedItems = 0,
+  DateTime? currentLatestActivity,
 }) => PreparedRestore(
   manifest: fakeManifest(createdAt: createdAt),
   backup: const BackupSummary(products: 214, prices: 1380, itemsAtHome: 56),
@@ -52,6 +53,7 @@ PreparedRestore fakePrepared({
   currentIsEmpty: currentIsEmpty,
   workspace: const RestoreWorkspace(path: 'novo', databasePath: 'novo/bipa.sqlite', photosPath: 'novo/fotos'),
   adjustedItems: adjustedItems,
+  currentLatestActivity: currentLatestActivity,
 );
 
 /// O `backupProvider` sem arquivos: começa em [initial] e anota o que a tela
@@ -80,11 +82,11 @@ class FakeBackupController extends BackupController {
   Future<BackupState> build() async => initial;
 
   @override
-  Future<BackupInfo?> createBackup() async {
-    calls.add('create');
+  Future<BackupInfo?> createBackup({bool replacePending = false}) async {
+    calls.add(replacePending ? 'createReplacing' : 'create');
     final info = await (onCreate ?? () async => null)();
     final current = state.value ?? initial;
-    if (info != null) state = AsyncData(current.copyWith(lastBackup: info));
+    if (info != null) state = AsyncData(current.copyWith(lastBackup: info, clearOffer: true));
     return info;
   }
 
@@ -133,7 +135,13 @@ class FakeBackupController extends BackupController {
   @override
   Future<void> dismissRestoreOffer([BackupInfo? offer]) async {
     calls.add('dismiss');
-    state = AsyncData((state.value ?? initial).copyWith(clearOffer: true));
+    final current = state.value ?? initial;
+    final last = current.lastBackup;
+    // O arquivo passa a ser deste aparelho: Ajustes volta a ser o de sempre.
+    final adopted = last == null
+        ? null
+        : BackupInfo(path: last.path, size: last.size, manifest: last.manifest, madeHere: true);
+    state = AsyncData(current.copyWith(lastBackup: adopted, clearOffer: true));
   }
 }
 

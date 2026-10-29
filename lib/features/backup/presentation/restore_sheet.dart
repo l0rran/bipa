@@ -60,9 +60,13 @@ Future<void> _discard(PickedBackup? picked) async {
 
 /// A folha de restauração (protótipo RestaurarBackup): "Conferindo o
 /// arquivo" enquanto [preparing] não termina; depois, "Restaurar o backup de
-/// 12/10?" com os números do arquivo e os deste celular, ou, se o arquivo
-/// não serve, o problema e a saída, no lugar da confirmação. Nada muda no
-/// celular antes de "Substituir pelo backup".
+/// 12/10/2025?" com os números do arquivo e os deste celular, ou, se o
+/// arquivo não serve, o problema e a saída, no lugar da confirmação. Nada
+/// muda no celular antes de "Substituir pelo backup".
+///
+/// [fromOtherPhone] é o `ultimo.bipa` do outro celular, aberto pela linha de
+/// Ajustes ou pelo Início (protótipo AjustesBackupPendente): "De outro
+/// celular" fica no lugar do nome do arquivo, e o aviso tem o ano.
 ///
 /// Restaurado, a folha fecha e o aviso "Backup de 12/10 restaurado" traz o
 /// "Desfazer" enquanto o aviso fica na tela, se [offerUndo].
@@ -72,33 +76,25 @@ Future<void> showRestoreSheet(
   String? fileName,
   VoidCallback? onPickAnother,
   bool offerUndo = true,
+  bool fromOtherPhone = false,
 }) {
   // A conferência pode falhar antes de a folha subir e ouvir o resultado: a
   // folha ainda recebe o erro, mas ele não escapa como erro sem tratamento.
   preparing.ignore();
-  return _showSheet(
-    context,
-    preparing: preparing,
-    fileName: fileName,
-    onPickAnother: onPickAnother,
-    offerUndo: offerUndo,
+  return showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    useSafeArea: true,
+    isScrollControlled: true,
+    builder: (_) => RestoreSheet(
+      preparing: preparing,
+      fileName: fileName,
+      onPickAnother: onPickAnother,
+      offerUndo: offerUndo,
+      fromOtherPhone: fromOtherPhone,
+    ),
   );
 }
-
-Future<void> _showSheet(
-  BuildContext context, {
-  required Future<PreparedRestore> preparing,
-  required String? fileName,
-  required VoidCallback? onPickAnother,
-  required bool offerUndo,
-}) => showModalBottomSheet<void>(
-  context: context,
-  showDragHandle: true,
-  useSafeArea: true,
-  isScrollControlled: true,
-  builder: (_) =>
-      RestoreSheet(preparing: preparing, fileName: fileName, onPickAnother: onPickAnother, offerUndo: offerUndo),
-);
 
 /// Tira as fotos antigas da memória: depois de restaurar (ou desfazer), as
 /// fotos dos produtos têm o mesmo caminho e outro conteúdo.
@@ -109,7 +105,8 @@ void clearProductImageCache() {
 }
 
 /// Troca os dados pelos de [prepared] e avisa, com o "Desfazer" se
-/// [offerUndo]. Devolve `false` se a troca falhou (já avisado).
+/// [offerUndo]. O aviso tem o ano quando o backup é do outro celular
+/// ([fromOtherPhone]). Devolve `false` se a troca falhou (já avisado).
 ///
 /// A reserva do "Desfazer" vive enquanto o aviso vive (BK2): o aviso segue a
 /// regra do tempo do `bipa-toast` (espera a pessoa com leitor de tela, estica
@@ -122,6 +119,7 @@ Future<bool> applyRestoreAndNotify({
   required ScaffoldMessengerState messenger,
   required AppLocalizations l10n,
   bool offerUndo = true,
+  bool fromOtherPhone = false,
 }) async {
   try {
     await backup.applyRestore(prepared);
@@ -131,18 +129,18 @@ Future<bool> applyRestoreAndNotify({
   }
   final epoch = backup.restoreEpoch;
   clearProductImageCache();
+  final createdAt = prepared.manifest.createdAt;
+  final restored = l10n.backupRestored(
+    fromOtherPhone ? BackupLabels.fullDate(createdAt) : BackupLabels.date(createdAt),
+  );
   if (!offerUndo) {
-    showBipaToast(
-      messenger,
-      l10n.backupRestored(BackupLabels.date(prepared.manifest.createdAt)),
-      duration: BipaToastDuration.long,
-    );
+    showBipaToast(messenger, restored, duration: BipaToastDuration.long);
     unawaited(backup.discardRestoreUndo(epoch));
     return true;
   }
   final notice = showBipaToast(
     messenger,
-    l10n.backupRestored(BackupLabels.date(prepared.manifest.createdAt)),
+    restored,
     actionLabel: l10n.undo,
     onAction: () => unawaited(() async {
       final bool undone;
@@ -168,7 +166,14 @@ Future<bool> applyRestoreAndNotify({
 }
 
 class RestoreSheet extends ConsumerStatefulWidget {
-  const RestoreSheet({required this.preparing, this.fileName, this.onPickAnother, this.offerUndo = true, super.key});
+  const RestoreSheet({
+    required this.preparing,
+    this.fileName,
+    this.onPickAnother,
+    this.offerUndo = true,
+    this.fromOtherPhone = false,
+    super.key,
+  });
 
   final Future<PreparedRestore> preparing;
 
@@ -179,6 +184,9 @@ class RestoreSheet extends ConsumerStatefulWidget {
   /// aparece.
   final VoidCallback? onPickAnother;
   final bool offerUndo;
+
+  /// O backup do outro celular: "De outro celular" embaixo do título.
+  final bool fromOtherPhone;
 
   @override
   ConsumerState<RestoreSheet> createState() => _RestoreSheetState();
@@ -245,6 +253,7 @@ class _RestoreSheetState extends ConsumerState<RestoreSheet> {
       messenger: messenger,
       l10n: l10n,
       offerUndo: widget.offerUndo,
+      fromOtherPhone: widget.fromOtherPhone,
     );
     if (mounted) navigator.pop();
   }
@@ -272,6 +281,7 @@ class _RestoreSheetState extends ConsumerState<RestoreSheet> {
             : _ConfirmContent(
                 prepared: prepared,
                 fileName: widget.fileName,
+                fromOtherPhone: widget.fromOtherPhone,
                 showSkeleton: _showSkeleton,
                 restoring: _restoring,
                 onReplace: prepared == null ? null : () => _replace(prepared),
@@ -286,6 +296,7 @@ class _ConfirmContent extends StatelessWidget {
   const _ConfirmContent({
     required this.prepared,
     required this.fileName,
+    required this.fromOtherPhone,
     required this.showSkeleton,
     required this.restoring,
     required this.onReplace,
@@ -293,6 +304,7 @@ class _ConfirmContent extends StatelessWidget {
 
   final PreparedRestore? prepared;
   final String? fileName;
+  final bool fromOtherPhone;
   final bool showSkeleton;
   final bool restoring;
   final VoidCallback? onReplace;
@@ -302,8 +314,11 @@ class _ConfirmContent extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final colors = context.colors;
     final prepared = this.prepared;
-    final fileName = this.fileName;
+    // A origem fica embaixo do título nos dois momentos; o nome do arquivo,
+    // só enquanto confere.
+    final source = fromOtherPhone ? l10n.backupFromOtherPhone : (prepared == null ? fileName : null);
     final body = BipaText.body.copyWith(color: colors.ink);
+    final note = BipaText.label.copyWith(fontWeight: FontWeight.w500, height: 20 / 14, color: colors.inkMuted);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -322,21 +337,25 @@ class _ConfirmContent extends StatelessWidget {
               ],
             ),
           ),
-          if (fileName != null && fileName.isNotEmpty) ...[
-            const SizedBox(height: BipaSpacing.s1),
-            Text(
-              fileName,
-              style: BipaText.label.copyWith(fontWeight: FontWeight.w500, color: colors.inkMuted),
-            ),
-          ],
         ] else
           Semantics(
             header: true,
+            // O leitor de tela ouve a data por extenso ("12 de outubro de
+            // 2025").
+            label: l10n.backupRestoreTitle(BackupLabels.spokenDate(prepared.manifest.createdAt)),
+            excludeSemantics: true,
             child: Text(
-              l10n.backupRestoreTitle(BackupLabels.date(prepared.manifest.createdAt)),
+              l10n.backupRestoreTitle(BackupLabels.fullDate(prepared.manifest.createdAt)),
               style: BipaText.title.copyWith(color: colors.ink),
             ),
           ),
+        if (source != null && source.isNotEmpty) ...[
+          const SizedBox(height: BipaSpacing.s1),
+          Text(
+            source,
+            style: BipaText.label.copyWith(fontWeight: FontWeight.w500, color: colors.inkMuted),
+          ),
+        ],
         const SizedBox(height: BipaSpacing.s4),
         Divider(color: colors.line),
         const SizedBox(height: BipaSpacing.s4),
@@ -348,12 +367,18 @@ class _ConfirmContent extends StatelessWidget {
           _CurrentLine(prepared: prepared),
           const SizedBox(height: BipaSpacing.s4),
           Text(l10n.backupReplaceWarning, style: body),
-          if (prepared.adjustedItems > 0) ...[
+          // O que a troca leva embora, numa linha própria: um backup mais
+          // velho que a casa parece inofensivo pelos números (BK3).
+          if (prepared.losesNewerData) ...[
             const SizedBox(height: BipaSpacing.s2),
             Text(
-              l10n.backupAdjusted(prepared.adjustedItems),
-              style: BipaText.label.copyWith(fontWeight: FontWeight.w500, height: 20 / 14, color: colors.inkMuted),
+              l10n.backupLosesNewer(BackupLabels.fullDate(prepared.manifest.createdAt)),
+              style: note.copyWith(fontWeight: FontWeight.w700, color: colors.ink),
             ),
+          ],
+          if (prepared.adjustedItems > 0) ...[
+            const SizedBox(height: BipaSpacing.s2),
+            Text(l10n.backupAdjusted(prepared.adjustedItems), style: note),
           ],
         ],
         const SizedBox(height: BipaSpacing.s6),
@@ -376,7 +401,8 @@ class _ConfirmContent extends StatelessWidget {
   }
 }
 
-/// "Neste celular agora: **230** produtos e **1.452** preços."
+/// "Neste celular agora: **230** produtos, **1.452** preços e **61** itens
+/// em casa.", os mesmos três números do arquivo, na mesma ordem (BK3).
 class _CurrentLine extends StatelessWidget {
   const _CurrentLine({required this.prepared});
 
@@ -389,26 +415,28 @@ class _CurrentLine extends StatelessWidget {
     final current = prepared.current;
     final products = BackupLabels.count(current.products);
     final prices = BackupLabels.count(current.prices);
-    final text = l10n.backupCurrent(products, current.products, prices, current.prices);
+    final items = BackupLabels.count(current.itemsAtHome);
+    final text = l10n.backupCurrent(products, current.products, prices, current.prices, items, current.itemsAtHome);
     final style = BipaText.label.copyWith(fontWeight: FontWeight.w500, height: 20 / 14, color: colors.inkMuted);
     final bold = style.copyWith(fontWeight: FontWeight.w800, color: colors.ink);
-    return Text.rich(TextSpan(style: style, children: _highlight(text, [products, prices], bold)));
+    return Text.rich(TextSpan(style: style, children: boldParts(text, [products, prices, items], bold)));
   }
+}
 
-  /// [text] com cada um de [parts], na ordem, em [bold].
-  static List<TextSpan> _highlight(String text, List<String> parts, TextStyle bold) {
-    final spans = <TextSpan>[];
-    var from = 0;
-    for (final part in parts) {
-      final at = text.indexOf(part, from);
-      if (at < 0) continue;
-      if (at > from) spans.add(TextSpan(text: text.substring(from, at)));
-      spans.add(TextSpan(text: part, style: bold));
-      from = at + part.length;
-    }
-    if (from < text.length) spans.add(TextSpan(text: text.substring(from)));
-    return spans;
+/// [text] com cada um de [parts], procurados na ordem, em [bold]: os números
+/// em `ink` no meio de uma frase em `ink-muted`.
+List<TextSpan> boldParts(String text, List<String> parts, TextStyle bold) {
+  final spans = <TextSpan>[];
+  var from = 0;
+  for (final part in parts) {
+    final at = text.indexOf(part, from);
+    if (at < 0) continue;
+    if (at > from) spans.add(TextSpan(text: text.substring(from, at)));
+    spans.add(TextSpan(text: part, style: bold));
+    from = at + part.length;
   }
+  if (from < text.length) spans.add(TextSpan(text: text.substring(from)));
+  return spans;
 }
 
 /// O arquivo não serve: o ícone em `alert-text`, o problema, a saída num

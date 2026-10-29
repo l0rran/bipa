@@ -135,6 +135,69 @@ void main() {
     expect((await db.select(db.products).get()).map((row) => row.name), ['Arroz', 'Feijão']);
   });
 
+  group('backup de outro celular sem resposta (BK1)', () {
+    /// O `ultimo.bipa` passa a ser de outro aparelho, como o Auto Backup do
+    /// Android o traz, e a casa já está em uso.
+    Future<String> arriveFromOtherPhone() async {
+      await addProduct('arroz', 'Arroz');
+      final id = (await controller().createBackup())!.manifest.id;
+      File(joinPath(root.path, 'suporte', 'backup', 'ultimo.id')).deleteSync();
+      await addProduct('feijao', 'Feijão');
+      container.invalidate(backupProvider);
+      await container.read(backupProvider.future);
+      return id;
+    }
+
+    test('fica pendente: o cartão e Ajustes o oferecem, e o diário não grava', () async {
+      final id = await arriveFromOtherPhone();
+
+      final state = container.read(backupProvider).value!;
+      expect(state.pending, isTrue);
+      expect(state.restoreOffer?.manifest.id, id);
+
+      await controller().runDailyBackup();
+      expect(controller().lastBackupInfo?.manifest.id, id);
+      expect(container.read(backupProvider).value!.pending, isTrue);
+    });
+
+    test('"Deixar de lado" com Desfazer: o cartão volta, e o backup continua pendente', () async {
+      final id = await arriveFromOtherPhone();
+
+      final hidden = controller().hideRestoreOffer()!;
+      expect(container.read(backupProvider).value!.restoreOffer, isNull);
+      expect(container.read(backupProvider).value!.pending, isTrue, reason: 'até o aviso sair, Ajustes ainda pergunta');
+
+      controller().bringBackRestoreOffer(hidden);
+      expect(container.read(backupProvider).value!.restoreOffer?.manifest.id, id);
+      await controller().runDailyBackup();
+      expect(controller().lastBackupInfo?.manifest.id, id);
+    });
+
+    test('"Deixar de lado" valendo: o arquivo é adotado e o diário volta a gravar', () async {
+      final id = await arriveFromOtherPhone();
+
+      final hidden = controller().hideRestoreOffer()!;
+      await controller().dismissRestoreOffer(hidden);
+
+      final state = container.read(backupProvider).value!;
+      expect((state.pending, state.restoreOffer), (false, null));
+      // O backup do outro celular ainda é o último, até o diário seguinte.
+      expect(state.lastBackup?.manifest.id, id);
+    });
+
+    test('"Fazer backup agora" só grava por cima com a confirmação', () async {
+      final id = await arriveFromOtherPhone();
+
+      expect(await controller().createBackup(), isNull);
+      expect(controller().lastBackupInfo?.manifest.id, id);
+
+      final made = await controller().createBackup(replacePending: true);
+      final state = container.read(backupProvider).value!;
+      expect(state.lastBackup?.manifest.id, made!.manifest.id);
+      expect((state.pending, state.restoreOffer), (false, null));
+    });
+  });
+
   test('o aviso saiu sem o desfazer: a reserva é descartada', () async {
     await addProduct('arroz', 'Arroz');
     final backup = (await controller().createBackup())!;

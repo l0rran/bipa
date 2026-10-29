@@ -15,6 +15,7 @@ final class PreparedRestore {
     required this.currentIsEmpty,
     required this.workspace,
     this.adjustedItems = 0,
+    this.currentLatestActivity,
   });
 
   final BackupManifest manifest;
@@ -37,6 +38,18 @@ final class PreparedRestore {
   /// Quantos itens em casa tiveram a quantidade acertada pela soma dos
   /// lotes, para a folha avisar.
   final int adjustedItems;
+
+  /// O preço ou a compra mais recente do aparelho agora
+  /// ([BackupDatabase.latestActivity]), ou `null`.
+  final DateTime? currentLatestActivity;
+
+  /// O backup é mais velho que o último preço ou compra deste aparelho: o
+  /// que veio depois da data dele sai com a restauração ("Os preços e as
+  /// compras depois de 12/10/2025 saem deste celular.", BK3).
+  bool get losesNewerData {
+    final latest = currentLatestActivity;
+    return latest != null && latest.isAfter(manifest.createdAt);
+  }
 }
 
 /// Restaura um backup `.bipa` (ADR 0023, seção 5), em dois tempos, como na
@@ -100,6 +113,7 @@ final class RestoreBackup {
         currentIsEmpty: await _database.isEmpty(),
         workspace: workspace,
         adjustedItems: checked.adjustedItems,
+        currentLatestActivity: await _database.latestActivity(),
       );
     } on Object {
       await _storage.discard(workspace.path);

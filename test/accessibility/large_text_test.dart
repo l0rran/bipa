@@ -464,6 +464,33 @@ void _tests() {
       expect(find.text('0.1.0'), findsOneWidget);
     });
 
+    testWidgets('Ajustes com o backup de outro celular, e o diálogo de gravar por cima', (tester) async {
+      final pending = fakeBackupInfo(createdAt: DateTime(2026, 10, 12, 21), madeHere: false);
+      await _pumpScreen(
+        tester,
+        const SettingsPage(),
+        overrides: [
+          crashReporterProvider.overrideWithValue(FakeCrashReporter()),
+          appVersionProvider.overrideWith((ref) async => '0.1.0'),
+          backupProvider.overrideWith(
+            () => FakeBackupController(
+              initial: BackupState(lastBackup: pending, restoreOffer: pending),
+            ),
+          ),
+        ],
+      );
+      expect(find.text('De outro celular. Toque para restaurar.'), findsOneWidget);
+      expect(find.text('2026'), findsOneWidget);
+      expect(find.text('Automático pausado até você decidir'), findsOneWidget);
+      _expectReadable(tester);
+
+      await tester.tap(find.text('Fazer backup agora'));
+      await _settle(tester);
+      expect(find.text('Apagar o backup do outro celular?'), findsOneWidget);
+      expect(find.text('Apagar e fazer backup'), findsOneWidget);
+      _expectReadable(tester);
+    });
+
     testWidgets('folha "Fim da compra"', (tester) async {
       await _pumpScreen(
         tester,
@@ -531,9 +558,13 @@ void _tests() {
     });
 
     testWidgets('folha "Restaurar o backup", com os números', (tester) async {
-      await openRestoreSheet(tester, () async => fakePrepared(createdAt: DateTime(2026, 10, 12, 21), adjustedItems: 2));
-      expect(find.text('Restaurar o backup de 12/10?'), findsOneWidget);
-      expect(find.text('Neste celular agora: 230 produtos e 1.452 preços.'), findsOneWidget);
+      await openRestoreSheet(
+        tester,
+        () async => fakePrepared(createdAt: DateTime(2026, 10, 12, 21), adjustedItems: 2, currentLatestActivity: _now),
+      );
+      expect(find.text('Restaurar o backup de 12/10/2026?'), findsOneWidget);
+      expect(find.textContaining('saem deste celular'), findsOneWidget);
+      expect(find.text('Neste celular agora: 230 produtos, 1.452 preços e 60 itens em casa.'), findsOneWidget);
       expect(find.textContaining('quantidade acertada'), findsOneWidget);
       expect(find.text('Cancelar'), findsOneWidget);
     });
@@ -586,9 +617,31 @@ void _tests() {
         ),
       );
       _expectReadable(tester);
-      expect(find.text('Restaurar o backup de 12/10?'), findsOneWidget);
+      expect(find.text('Restaurar o backup de 12/10/2026?'), findsOneWidget);
       expect(find.text('Restaurar'), findsOneWidget);
       expect(find.text('Começar do zero'), findsOneWidget);
+    });
+
+    testWidgets('cartão menor do backup de outro celular, com a casa em uso', (tester) async {
+      final offer = fakeBackupInfo(createdAt: DateTime(2026, 10, 12, 21), madeHere: false);
+      await _pumpComponent(
+        tester,
+        ProviderScope(
+          overrides: [
+            backupProvider.overrideWith(() => FakeBackupController(initial: BackupState(restoreOffer: offer))),
+          ],
+          child: PendingBackupCard(offer: offer),
+        ),
+      );
+      _expectReadable(tester);
+      expect(find.text('Restaurar o backup de 12/10/2026?'), findsOneWidget);
+      expect(find.text('214 produtos, 1.380 preços e 56 itens em casa'), findsOneWidget);
+      expect(find.text('Deixar de lado'), findsOneWidget);
+      // A 200%, os botões ficam um embaixo do outro.
+      expect(
+        tester.getTopLeft(find.text('Deixar de lado')).dy,
+        greaterThan(tester.getBottomLeft(find.text('Restaurar')).dy),
+      );
     });
 
     testWidgets('bandeja do modo carrinho', (tester) async {

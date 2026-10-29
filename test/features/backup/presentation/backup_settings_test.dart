@@ -178,6 +178,114 @@ void main() {
     expect(find.byType(SnackBar), findsNothing);
   });
 
+  group('backup de outro celular sem resposta (BK1)', () {
+    final pendingBackup = fakeBackupInfo(createdAt: DateTime(2026, 10, 12, 21), madeHere: false);
+    BackupState pendingState() => BackupState(lastBackup: pendingBackup, restoreOffer: pendingBackup);
+
+    testWidgets('a linha diz a origem e a data com o ano, e o automático está pausado', (tester) async {
+      await pumpSettings(tester, backup: FakeBackupController(initial: pendingState()));
+
+      expect(find.text('De outro celular. Toque para restaurar.'), findsOneWidget);
+      expect(find.text('12/10'), findsOneWidget);
+      expect(find.text('2026'), findsOneWidget);
+      expect(find.text('21:00'), findsNothing);
+      expect(find.textContaining('Automático, uma vez por dia'), findsNothing);
+      expect(find.text('Automático pausado até você decidir'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('Último backup: de outro celular, 12 de outubro de 2026. Restaurar'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('tocar na linha abre a folha com esse arquivo, sem o seletor do Android', (tester) async {
+      final backup = FakeBackupController(initial: pendingState());
+      final files = FakeBackupFiles();
+      await pumpSettings(tester, backup: backup, files: files);
+
+      await tester.tap(find.text('De outro celular. Toque para restaurar.'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(files.picks, 0);
+      expect(backup.calls, ['prepare']);
+      expect(find.text('Restaurar o backup de 12/10/2026?'), findsOneWidget);
+      expect(find.text('De outro celular'), findsOneWidget);
+      expect(find.text('Substituir pelo backup'), findsOneWidget);
+
+      await tester.tap(find.text('Substituir pelo backup'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('Backup de 12/10/2026 restaurado'), findsOneWidget);
+      await finishToasts(tester);
+    });
+
+    testWidgets('"Fazer backup agora" pergunta antes, e Cancelar não grava', (tester) async {
+      final backup = FakeBackupController(initial: pendingState());
+      await pumpSettings(tester, backup: backup);
+
+      await tester.tap(find.text('Fazer backup agora'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Apagar o backup do outro celular?'), findsOneWidget);
+      expect(
+        find.text(
+          'O backup de 12/10/2026, com 214 produtos, 1.380 preços e 56 itens em casa, dá lugar ao deste celular '
+          'e não volta mais.',
+          findRichText: true,
+        ),
+        findsOneWidget,
+      );
+      final confirm = tester.getRect(find.text('Apagar e fazer backup'));
+      final cancel = tester.getRect(find.text('Cancelar'));
+      expect(cancel.top, greaterThan(confirm.bottom), reason: 'os botões ficam empilhados');
+
+      await tester.tap(find.text('Cancelar'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Apagar o backup do outro celular?'), findsNothing);
+      expect(backup.calls, isEmpty);
+      expect(find.text('De outro celular. Toque para restaurar.'), findsOneWidget);
+    });
+
+    testWidgets('"Apagar e fazer backup" grava por cima, e o grupo volta ao de sempre', (tester) async {
+      final backup = FakeBackupController(
+        initial: pendingState(),
+        onCreate: () async => fakeBackupInfo(createdAt: _now, id: 'novo'),
+      );
+      await pumpSettings(tester, backup: backup);
+
+      await tester.tap(find.text('Fazer backup agora'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.tap(find.text('Apagar e fazer backup'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(backup.calls, ['createReplacing']);
+      expect(find.text('agora'), findsOneWidget);
+      expect(find.text('De outro celular. Toque para restaurar.'), findsNothing);
+      expect(find.text('Automático pausado até você decidir'), findsNothing);
+      expect(find.textContaining('Automático, uma vez por dia'), findsOneWidget);
+    });
+
+    testWidgets('"Salvar uma cópia…" não pergunta', (tester) async {
+      final backup = FakeBackupController(initial: pendingState());
+      final files = FakeBackupFiles();
+      await pumpSettings(tester, backup: backup, files: files);
+
+      await tester.tap(find.text('Salvar uma cópia…'));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('Apagar o backup do outro celular?'), findsNothing);
+      expect(backup.calls, ['saveCopy']);
+      expect(find.text('Cópia salva'), findsOneWidget);
+      await finishToasts(tester);
+    });
+  });
+
   group('restaurar de um arquivo', () {
     final backupDay = DateTime(2026, 10, 12, 21);
     PickedBackup picked() => PickedBackup(
@@ -209,12 +317,12 @@ void main() {
       preparing.complete(fakePrepared(createdAt: backupDay));
       await tester.pump();
       await tester.pump();
-      expect(find.text('Restaurar o backup de 12/10?'), findsOneWidget);
+      expect(find.text('Restaurar o backup de 12/10/2026?'), findsOneWidget);
       expect(find.text('214'), findsOneWidget);
       expect(find.text('1.380'), findsOneWidget);
       expect(find.text('itens em casa'), findsOneWidget);
       expect(find.bySemanticsLabel('214 produtos'), findsOneWidget);
-      expect(find.text('Neste celular agora: 230 produtos e 1.452 preços.'), findsOneWidget);
+      expect(find.text('Neste celular agora: 230 produtos, 1.452 preços e 60 itens em casa.'), findsOneWidget);
       expect(find.textContaining('é trocado pelo que está no arquivo'), findsOneWidget);
       expect(find.textContaining('quantidade acertada'), findsNothing);
 
@@ -223,12 +331,12 @@ void main() {
       // Restaurando: o botão vira o indicador, a folha fica e o Cancelar sai.
       expect(find.bySemanticsLabel('Restaurando'), findsOneWidget);
       expect(find.text('Cancelar'), findsNothing);
-      expect(find.text('Restaurar o backup de 12/10?'), findsOneWidget);
+      expect(find.text('Restaurar o backup de 12/10/2026?'), findsOneWidget);
 
       applying.complete();
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
-      expect(find.text('Restaurar o backup de 12/10?'), findsNothing);
+      expect(find.text('Restaurar o backup de 12/10/2026?'), findsNothing);
       expect(find.text('Backup de 12/10 restaurado'), findsOneWidget);
       expect(backup.calls, ['prepare', 'apply']);
 
@@ -296,6 +404,44 @@ void main() {
       expect(find.text('2 itens tiveram a quantidade acertada pela soma das compras.'), findsOneWidget);
     });
 
+    testWidgets('um backup mais velho que o último preço ou compra diz o que sai (BK3)', (tester) async {
+      final backup = FakeBackupController(
+        onPrepare: () async => fakePrepared(createdAt: DateTime(2025, 10, 12, 21), currentLatestActivity: _now),
+      );
+      await pumpSettings(
+        tester,
+        backup: backup,
+        files: FakeBackupFiles(picked: picked()),
+      );
+
+      await chooseFile(tester);
+      await tester.pump();
+
+      expect(find.text('Restaurar o backup de 12/10/2025?'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('Restaurar o backup de 12 de outubro de 2025?'),
+        findsOneWidget,
+        reason: 'o leitor de tela ouve a data por extenso',
+      );
+      expect(find.text('Os preços e as compras depois de 12/10/2025 saem deste celular.'), findsOneWidget);
+    });
+
+    testWidgets('um backup mais novo que tudo o que há aqui não tem a linha do que sai', (tester) async {
+      final backup = FakeBackupController(
+        onPrepare: () async => fakePrepared(createdAt: backupDay, currentLatestActivity: DateTime(2026, 10, 1)),
+      );
+      await pumpSettings(
+        tester,
+        backup: backup,
+        files: FakeBackupFiles(picked: picked()),
+      );
+
+      await chooseFile(tester);
+      await tester.pump();
+
+      expect(find.textContaining('saem deste celular'), findsNothing);
+    });
+
     testWidgets('Cancelar apaga a cópia conferida e não restaura', (tester) async {
       final backup = FakeBackupController();
       await pumpSettings(
@@ -310,7 +456,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
-      expect(find.text('Restaurar o backup de 12/10?'), findsNothing);
+      expect(find.text('Restaurar o backup de 12/10/2026?'), findsNothing);
       expect(backup.calls, ['prepare', 'cancel']);
     });
 
@@ -380,7 +526,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
-      expect(find.text('Restaurar o backup de 12/10?'), findsNothing);
+      expect(find.text('Restaurar o backup de 12/10/2026?'), findsNothing);
       expect(find.text('Não deu para restaurar. Seus dados continuam como estavam.'), findsOneWidget);
       await finishToasts(tester);
     });

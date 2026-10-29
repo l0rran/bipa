@@ -6,6 +6,7 @@ import 'package:bipa/core/database/app_database.dart';
 import 'package:bipa/features/backup/domain/backup_exception.dart';
 import 'package:bipa/features/backup/domain/backup_manifest.dart';
 import 'package:bipa/features/backup/domain/backup_ports.dart';
+import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 
@@ -46,6 +47,27 @@ final class DriftBackupDatabase implements BackupDatabase {
       if (row.read<bool>('any')) return false;
     }
     return true;
+  }
+
+  @override
+  Future<DateTime?> latestActivity() async {
+    final prices = _db.priceObservations.observedAt.max();
+    final trips = _db.shoppingTrips.startedAt.max();
+    final purchases = _db.stockMovements.occurredAt.max();
+    final dates = [
+      await (_db.selectOnly(_db.priceObservations)..addColumns([prices])).map((row) => row.read(prices)).getSingle(),
+      await (_db.selectOnly(_db.shoppingTrips)..addColumns([trips])).map((row) => row.read(trips)).getSingle(),
+      await (_db.selectOnly(_db.stockMovements)
+            ..addColumns([purchases])
+            ..where(_db.stockMovements.reason.equalsValue(StockMovementReason.purchase)))
+          .map((row) => row.read(purchases))
+          .getSingle(),
+    ];
+    DateTime? latest;
+    for (final date in dates.nonNulls) {
+      if (latest == null || date.isAfter(latest)) latest = date;
+    }
+    return latest;
   }
 
   static Future<BackupSummary> _summary(AppDatabase db) async {

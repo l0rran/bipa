@@ -30,9 +30,11 @@ enum BackupTrigger {
 /// * pelo backup diário, com o banco vazio: um app recém-instalado não põe
 ///   um backup vazio no lugar do que o Auto Backup do Android trouxe, nem no
 ///   Google Drive;
-/// * enquanto ele veio de outro aparelho e a pessoa não respondeu à oferta
-///   de restaurar ([BackupInfo.madeHere]): nem pelo diário, nem por um
-///   backup manual com o banco vazio.
+/// * enquanto ele veio de outro aparelho e a pessoa não respondeu
+///   ([BackupInfo.madeHere], decisão do mantenedor em 29/10, BK1): o diário
+///   fica pausado, sem prazo; "Fazer backup agora" só grava por cima com a
+///   confirmação ("Apagar o backup do outro celular?", `replacePending`) e
+///   com algo para guardar; e "Salvar uma cópia…" grava só a cópia.
 final class CreateBackup {
   CreateBackup({
     required BackupDatabase database,
@@ -56,26 +58,33 @@ final class CreateBackup {
   final IdGenerator _ids;
 
   /// Grava o backup e devolve o que ficou no `ultimo.bipa`; `null` quando
-  /// ele não foi substituído (veja a classe).
-  Future<BackupInfo?> call({BackupTrigger trigger = BackupTrigger.manual}) async {
+  /// ele não foi substituído (veja a classe). [replacePending] é a resposta
+  /// "Apagar e fazer backup": o backup de outro aparelho que esperava
+  /// resposta dá lugar ao deste.
+  Future<BackupInfo?> call({BackupTrigger trigger = BackupTrigger.manual, bool replacePending = false}) async {
     final latest = await ReadLatestBackup(storage: _storage, archive: _archive)();
+    final pending = latest != null && !latest.madeHere;
     if (trigger == BackupTrigger.daily) {
       if (await _database.isEmpty()) return null;
-      if (latest != null && !latest.madeHere) return null;
+      if (pending) return null;
       if (latest != null && _sameDay(latest.createdAt, _clock())) return null;
+    } else if (pending && !replacePending) {
+      return null;
     }
-    return _build(latest: latest, trigger: trigger);
+    return _build(trigger: trigger, pending: pending);
   }
 
   /// "Salvar uma cópia…": grava um backup novo em [destination] (o arquivo
-  /// que a pessoa escolheu no seletor do Android) e, pelas mesmas regras de
-  /// um backup manual, também no `ultimo.bipa`. Devolve o manifesto.
+  /// que a pessoa escolheu no seletor do Android) e devolve o manifesto. O
+  /// mesmo arquivo passa a ser o `ultimo.bipa`, a não ser que ele seja de
+  /// outro aparelho e espere resposta: aí só a cópia é gravada.
   Future<BackupManifest> saveCopy(StreamConsumer<List<int>> destination) async {
     final latest = await ReadLatestBackup(storage: _storage, archive: _archive)();
     late BackupManifest manifest;
     await _build(
-      latest: latest,
       trigger: BackupTrigger.manual,
+      pending: latest != null && !latest.madeHere,
+      copyOnly: latest != null && !latest.madeHere,
       beforePublish: (archivePath, built) async {
         manifest = built;
         await _storage.copyTo(archivePath, destination);
@@ -85,18 +94,18 @@ final class CreateBackup {
   }
 
   Future<BackupInfo?> _build({
-    required BackupInfo? latest,
     required BackupTrigger trigger,
+    required bool pending,
+    bool copyOnly = false,
     Future<void> Function(String archivePath, BackupManifest manifest)? beforePublish,
   }) async {
     final workspace = await _storage.createWorkspace();
     try {
       await _database.copyTo(workspace.databasePath);
       final contents = await _database.describe(workspace.databasePath);
-      final publish = switch (trigger) {
-        BackupTrigger.daily => !contents.isEmpty,
-        BackupTrigger.manual => latest == null || latest.madeHere || !contents.isEmpty,
-      };
+      // Um banco vazio não toma o lugar do backup de outro aparelho, nem
+      // com a confirmação: não há o que guardar.
+      final publish = !copyOnly && ((trigger == BackupTrigger.manual && !pending) || !contents.isEmpty);
       if (!publish && beforePublish == null) return null;
 
       final draft = BackupDraft(

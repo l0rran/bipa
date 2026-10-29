@@ -6,7 +6,12 @@ import 'package:bipa/features/backup/domain/backup_exception.dart';
 import 'package:bipa/features/backup/domain/backup_manifest.dart';
 import 'package:bipa/features/backup/presentation/backup_files.dart';
 import 'package:bipa/features/backup/presentation/backup_providers.dart';
+import 'package:bipa/features/products/domain/measure_unit.dart';
+import 'package:bipa/features/products/domain/product.dart';
+import 'package:bipa/features/products/presentation/products_providers.dart';
+import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
 import 'package:bipa/features/stock/presentation/home_page.dart';
+import 'package:bipa/features/stock/presentation/stock_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,8 +24,9 @@ import '../../../helpers/test_database.dart';
 final _now = DateTime(2026, 10, 29, 9);
 final _backupDay = DateTime(2026, 10, 12, 21);
 
-/// O Início de um celular novo: o banco vazio e o backup do antigo à espera.
-Future<FakeBackupController> _pumpHome(WidgetTester tester, FakeBackupController backup) async {
+/// O Início de um celular novo: o backup do antigo à espera e o banco
+/// vazio, ou, com [inUse], o leite já em casa.
+Future<FakeBackupController> _pumpHome(WidgetTester tester, FakeBackupController backup, {bool inUse = false}) async {
   tester.view
     ..physicalSize = const Size(411, 1400)
     ..devicePixelRatio = 1;
@@ -40,6 +46,18 @@ Future<FakeBackupController> _pumpHome(WidgetTester tester, FakeBackupController
     container.dispose();
     await tester.runAsync(db.close);
   });
+  if (inUse) {
+    await tester.runAsync(() async {
+      await container
+          .read(productRepositoryProvider)
+          .save(
+            Product(id: 'leite', name: 'Leite integral', unit: MeasureUnit.liter, createdAt: _now, updatedAt: _now),
+          );
+      await container
+          .read(stockRepositoryProvider)
+          .adjust(productId: 'leite', delta: 2, reason: StockMovementReason.purchase);
+    });
+  }
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
@@ -79,7 +97,7 @@ void main() {
     await _pumpHome(tester, FakeBackupController(initial: BackupState(restoreOffer: _offer)));
 
     expect(find.text('Backup do Google'), findsOneWidget);
-    expect(find.text('Restaurar o backup de 12/10?'), findsOneWidget);
+    expect(find.text('Restaurar o backup de 12/10/2026?'), findsOneWidget);
     expect(find.text('214'), findsOneWidget);
     expect(find.text('1.380'), findsOneWidget);
     expect(find.bySemanticsLabel('56 itens em casa'), findsOneWidget);
@@ -111,7 +129,7 @@ void main() {
 
     expect(backup.calls, ['prepare', 'apply']);
     expect(find.text('Substituir pelo backup'), findsNothing);
-    expect(find.text('Backup de 12/10 restaurado'), findsOneWidget);
+    expect(find.text('Backup de 12/10/2026 restaurado'), findsOneWidget);
     expect(find.text('Desfazer'), findsNothing);
     expect(find.text('Backup do Google'), findsNothing);
     await _finishToasts(tester);
@@ -155,7 +173,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('Substituir pelo backup'), findsOneWidget);
-    expect(find.text('Neste celular agora: 230 produtos e 1.452 preços.'), findsOneWidget);
+    expect(find.text('Neste celular agora: 230 produtos, 1.452 preços e 60 itens em casa.'), findsOneWidget);
     expect(backup.calls, ['prepare']);
   });
 
@@ -186,7 +204,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('Backup do Google'), findsNothing);
-    expect(find.text('Backup de 12/10 deixado de lado'), findsOneWidget);
+    expect(find.text('Backup de 12/10/2026 deixado de lado'), findsOneWidget);
 
     await tester.tap(find.text('Desfazer'));
     await tester.pump();
@@ -209,5 +227,81 @@ void main() {
 
     expect(backup.calls, ['dismiss']);
     expect(find.text('Backup do Google'), findsNothing);
+  });
+
+  group('com a casa já em uso (BK1)', () {
+    testWidgets('o cartão fica, menor, com os números numa linha e a data com o ano', (tester) async {
+      await _pumpHome(tester, FakeBackupController(initial: BackupState(restoreOffer: _offer)), inUse: true);
+
+      expect(find.text('Backup do Google'), findsOneWidget);
+      expect(find.text('Restaurar o backup de 12/10/2026?'), findsOneWidget);
+      expect(find.bySemanticsLabel('Restaurar o backup de 12 de outubro de 2026?'), findsOneWidget);
+      expect(find.text('214 produtos, 1.380 preços e 56 itens em casa'), findsOneWidget);
+      expect(find.text('Restaurar'), findsOneWidget);
+      expect(find.text('Deixar de lado'), findsOneWidget);
+      expect(find.text('Começar do zero'), findsNothing);
+      expect(find.text('Leite integral'), findsOneWidget, reason: 'a casa continua embaixo');
+    });
+
+    testWidgets('"Restaurar" sempre passa pela folha de confirmação, com a origem', (tester) async {
+      final backup = await _pumpHome(
+        tester,
+        FakeBackupController(
+          initial: BackupState(restoreOffer: _offer),
+          onPrepare: () async =>
+              fakePrepared(createdAt: _backupDay, current: BackupSummary.empty, currentIsEmpty: true),
+        ),
+        inUse: true,
+      );
+
+      await tester.tap(find.text('Restaurar'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(backup.calls, ['prepare'], reason: 'nada foi restaurado sem a confirmação');
+      expect(find.text('Substituir pelo backup'), findsOneWidget);
+      expect(find.text('De outro celular'), findsOneWidget);
+    });
+
+    testWidgets('"Deixar de lado" diz o que vem depois, e o Desfazer traz o cartão de volta', (tester) async {
+      final backup = await _pumpHome(
+        tester,
+        FakeBackupController(initial: BackupState(restoreOffer: _offer)),
+        inUse: true,
+      );
+
+      await tester.tap(find.text('Deixar de lado'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.text('Backup do Google'), findsNothing);
+      expect(find.text('Backup de 12/10/2026 deixado de lado. O próximo grava por cima.'), findsOneWidget);
+
+      await tester.tap(find.text('Desfazer'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.text('Backup do Google'), findsOneWidget);
+      expect(backup.calls, isNot(contains('dismiss')), reason: 'o arquivo continua pendente');
+    });
+
+    testWidgets('"Deixar de lado" vale quando o aviso sai: o arquivo é adotado', (tester) async {
+      final backup = await _pumpHome(
+        tester,
+        FakeBackupController(
+          initial: BackupState(lastBackup: _offer, restoreOffer: _offer),
+        ),
+        inUse: true,
+      );
+
+      await tester.tap(find.text('Deixar de lado'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      await _finishToasts(tester);
+
+      expect(backup.calls, ['dismiss']);
+      expect(find.text('Backup do Google'), findsNothing);
+      expect(backup.lastBackupInfo?.madeHere, isTrue, reason: 'Ajustes volta a ser o de sempre');
+    });
   });
 }

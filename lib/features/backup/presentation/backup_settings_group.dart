@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
@@ -25,6 +26,12 @@ enum _Busy { none, making, saving }
 ///
 /// Um último backup maior que os 25 MB do backup do Google troca a frase
 /// pelo tamanho e sugere "Salvar uma cópia…".
+///
+/// Com o backup de outro celular à espera de resposta (protótipo
+/// AjustesBackupPendente, BK1): a linha do último backup diz a origem, com o
+/// ano, e restaura ao toque; "Fazer backup agora" diz que o automático está
+/// pausado e pergunta antes de gravar por cima; "Salvar uma cópia…" grava só
+/// a cópia.
 class BackupSettingsCard extends ConsumerStatefulWidget {
   const BackupSettingsCard({super.key});
 
@@ -42,9 +49,14 @@ class _BackupSettingsCardState extends ConsumerState<BackupSettingsCard> {
   Future<void> _makeNow() async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
+    final last = ref.read(backupProvider).value?.lastBackup;
+    final pending = last != null && !last.madeHere;
+    // Gravar por cima do backup do outro celular é apagá-lo: pergunta antes.
+    if (pending && !await confirmReplacePending(context, last)) return;
+    if (!mounted) return;
     setState(() => _busy = _Busy.making);
     try {
-      final info = await ref.read(backupProvider.notifier).createBackup();
+      final info = await ref.read(backupProvider.notifier).createBackup(replacePending: pending);
       if (info == null) {
         showBipaToast(messenger, l10n.backupNothingYet);
       } else if (mounted) {
@@ -78,6 +90,14 @@ class _BackupSettingsCardState extends ConsumerState<BackupSettingsCard> {
     }
   }
 
+  /// O toque na linha do backup de outro celular: a folha de confirmação com
+  /// esse arquivo, sem o seletor do Android, que não vê a pasta do app.
+  Future<void> _restorePending(BackupInfo last) => showRestoreSheet(
+    context,
+    preparing: ref.read(backupProvider.notifier).prepareRestore(File(last.path)),
+    fromOtherPhone: true,
+  );
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -85,6 +105,7 @@ class _BackupSettingsCardState extends ConsumerState<BackupSettingsCard> {
     final last = ref.watch(backupProvider.select((state) => state.value?.lastBackup));
     final loaded = ref.watch(backupProvider.select((state) => !state.isLoading));
     final now = ref.watch(clockProvider)();
+    final pending = last != null && !last.madeHere;
 
     return Material(
       color: colors.surface,
@@ -93,11 +114,20 @@ class _BackupSettingsCardState extends ConsumerState<BackupSettingsCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _LastBackupRow(last: last, loaded: loaded, now: now, justMade: last != null && last.manifest.id == _justMade),
+          if (pending)
+            _PendingBackupRow(last: last, onTap: _busy == _Busy.none ? () => unawaited(_restorePending(last)) : null)
+          else
+            _LastBackupRow(
+              last: last,
+              loaded: loaded,
+              now: now,
+              justMade: last != null && last.manifest.id == _justMade,
+            ),
           Divider(color: colors.line),
           BackupActionRow(
             icon: Icons.cloud_upload_outlined,
             title: l10n.backupMakeNow,
+            subtitle: pending ? l10n.backupMakeNowPaused : null,
             busyLabel: l10n.backupMaking,
             busy: _busy == _Busy.making,
             onTap: _busy == _Busy.none ? _makeNow : null,
@@ -208,6 +238,136 @@ class _LastBackupRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// A linha do último backup quando ele é de outro celular e espera resposta
+/// (protótipo AjustesBackupPendente): a mesma linha, agora botão, com o
+/// ícone do celular com a seta, a origem na frase ("De outro celular. Toque
+/// para restaurar.") e o dia grande com o ano embaixo.
+class _PendingBackupRow extends StatelessWidget {
+  const _PendingBackupRow({required this.last, required this.onTap});
+
+  final BackupInfo last;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final colors = context.colors;
+    final createdAt = last.createdAt;
+    return Semantics(
+      button: true,
+      enabled: onTap != null,
+      label: l10n.backupLastPendingSemantics(BackupLabels.spokenDate(createdAt)),
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
+        splashFactory: NoSplash.splashFactory,
+        highlightColor: colors.surfaceSunken,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 64),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s4, vertical: BipaSpacing.s4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: BipaSpacing.s1),
+                  child: Icon(Icons.install_mobile, size: 24, color: colors.ink),
+                ),
+                const SizedBox(width: BipaSpacing.s4),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(l10n.backupLastTitle, style: BipaText.bodyLarge.copyWith(color: colors.ink)),
+                      const SizedBox(height: 2),
+                      Text(
+                        l10n.backupLastFromOtherPhone,
+                        style: BipaText.label.copyWith(
+                          fontWeight: FontWeight.w500,
+                          height: 20 / 14,
+                          color: colors.inkMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: BipaSpacing.s3),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      BackupLabels.date(createdAt),
+                      style: BipaText.number.copyWith(fontSize: 17, color: colors.ink),
+                    ),
+                    Text(
+                      BackupLabels.year(createdAt),
+                      style: BipaText.caption.copyWith(
+                        color: colors.inkMuted,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// "Fazer backup agora" com o backup de outro celular pendente: o diálogo
+/// das ações que apagam, com a data, os números do que some e os botões
+/// empilhados, porque "Apagar e fazer backup" não cabe ao lado de
+/// "Cancelar". Devolve `true` só quando a pessoa confirma.
+Future<bool> confirmReplacePending(BuildContext context, BackupInfo pending) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (context) {
+      final l10n = AppLocalizations.of(context);
+      final colors = context.colors;
+      final summary = pending.manifest.summary;
+      final date = BackupLabels.fullDate(pending.createdAt);
+      final products = BackupLabels.count(summary.products);
+      final prices = BackupLabels.count(summary.prices);
+      final items = BackupLabels.count(summary.itemsAtHome);
+      final body = l10n.backupReplacePendingBody(
+        date,
+        products,
+        summary.products,
+        prices,
+        summary.prices,
+        items,
+        summary.itemsAtHome,
+      );
+      final style = BipaText.body.copyWith(color: colors.inkMuted);
+      final bold = style.copyWith(fontWeight: FontWeight.w700, color: colors.ink);
+      return AlertDialog(
+        title: Text(l10n.backupReplacePendingTitle),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text.rich(TextSpan(style: style, children: boldParts(body, [date, products, prices, items], bold))),
+              const SizedBox(height: BipaSpacing.s6),
+              NeutralButton(label: l10n.backupReplacePendingConfirm, onPressed: () => Navigator.of(context).pop(true)),
+              const SizedBox(height: BipaSpacing.s2),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+                child: Text(l10n.cancel),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+  return confirmed ?? false;
 }
 
 /// Uma linha de ação de Ajustes: ícone de 24 em `ink`, o título com a ação e,
