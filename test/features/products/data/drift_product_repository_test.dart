@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bipa/core/database/app_database.dart';
 import 'package:bipa/core/money/money.dart';
 import 'package:bipa/features/markets/data/drift_market_repository.dart';
@@ -5,6 +7,7 @@ import 'package:bipa/features/markets/domain/market.dart';
 import 'package:bipa/features/prices/data/drift_price_repository.dart';
 import 'package:bipa/features/prices/domain/price_observation.dart';
 import 'package:bipa/features/prices/domain/price_source.dart';
+import 'package:bipa/features/products/data/directory_product_photo_files.dart';
 import 'package:bipa/features/products/data/drift_product_repository.dart';
 import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
@@ -228,6 +231,69 @@ void main() {
     expect(await db.select(db.priceObservations).get(), isEmpty);
     expect(await stock.findByProduct('arroz'), isNull);
     expect(await list.watchAll().first, isEmpty);
+  });
+
+  group('o arquivo da foto sai com o produto (ADR 0023, B2)', () {
+    late Directory photos;
+
+    setUp(() async {
+      photos = await Directory.systemTemp.createTemp('bipa_fotos_');
+      repository = DriftProductRepository(db, photos: DirectoryProductPhotoFiles(() async => photos));
+    });
+
+    tearDown(() => photos.delete(recursive: true));
+
+    /// Grava o produto com uma foto que existe na pasta.
+    Future<File> withPhoto(String id, String name, String photoPath) async {
+      await repository.save(product(id, name).copyWith(photoPath: photoPath));
+      return File('${photos.path}${Platform.pathSeparator}$photoPath').writeAsBytes([1, 2, 3]);
+    }
+
+    test('apagar o produto apaga a foto dele', () async {
+      final photo = await withPhoto('arroz', 'Arroz branco', 'arroz.jpg');
+      final other = await withPhoto('feijao', 'Feijão', 'feijao.jpg');
+
+      await repository.delete('arroz');
+
+      expect(photo.existsSync(), isFalse);
+      expect(other.existsSync(), isTrue);
+    });
+
+    test('juntar apaga a foto do produto que sai e mantém a do que fica', () async {
+      final from = await withPhoto('arroz-camil', 'Arroz Camil', 'camil.jpg');
+      final into = await withPhoto('arroz', 'Arroz branco', 'arroz.jpg');
+
+      await repository.merge(fromId: 'arroz-camil', intoId: 'arroz');
+
+      expect(from.existsSync(), isFalse);
+      expect(into.existsSync(), isTrue);
+      expect((await repository.findById('arroz'))?.photoPath, 'arroz.jpg');
+    });
+
+    test('a foto que outro produto ainda cita fica', () async {
+      final photo = await withPhoto('arroz', 'Arroz branco', 'arroz.jpg');
+      await repository.save(product('arroz-camil', 'Arroz Camil').copyWith(photoPath: 'arroz.jpg'));
+
+      await repository.delete('arroz');
+
+      expect(photo.existsSync(), isTrue);
+    });
+
+    test('sem o arquivo no disco, o produto sai do mesmo jeito', () async {
+      await repository.save(product('arroz', 'Arroz branco').copyWith(photoPath: 'sumiu.jpg'));
+
+      await repository.delete('arroz');
+
+      expect(await repository.findById('arroz'), isNull);
+    });
+
+    test('juntar um produto com ele mesmo não apaga a foto', () async {
+      final photo = await withPhoto('arroz', 'Arroz branco', 'arroz.jpg');
+
+      await repository.merge(fromId: 'arroz', intoId: 'arroz');
+
+      expect(photo.existsSync(), isTrue);
+    });
   });
 
   group('embalagem no produto errado (ADR 0022)', () {

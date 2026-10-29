@@ -8,6 +8,7 @@ import 'package:bipa/features/products/data/product_mapper.dart';
 import 'package:bipa/features/products/domain/deleted_package.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
+import 'package:bipa/features/products/domain/product_photo_files.dart';
 import 'package:bipa/features/products/domain/product_repository.dart';
 import 'package:bipa/features/stock/domain/stock_location.dart';
 import 'package:bipa/features/stock/domain/stock_movement_reason.dart';
@@ -15,13 +16,21 @@ import 'package:bipa/features/stock/domain/suggested_location.dart';
 import 'package:drift/drift.dart';
 
 final class DriftProductRepository implements ProductRepository {
-  const DriftProductRepository(this._db, {Clock clock = systemClock, IdGenerator ids = const UuidGenerator()})
-    : _clock = clock,
-      _ids = ids;
+  /// Com [photos], apagar ou juntar um produto apaga também o arquivo da
+  /// foto dele (ADR 0023, lacuna B2). Sem ele, o arquivo fica.
+  const DriftProductRepository(
+    this._db, {
+    Clock clock = systemClock,
+    IdGenerator ids = const UuidGenerator(),
+    ProductPhotoFiles? photos,
+  }) : _clock = clock,
+       _ids = ids,
+       _photos = photos;
 
   final AppDatabase _db;
   final Clock _clock;
   final IdGenerator _ids;
+  final ProductPhotoFiles? _photos;
 
   @override
   Stream<List<Product>> watchAll({String query = ''}) {
@@ -107,19 +116,26 @@ final class DriftProductRepository implements ProductRepository {
     });
   }
 
-  /// Muda o produto em todas as tabelas que o citam, numa transação. Estoque
-  /// e lista somam ou deduplicam; o resto só troca de dono. As observações de
-  /// preço mantêm a embalagem, que é o que elas de fato registraram.
   @override
   Future<void> delete(String id) async {
-    // As tabelas filhas apagam em cascata (chaves estrangeiras).
-    await (_db.delete(_db.products)..where((t) => t.id.equals(id))).go();
+    final photoPath = await _db.transaction(() async {
+      final photoPath = (await findById(id))?.photoPath;
+      // As tabelas filhas apagam em cascata (chaves estrangeiras).
+      await (_db.delete(_db.products)..where((t) => t.id.equals(id))).go();
+      return photoPath;
+    });
+    await _deleteUnusedPhoto(photoPath);
   }
 
+  /// Muda o produto em todas as tabelas que o citam, numa transação. Estoque
+  /// e lista somam ou deduplicam; o resto só troca de dono. As observações de
+  /// preço mantêm a embalagem, que é o que elas de fato registraram. A foto
+  /// de [fromId] sai com ele; [intoId] fica com a sua.
   @override
-  Future<void> merge({required String fromId, required String intoId}) {
-    if (fromId == intoId) return Future.value();
-    return _db.transaction(() async {
+  Future<void> merge({required String fromId, required String intoId}) async {
+    if (fromId == intoId) return;
+    final photoPath = await _db.transaction(() async {
+      final photoPath = (await findById(fromId))?.photoPath;
       final now = _clock();
       // `updates` avisa as telas que observam essas tabelas.
       Future<void> move(TableInfo<Table, Object?> table) => _db.customUpdate(
@@ -216,7 +232,23 @@ final class DriftProductRepository implements ProductRepository {
         updates: {_db.rememberedLocations},
       );
       await (_db.delete(_db.products)..where((t) => t.id.equals(fromId))).go();
+      return photoPath;
     });
+    await _deleteUnusedPhoto(photoPath);
+  }
+
+  /// Apaga o arquivo da foto de um produto que saiu do banco, depois da
+  /// transação: se ela falhar, a foto fica. Uma foto que outro produto ainda
+  /// cita fica também.
+  Future<void> _deleteUnusedPhoto(String? photoPath) async {
+    final photos = _photos;
+    if (photoPath == null || photos == null) return;
+    final citing =
+        await (_db.select(_db.products)
+              ..where((t) => t.photoPath.equals(photoPath))
+              ..limit(1))
+            .getSingleOrNull();
+    if (citing == null) await photos.delete(photoPath);
   }
 
   @override

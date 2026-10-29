@@ -1,5 +1,6 @@
 import 'package:bipa/core/database/database_provider.dart';
 import 'package:bipa/core/di/core_providers.dart';
+import 'package:bipa/features/products/data/directory_product_photo_files.dart';
 import 'package:bipa/features/products/data/drift_product_repository.dart';
 import 'package:bipa/features/products/domain/create_product_by_weight.dart';
 import 'package:bipa/features/products/domain/delete_package.dart';
@@ -15,6 +16,7 @@ final productRepositoryProvider = Provider<ProductRepository>(
     ref.watch(appDatabaseProvider),
     clock: ref.watch(clockProvider),
     ids: ref.watch(idGeneratorProvider),
+    photos: DirectoryProductPhotoFiles(productPhotosDirectory),
   ),
 );
 
