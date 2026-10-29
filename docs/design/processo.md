@@ -190,14 +190,16 @@ O problema: **corrigir o local de um item novo na hora do bipe**, quando a suges
 
 | Referência | Como resolve | O que levamos | O que fazemos diferente |
 | --- | --- | --- | --- |
-| **Spotify** (botão "+", nas [discussões da comunidade](https://community.spotify.com/t5/Live-Ideas/Ability-to-Change-the-Default-Playlist-for-button/idi-p/5678036/page/3)) | O "+" salva direto nas Curtidas, e o aviso traz "Alterar" para escolher outra playlist | Salvar no destino provável e oferecer a troca no próprio aviso | A troca é um chip à parte, com o local à vista, e não um botão "Alterar" ao lado do "Desfazer" |
-| **Material Design** ([snackbars](https://m3.material.io/components/snackbar/guidelines)) | Uma ação por aviso, reversível; um aviso novo substitui o anterior | O aviso fica com uma ação só (Desfazer) | O local não cabe como segunda ação: vai num controle próprio, que também some com o aviso |
+| **Spotify** (botão "+", nas [discussões da comunidade](https://community.spotify.com/t5/Live-Ideas/Ability-to-Change-the-Default-Playlist-for-button/idi-p/5678036/page/3)) | O "+" salva direto nas Curtidas, e o aviso traz "Alterar" para escolher outra playlist | Salvar no destino provável e oferecer a troca no próprio aviso | A troca é o próprio texto do aviso, com o local à vista e a seta para baixo, e não um botão "Alterar" ao lado do "Desfazer" |
+| **Material Design** ([snackbars](https://m3.material.io/components/snackbar/guidelines)) | Uma ação por aviso, reversível; um aviso novo substitui o anterior | O aviso fica com uma ação escrita só (Desfazer) | O local não vira uma segunda ação com rótulo: o texto que já diz o local é o botão que o troca |
 
 **Do nosso jeito:**
 
-- **Um sinal por informação:** o aviso diz o estoque, e o chip diz o local. O local não se repete no texto do aviso.
-- O chip é o mesmo chip de vidro do mercado, com a seta, e só aparece quando o item nasce no bipe, a hora em que a sugestão pode errar.
-- A escolha usa os chips de local de "Arrumar o que entrou". Tocar escolhe e fecha, sem botão de salvar.
+- **Um sinal por informação:** o local fica dentro do aviso, no texto que já diz o estoque ("Leite integral 1 L · 1 na Despensa ▾"), e não se repete em outro lugar.
+- O texto, com a seta para baixo, é um botão, e o Desfazer é outro no mesmo aviso, cada um com 48 de área de toque. O local só aparece quando o item nasce no bipe, a hora em que a sugestão pode errar.
+- Tocar no local para o tempo do aviso e abre a escolha, com os chips de local de "Arrumar o que entrou". Tocar escolhe e fecha, sem botão de salvar, e o aviso volta com o local novo.
+
+**Decidido em 28/10/2026:** a primeira proposta punha o local num chip de vidro à parte, abaixo do aviso. O quadro aprovado ([CapturaCasaLocal](prototipo/telas/CapturaCasaLocal.png)) pôs o local dentro do aviso, e o app seguiu (`onDetailTap` do `LiveReadChip`). Um chip separado dizia o mesmo item duas vezes, em dois lugares.
 
 ### Quadros do que o app já fazia (outubro de 2026)
 
@@ -231,7 +233,9 @@ O problema: **os rótulos da barra cortam a partir de uns 120% num celular de 36
 | **WCAG 1.4.4** ([redimensionar texto](https://www.w3.org/WAI/WCAG21/Understanding/resize-text.html)) e **Material 3** (rótulos de uma linha, sem cortar) | Texto até 200% sem perder conteúdo; o M3 pede rótulo de uma linha, inteiro | Nada de reticências na barra | A proposta B ganha largura tirando o bipar do meio, em vez de esconder rótulos |
 | **iOS 26** (barra que minimiza, na análise do lote 8) | Minimiza ao rolar só quando há o que rolar | — | Com letra grande ou TalkBack, a barra não encolhe: o rótulo é a informação |
 
-**Do nosso jeito:** duas propostas para o mantenedor escolher. A mantém a anatomia do `ScanNavBar` (bipar no meio) e aceita rótulos quase do tamanho normal, com o balão para quem precisa ler maior. B dá aos rótulos uns 35% a mais de largura, mas tira o bipar do centro da barra, que é a marca do componente.
+**Do nosso jeito:** duas propostas foram ao mantenedor. A mantém a anatomia do `ScanNavBar` (bipar no meio) e aceita rótulos quase do tamanho normal, com o balão para quem precisa ler maior. B dá aos rótulos uns 35% a mais de largura, mas tira o bipar do centro da barra, que é a marca do componente.
+
+**Decidido em 28/10/2026: A até 160%, B acima.** Até 160% de letra, a barra é a de sempre, com os rótulos limitados a 130% e encolhidos por igual até caber. Acima de 160%, o bipar sai do meio e flutua acima da barra, à direita, e o menu do bipar sai dele. O balão do rótulo grande, no toque longo do destino, vale nas duas, porque em B os rótulos ainda encolhem num celular estreito. A partir de 130% ou com o TalkBack, a barra não encolhe ao rolar. O que fica aberto é B durante a compra, com a barra amarela da compra entre o bipar e a navegação (H12, na [análise do lote 9](../ux/analise-ux-2026-10-28-lote9.md)).
 
 ## Fontes
 
