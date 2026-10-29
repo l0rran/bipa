@@ -300,6 +300,17 @@ O problema: **pedir o consentimento do relatório de falhas sem quebrar a calma,
 - **Ajustes** abre por um botão redondo com a engrenagem, à direita do título "Sua casa", como o botão redondo das outras telas. A tela tem o mínimo: "Privacidade", com o interruptor "Relatório de falhas" e, embaixo, o que vai e o que nunca vai; e "Sobre o Bipa", com a versão. Desligar fecha o Sentry na hora.
 - Em build sem DSN, nem o cartão nem a seção "Privacidade" aparecem; a tela fica só com a versão.
 
+### O anel que respira (outubro de 2026)
+
+O problema: **o anel do bipar respira sem fim, em todas as abas** (H16). É a assinatura do botão, mas um movimento contínuo no canto do olho briga com a calma por padrão, e durante a compra pulsa ao lado da barra amarela, que já é o destaque.
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **WCAG 2.2.2** ([pausar, parar, esconder](https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide.html)) | Movimento automático por mais de 5 s precisa de um jeito de pausar | Movimento com começo e fim, abaixo de 5 s: dois ciclos de 2,4 s | Sem controle de pausa: o anel para sozinho |
+| **Linear e Shortcut** (calma por padrão, em [identidade-visual.md](identidade-visual.md)) | Não disputar uma atenção que não foi conquistada | O anel chama só quando a barra aparece | Continua sem fim quando a casa e a lista estão vazias, porque aí bipar é a única coisa a fazer |
+
+**Do nosso jeito:** a regra está no guia [`ScanNavBar.md`](design-system/componentes/ScanNavBar.md), como proposta que aguarda revisão: dois ciclos quando a barra aparece, sem fim só com a casa e a lista vazias, parado durante a compra e com movimento reduzido. Muda o design system primeiro e o código depois.
+
 ## Fontes
 
 - [Menor Preço Brasil (Olhar Digital)](https://olhardigital.com.br/2025/08/03/dicas-e-tutoriais/quer-economizar-na-farmacia-e-supermercado-conheca-o-app-menor-preco-brasil/)
