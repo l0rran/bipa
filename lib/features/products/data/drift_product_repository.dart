@@ -6,6 +6,7 @@ import 'package:bipa/core/time/clock.dart';
 import 'package:bipa/features/prices/data/drift_price_repository.dart';
 import 'package:bipa/features/products/data/product_mapper.dart';
 import 'package:bipa/features/products/domain/deleted_package.dart';
+import 'package:bipa/features/products/domain/moved_package.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/product_repository.dart';
@@ -220,11 +221,13 @@ final class DriftProductRepository implements ProductRepository {
   }
 
   @override
-  Future<void> movePackage({required String packageId, required String intoId}) => _db.transaction(() async {
+  Future<MovedPackage> movePackage({required String packageId, required String intoId}) => _db.transaction(() async {
     final package = await _selectPackage(packageId).getSingleOrNull();
     if (package == null) throw const PackageNotFoundException();
     final fromId = package.productId;
-    if (fromId == intoId) return;
+    MovedPackage result({bool created = false}) =>
+        MovedPackage(packageId: packageId, fromProductId: fromId, intoProductId: intoId, createdStockItem: created);
+    if (fromId == intoId) return result();
     final now = _clock();
 
     await (_db.update(_db.productPackages)..where((t) => t.id.equals(packageId))).write(
@@ -258,7 +261,7 @@ final class DriftProductRepository implements ProductRepository {
     await (_db.update(
       _db.stockLots,
     )..where((t) => t.packageId.equals(packageId))).write(StockLotsCompanion(productId: Value(intoId)));
-    if (moved <= _epsilon) return;
+    if (moved <= _epsilon) return result();
 
     final from = await _selectStockItem(fromId).getSingleOrNull();
     if (from != null) {
@@ -269,6 +272,7 @@ final class DriftProductRepository implements ProductRepository {
       await _recordAdjustment(fromId, quantity - from.quantity, now);
     }
     final into = await _selectStockItem(intoId).getSingleOrNull();
+    final created = into == null;
     if (into == null) {
       await _db
           .into(_db.stockItems)
@@ -286,7 +290,34 @@ final class DriftProductRepository implements ProductRepository {
       );
     }
     await _recordAdjustment(intoId, moved, now);
+    return result(created: created);
   });
+
+  @override
+  Future<void> deleteEmptyStockItem(String productId) async {
+    await (_db.delete(
+      _db.stockItems,
+    )..where((t) => t.productId.equals(productId) & t.quantity.isSmallerOrEqualValue(_epsilon))).go();
+  }
+
+  @override
+  Future<bool> isProductEmpty(String productId) async {
+    final packages =
+        await (_db.select(_db.productPackages)
+              ..where((t) => t.productId.equals(productId))
+              ..limit(1))
+            .get();
+    if (packages.isNotEmpty) return false;
+    final prices =
+        await (_db.select(_db.priceObservations)
+              ..where((t) => t.productId.equals(productId))
+              ..limit(1))
+            .get();
+    if (prices.isNotEmpty) return false;
+    final stock = await _selectStockItem(productId).getSingleOrNull();
+    // Um "ter sempre" é um pedido de que o produto continue existindo.
+    return stock == null || (stock.quantity <= _epsilon && (stock.minimumQuantity ?? 0) <= _epsilon);
+  }
 
   @override
   Future<DeletedPackage> deletePackage(String packageId) => _db.transaction(() async {

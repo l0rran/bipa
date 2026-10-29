@@ -4,6 +4,7 @@ import 'package:bipa/features/prices/domain/price_condition.dart';
 import 'package:bipa/features/prices/domain/price_observation.dart';
 import 'package:bipa/features/prices/domain/price_repository.dart';
 import 'package:bipa/features/products/domain/deleted_package.dart';
+import 'package:bipa/features/products/domain/moved_package.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/domain/product_repository.dart';
@@ -79,10 +80,34 @@ final class InMemoryProductRepository implements ProductRepository {
   }
 
   @override
-  Future<void> movePackage({required String packageId, required String intoId}) async {
+  Future<MovedPackage> movePackage({required String packageId, required String intoId}) async {
     final package = packages[packageId] ?? (throw const PackageNotFoundException());
     packages[packageId] = package.copyWith(productId: intoId);
+    return MovedPackage(
+      packageId: packageId,
+      fromProductId: package.productId,
+      intoProductId: intoId,
+      createdStockItem: createsStockItem && package.productId != intoId,
+    );
   }
+
+  /// A próxima movida de embalagem diz que criou o item de estoque do destino.
+  var createsStockItem = false;
+
+  /// Produtos que, mesmo sem embalagem, ainda têm preço ou algo em casa.
+  final productsWithData = <String>{};
+
+  /// Os produtos de que `deleteEmptyStockItem` foi chamado.
+  final emptyStockItemsDeleted = <String>[];
+
+  @override
+  Future<void> deleteEmptyStockItem(String productId) async {
+    emptyStockItemsDeleted.add(productId);
+  }
+
+  @override
+  Future<bool> isProductEmpty(String productId) async =>
+      !productsWithData.contains(productId) && !packages.values.any((p) => p.productId == productId);
 
   @override
   Future<DeletedPackage> deletePackage(String packageId) async {

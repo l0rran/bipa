@@ -1464,6 +1464,14 @@
     }
   },
   "packageDeleted": "Embalagem apagada.",
+  "packageEmptyProduct": "{name} ficou sem embalagem, preço e estoque.",
+  "@packageEmptyProduct": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "packageDeleteFailed": "Não deu para apagar a embalagem. Tente de novo.",
   "packageRestoreFailed": "Não deu para trazer a embalagem de volta."
 }
