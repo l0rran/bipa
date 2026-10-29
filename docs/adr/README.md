@@ -25,6 +25,7 @@ Cada arquivo registra uma decisão importante: o contexto, o que foi decidido e 
 | [0019](0019-casa-e-lista-no-mesmo-gesto.md) | Casa e lista no mesmo gesto, com um só "Desfazer" | Aceito |
 | [0020](0020-precos-da-compra-guardados-com-ela.md) | Preços da compra guardados com ela | Aceito |
 | [0021](0021-local-lembrado-ao-tirar-de-casa.md) | Lembrar o local do item ao tirar de casa | Aceito |
+| [0022](0022-mover-e-apagar-embalagem.md) | Mover e apagar uma embalagem | Aceito |
 
 ## Modelo
 
