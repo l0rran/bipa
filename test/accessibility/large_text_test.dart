@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:bipa/core/database/app_database.dart';
 import 'package:bipa/core/database/database_provider.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
@@ -44,6 +46,7 @@ import 'package:bipa/features/stock/presentation/home_page.dart';
 import 'package:bipa/features/stock/presentation/stock_item_sheet.dart';
 import 'package:bipa/features/stock/presentation/stock_providers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -55,6 +58,12 @@ import '../helpers/test_database.dart';
 /// pode cortar texto. O Flutter reporta o `RenderFlex overflow` como erro, e o
 /// teste falha com ele, dizendo qual linha estourou.
 ///
+/// Estouro não é tudo (H10): reticência, `maxLines` e `FittedBox` cortam sem
+/// erro de layout. Por isso cada tela também passa por [_expectReadable]: o
+/// nome de um produto não pode ser cortado, e nenhum texto encolhido por um
+/// `FittedBox` pode ficar pequeno demais. Tudo roda em duas larguras: 411 dp
+/// (um celular comum) e 360 dp (um celular pequeno).
+///
 /// A barra de navegação (`ScanNavBar`) fica de fora: as telas são montadas
 /// sem o `HomeShell`, que a desenha.
 const _scale = 2.0;
@@ -62,7 +71,21 @@ const _scale = 2.0;
 /// Um celular comum, em pixels lógicos de largura. A altura é grande de
 /// propósito: o que está abaixo da dobra só é medido quando entra na tela, e
 /// o teste precisa medir tudo.
-const _phone = Size(411, 4000);
+const _phoneHeight = 4000.0;
+
+/// As larguras em que cada teste roda, em dp.
+const _widths = [411.0, 360.0];
+
+/// A largura do teste em andamento; o `setUp` de cada grupo a define.
+var _width = 411.0;
+
+/// Trechos dos nomes de produto do [_seed] e dos outros testes: nenhum deles
+/// pode aparecer cortado.
+const _productNames = ['Café torrado', 'Leite integral', 'Detergente líquido', 'Papel higiênico', 'Pão francês'];
+
+/// O menor tamanho de letra, já com a escala do aparelho, que um texto
+/// encolhido por `FittedBox` pode ter. Abaixo disso, deixa de ser legível.
+const _minShrunkFontSize = 12.0;
 
 final _now = DateTime(2026, 10, 28, 9);
 
@@ -202,7 +225,7 @@ Widget _app(Widget home, {double scale = _scale}) => MaterialApp(
 
 void _usePhone(WidgetTester tester) {
   tester.view
-    ..physicalSize = _phone
+    ..physicalSize = Size(_width, _phoneHeight)
     ..devicePixelRatio = 1;
   addTearDown(tester.view.reset);
 }
@@ -256,6 +279,46 @@ Future<void> _pumpComponent(WidgetTester tester, Widget child) async {
   await tester.pump(const Duration(seconds: 1));
 }
 
+/// Mede leitura, não só estouro (H10): falha se um nome de produto foi cortado
+/// por `maxLines` ou se um texto foi encolhido por um `FittedBox` até ficar
+/// menor que [_minShrunkFontSize].
+void _expectReadable(WidgetTester tester) {
+  final problems = <String>[];
+  for (final element in find.byType(RichText).evaluate()) {
+    final paragraph = element.renderObject;
+    if (paragraph is! RenderParagraph) continue;
+    final text = paragraph.text.toPlainText();
+    if (text.trim().isEmpty) continue;
+
+    if (_productNames.any(text.contains) && paragraph.didExceedMaxLines) {
+      // Os widgets acima do texto dizem de onde ele vem.
+      final owners = <String>[];
+      element.visitAncestorElements((ancestor) {
+        owners.add(ancestor.widget.runtimeType.toString());
+        return owners.length < 12;
+      });
+      problems.add('nome cortado: "$text" (${owners.join(' < ')})');
+    }
+
+    // Quanto os `FittedBox` acima encolheram o texto.
+    var shrink = 1.0;
+    for (RenderObject? node = paragraph.parent; node != null; node = node.parent) {
+      if (node is RenderFittedBox) {
+        final child = node.child;
+        if (child != null && child.size.width > 0) shrink *= math.min(1, node.size.width / child.size.width);
+      }
+    }
+    final fontSize = paragraph.text.style?.fontSize;
+    if (fontSize != null && shrink < 1) {
+      final effective = paragraph.textScaler.scale(fontSize) * shrink;
+      if (effective < _minShrunkFontSize) {
+        problems.add('texto encolhido para ${effective.toStringAsFixed(1)}: "$text"');
+      }
+    }
+  }
+  expect(problems, isEmpty, reason: 'texto ilegível a ${_width.toInt()} dp');
+}
+
 /// Deixa o banco responder (ele roda fora do relógio falso do teste) e o
 /// quadro seguinte desenhar o resultado.
 Future<void> _settle(WidgetTester tester) async {
@@ -264,9 +327,19 @@ Future<void> _settle(WidgetTester tester) async {
     await tester.pump(const Duration(milliseconds: 100));
   }
   await tester.pump(const Duration(seconds: 1));
+  _expectReadable(tester);
 }
 
 void main() {
+  for (final width in _widths) {
+    group('a ${width.toInt()} dp', () {
+      setUp(() => _width = width);
+      _tests();
+    });
+  }
+}
+
+void _tests() {
   group('telas com a letra a 200%', () {
     testWidgets('Início', (tester) async {
       await _pumpScreen(tester, const HomePage());
@@ -383,6 +456,8 @@ void main() {
                 bottom: 0,
                 child: ScanTray(
                   title: 'Carrinho',
+                  // Toda a lista à mostra: o teste mede os três itens.
+                  maxListHeight: 1200,
                   countLabel: '4 de 7 da lista',
                   totalLabel: 'Vou levar',
                   totalValue: r'≈ R$ 154,88',
@@ -531,7 +606,7 @@ void main() {
                 onSelected: (_) {},
               ),
               SizedBox(
-                height: QuickTile.sideFor(context),
+                height: QuickTile.sideFor(context, labels: const ['Café em pó']),
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: [
@@ -541,7 +616,7 @@ void main() {
                 ),
               ),
               SizedBox(
-                height: ProductCard.heightFor(context) + 12,
+                height: ProductCard.heightFor(context, names: const ['Detergente líquido neutro para louças']) + 12,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: [
