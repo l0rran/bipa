@@ -254,6 +254,20 @@
       "w": 1160,
       "h": 900,
       "title": "Proposta: navegação com letra grande durante a compra (A e B)"
+    },
+    "InicioRelatorioFalhas.dc.html": {
+      "x": 2960,
+      "y": 5500,
+      "w": 390,
+      "h": 1080,
+      "title": "Proposta: Casa com a pergunta do relatório de falhas"
+    },
+    "Ajustes.dc.html": {
+      "x": 3430,
+      "y": 5500,
+      "w": 390,
+      "h": 844,
+      "title": "Proposta: Ajustes, relatório de falhas"
     }
   },
   "order": [
@@ -291,7 +305,9 @@
     "NavLetraGrande.dc.html",
     "CapturaCasaLocalNomeLongo.dc.html",
     "ArrumarEntrouRegra.dc.html",
-    "NavLetraGrandeCompra.dc.html"
+    "NavLetraGrandeCompra.dc.html",
+    "InicioRelatorioFalhas.dc.html",
+    "Ajustes.dc.html"
   ],
   "notes": {
     "titulo": {

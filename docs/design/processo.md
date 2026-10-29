@@ -283,6 +283,23 @@ O problema: **acima de 160% de letra, durante a compra, dois botões amarelos em
 
 Recomendação: A, que segue a regra de texto na navegação e não cria variante.
 
+### Pergunta do relatório de falhas (outubro de 2026)
+
+O problema: **pedir o consentimento do relatório de falhas sem quebrar a calma, com a recusa tão fácil quanto o aceite e um lugar para mudar de ideia** ([ADR 0025](../adr/0025-relatorio-de-falhas-com-sentry-e-consentimento.md)). O app ainda não tem tela de Ajustes.
+
+| Referência | Como resolve | O que levamos | O que fazemos diferente |
+| --- | --- | --- | --- |
+| **ANPD** ([guia de cookies, 2022](https://www.gov.br/anpd/pt-br/documentos-e-publicacoes)) e **LGPD** (art. 8º, § 5º) | Recusar tão fácil quanto aceitar, nada pré-marcado, e revogação gratuita e facilitada | "Mandar" e "Não mandar" com o mesmo peso e a mesma largura; o interruptor sempre à mão | Fechar o cartão no × conta como "não", e ele não volta |
+| **iOS** (Análises e Melhorias) | Pergunta uma vez e deixa o interruptor nos Ajustes, com o que é enviado explicado ali | Uma pergunta só e o resto nos Ajustes | Não na primeira abertura: depois da primeira compra terminada, quando a pessoa já sabe o que o app faz |
+| **Firefox para Android** (Ajustes, coleta de dados) | Interruptores por tipo de dado, cada um com uma linha do que faz | Um interruptor com uma linha embaixo | O que vai e o que nunca vai ficam abertos sob o interruptor, sem link para outra página: é a explicação que a LGPD pede, num lugar só |
+| **InsightCard** do Bipa | Cartão dispensável no Início, com o × no canto | O mesmo cartão, neutro | Sem `brand` nem `alert`: o destaque do Início continua sendo "Ir às compras" |
+
+**Do nosso jeito:** dois quadros, [InicioRelatorioFalhas](prototipo/telas/InicioRelatorioFalhas.png) e [Ajustes](prototipo/telas/Ajustes.png).
+
+- **O cartão** fica no lugar do carrossel de insights, abaixo da lista e dos locais, uma vez, depois da primeira compra terminada. O selo diz o assunto ("Relatório de falhas"), o título faz a pergunta e uma frase diz o que vai e o que fica. Os dois botões são secundários, lado a lado, do mesmo tamanho.
+- **Ajustes** abre por um botão redondo com a engrenagem, à direita do título "Sua casa", como o botão redondo das outras telas. A tela tem o mínimo: "Privacidade", com o interruptor "Relatório de falhas" e, embaixo, o que vai e o que nunca vai; e "Sobre o Bipa", com a versão. Desligar fecha o Sentry na hora.
+- Em build sem DSN, nem o cartão nem a seção "Privacidade" aparecem; a tela fica só com a versão.
+
 ## Fontes
 
 - [Menor Preço Brasil (Olhar Digital)](https://olhardigital.com.br/2025/08/03/dicas-e-tutoriais/quer-economizar-na-farmacia-e-supermercado-conheca-o-app-menor-preco-brasil/)
