@@ -187,12 +187,14 @@ class _CameraPageState extends ConsumerState<CameraPage> {
   /// [onTap] faz do aviso um botão (com a seta): o granel a escolher, ou a
   /// leitura pela metade a completar. Com [actionLabel], o botão diz o que
   /// faz no lugar da seta ("Desfazer"). [onDetailTap] faz do texto um botão
-  /// à parte: o local do item novo (AB9).
+  /// à parte: o local do item novo (AB9), com o nome do item numa linha
+  /// acima ([title], AB12).
   void _showNotice(
     _Notice notice, {
     VoidCallback? onTap,
     String? actionLabel,
     VoidCallback? onDetailTap,
+    String? title,
     Duration duration = const Duration(milliseconds: 2500),
   }) {
     if (!mounted) return;
@@ -201,6 +203,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
       _noticeTap = onTap;
       _noticeAction = actionLabel;
       _noticeDetailTap = onDetailTap;
+      _noticeTitle = onDetailTap == null ? null : title;
     });
     // A mesma regra do bipa-toast (AB11): com o leitor de tela, o aviso com
     // botão espera a pessoa. A espera do par (o anel) é o prazo da leitura,
@@ -221,6 +224,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
       _noticeTap = null;
       _noticeAction = null;
       _noticeDetailTap = null;
+      _noticeTitle = null;
     });
   }
 
@@ -231,6 +235,10 @@ class _CameraPageState extends ConsumerState<CameraPage> {
 
   /// O que o aviso diz que o toque faz, no lugar da seta.
   String? _noticeAction;
+
+  /// O nome do item, na linha de cima do aviso cujo texto é um botão à
+  /// parte: o local fica embaixo e não corta (AB12).
+  String? _noticeTitle;
 
   /// O que tocar no texto do aviso faz, quando ele é um botão à parte.
   VoidCallback? _noticeDetailTap;
@@ -599,12 +607,15 @@ class _CameraPageState extends ConsumerState<CameraPage> {
         value: applied > 0 ? l10n.cameraDeltaUp(amount) : l10n.cameraDeltaDown(amount),
         detail: place == null
             ? l10n.cameraAtHome(product.name, Formatters.quantity(atHome))
-            : l10n.cameraAtHomePlaced(product.name, Formatters.quantity(atHome), place.name),
+            : l10n.cameraAtHomePlaced(Formatters.quantity(atHome), place.name),
         waiting: false,
       ),
       onTap: undoInNotice ? () => unawaited(undo()) : null,
       actionLabel: undoInNotice ? l10n.undo : null,
       onDetailTap: place == null ? null : () => unawaited(_choosePlace(product, place, show)),
+      // Com o local, duas linhas: o nome em cima e o local embaixo, que é o
+      // que o toque troca e nunca corta (AB12).
+      title: place == null ? null : product.name,
       duration: undoInNotice || place != null ? BipaToastDuration.short.time : const Duration(milliseconds: 2500),
     );
 
@@ -732,7 +743,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
         hint: _hint(l10n),
         notice: switch (notice) {
           (:final icon, :final value, :final detail, :final waiting)? => LiveReadChip(
-            key: ValueKey((value, detail)),
+            key: ValueKey((value, _noticeTitle, detail)),
             icon: icon,
             price: value,
             detail: detail,
@@ -741,6 +752,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
             actionLabel: _notice == null ? null : _noticeAction,
             onDetailTap: _notice == null ? null : _noticeDetailTap,
             detailActionLabel: l10n.cameraChangePlace,
+            title: _noticeTitle,
           ),
           null => null,
         },

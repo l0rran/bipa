@@ -798,6 +798,17 @@ void _tests() {
                 actionLabel: 'Desfazer',
                 onTap: () {},
               ),
+              // O item novo em casa: o nome em cima e o local embaixo (AB12).
+              LiveReadChip(
+                icon: Icons.home_outlined,
+                price: '+1',
+                title: 'Leite integral 1 L',
+                detail: '1 na Despensa',
+                onDetailTap: () {},
+                detailActionLabel: 'trocar o local',
+                actionLabel: 'Desfazer',
+                onTap: () {},
+              ),
             ],
           ),
         ),

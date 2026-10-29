@@ -1050,13 +1050,10 @@
       }
     }
   },
-  "cameraAtHomePlaced": "{name} · {count} {place, select, pantry{na Despensa} fridge{na Geladeira} freezer{no Freezer} bathroom{no Banheiro} cleaning{na Limpeza} other{em Outros}}",
+  "cameraAtHomePlaced": "{count} {place, select, pantry{na Despensa} fridge{na Geladeira} freezer{no Freezer} bathroom{no Banheiro} cleaning{na Limpeza} other{em Outros}}",
   "@cameraAtHomePlaced": {
-    "description": "Aviso da câmera ao guardar em casa um item que acabou de nascer: diz onde ele ficou. Só nesse bipe; nos seguintes vale cameraAtHome.",
+    "description": "Aviso da câmera ao guardar em casa um item que acabou de nascer: diz onde ele ficou, na linha de baixo, sob o nome do produto, e é o texto que o toque troca (AB12). Só nesse bipe; nos seguintes vale cameraAtHome.",
     "placeholders": {
-      "name": {
-        "type": "String"
-      },
       "count": {
         "type": "String"
       },
