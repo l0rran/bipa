@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Ícone da barra de status: um código de barras, em branco (o sistema pinta). -->
+<!-- Ícone da barra de status: a etiqueta do ícone do app, com o furo e o "b" vazados,
+     em branco (o sistema pinta). O viewport de 72 recorta a etiqueta (24 a 84 na grade
+     de 108) deixando uma folga de 6 em cada lado. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
-    android:viewportWidth="24"
-    android:viewportHeight="24">
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M3,5h2v14H3zM7,5h1v14H7zM10,5h2v14h-2zM14,5h1v14h-1zM17,5h1v14h-1zM20,5h1v14h-1z" />
+    android:viewportWidth="72"
+    android:viewportHeight="72">
+    <group
+        android:translateX="-18"
+        android:translateY="-18">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:fillType="evenOdd"
+            android:pathData="M34 33h40a10 10 0 0 1 10 10v22a10 10 0 0 1-10 10H34a10 10 0 0 1-10-10V43a10 10 0 0 1 10-10Z M34 50a4 4 0 1 0 0 8a4 4 0 1 0 0-8Z M48.5 70V41.5a3.5 3.5 0 0 1 7 0v11.89a10 10 0 1 1 0 13.22V70Z M63 55.5a4.5 4.5 0 1 0 0 9a4.5 4.5 0 1 0 0-9Z" />
+    </group>
 </vector>

@@ -71,7 +71,7 @@ O amarelo nunca é usado como texto sobre fundo claro, porque não tem contraste
 
 ### Logo
 
-O símbolo é um bloco amarelo (`brand`) com quatro barras de código em `ink`, cortadas por uma linha coral (`alert`): o laser do leitor.
+O símbolo é a etiqueta de gôndola: uma etiqueta amarela (`brand`) com o furo à esquerda, o da `PriceTag`, e um "b" em `ink`, sobre um quadrado arredondado `ink`. É também o ícone do app ([propostas e decisão](icone/README.md)). Em 28/10/2026 ele trocou o símbolo antigo (quatro barras cortadas pelo laser coral); o design system publicado no claude.ai ainda precisa receber essa mudança. As quatro barras ficam só no indicador de carregamento.
 
 ## Tipografia
 

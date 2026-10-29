@@ -102,7 +102,9 @@ Padrões:
 
 ## Logo
 
-O símbolo é um bloco `brand` (o amarelo da etiqueta) com quatro barras de código em `ink` cortadas por uma linha `alert`, o laser coral do leitor. Use sobre `ground`, `surface` ou fotos escuras; nunca distorça nem troque as cores. Para usos em uma cor (marca d'água, carimbo), use `bipa-symbol-mono.svg` em `ink`. O nome "Bipa" acompanha o símbolo em Manrope 800, com a mesma altura das barras.
+O símbolo é a etiqueta de gôndola: uma etiqueta `brand` (o amarelo do preço) com o furo à esquerda, o mesmo da `PriceTag`, e um "b" em `ink`, sobre um quadrado arredondado `ink`. É o mesmo desenho do ícone do app. Use sobre `ground`, `surface` ou fotos escuras; nunca distorça nem troque as cores. Para usos em uma cor (marca d'água, carimbo), use `bipa-symbol-mono.svg` em `ink`: a etiqueta cheia, com o furo e o "b" vazados. O nome "Bipa" acompanha o símbolo em Manrope 800, com a altura do "b".
+
+> **Pendente no design system publicado.** Em 28/10/2026 o mantenedor escolheu a proposta 1 · Etiqueta para o ícone do app, e o símbolo mudou nesta cópia (`logos/bipa-symbol.svg`, `logos/bipa-symbol-mono.svg` e este parágrafo). A página publicada no claude.ai ainda mostra o símbolo antigo (quatro barras e o laser coral) e **precisa receber a mesma mudança**; depois disso, exporte a cópia de novo. As quatro barras continuam só como indicador de carregamento (`.bipa-loader`).
 
 ## Componentes
 
