@@ -6,6 +6,7 @@ import 'package:bipa/core/design_system/bipa_typography.dart';
 import 'package:bipa/core/design_system/components/bipa_toast.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/features/backup/presentation/backup_settings_group.dart';
+import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:bipa/features/settings/presentation/settings_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,7 +15,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// engrenagem do Início. "Backup" vem primeiro (protótipo AjustesBackup,
 /// ADR 0023, seção 5). "Privacidade" tem o interruptor do relatório de
 /// falhas, o único lugar para mudar de ideia nos dois sentidos, com o que vai
-/// e o que nunca vai logo abaixo; "Sobre o Bipa" traz a versão.
+/// e o que nunca vai logo abaixo; "Sobre o Bipa" traz a versão e a atribuição
+/// do catálogo pronto.
 ///
 /// Em build sem DSN o relatório não existe, e a seção "Privacidade" some.
 class SettingsPage extends ConsumerWidget {
@@ -26,6 +28,7 @@ class SettingsPage extends ConsumerWidget {
     final colors = context.colors;
     final available = ref.watch(crashReportingAvailableProvider);
     final version = ref.watch(appVersionProvider).value;
+    final attribution = ref.watch(catalogAttributionProvider).value;
 
     return Scaffold(
       backgroundColor: colors.ground,
@@ -67,22 +70,33 @@ class SettingsPage extends ConsumerWidget {
             child: _Card(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s4, vertical: BipaSpacing.s4),
-                child: Row(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Text(l10n.settingsVersion, style: BipaText.bodyLarge.copyWith(color: colors.ink)),
-                    ),
-                    const SizedBox(width: BipaSpacing.s3),
-                    if (version != null)
-                      Text(
-                        version,
-                        style: BipaText.body.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: colors.inkMuted,
-                          fontFeatures: const [FontFeature.tabularFigures()],
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(l10n.settingsVersion, style: BipaText.bodyLarge.copyWith(color: colors.ink)),
                         ),
-                      ),
+                        const SizedBox(width: BipaSpacing.s3),
+                        if (version != null)
+                          Text(
+                            version,
+                            style: BipaText.body.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: colors.inkMuted,
+                              fontFeatures: const [FontFeature.tabularFigures()],
+                            ),
+                          ),
+                      ],
+                    ),
+                    // A ODbL pede a atribuição onde o app mostra os dados do
+                    // catálogo pronto (ADR 0024); o texto vem do próprio arquivo.
+                    if (attribution != null) ...[
+                      const SizedBox(height: BipaSpacing.s3),
+                      Text(attribution, style: BipaText.caption.copyWith(color: colors.inkMuted)),
+                    ],
                   ],
                 ),
               ),

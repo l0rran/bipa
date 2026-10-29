@@ -3,6 +3,7 @@ import 'package:bipa/core/crash_reporting/crash_reporting_providers.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/features/backup/presentation/backup_providers.dart';
+import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:bipa/features/settings/presentation/settings_page.dart';
 import 'package:bipa/features/settings/presentation/settings_providers.dart';
 import 'dart:ui' show Tristate;
@@ -19,6 +20,7 @@ Future<({MemoryConsentStore store, FakeCrashReporter reporter})> _pump(
   WidgetTester tester, {
   CrashReportingConsent consent = CrashReportingConsent.unasked,
   bool available = true,
+  String? attribution,
 }) async {
   // Um celular alto, para a tela inteira ficar à vista.
   tester.view
@@ -35,6 +37,7 @@ Future<({MemoryConsentStore store, FakeCrashReporter reporter})> _pump(
         initialCrashReportingConsentProvider.overrideWithValue(consent),
         appVersionProvider.overrideWith((ref) async => '0.1.0'),
         backupProvider.overrideWith(FakeBackupController.new),
+        catalogAttributionProvider.overrideWith((ref) async => attribution),
       ],
       child: MaterialApp(
         theme: BipaTheme.light,
@@ -64,6 +67,17 @@ void main() {
     expect(find.text('O que nunca vai'), findsOneWidget);
     expect(find.text('Produtos, preços, estoque e lista'), findsOneWidget);
     expect(find.text('0.1.0'), findsOneWidget);
+  });
+
+  testWidgets('"Sobre o Bipa" traz a atribuição do catálogo quando ele existe', (tester) async {
+    const text = 'Contém informações do Open Food Facts, disponíveis sob a ODbL';
+    await _pump(tester, attribution: text);
+    expect(find.text(text), findsOneWidget);
+  });
+
+  testWidgets('sem catálogo, "Sobre o Bipa" fica só com a versão', (tester) async {
+    await _pump(tester);
+    expect(find.textContaining('Open Food Facts'), findsNothing);
   });
 
   testWidgets('o interruptor reflete o consentimento já dado', (tester) async {
