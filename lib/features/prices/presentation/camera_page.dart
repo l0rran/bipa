@@ -32,7 +32,10 @@ import 'package:bipa/features/shopping_list/presentation/live_camera.dart';
 import 'package:bipa/features/shopping_list/presentation/photograph_tag.dart';
 import 'package:bipa/features/shopping_list/presentation/shopping_list_providers.dart';
 import 'package:bipa/features/shopping_list/presentation/start_shopping.dart';
+import 'package:bipa/features/stock/domain/home_arrivals.dart';
+import 'package:bipa/features/stock/domain/stock_item.dart';
 import 'package:bipa/features/stock/domain/stock_location.dart';
+import 'package:bipa/features/stock/presentation/arrange_arrivals_sheet.dart';
 import 'package:bipa/features/stock/presentation/place_choice_sheet.dart';
 import 'package:bipa/features/stock/presentation/stock_providers.dart';
 import 'package:flutter/material.dart';
@@ -109,6 +112,10 @@ class _CameraPageState extends ConsumerState<CameraPage> {
 
   _Notice? _notice;
   Timer? _noticeTimer;
+
+  /// Os produtos que nasceram em casa nesta câmera de "Comprei", para a
+  /// folha "Arrumar o que entrou" ao fechar (AB5).
+  final _arrivals = HomeArrivals();
 
   @override
   void initState() {
@@ -594,6 +601,9 @@ class _CameraPageState extends ConsumerState<CameraPage> {
       duration: undoInNotice || place != null ? _undoFor : const Duration(milliseconds: 2500),
     );
 
+    // Antes do aviso, que redesenha a tela: fechar já sabe que há o que
+    // arrumar.
+    if (wasNew && item != null && _mode == CameraMode.bought) _arrivals.entered(product.id);
     // O local só é dito quando o item nasce neste bipe (AB9): é a hora em que
     // a sugestão pode estar errada e a pessoa ainda lembra do que bipou.
     show(wasNew ? item?.location : null);
@@ -630,6 +640,41 @@ class _CameraPageState extends ConsumerState<CameraPage> {
 
   /// Quanto tempo o Desfazer fica no aviso do visor, como num snackbar.
   static const _undoFor = Duration(seconds: 4);
+
+  /// Fechar pode mostrar "Arrumar o que entrou" antes (AB5): só em
+  /// "Comprei", e só quando já entraram produtos novos suficientes.
+  bool get _mayArrange => _mode == CameraMode.bought && _arrivals.productIds.length >= HomeArrivals.minimumToArrange;
+
+  /// Fechar a câmera de "Comprei" com três ou mais produtos novos em casa
+  /// abre "Arrumar o que entrou" por cima dela; a câmera sai quando a folha
+  /// fecha, por "Pronto" ou arrastando (pular).
+  Future<void> _closeAfterArranging() async {
+    if (_closing) return;
+    _closing = true;
+    try {
+      final List<StockEntry> entries;
+      try {
+        entries = await ref.read(stockRepositoryProvider).watchAll().first;
+      } on Exception catch (error, stack) {
+        // Sem o estoque, a folha não tem o que mostrar: a câmera só fecha.
+        FlutterError.reportError(FlutterErrorDetails(exception: error, stack: stack, library: 'camera'));
+        if (mounted) context.pop();
+        return;
+      }
+      final byId = {for (final entry in entries) entry.product.id: entry};
+      final arrivals = [for (final id in _arrivals.toArrange(entries.map((entry) => entry.item))) ?byId[id]];
+      if (!mounted) return;
+      if (arrivals.isNotEmpty) {
+        _clearNotice();
+        await _withAnalysisPaused(() => showArrangeArrivalsSheet(context, arrivals));
+      }
+      if (mounted) context.pop();
+    } finally {
+      _closing = false;
+    }
+  }
+
+  var _closing = false;
 
   /// A compra abre o carrinho por cima da Lista, e esta câmera sai: ela fecha
   /// antes, para o carrinho achar a câmera livre. Se a compra não começar, a
@@ -675,7 +720,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
     // modelos do ML Kit uma vez e os solta ao sair.
     ref.watch(priceTagReaderProvider);
 
-    return Scaffold(
+    final page = Scaffold(
       backgroundColor: colors.camera,
       body: LiveCamera(
         key: _cameraKey,
@@ -697,7 +742,12 @@ class _CameraPageState extends ConsumerState<CameraPage> {
         },
         topBar: (camera) => Row(
           children: [
-            CameraGlassButton(icon: Icons.close_rounded, label: l10n.cartClose, onPressed: () => context.pop()),
+            CameraGlassButton(
+              icon: Icons.close_rounded,
+              label: l10n.cartClose,
+              // Passa pelo PopScope, como o voltar do sistema.
+              onPressed: () => Navigator.of(context).maybePop(),
+            ),
             const SizedBox(width: BipaSpacing.s2),
             Expanded(
               child: Center(
@@ -773,6 +823,13 @@ class _CameraPageState extends ConsumerState<CameraPage> {
           ),
         ),
       ),
+    );
+    return PopScope<void>(
+      canPop: !_mayArrange,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) unawaited(_closeAfterArranging());
+      },
+      child: page,
     );
   }
 }

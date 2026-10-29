@@ -85,6 +85,35 @@
   "stockSheetTarget": "Ter sempre",
   "stockSheetTargetHelp": "Abaixo disso, o item aparece em \"Acabando\"",
   "stockSheetSeeProduct": "Ver produto e preços",
+  "arrangeArrivalsTitle": "Arrumar o que entrou",
+  "@arrangeArrivalsTitle": {
+    "description": "Folha ao fechar a câmera de \"Guardar em casa\" quando entraram 3 ou mais produtos que não estavam em casa (AB5)."
+  },
+  "arrangeArrivalsHeading": "Arrumar o que entrou, {count, plural, =1{1 produto} other{{count} produtos}}",
+  "@arrangeArrivalsHeading": {
+    "description": "Leitor de tela: o título da folha com o selo de contagem.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "arrangeArrivalsGroup": "{place}, {count, plural, =1{1 produto} other{{count} produtos}}",
+  "@arrangeArrivalsGroup": {
+    "description": "Leitor de tela: o nome de um local na folha \"Arrumar o que entrou\", com quantos produtos entraram nele.",
+    "placeholders": {
+      "place": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "arrangeArrivalsDone": "Pronto",
+  "@arrangeArrivalsDone": {
+    "description": "Fecha a folha \"Arrumar o que entrou\". Cada toque já salvou; fechar sem mexer é pular."
+  },
   "save": "Salvar",
   "priceConditionLoyalty": "cartão da loja",
   "@priceConditionLoyalty": {
