@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bipa/core/database/app_database.dart';
 import 'package:bipa/core/database/database_provider.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
@@ -13,6 +15,7 @@ import 'package:bipa/features/products/domain/measure_unit.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 import 'package:bipa/features/products/presentation/product_detail_page.dart';
+import 'package:bipa/features/products/presentation/product_photos.dart';
 import 'package:bipa/features/products/presentation/products_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -36,6 +39,8 @@ Future<ProviderContainer> _pumpProduct(WidgetTester tester) async {
       appDatabaseProvider.overrideWithValue(db),
       clockProvider.overrideWithValue(() => _now),
       idGeneratorProvider.overrideWithValue(SequentialIdGenerator()),
+      // Sem plugin de pastas nos testes: o erro dele se repetiria por conta própria.
+      productPhotosDirectoryProvider.overrideWith((ref) async => Directory.systemTemp),
     ],
   );
   addTearDown(() async {
@@ -102,6 +107,14 @@ Future<void> _settle(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 500));
 }
 
+/// Deixa o aviso passar sozinho (4 s) e sair de cena.
+Future<void> _letSnackBarGo(WidgetTester tester) async {
+  for (var i = 0; i < 3; i++) {
+    await tester.pump(const Duration(seconds: 5));
+  }
+  await _settle(tester);
+}
+
 Future<void> _openMenuItem(WidgetTester tester, String label) async {
   await tester.tap(find.byTooltip('Mais opções'));
   await tester.pump();
@@ -147,5 +160,63 @@ void main() {
 
     expect((await tester.runAsync(() => products.findPackageById('ninho-400')))?.productId, 'ninho');
     expect(find.text('Embalagem movida para Leite Ninho.'), findsOneWidget);
+  });
+
+  /// Escolhe "Leite Ninho" no "Mover embalagem…" e confirma.
+  Future<void> moveToNinho(WidgetTester tester) async {
+    await _openMenuItem(tester, 'Mover embalagem…');
+    await tester.tap(find.widgetWithText(ListTile, 'Leite Ninho'));
+    await _settle(tester);
+    await tester.tap(find.widgetWithText(FilledButton, 'Mover'));
+    await _settle(tester);
+  }
+
+  testWidgets('o "Desfazer" da movida leva a embalagem de volta e não oferece apagar o produto', (tester) async {
+    final container = await _pumpProduct(tester);
+    final products = container.read(productRepositoryProvider);
+
+    await moveToNinho(tester);
+    expect(find.text('Embalagem movida para Leite Ninho.'), findsOneWidget);
+    // Um botão só no aviso.
+    expect(find.text('Apagar produto'), findsNothing);
+
+    await tester.tap(find.text('Desfazer'));
+    await _settle(tester);
+    expect((await tester.runAsync(() => products.findPackageById('ninho-400')))?.productId, 'integral');
+
+    await _letSnackBarGo(tester);
+    expect(find.textContaining('ficou sem embalagem'), findsNothing);
+    expect(find.text('Apagar produto'), findsNothing);
+  });
+
+  testWidgets('sem desfazer, o produto que ficou vazio ganha um segundo aviso com "Apagar produto"', (tester) async {
+    final container = await _pumpProduct(tester);
+    final products = container.read(productRepositoryProvider);
+
+    await moveToNinho(tester);
+    await _letSnackBarGo(tester);
+
+    expect(find.text('Leite integral ficou sem embalagem, preço e estoque.'), findsOneWidget);
+    expect(find.text('Desfazer'), findsNothing);
+    // Não apaga sozinho; o botão abre a confirmação do apagar produto.
+    expect(await tester.runAsync(() => products.findById('integral')), isNotNull);
+    await tester.tap(find.text('Apagar produto'));
+    await _settle(tester);
+    expect(find.text('Apagar Leite integral?'), findsOneWidget);
+    expect(await tester.runAsync(() => products.findById('integral')), isNotNull);
+  });
+
+  testWidgets('apagar a última embalagem também oferece "Apagar produto" depois do aviso', (tester) async {
+    await _pumpProduct(tester);
+
+    await _openMenuItem(tester, 'Apagar embalagem');
+    await tester.tap(find.widgetWithText(FilledButton, 'Apagar embalagem'));
+    await _settle(tester);
+    expect(find.text('Embalagem apagada.'), findsOneWidget);
+    expect(find.text('Apagar produto'), findsNothing);
+
+    await _letSnackBarGo(tester);
+    expect(find.text('Leite integral ficou sem embalagem, preço e estoque.'), findsOneWidget);
+    expect(find.text('Apagar produto'), findsOneWidget);
   });
 }

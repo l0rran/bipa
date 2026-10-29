@@ -122,7 +122,7 @@ class _ProductView extends ConsumerWidget {
 
   /// "Mover embalagem…": a embalagem posta no produto errado vai para outro,
   /// que já existe ou é criado na hora, com os preços e o que está em casa
-  /// dela (G2, ADR 0022). Mover de volta desfaz.
+  /// dela (G2, ADR 0022). O aviso tem "Desfazer".
   Future<void> _movePackage(
     BuildContext context,
     WidgetRef ref,
@@ -156,16 +156,82 @@ class _ProductView extends ConsumerWidget {
     );
     if (confirmed != true) return;
     try {
-      final into = await switch (choice) {
+      final moved = await switch (choice) {
         ExistingProduct(:final product) => move(packageId: package.id, intoProductId: product.id),
         NewProduct(:final name) => move(packageId: package.id, newProductName: name),
       };
-      if (into != null) messenger.showSnackBar(SnackBar(content: Text(l10n.packageMoved(into.name))));
+      if (moved == null) return;
+      Future<void> undo() async {
+        try {
+          await move.undo(moved);
+        } on Exception {
+          messenger.showSnackBar(SnackBar(content: Text(l10n.packageRestoreFailed)));
+        }
+      }
+
+      await _showUndoThenOfferDelete(
+        messenger,
+        l10n,
+        message: l10n.packageMoved(moved.into.name),
+        undo: undo,
+        offerDelete: moved.sourceEmpty,
+        navigatorContext: context.mounted ? context : null,
+        ref: ref,
+      );
     } on DomainException catch (error) {
       messenger.showSnackBar(SnackBar(content: Text(domainErrorText(l10n, error))));
     } on Exception {
       messenger.showSnackBar(SnackBar(content: Text(l10n.packageMoveFailed)));
     }
+  }
+
+  /// O aviso de "mover" e de "apagar embalagem": só "Desfazer". Se o produto
+  /// ficou sem embalagem, preço e estoque, depois que o aviso some sem o
+  /// "Desfazer" vem um segundo aviso, só com "Apagar produto". Dois botões no
+  /// mesmo aviso disputariam o toque, e quem desfaz não precisa da oferta.
+  Future<void> _showUndoThenOfferDelete(
+    ScaffoldMessengerState messenger,
+    AppLocalizations l10n, {
+    required String message,
+    required Future<void> Function() undo,
+    required bool offerDelete,
+    required BuildContext? navigatorContext,
+    required WidgetRef ref,
+  }) async {
+    var undone = false;
+    messenger.hideCurrentSnackBar();
+    final controller = messenger.showSnackBar(
+      SnackBar(
+        content: Text(message),
+        // Com ação, o aviso fica até alguém tocar (persist); aqui ele precisa
+        // sair sozinho para o segundo aviso poder vir.
+        persist: !offerDelete || navigatorContext == null,
+        action: SnackBarAction(
+          label: l10n.undo,
+          onPressed: () {
+            undone = true;
+            unawaited(undo());
+          },
+        ),
+      ),
+    );
+    if (!offerDelete || navigatorContext == null) return;
+    await controller.closed;
+    if (undone || !navigatorContext.mounted) return;
+    // O produto pode ter ganhado preço ou estoque enquanto o aviso estava na tela.
+    if (!await ref.read(productRepositoryProvider).isProductEmpty(product.id)) return;
+    if (!navigatorContext.mounted) return;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(l10n.packageEmptyProduct(product.name)),
+        action: SnackBarAction(
+          label: l10n.productDelete,
+          onPressed: () {
+            if (navigatorContext.mounted) unawaited(_delete(navigatorContext, ref));
+          },
+        ),
+      ),
+    );
   }
 
   /// "Apagar embalagem": confirma dizendo quantos preços vão junto e oferece
@@ -191,6 +257,7 @@ class _ProductView extends ConsumerWidget {
     if (!confirmed) return;
     try {
       final deleted = await delete(package.id);
+      final empty = await delete.leavesProductEmpty(deleted);
       Future<void> undo() async {
         try {
           await delete.undo(deleted);
@@ -199,14 +266,15 @@ class _ProductView extends ConsumerWidget {
         }
       }
 
-      messenger
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(l10n.packageDeleted),
-            action: SnackBarAction(label: l10n.undo, onPressed: () => unawaited(undo())),
-          ),
-        );
+      await _showUndoThenOfferDelete(
+        messenger,
+        l10n,
+        message: l10n.packageDeleted,
+        undo: undo,
+        offerDelete: empty,
+        navigatorContext: context.mounted ? context : null,
+        ref: ref,
+      );
     } on DomainException catch (error) {
       messenger.showSnackBar(SnackBar(content: Text(domainErrorText(l10n, error))));
     } on Exception {

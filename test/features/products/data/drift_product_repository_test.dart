@@ -347,6 +347,42 @@ void main() {
       expect((await stock.findByProduct('ninho'))?.quantity, 3);
     });
 
+    test('o desfazer leva tudo de volta e o item de estoque que nasceu no destino sai', () async {
+      final moved = await repository.movePackage(packageId: 'ninho-400', intoId: 'ninho');
+      expect(moved.createdStockItem, isTrue);
+      expect((moved.fromProductId, moved.intoProductId), ('integral', 'ninho'));
+
+      await repository.movePackage(packageId: 'ninho-400', intoId: moved.fromProductId);
+      await repository.deleteEmptyStockItem(moved.intoProductId);
+
+      expect((await repository.findPackageById('ninho-400'))?.productId, 'integral');
+      expect((await priceRow('preco-ninho')).productId, 'integral');
+      expect((await stock.findByProduct('integral'))?.quantity, 3);
+      expect(await stock.findByProduct('ninho'), isNull);
+    });
+
+    test('um destino que já estava em casa não perde o item no desfazer', () async {
+      await stock.adjust(productId: 'ninho', delta: 1, reason: StockMovementReason.purchase);
+      final moved = await repository.movePackage(packageId: 'ninho-400', intoId: 'ninho');
+      expect(moved.createdStockItem, isFalse);
+
+      await repository.movePackage(packageId: 'ninho-400', intoId: 'integral');
+      await repository.deleteEmptyStockItem('ninho');
+
+      expect((await stock.findByProduct('ninho'))?.quantity, 1);
+    });
+
+    test('um produto sem embalagem, preço e estoque está vazio; "ter sempre" ou preço o mantêm', () async {
+      expect(await repository.isProductEmpty('integral'), isFalse);
+      await repository.movePackage(packageId: 'italac', intoId: 'ninho');
+      await repository.movePackage(packageId: 'ninho-400', intoId: 'ninho');
+      // Sobra o item de estoque zerado, sem "ter sempre".
+      expect(await repository.isProductEmpty('integral'), isTrue);
+
+      await stock.setTargetQuantity('integral', 2);
+      expect(await repository.isProductEmpty('integral'), isFalse);
+    });
+
     test('mover uma embalagem que não existe avisa', () async {
       await expectLater(
         repository.movePackage(packageId: 'nenhuma', intoId: 'ninho'),

@@ -1,5 +1,6 @@
 import 'package:bipa/core/errors/domain_exception.dart';
 import 'package:bipa/features/products/domain/deleted_package.dart';
+import 'package:bipa/features/products/domain/moved_package.dart';
 import 'package:bipa/features/products/domain/product.dart';
 import 'package:bipa/features/products/domain/product_package.dart';
 
@@ -47,10 +48,19 @@ abstract interface class ProductRepository {
   /// Passa a embalagem [packageId] para o produto [intoId] (ADR 0022), com
   /// os preços, os lotes em casa, o carrinho e os preços da compra dela. A
   /// quantidade em casa sai do produto antigo e entra no novo. Para o mesmo
-  /// produto, não faz nada.
+  /// produto, não faz nada. Devolve o que foi feito, para o "Desfazer"
+  /// (mover de volta e [deleteEmptyStockItem]).
   ///
   /// Lança [PackageNotFoundException] se a embalagem não existir.
-  Future<void> movePackage({required String packageId, required String intoId});
+  Future<MovedPackage> movePackage({required String packageId, required String intoId});
+
+  /// Tira o item de estoque do produto se ele estiver zerado; com algo em
+  /// casa, não faz nada.
+  Future<void> deleteEmptyStockItem(String productId);
+
+  /// O produto não tem embalagem, nem preço, nem nada em casa (nem "ter
+  /// sempre"): está ali só por engano, e "Apagar produto" resolve.
+  Future<bool> isProductEmpty(String productId);
 
   /// Apaga a embalagem e os preços dela (ADR 0022). O que está em casa e as
   /// compras terminadas ficam sem embalagem. Devolve o que saiu, para

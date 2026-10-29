@@ -29,7 +29,7 @@ Para mover sem tocar nas observações, elas teriam de apontar só para a embala
 - **Lista, local lembrado e itens da balança** são do produto e ficam com o antigo.
 - O destino pode ser um produto que existe ou um produto novo, criado na hora com a grandeza base da embalagem, como no cadastro de um código novo. Mover para o mesmo produto não faz nada.
 - A última embalagem pode sair. O produto antigo continua, sem embalagem, com o que tiver de preço sem embalagem e de estoque. Se ele estava ali só por engano, "Apagar produto" resolve.
-- Pede confirmação dizendo quantos preços e quanto em casa vão junto, como o "Juntar com…". Não há "Desfazer": mover de volta pelo mesmo menu desfaz.
+- Pede confirmação dizendo quantos preços e quanto em casa vão junto, como o "Juntar com…". O aviso depois de mover tem "Desfazer" (veja "Decisões do mantenedor em 28/10").
 
 **Apagar embalagem** descarta a embalagem e os preços dela, como "Apagar produto" faz com o produto inteiro (ADR 0016):
 
@@ -47,4 +47,11 @@ O esquema não muda: continua o 14.
 - O ADR 0013 passa a ter duas mudanças permitidas numa observação, o juntar e o mover, as duas só no `product_id`. A base comunitária vai precisar dos dois eventos.
 - Apagar uma embalagem com preços apaga histórico, como apagar um produto. As marcas de exclusão do ADR 0016 vão precisar cobrir embalagens e as observações delas.
 - O movimento de ajuste não separa o que foi comprado e usado de cada embalagem no passado: o histórico de movimentos do produto antigo continua com as compras dela. A previsão de consumo que usar esse histórico precisa contar com isso.
-- O "Desfazer" do apagar só vale enquanto o aviso está na tela. Se a pessoa cadastrar o mesmo código nesse meio-tempo, o "Desfazer" falha e avisa.
+- O "Desfazer" do apagar e o do mover só valem enquanto o aviso está na tela. Se a pessoa cadastrar o mesmo código nesse meio-tempo, o "Desfazer" falha e avisa.
+
+## Decisões do mantenedor em 28/10
+
+- **Mover tem "Desfazer".** O aviso "Embalagem movida para …" move a embalagem de volta ao produto de origem, com os preços, os lotes e o carrinho que foram junto. Tira também o que nasceu só por causa da movida: o item de estoque zerado no destino (se o destino não estava em casa) e o produto criado na hora (se continuar vazio). O caso de uso `MovePackage` devolve um `PackageMove` com o necessário para isso, como `DeletePackage` devolve um `DeletedPackage`.
+- **Produto que ficou vazio.** Quando a última embalagem sai (por mover ou por apagar) e o produto fica sem embalagem, sem preço e sem nada em casa (nem "ter sempre"), a tela oferece "Apagar produto", que usa o fluxo de apagar produto já existente, com a confirmação dele; nada é apagado sozinho. A oferta vem em um **segundo aviso**, depois que o primeiro (o do "Desfazer") sai sozinho. Não há dois botões no mesmo aviso, que disputariam o toque, e quem tocou em "Desfazer" não vê a oferta. Para o primeiro aviso sair sozinho, ele deixa de ser persistente (no Flutter 3.47, avisos com ação ficam até alguém tocar); sem a oferta, ele segue como os outros "Desfazer" do app.
+- **Apagar com preços** continua apagando, com "Desfazer". O item do menu continua "Mover embalagem…".
+- **Limitação conhecida:** os movimentos de estoque (compras e usos) ficam no produto antigo, mesmo quando a embalagem muda de produto, e o ajuste da movida não os separa. Aceito por ora, a rever junto com a previsão de consumo, que vai precisar contar com isso.

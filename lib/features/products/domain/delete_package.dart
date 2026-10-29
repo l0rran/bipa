@@ -14,6 +14,10 @@ final class DeletePackage {
   /// Apaga a embalagem e devolve o que saiu, para [undo].
   Future<DeletedPackage> call(String packageId) => _products.deletePackage(packageId);
 
+  /// O produto de onde a embalagem saiu ficou sem embalagem, sem preço e sem
+  /// nada em casa: a tela oferece "Apagar produto" (sem apagar sozinha).
+  Future<bool> leavesProductEmpty(DeletedPackage deleted) => _products.isProductEmpty(deleted.package.productId);
+
   /// Grava de volta a embalagem, os preços e as ligações com o estoque e as
   /// compras, com os mesmos ids.
   Future<void> undo(DeletedPackage deleted) => _products.restorePackage(deleted);
