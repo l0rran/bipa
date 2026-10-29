@@ -86,6 +86,13 @@ Todas as mudanças relevantes do projeto. O formato segue o [Keep a Changelog](h
 - Os avisos seguem o do design system, com a linha do tempo, e o Desfazer some sozinho depois de alguns segundos; com TalkBack, fica até a pessoa agir.
 - A etiqueta em destaque do produto ganhou o furo e a sombra do design system, e "Editar embalagem" usa os mesmos campos da "Embalagem nova".
 - O app pede Android 8.0 ou mais novo (minSdk 26).
+- A busca de produtos ignora acento e caixa e acha pelas palavras em qualquer ordem, na aba Produtos, na escolha de produto e na Lista; a escolha não oferece cadastrar o que já existe, e o texto lido da etiqueta é recortado antes ("FEIJAO CARIOCA CAMIL 1KG" acha "Feijão carioca").
+- Em Produtos, o preço com 30 dias ou mais diz a idade.
+- "Quanto deu…" sem artigo, com a conta anunciada ao leitor de tela e erro visível para valor inválido. Mover uma embalagem para um produto criado na hora abre esse produto, e a embalagem sem marca aparece como "a embalagem de código final 4321".
+- Os avisos pausam enquanto o dedo está sobre eles, ficam 10 s em ações grandes ("Tirar comprados", "Terminar compra", mover e apagar embalagem), seguem o "Tempo para agir" do Android, aparecem por cima das folhas e, com TalkBack, esperam a pessoa também na câmera de casa; com "Remover animações", a linha do tempo some.
+- O aviso da câmera de casa com local usa duas linhas (o nome em cima, "1 na Despensa ▾" embaixo), e a folha "Arrumar o que entrou" lista só o que ninguém conferiu no aviso, sem mínimo de itens.
+- Com letra acima de 160% durante a compra, a barra da compra assume o lugar do bipar flutuante e abre o menu no toque longo. O anel do bipar respira duas vezes e para (sem fim só com a casa e a lista vazias; parado na compra).
+- Tela de Ajustes, pela engrenagem do Início, com o interruptor do relatório de falhas e a versão; depois da primeira compra terminada, o Início pergunta uma vez se a pessoa quer mandar relatórios de falha (só em builds com o Sentry configurado).
 - Os erros de regra de negócio (preço zerado, código repetido, código da balança...) vêm dos textos do app, e não mais escritos no código.
 
 ### Corrigido

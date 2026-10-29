@@ -13,15 +13,16 @@ Retrato de 28/10/2026, para quem continua o trabalho (pessoa ou agente). Leia an
 
 ## Compilado e testado
 
-Em 28/10, no Windows (Flutter 3.47.8, Dart 3.13.7): `flutter analyze` sem problemas, `flutter test` com 696 testes passando, `flutter build apk --debug` passando e o banco do OCR passando. No Windows, o banco do OCR roda com `py -3 tool/ocr_bench/testes.py`, porque não há `python3`, e `dart format .` falha depois de um build por causa de um caminho longo dentro de `build/`: use `dart format lib test tool`.
+Em 28/10, no Windows (Flutter 3.47.8, Dart 3.13.7): `flutter analyze` sem problemas, `flutter test` com 804 testes passando, `flutter build apk --debug` passando e o banco do OCR passando. No Windows, o banco do OCR roda com `py -3 tool/ocr_bench/testes.py`, porque não há `python3`, e `dart format .` falha depois de um build por causa de um caminho longo dentro de `build/`: use `dart format lib test tool`.
 
-Os lotes 8 e 9 foram feitos por agentes em paralelo, cada um num worktree, e juntados em `main` com merges. Cada lote terminou com uma revisão de UX: [lote 8](ux/analise-ux-2026-10-28-lote8.md) e [lote 9](ux/analise-ux-2026-10-28-lote9.md), cujos achados estão no roadmap.
+Os lotes 8, 9 e 10 foram feitos por agentes em paralelo, cada um num worktree, e juntados em `main` com merges. Cada lote terminou com uma revisão de UX: [lote 8](ux/analise-ux-2026-10-28-lote8.md), [lote 9](ux/analise-ux-2026-10-28-lote9.md) e [lote 10](ux/analise-ux-2026-10-28-lote10.md), cujos achados estão no roadmap.
 
 Falta o teste no aparelho, de antes e de agora:
 - compra: "3× Leite" bipando um de cada vez, cancelar pela folha "Fim da compra", trocar o produto de uma pesagem, o granel na bandeja (traço, preço por kg e "Quanto deu…");
 - casa: a câmera de "Guardar em casa" com o local no aviso, o chip do modo e a folha "Arrumar o que entrou" ao fechar (pelo "×" e pelo voltar do Android);
 - produto: corrigir um preço, "Editar embalagem", mover e apagar embalagem com Desfazer, a etiqueta em destaque com o furo (tema claro e escuro);
-- geral: os avisos que somem sozinhos (e com TalkBack), a barra encolhendo ao rolar, o anel que respira, a letra do Android em 130%, 170% e no máximo, e o ícone no lançador e na notificação.
+- geral: os avisos que somem sozinhos (e com TalkBack, pausa ao toque, 10 s nas ações grandes, o "Tempo para agir" do Android e por cima das folhas), a barra encolhendo ao rolar, o anel que respira duas vezes e para, a letra do Android em 130%, 170% e no máximo (com o toque longo na barra da compra), e o ícone no lançador e na notificação;
+- novos: a busca sem acento, o recorte da etiqueta do granel, a tela de Ajustes e, num build com DSN, o cartão do relatório de falhas.
 
 ## Pontos abertos conhecidos
 
@@ -40,9 +41,8 @@ Achados "prováveis" das revisões que ficaram como estão, por serem raros ou p
 
 Os detalhes de cada código estão nas análises de UX (em `ux/`) e no [roadmap](roadmap.md).
 
-1. **Achados do lote 9 que não pedem quadro:** G4 (alto, busca sem acento que cria produto duplicado), AB11 e H14, H13 e H15, F5, D10 e G5.
-2. **Quadros antes do código:** AB12 e AB13 (aviso da câmera e folha "Arrumar"), H12 (barra B durante a compra), a pergunta do Sentry e o H16 (anel que para).
-3. **Levar ao claude.ai** as mudanças de 28/10 nas cópias do protótipo e do design system.
+1. **Achados do lote 10:** G6 (alto: o recorte da etiqueta mistura variedades do granel) e G7, H17 e H18 (antes do primeiro build com DSN), G8. Depois, com quadro ou regra antes: AB14 e H19.
+2. **Levar ao claude.ai** as mudanças de 28/10 nas cópias do protótipo e do design system.
 4. **Maiores:** o backup e a restauração (B5), o catálogo pronto (script e cobertura), a migração para o Kotlin embutido e o teste no aparelho (acima).
 
 ## Decisões do mantenedor em 28/10

@@ -49,7 +49,8 @@
 - [ ] Onboarding (a explicação antes de pedir localização e notificação já existe)
 - [ ] Backup e restauração local (ADR 0023, lacuna B5): o arquivo `.bipa` em `backup/ultimo.bipa`; o modelo já foi fechado (B1–B4) e o Auto Backup do Android guarda só esse arquivo
 - [x] Ícone do app: a etiqueta amarela com o "b" (proposta 1, em `docs/design/icone/`)
-- [ ] Relatório de falhas com Sentry só com consentimento (ADR 0025): a base está pronta; faltam o quadro e a tela da pergunta (cartão no Início depois da primeira compra e interruptor em Ajustes) e o projeto no Sentry com o DSN
+- [x] Relatório de falhas com Sentry só com consentimento (ADR 0025): a pergunta no Início depois da primeira compra e o interruptor em Ajustes
+- [ ] Criar o projeto no Sentry (região UE, sem guardar IP) e gerar os builds de publicação com `--dart-define=SENTRY_DSN=...`
 
 ### Ajustes de UX (análise de 28/10/2026)
 
@@ -71,7 +72,7 @@ Preços, mercados e produto:
 Consistência e acessibilidade:
 
 - [x] H1: a aba Produtos com os componentes de Mercados
-- [ ] H1 (resto): os formulários de produto e de mercado no design system; a busca de Produtos ignorar acento ("acucar" acha "Açúcar"), como a de Mercados
+- [ ] H1 (resto): os formulários de produto e de mercado no design system (a busca já ignora acento, G4)
 - [x] H2 (resto): exceções do domínio traduzidas pelo ARB e falha tratada no stepper do produto
 - [x] H3 (resto): teste com fonte em 200% nas telas principais e alturas mínimas no lugar de fixas
 - [x] H3 (formulários): o teste com fonte em 200% cobre os formulários de produto, mercado e embalagem, a folha do preço e "Editar embalagem" (a câmera e a tela do carrinho não montam em teste)
@@ -97,15 +98,26 @@ Os achados da [análise do lote 8](ux/analise-ux-2026-10-28-lote8.md), feita dep
 
 Os achados da [análise do lote 9](ux/analise-ux-2026-10-28-lote9.md), feita depois da barra com letra grande, G2, H1, D9, AB5, AB9, ícone, Sentry e o toast que some sozinho.
 
-- [ ] G4 (alto): a busca de produtos ignora acento e casa palavra por palavra, também na escolha de produto (granel e "Mover embalagem"), e não oferece "Cadastrar" quando já há um parecido (junto com o "H1 (resto)")
-- [ ] AB11 e H14: o aviso da câmera de casa respeita o TalkBack como o toast, e a linha do tempo do toast respeita "Remover animações"
-- [ ] H13 e H15: o toast pausa ao toque, dura mais em ações grandes ("Tirar comprados"), segue o "Tempo para agir" do Android, e as falhas aparecem acima das folhas
-- [ ] F5: a idade do preço na lista de Produtos quando ele é velho
-- [ ] D10, G5: "Quanto deu…" sem artigo, com o peso anunciado e erro visível; depois de mover, caminho para o produto de destino e nome da embalagem sem rótulo
-- [ ] AB12, AB13: o local cortado em nomes longos e a regra da folha "Arrumar o que entrou" (quadro antes)
-- [ ] H12: com letra acima de 160% durante a compra, o bipar flutuante sobre a barra da compra (quadro "NavLetraGrande, durante a compra" antes)
-- [ ] H16: o anel que respira parar depois de um tempo (decisão no design system antes)
-- [ ] Atualizar `processo.md`, `ScanNavBar.md` e `BipFeedback.md` com o que foi decidido, e redesenhar CapturaComprei e CapturaUsei com o chip do modo
+- [x] G4 (alto): a busca de produtos ignora acento e casa palavra por palavra, também na escolha de produto (granel e "Mover embalagem"), e não oferece "Cadastrar" quando já há um parecido (junto com o "H1 (resto)")
+- [x] AB11 e H14: o aviso da câmera de casa respeita o TalkBack como o toast, e a linha do tempo do toast respeita "Remover animações"
+- [x] H13 e H15: o toast pausa ao toque, dura mais em ações grandes ("Tirar comprados"), segue o "Tempo para agir" do Android, e as falhas aparecem acima das folhas
+- [x] F5: a idade do preço na lista de Produtos quando ele é velho
+- [x] D10, G5: "Quanto deu…" sem artigo, com o peso anunciado e erro visível; depois de mover, caminho para o produto de destino e nome da embalagem sem rótulo
+- [x] AB12, AB13: o aviso com local em duas linhas (o local nunca corta), e a folha "Arrumar o que entrou" só com o que ninguém conferiu, sem mínimo
+- [x] H12: com letra acima de 160% durante a compra, a barra da compra assume o lugar do bipar flutuante, com o toque longo do menu
+- [x] H16: o anel respira duas vezes e para; sem fim só com casa e lista vazias; parado na compra
+- [x] Atualizar `processo.md`, `ScanNavBar.md` e `BipFeedback.md` com o que foi decidido, e redesenhar CapturaComprei e CapturaUsei com o chip do modo
+
+### Ajustes de UX (análise do lote 10, 28/10/2026)
+
+Os achados da [análise do lote 10](ux/analise-ux-2026-10-28-lote10.md), feita depois da busca sem acento, dos avisos que esperam a pessoa, de AB12, AB13, H12, H16 e de Ajustes.
+
+- [ ] G6 (alto) e G7: o recorte da etiqueta guarda a variedade do granel ("Banana prata" não vira "Banana") e oferece "Cadastrar" quando a etiqueta tem palavra a mais; o nome novo ganha os acentos comuns; a busca do Início usa a mesma regra da aba Produtos
+- [ ] H17 e H18: o texto do cartão do relatório de falhas diz tudo o que vai (como os Ajustes), com link para eles, e o cartão fica depois de "Acabando" e só na abertura seguinte à compra. Antes do primeiro build com DSN
+- [ ] AB14: escolher o local no aviso da câmera não pode tirar a pergunta do "ter sempre" (quadro "CapturaCasaLocal" antes)
+- [ ] G8: o Desfazer depois de mover para um produto novo volta para a origem, não para "Produto não encontrado"
+- [ ] H19: o anel do bipar não volta a respirar a cada volta de tela cheia (regra no design system antes)
+- [ ] H1 (resto) inclui a escolha de produto (`product_picker_sheet.dart`, ainda com `TextField`, `ListTile` e `CircleAvatar`)
 
 ## Fase 2: base comunitária
 
