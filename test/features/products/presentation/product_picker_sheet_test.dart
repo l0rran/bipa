@@ -88,8 +88,8 @@ void main() {
   testWidgets('sem o produto, a etiqueta recortada vira o nome do novo (G4)', (tester) async {
     await _pumpPicker(tester, nameHint: 'MACARRAO PARAFUSO RENATA 500G');
 
-    expect(find.widgetWithText(TextField, 'Macarrao'), findsOneWidget);
-    expect(find.text('Criar “Macarrao”'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Macarrão parafuso'), findsOneWidget);
+    expect(find.text('Criar “Macarrão parafuso”'), findsOneWidget);
   });
 
   testWidgets('digitar sem acento e em outra ordem também acha', (tester) async {
