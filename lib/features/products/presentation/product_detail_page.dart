@@ -210,6 +210,7 @@ class _ProductView extends ConsumerWidget {
         undone = true;
         unawaited(undo());
       },
+      duration: BipaToastDuration.long,
     );
     if (!offerDelete || navigatorContext == null) return;
     await controller.closed;

@@ -184,6 +184,8 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage> {
       l10n.listCheckedRemoved(removed.length),
       actionLabel: l10n.undo,
       onAction: () => unawaited(restore()),
+      // Tira a lista inteira de marcados sem confirmação: mais tempo (H13).
+      duration: BipaToastDuration.long,
     );
   }
 

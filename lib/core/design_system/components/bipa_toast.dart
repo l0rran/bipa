@@ -1,14 +1,27 @@
 import 'dart:async';
 
+import 'package:bipa/core/accessibility/recommended_timeouts.dart';
 import 'package:bipa/core/design_system/bipa_metrics.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/design_system/bipa_typography.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-/// Quanto tempo o aviso com ação fica na tela: a linha do tempo do
-/// `bipa-toast` esvazia em 4 s, e depois disso o registro fica.
-const bipaToastDuration = Duration(seconds: 4);
+/// Quanto tempo o aviso fica na tela antes de sair sozinho.
+enum BipaToastDuration {
+  /// O padrão do design system: a linha do tempo do `bipa-toast` esvazia em
+  /// 4 s, e depois disso o registro fica.
+  short(Duration(seconds: 4)),
+
+  /// Para o Desfazer de ações que mexem em muitos registros de uma vez ou
+  /// que não pedem confirmação: tirar os comprados da lista, terminar a
+  /// compra, apagar ou mover uma embalagem com os preços (H13). É o "longo"
+  /// do Material (`SnackbarDuration.Long`, 10 s).
+  long(Duration(seconds: 10));
+
+  const BipaToastDuration(this.time);
+
+  final Duration time;
+}
 
 /// A regra do tempo do `bipa-toast`: quanto tempo um aviso fica antes de sair
 /// sozinho, ou `null` quando ele espera a pessoa. Vale para o
@@ -18,11 +31,16 @@ const bipaToastDuration = Duration(seconds: 4);
 /// Com o TalkBack ou outro leitor de tela
 /// ([MediaQueryData.accessibleNavigation]), o aviso com ação não sai
 /// sozinho: fica até a pessoa agir, dispensá-lo ou outro aviso tomar o
-/// lugar, para dar tempo de chegar até a ação (WCAG 2.2.1).
-Duration? bipaToastTimeout(BuildContext context, {required bool hasAction, Duration duration = bipaToastDuration}) {
+/// lugar, para dar tempo de chegar até a ação (WCAG 2.2.1). Fora isso, o
+/// aviso fica [duration] ou o "Tempo para agir" que a pessoa pediu ao
+/// Android ([RecommendedTimeouts]), o que for maior (H13).
+Duration? bipaToastTimeout(BuildContext context, {required bool hasAction, Duration? duration}) {
   final screenReader = MediaQuery.maybeAccessibleNavigationOf(context) ?? false;
   if (hasAction && screenReader) return null;
-  return duration;
+  final asked = RecommendedTimeoutsScope.of(context);
+  final floor = hasAction ? asked.controls : asked.text;
+  final own = duration ?? BipaToastDuration.short.time;
+  return own > floor ? own : floor;
 }
 
 /// O relógio de um aviso que não é snackbar (o do visor da câmera), com a
@@ -58,11 +76,14 @@ final class BipaNoticeTimer {
 /// `radius-lg`, e, com [actionLabel] e [onAction], a ação ("Desfazer") em
 /// `price` e a linha do tempo que esvazia em [duration].
 ///
-/// No Flutter 3.47 um `SnackBar` com ação fica na tela até alguém tocar
-/// (`persist` vem verdadeiro). Aqui o aviso com ação some sozinho depois de
-/// [duration], como no design system, exceto quando a regra de
-/// [bipaToastTimeout] pede que ele espere a pessoa (com leitor de tela); aí
-/// a linha do tempo não aparece.
+/// O tempo segue a regra de [bipaToastTimeout]: com leitor de tela, o aviso
+/// com ação espera a pessoa (e a linha do tempo não aparece); fora isso, ele
+/// fica [duration] ou o "Tempo para agir" do Android, o que for maior.
+///
+/// O aviso com ação tem relógio próprio (o do `ScaffoldMessenger` não para):
+/// enquanto o dedo está sobre o aviso, o tempo para, e volta a correr de onde
+/// parou quando o dedo sai (H13). O aviso só de texto usa o relógio do
+/// `ScaffoldMessenger`.
 ///
 /// Devolve o controle do aviso, para quem precisa saber quando ele sai.
 ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showBipaToast(
@@ -70,51 +91,116 @@ ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showBipaToast(
   String message, {
   String? actionLabel,
   VoidCallback? onAction,
-  Duration duration = bipaToastDuration,
+  BipaToastDuration duration = BipaToastDuration.short,
 }) {
   final hasAction = actionLabel != null && onAction != null;
-  final timeout = bipaToastTimeout(messenger.context, hasAction: hasAction, duration: duration);
-  final started = ValueNotifier(false);
+  final timeout = bipaToastTimeout(messenger.context, hasAction: hasAction, duration: duration.time);
+  var closed = false;
+  final clock = hasAction && timeout != null
+      ? BipaToastClock(
+          timeout,
+          onTimeout: () {
+            if (!closed) messenger.hideCurrentSnackBar(reason: SnackBarClosedReason.timeout);
+          },
+        )
+      : null;
+  var acted = false;
   messenger.hideCurrentSnackBar();
   final controller = messenger.showSnackBar(
     SnackBar(
       padding: EdgeInsets.zero,
-      duration: timeout ?? duration,
-      persist: timeout == null,
-      // A linha do tempo anda junto com o relógio do ScaffoldMessenger, que
-      // só começa a contar quando o aviso termina de entrar.
-      onVisible: () => started.value = true,
+      duration: timeout ?? duration.time,
+      // Com ação, quem tira o aviso é o relógio dele, ou a pessoa.
+      persist: hasAction,
+      // O relógio só começa quando o aviso termina de entrar.
+      onVisible: clock?.start,
       content: BipaToast(
         message: message,
         actionLabel: hasAction ? actionLabel : null,
         onAction: hasAction
             ? () {
+                // Como o SnackBarAction: dois toques rápidos desfazem uma vez só.
+                if (acted) return;
+                acted = true;
                 messenger.hideCurrentSnackBar(reason: SnackBarClosedReason.action);
                 onAction();
               }
             : null,
-        timer: hasAction ? timeout : null,
-        started: started,
+        clock: clock,
       ),
     ),
   );
+  unawaited(controller.closed.whenComplete(() => closed = true));
   return controller;
+}
+
+/// O relógio de um aviso com ação, dividido pelas cópias dele: o
+/// `ScaffoldMessenger` desenha o aviso em cada `Scaffold` de cima (duas telas
+/// durante a transição, ou a tela e uma folha), e cada cópia anda a sua linha
+/// do tempo. O dedo sobre uma delas para todas, e a primeira que chega ao fim
+/// tira o aviso.
+final class BipaToastClock extends ChangeNotifier {
+  BipaToastClock(this.duration, {required VoidCallback onTimeout}) : _onTimeout = onTimeout;
+
+  /// Em quanto tempo o aviso sai, sem contar as pausas.
+  final Duration duration;
+  final VoidCallback _onTimeout;
+
+  var _started = false;
+  var _holds = 0;
+  var _timeLeft = 1.0;
+  var _done = false;
+
+  /// Se o tempo está correndo: o aviso já entrou e ninguém está tocando nele.
+  bool get running => _started && _holds == 0 && !_done;
+
+  /// Quanto ainda falta, de 0 a 1: a cópia que aparece no meio do caminho
+  /// começa daqui.
+  double get timeLeft => _timeLeft;
+
+  /// O aviso terminou de entrar.
+  void start() {
+    if (_started) return;
+    _started = true;
+    notifyListeners();
+  }
+
+  /// Um dedo encostou no aviso.
+  void hold() {
+    _holds++;
+    notifyListeners();
+  }
+
+  /// O dedo saiu do aviso.
+  void release() {
+    if (_holds == 0) return;
+    _holds--;
+    notifyListeners();
+  }
+
+  void _tick(double timeLeft) {
+    if (timeLeft < _timeLeft) _timeLeft = timeLeft;
+  }
+
+  void _finish() {
+    if (_done) return;
+    _done = true;
+    _onTimeout();
+  }
 }
 
 /// O conteúdo do aviso: o texto, a ação e, embaixo, a linha do tempo.
 /// O fundo, o raio e a sombra vêm do `snackBarTheme` do [BipaTheme].
 class BipaToast extends StatefulWidget {
-  const BipaToast({required this.message, this.actionLabel, this.onAction, this.timer, this.started, super.key});
+  const BipaToast({required this.message, this.actionLabel, this.onAction, this.clock, super.key});
 
   final String message;
   final String? actionLabel;
   final VoidCallback? onAction;
 
-  /// Em quanto tempo a linha do tempo esvazia; `null` não a mostra.
-  final Duration? timer;
-
-  /// Quando a linha começa a esvaziar; sem ele, ela começa ao aparecer.
-  final ValueListenable<bool>? started;
+  /// O relógio do aviso com ação, que a linha do tempo mostra; `null` não a
+  /// mostra (o aviso só de texto, ou o que espera a pessoa).
+  final BipaToastClock? clock;
 
   @override
   State<BipaToast> createState() => _BipaToastState();
@@ -126,109 +212,136 @@ class _BipaToastState extends State<BipaToast> with SingleTickerProviderStateMix
   /// esvaziaria antes do aviso sair (H14).
   late final AnimationController _timeLeft = AnimationController(
     vsync: this,
-    value: 1,
-    duration: widget.timer ?? Duration.zero,
+    value: widget.clock?.timeLeft ?? 1,
+    duration: widget.clock?.duration ?? Duration.zero,
     animationBehavior: AnimationBehavior.preserve,
   );
-  var _acted = false;
+
+  /// Os dedos desta cópia sobre o aviso, para devolver se ela sair antes.
+  var _holds = 0;
 
   @override
   void initState() {
     super.initState();
-    final started = widget.started;
-    if (started == null) {
-      _run();
+    final clock = widget.clock;
+    if (clock == null) return;
+    clock.addListener(_follow);
+    _timeLeft
+      ..addListener(() => clock._tick(_timeLeft.value))
+      ..addStatusListener((status) {
+        if (status.isDismissed) clock._finish();
+      });
+    _follow();
+  }
+
+  /// Anda ou para junto com o relógio.
+  void _follow() {
+    final clock = widget.clock;
+    if (clock == null) return;
+    if (clock.running) {
+      if (!_timeLeft.isAnimating) unawaited(_timeLeft.reverse());
     } else {
-      started.addListener(_onStarted);
-      _onStarted();
+      _timeLeft.stop();
     }
   }
 
-  void _onStarted() {
-    if (widget.started?.value ?? false) _run();
+  void _hold() {
+    if (widget.clock == null) return;
+    _holds++;
+    widget.clock!.hold();
   }
 
-  void _run() {
-    if (widget.timer != null && !_timeLeft.isAnimating && _timeLeft.value == 1) _timeLeft.reverse();
+  void _release() {
+    if (_holds == 0) return;
+    _holds--;
+    widget.clock!.release();
   }
 
   @override
   void dispose() {
-    widget.started?.removeListener(_onStarted);
+    final clock = widget.clock;
+    if (clock != null) {
+      clock.removeListener(_follow);
+      for (; _holds > 0; _holds--) {
+        clock.release();
+      }
+    }
     _timeLeft.dispose();
     super.dispose();
-  }
-
-  void _act() {
-    // Como o SnackBarAction: dois toques rápidos desfazem uma vez só.
-    if (_acted) return;
-    _acted = true;
-    widget.onAction?.call();
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final actionLabel = widget.actionLabel;
-    final hasAction = actionLabel != null && widget.onAction != null;
+    final onAction = widget.onAction;
+    final hasAction = actionLabel != null && onAction != null;
     // Com "Remover animações", a linha sai, como o anel do bipar: o estado
     // final de algo que esvazia é não estar lá. O tempo continua valendo.
-    final showTimer = widget.timer != null && !MediaQuery.disableAnimationsOf(context);
-    return Stack(
-      children: [
-        Padding(
-          padding: EdgeInsetsDirectional.fromSTEB(
-            BipaSpacing.s4,
-            BipaSpacing.s3,
-            hasAction ? BipaSpacing.s2 : BipaSpacing.s4,
-            BipaSpacing.s3,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  widget.message,
-                  style: BipaText.label.copyWith(fontWeight: FontWeight.w600, height: 20 / 14, color: colors.ground),
-                ),
-              ),
-              if (hasAction) ...[
-                const SizedBox(width: BipaSpacing.s3),
-                TextButton(
-                  onPressed: _act,
-                  style: TextButton.styleFrom(
-                    foregroundColor: colors.price,
-                    textStyle: BipaText.label.copyWith(fontWeight: FontWeight.w800),
-                    shape: const StadiumBorder(),
-                    // O alvo de toque tem 48 de altura, mesmo com o aviso baixo.
-                    minimumSize: const Size(48, 48),
-                    padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s3),
+    final showTimer = widget.clock != null && !MediaQuery.disableAnimationsOf(context);
+    return Listener(
+      // O dedo sobre o aviso para o tempo, inclusive no caminho até o
+      // Desfazer ou ao arrastar para dispensar.
+      behavior: HitTestBehavior.opaque,
+      onPointerDown: (_) => _hold(),
+      onPointerUp: (_) => _release(),
+      onPointerCancel: (_) => _release(),
+      child: Stack(
+        children: [
+          Padding(
+            padding: EdgeInsetsDirectional.fromSTEB(
+              BipaSpacing.s4,
+              BipaSpacing.s3,
+              hasAction ? BipaSpacing.s2 : BipaSpacing.s4,
+              BipaSpacing.s3,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.message,
+                    style: BipaText.label.copyWith(fontWeight: FontWeight.w600, height: 20 / 14, color: colors.ground),
                   ),
-                  child: Text(actionLabel),
                 ),
+                if (hasAction) ...[
+                  const SizedBox(width: BipaSpacing.s3),
+                  TextButton(
+                    onPressed: onAction,
+                    style: TextButton.styleFrom(
+                      foregroundColor: colors.price,
+                      textStyle: BipaText.label.copyWith(fontWeight: FontWeight.w800),
+                      shape: const StadiumBorder(),
+                      // O alvo de toque tem 48 de altura, mesmo com o aviso baixo.
+                      minimumSize: const Size(48, 48),
+                      padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s3),
+                    ),
+                    child: Text(actionLabel),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
-        ),
-        if (showTimer)
-          PositionedDirectional(
-            start: 0,
-            end: 0,
-            bottom: 0,
-            child: ExcludeSemantics(
-              child: AnimatedBuilder(
-                animation: _timeLeft,
-                builder: (context, _) => Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: FractionallySizedBox(
-                    key: const ValueKey('bipa-toast-timer'),
-                    widthFactor: _timeLeft.value,
-                    child: SizedBox(height: 3, child: ColoredBox(color: colors.price)),
+          if (showTimer)
+            PositionedDirectional(
+              start: 0,
+              end: 0,
+              bottom: 0,
+              child: ExcludeSemantics(
+                child: AnimatedBuilder(
+                  animation: _timeLeft,
+                  builder: (context, _) => Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: FractionallySizedBox(
+                      key: const ValueKey('bipa-toast-timer'),
+                      widthFactor: _timeLeft.value,
+                      child: SizedBox(height: 3, child: ColoredBox(color: colors.price)),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }

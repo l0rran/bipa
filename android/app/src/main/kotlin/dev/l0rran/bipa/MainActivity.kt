@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.view.accessibility.AccessibilityManager
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -59,6 +60,32 @@ class MainActivity : FlutterActivity() {
                 }
             }
         }
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, ACCESSIBILITY_CHANNEL).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "recommendedTimeouts" -> result.success(recommendedTimeouts())
+                else -> result.notImplemented()
+            }
+        }
+    }
+
+    /**
+     * O "Tempo para agir" da Acessibilidade, em milissegundos: "controls" para
+     * o que tem botão (o aviso com "Desfazer") e "text" para o que só tem
+     * texto. Zero quando a pessoa não pediu nada, ou antes do Android 10.
+     *
+     * Com 0 como tempo original, o Android devolve só o que a pessoa pediu: o
+     * Dart usa o maior entre esse e o tempo do próprio aviso.
+     */
+    private fun recommendedTimeouts(): Map<String, Int> {
+        val manager = getSystemService(ACCESSIBILITY_SERVICE) as? AccessibilityManager
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || manager == null) {
+            return mapOf("controls" to 0, "text" to 0)
+        }
+        val text = AccessibilityManager.FLAG_CONTENT_TEXT or AccessibilityManager.FLAG_CONTENT_ICONS
+        return mapOf(
+            "controls" to manager.getRecommendedTimeoutMillis(0, text or AccessibilityManager.FLAG_CONTENT_CONTROLS),
+            "text" to manager.getRecommendedTimeoutMillis(0, text),
+        )
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -134,6 +161,7 @@ class MainActivity : FlutterActivity() {
 
     private companion object {
         const val REQUEST_NOTIFICATIONS = 7002
+        const val ACCESSIBILITY_CHANNEL = "dev.l0rran.bipa/accessibility"
         const val PERMISSION_PREFS = "bipa_permissions"
         const val KEY_NOTIFICATIONS_DENIED = "notifications_denied"
     }

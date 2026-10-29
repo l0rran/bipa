@@ -1,4 +1,5 @@
 import 'package:bipa/app/router.dart';
+import 'package:bipa/core/accessibility/recommended_timeouts.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
 import 'package:bipa/features/shopping_list/presentation/live_shopping_notification.dart';
@@ -11,19 +12,23 @@ class BipaApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return MaterialApp.router(
-      title: 'Bipa',
-      debugShowCheckedModeBanner: false,
-      theme: BipaTheme.light,
-      darkTheme: BipaTheme.dark,
-      // O app nasce no tema claro; o escuro existe nos tokens para depois.
-      themeMode: ThemeMode.light,
-      locale: const Locale('pt', 'BR'),
-      supportedLocales: const [Locale('pt', 'BR')],
-      localizationsDelegates: const [AppLocalizations.delegate, ...GlobalMaterialLocalizations.delegates],
-      routerConfig: ref.watch(routerProvider),
-      // A notificação ao vivo da compra acompanha o app inteiro, acima das rotas.
-      builder: (context, child) => LiveShoppingNotification(child: child ?? const SizedBox.shrink()),
+    // O "Tempo para agir" do Android fica acima do MaterialApp, para o
+    // ScaffoldMessenger do app também enxergar (o tempo do bipa-toast).
+    return RecommendedTimeoutsLoader(
+      child: MaterialApp.router(
+        title: 'Bipa',
+        debugShowCheckedModeBanner: false,
+        theme: BipaTheme.light,
+        darkTheme: BipaTheme.dark,
+        // O app nasce no tema claro; o escuro existe nos tokens para depois.
+        themeMode: ThemeMode.light,
+        locale: const Locale('pt', 'BR'),
+        supportedLocales: const [Locale('pt', 'BR')],
+        localizationsDelegates: const [AppLocalizations.delegate, ...GlobalMaterialLocalizations.delegates],
+        routerConfig: ref.watch(routerProvider),
+        // A notificação ao vivo da compra acompanha o app inteiro, acima das rotas.
+        builder: (context, child) => LiveShoppingNotification(child: child ?? const SizedBox.shrink()),
+      ),
     );
   }
 }

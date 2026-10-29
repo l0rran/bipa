@@ -605,7 +605,7 @@ class _CameraPageState extends ConsumerState<CameraPage> {
       onTap: undoInNotice ? () => unawaited(undo()) : null,
       actionLabel: undoInNotice ? l10n.undo : null,
       onDetailTap: place == null ? null : () => unawaited(_choosePlace(product, place, show)),
-      duration: undoInNotice || place != null ? bipaToastDuration : const Duration(milliseconds: 2500),
+      duration: undoInNotice || place != null ? BipaToastDuration.short.time : const Duration(milliseconds: 2500),
     );
 
     // Antes do aviso, que redesenha a tela: fechar já sabe que há o que
