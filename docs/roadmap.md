@@ -132,9 +132,10 @@ Os achados da [análise do lote 11](ux/analise-ux-2026-10-29-lote11.md), feita d
 
 Os achados da [análise do lote 12](ux/analise-ux-2026-10-29-lote12.md), feita depois do backup (B5) e do catálogo pronto.
 
-- [ ] BK1 (crítico) e BK4: backup que não se perde. O `ultimo.bipa` do celular antigo precisa continuar restaurável pelos Ajustes (não só pelo cartão do Início, que some com o primeiro item), o backup diário não pode parar calado nem um "Fazer backup agora" gravar por cima de um backup de outro aparelho sem perguntar, e a casa vazia do cartão se decide por `isEmpty()`. Quadro e decisão antes. Antes de qualquer build para outras pessoas
-- [ ] BK2 e BK3: o Desfazer da restauração dura o mesmo que o aviso (TalkBack, "Tempo para agir", dedo em cima); a confirmação mostra os mesmos três números dos dois lados e a data com ano
-- [ ] G12, G13 e G14: catálogo que não junta. A folha mostra "No catálogo: …"; o produto da pessoa só é escolhido quando cobre a maior parte do nome (leite condensado não vai para "Leite", Fanta Uva não vai para "Uva"); o nome novo mantém a marca quando sobra uma palavra; o gerador fica só com nomes em português, a grafia da marca e o tamanho por massa ("1 u, 120 g")
+- [x] BK1 (crítico) e BK4: backup que não se perde. O `ultimo.bipa` do celular antigo precisa continuar restaurável pelos Ajustes (não só pelo cartão do Início, que some com o primeiro item), o backup diário não pode parar calado nem um "Fazer backup agora" gravar por cima de um backup de outro aparelho sem perguntar, e a casa vazia do cartão se decide por `isEmpty()`. Quadro e decisão antes. Antes de qualquer build para outras pessoas
+- [x] BK2 e BK3: o Desfazer da restauração dura o mesmo que o aviso (TalkBack, "Tempo para agir", dedo em cima); a confirmação mostra os mesmos três números dos dois lados e a data com ano
+- [x] G12 e G13: catálogo que não junta (o produto da pessoa começa o nome sugerido; versão e linha não bloqueiam; sabor e tipo bloqueiam; a marca fica quando sobra só o sabor). Fica o G14 e a linha "No catálogo: …" (quadro antes)
+- [ ] G14 e o resto do G12: o gerador fica só com nomes em português, a grafia da marca e o tamanho por massa ("1 u, 120 g"); a folha mostra "No catálogo: …" (quadro antes)
 - [ ] H20 e G15: atribuição com link, com o texto de "Sobre" no ARB citando as três bases, e a linha "Dados do Open Food Facts" como link para a ficha (quadros antes)
 
 ## Fase 2: base comunitária

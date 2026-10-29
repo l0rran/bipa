@@ -13,7 +13,7 @@ Retrato de 29/10/2026, para quem continua o trabalho (pessoa ou agente). Leia an
 
 ## Compilado e testado
 
-Em 28/10, no Windows (Flutter 3.47.8, Dart 3.13.7): `flutter analyze` sem problemas, `flutter test` com 962 testes passando, `flutter build apk --debug` passando e o banco do OCR passando. No Windows, o banco do OCR roda com `py -3 tool/ocr_bench/testes.py`, porque não há `python3`, e `dart format .` falha depois de um build por causa de um caminho longo dentro de `build/`: use `dart format lib test tool`.
+Em 28/10, no Windows (Flutter 3.47.8, Dart 3.13.7): `flutter analyze` sem problemas, `flutter test` com 1067 testes passando, `flutter build apk --debug` passando e o banco do OCR passando. No Windows, o banco do OCR roda com `py -3 tool/ocr_bench/testes.py`, porque não há `python3`, e `dart format .` falha depois de um build por causa de um caminho longo dentro de `build/`: use `dart format lib test tool`.
 
 Os lotes 8 a 12 foram feitos por agentes em paralelo, cada um num worktree, e juntados em `main` com merges. Cada lote terminou com uma revisão de UX: [lote 8](ux/analise-ux-2026-10-28-lote8.md), [lote 9](ux/analise-ux-2026-10-28-lote9.md) , [lote 10](ux/analise-ux-2026-10-28-lote10.md) [lote 11](ux/analise-ux-2026-10-29-lote11.md) e [lote 12](ux/analise-ux-2026-10-29-lote12.md), cujos achados estão no roadmap.
 
@@ -23,6 +23,8 @@ Falta o teste no aparelho, de antes e de agora:
 - produto: corrigir um preço, "Editar embalagem", mover e apagar embalagem com Desfazer, a etiqueta em destaque com o furo (tema claro e escuro);
 - geral: os avisos que somem sozinhos (e com TalkBack, pausa ao toque, 10 s nas ações grandes, o "Tempo para agir" do Android e por cima das folhas), a barra encolhendo ao rolar, o anel que respira duas vezes e para, a letra do Android em 130%, 170% e no máximo (com o toque longo na barra da compra), e o ícone no lançador e na notificação;
 - novos: a busca sem acento, o recorte da etiqueta do granel, a tela de Ajustes e, num build com DSN, o cartão do relatório de falhas.
+- catálogo: bipar produtos de casa que você ainda não cadastrou (a "Embalagem nova" preenchida; leite condensado, Fanta Uva e parecidos não podem cair no produto genérico; "Leite UHT integral" deve cair em "Leite"), a linha "Dados do Open Food Facts" no produto e a atribuição em Ajustes;
+- backup: "Fazer backup agora", "Salvar uma cópia…" (seletor do Android, Drive e pasta local) e "Restaurar de um arquivo…" com a confirmação, os erros e o Desfazer; num segundo aparelho ou depois de limpar os dados do app, o cartão "Backup encontrado" (casa vazia e casa em uso, "Deixar de lado"), a linha "Último backup" em Ajustes e o diálogo antes de gravar por cima. Para forçar o Auto Backup: `adb shell bmgr backupnow dev.l0rran.bipa`.
 
 ## Pontos abertos conhecidos
 
@@ -41,7 +43,7 @@ Achados "prováveis" das revisões que ficaram como estão, por serem raros ou p
 
 Os detalhes de cada código estão nas análises de UX (em `ux/`) e no [roadmap](roadmap.md).
 
-1. **Antes do teste no aparelho:** o mantenedor testa depois do catálogo pronto (feito em 29/10). Falta corrigir BK1 (crítico: o backup do celular antigo pode se perder), BK2 e BK4, e G12 (o catálogo põe a embalagem num produto mais genérico). BK1 pede quadro e decisão.
+1. **Teste no aparelho pelo mantenedor** (lista acima): BK1, BK2, BK3, BK4, G12 e G13 foram corrigidos em 29/10, antes dele. A [revisão do lote 13](ux/analise-ux-2026-10-29-lote13.md) roda em paralelo.
 2. **Depois:** BK3, G13, G14, H20 e G15; AB14, H19 e a escolha de produto no design system (H1), com quadro ou regra antes; o quadro InicioRelatorioFalhas com o texto novo.
 3. **Cobertura do catálogo:** medir com os cupons reais do mantenedor (`tool/catalogo/cobertura.py`). Amostras de sites de terceiros não são usadas.
 4. **Levar ao claude.ai** as mudanças de 28/10 nas cópias do protótipo e do design system.
