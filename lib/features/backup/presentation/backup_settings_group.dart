@@ -127,7 +127,7 @@ class _BackupSettingsCardState extends ConsumerState<BackupSettingsCard> {
           BackupActionRow(
             icon: Icons.cloud_upload_outlined,
             title: l10n.backupMakeNow,
-            subtitle: pending ? l10n.backupMakeNowPaused : null,
+            subtitle: pending ? _automaticState(l10n, last, now) : null,
             busyLabel: l10n.backupMaking,
             busy: _busy == _Busy.making,
             onTap: _busy == _Busy.none ? _makeNow : null,
@@ -151,6 +151,18 @@ class _BackupSettingsCardState extends ConsumerState<BackupSettingsCard> {
       ),
     );
   }
+}
+
+/// O estado do automático embaixo de "Fazer backup agora", com o backup de
+/// outro celular no lugar: pausado até a resposta, ou, no dia em que ele foi
+/// deixado de lado, de volta amanhã (BK6). Passado esse dia, o diário grava
+/// na próxima volta ao app, e a linha não diz nada.
+String? _automaticState(AppLocalizations l10n, BackupInfo pending, DateTime now) {
+  final setAside = pending.setAsideAt;
+  if (setAside == null) return l10n.backupMakeNowPaused;
+  final (day, today) = (setAside.toLocal(), now.toLocal());
+  final sameDay = day.year == today.year && day.month == today.month && day.day == today.day;
+  return sameDay ? l10n.backupMakeNowResumesTomorrow : null;
 }
 
 /// A linha que só informa: "Último backup", a frase e o valor à direita, o
@@ -242,8 +254,9 @@ class _LastBackupRow extends StatelessWidget {
 
 /// A linha do último backup quando ele é de outro celular e espera resposta
 /// (protótipo AjustesBackupPendente): a mesma linha, agora botão, com o
-/// ícone do celular com a seta, a origem na frase ("De outro celular. Toque
-/// para restaurar.") e o dia grande com o ano embaixo.
+/// ícone do celular com a seta, a origem na frase ("Veio do backup do Google.
+/// Toque para restaurar.", sem afirmar outro celular, BK9) e o dia grande
+/// com o ano embaixo.
 class _PendingBackupRow extends StatelessWidget {
   const _PendingBackupRow({required this.last, required this.onTap});
 
@@ -259,6 +272,9 @@ class _PendingBackupRow extends StatelessWidget {
       button: true,
       enabled: onTap != null,
       label: l10n.backupLastPendingSemantics(BackupLabels.spokenDate(createdAt)),
+      // O `excludeSemantics` tira da árvore a ação do `InkWell`: o toque vai
+      // aqui, para o toque duplo do TalkBack abrir a folha (BK8).
+      onTap: onTap,
       excludeSemantics: true,
       child: InkWell(
         onTap: onTap,
@@ -283,7 +299,7 @@ class _PendingBackupRow extends StatelessWidget {
                       Text(l10n.backupLastTitle, style: BipaText.bodyLarge.copyWith(color: colors.ink)),
                       const SizedBox(height: 2),
                       Text(
-                        l10n.backupLastFromOtherPhone,
+                        l10n.backupLastFromGoogle,
                         style: BipaText.label.copyWith(
                           fontWeight: FontWeight.w500,
                           height: 20 / 14,

@@ -1,6 +1,7 @@
 import 'package:bipa/core/accessibility/recommended_timeouts.dart';
 import 'package:bipa/core/design_system/bipa_theme.dart';
 import 'package:bipa/core/l10n/app_localizations.dart';
+import 'package:bipa/features/backup/domain/backup_manifest.dart';
 import 'package:bipa/features/backup/domain/backup_ports.dart';
 import 'package:bipa/features/backup/presentation/backup_providers.dart';
 import 'package:bipa/features/backup/presentation/restore_sheet.dart';
@@ -14,24 +15,42 @@ import '../../../helpers/backup_fakes.dart';
 /// Os arquivos do app com o que a restauração e o "Desfazer" usam: a reserva
 /// existe depois de [replaceAppData], até [undoReplace] ou [discardReserve].
 final class _FakeStorage implements BackupStorage {
+  _FakeStorage({this.hasLatest = false});
+
+  /// Há um `ultimo.bipa`, o do [_FakeArchive]; de outro celular enquanto
+  /// [madeHereId] não é o id dele.
+  final bool hasLatest;
+  String? madeHereId;
+
+  /// A marca de antes de uma restauração que adotou o `ultimo.bipa`.
+  (String?,)? _markerBefore;
+
   var reserve = false;
   var undone = 0;
   var discarded = 0;
 
   @override
-  Future<void> replaceAppData(RestoreWorkspace workspace) async => reserve = true;
+  Future<void> replaceAppData(RestoreWorkspace workspace, {String? adopt}) async {
+    reserve = true;
+    _markerBefore = adopt == null ? null : (madeHereId,);
+    if (adopt != null) madeHereId = adopt;
+  }
 
   @override
   Future<void> discard(String workspace) async {}
 
   @override
-  Future<LatestBackupFile?> latest() async => null;
+  Future<LatestBackupFile?> latest() async =>
+      hasLatest ? LatestBackupFile(path: 'ultimo.bipa', size: 1, madeHereId: madeHereId) : null;
 
   @override
   Future<bool> undoReplace() async {
     if (!reserve) return false;
     reserve = false;
     undone++;
+    final before = _markerBefore;
+    if (before != null) madeHereId = before.$1;
+    _markerBefore = null;
     return true;
   }
 
@@ -50,7 +69,12 @@ final class _UnusedDatabase implements BackupDatabase {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-final class _UnusedArchive implements BackupArchive {
+/// O `ultimo.bipa` é o backup `b1` de [_backupDay], o mesmo do
+/// `fakePrepared`.
+final class _FakeArchive implements BackupArchive {
+  @override
+  Future<BackupManifest> readManifest(String source) async => fakeManifest(createdAt: _backupDay);
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -66,14 +90,16 @@ Future<_FakeStorage> _pump(
   WidgetTester tester, {
   bool screenReader = false,
   RecommendedTimeouts asked = RecommendedTimeouts.none,
+  bool pendingLatest = false,
+  String restoredId = 'b1',
 }) async {
-  final storage = _FakeStorage();
+  final storage = _FakeStorage(hasLatest: pendingLatest);
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         backupStorageProvider.overrideWithValue(storage),
         backupDatabaseProvider.overrideWithValue(_UnusedDatabase()),
-        backupArchiveProvider.overrideWithValue(_UnusedArchive()),
+        backupArchiveProvider.overrideWithValue(_FakeArchive()),
       ],
       child: RecommendedTimeoutsScope(
         timeouts: asked,
@@ -93,7 +119,7 @@ Future<_FakeStorage> _pump(
                         builder: (context, ref, _) => TextButton(
                           onPressed: () => applyRestoreAndNotify(
                             backup: ref.read(backupProvider.notifier),
-                            prepared: fakePrepared(createdAt: _backupDay),
+                            prepared: fakePrepared(createdAt: _backupDay, id: restoredId),
                             messenger: ScaffoldMessenger.of(context),
                             l10n: AppLocalizations.of(context),
                           ),
@@ -226,5 +252,35 @@ void main() {
     expect(storage.reserve, isTrue, reason: 'a reserva é a da restauração nova');
     await _undo(tester);
     expect(storage.undone, 1);
+  });
+
+  group('com o backup de outro celular pendente (BK5)', () {
+    Future<BackupState> state(WidgetTester tester) =>
+        ProviderScope.containerOf(tester.element(find.byType(Scaffold))).read(backupProvider.future);
+
+    testWidgets('restaurá-lo responde, e o Desfazer devolve a pergunta', (tester) async {
+      await _pump(tester, pendingLatest: true);
+      expect((await state(tester)).restoreOffer?.manifest.id, 'b1');
+
+      await _restore(tester);
+      final restored = await state(tester);
+      expect((restored.pending, restored.restoreOffer), (false, null));
+
+      await _undo(tester);
+      final undone = await state(tester);
+      expect(undone.pending, isTrue);
+      expect(undone.restoreOffer?.manifest.id, 'b1', reason: 'o cartão do Início volta');
+    });
+
+    testWidgets('restaurar outro arquivo não responde por ele', (tester) async {
+      await _pump(tester, pendingLatest: true, restoredId: 'copia');
+      await state(tester);
+
+      await _restore(tester);
+
+      final restored = await state(tester);
+      expect(restored.pending, isTrue);
+      expect(restored.restoreOffer?.manifest.id, 'b1');
+    });
   });
 }

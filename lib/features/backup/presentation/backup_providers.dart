@@ -64,7 +64,11 @@ final restoreBackupProvider = Provider<RestoreBackup>(
 );
 
 final restoreOfferProvider = Provider<RestoreOffer>(
-  (ref) => RestoreOffer(storage: ref.watch(backupStorageProvider), archive: ref.watch(backupArchiveProvider)),
+  (ref) => RestoreOffer(
+    storage: ref.watch(backupStorageProvider),
+    archive: ref.watch(backupArchiveProvider),
+    clock: ref.watch(clockProvider),
+  ),
 );
 
 final readLatestBackupProvider = Provider<ReadLatestBackup>(
@@ -86,8 +90,10 @@ final class BackupState {
   /// lado" está na tela: o cartão já saiu, e o arquivo ainda espera.
   final BackupInfo? restoreOffer;
 
-  /// O [lastBackup] é de outro aparelho e espera resposta.
-  bool get pending => RestoreOffer.pendingOf(lastBackup) != null;
+  /// O [lastBackup] é de outro aparelho: Ajustes o restaura pela linha e
+  /// pergunta antes de gravar por cima, mesmo depois de "Deixar de lado",
+  /// até o diário gravar no dia seguinte (BK6).
+  bool get pending => lastBackup != null && !lastBackup!.madeHere;
 
   /// Se o "Desfazer" do aviso de restauração ainda vale.
   final bool canUndoRestore;
@@ -218,9 +224,9 @@ class BackupController extends AsyncNotifier<BackupState> {
   });
 
   /// "Começar do zero" ou "Deixar de lado", na tela: o cartão some na hora,
-  /// mas o arquivo só é adotado em [dismissRestoreOffer], quando o aviso com
-  /// "Desfazer" sai; até lá, ele continua pendente (Ajustes ainda o
-  /// restaura, e o diário segue pausado). Devolve a oferta escondida, ou
+  /// mas o arquivo só é deixado de lado em [dismissRestoreOffer], quando o
+  /// aviso com "Desfazer" sai; até lá, ele continua pendente (Ajustes ainda
+  /// o restaura, e o diário segue pausado). Devolve a oferta escondida, ou
   /// `null`.
   BackupInfo? hideRestoreOffer() {
     final current = state.value;
@@ -235,9 +241,10 @@ class BackupController extends AsyncNotifier<BackupState> {
     if (current != null) state = AsyncData(current.copyWith(restoreOffer: offer));
   }
 
-  /// "Começar do zero" ou "Deixar de lado" valendo: adota [offer] (ou a
-  /// oferta pendente), que deixa de ser oferecida, e o backup diário volta
-  /// a substituí-lo. Ajustes volta a ser o de sempre.
+  /// "Começar do zero" ou "Deixar de lado" valendo: [offer] (ou a oferta
+  /// pendente) deixa de ser oferecida no Início. Ajustes ainda o restaura
+  /// até o dia seguinte, quando o backup diário volta a gravar por cima
+  /// (BK6).
   Future<void> dismissRestoreOffer([BackupInfo? offer]) => _serial(() async {
     final dismissed = offer ?? pendingRestoreOffer;
     if (dismissed != null) await ref.read(restoreOfferProvider).dismiss(dismissed);

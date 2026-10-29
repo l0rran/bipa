@@ -1,6 +1,7 @@
 import 'package:bipa/features/backup/domain/backup_exception.dart';
 import 'package:bipa/features/backup/domain/backup_manifest.dart';
 import 'package:bipa/features/backup/domain/backup_ports.dart';
+import 'package:bipa/features/backup/domain/read_latest_backup.dart';
 import 'package:meta/meta.dart';
 
 /// Um backup conferido e pronto para entrar no lugar dos dados do app: o
@@ -138,23 +139,19 @@ final class RestoreBackup {
   /// "Substituir pelo backup": troca o banco e as fotos do app pelos de
   /// [prepared] (passos 4 e 5). Se a troca falha, os de antes voltam e o
   /// erro sobe.
+  ///
+  /// Só quando o arquivo restaurado é o próprio `ultimo.bipa` que esperava
+  /// resposta (o mesmo id), restaurar é a resposta: ele passa a ser deste
+  /// aparelho, e o backup diário volta a substituí-lo. Restaurar outro
+  /// arquivo não responde à pergunta sobre ele, que continua pendente (BK5).
+  /// O "Desfazer" ([undo]) devolve a pendência como estava.
   Future<void> apply(PreparedRestore prepared) async {
+    final latest = await ReadLatestBackup(storage: _storage, archive: _archive)();
+    final answersPending = latest != null && !latest.madeHere && latest.manifest.id == prepared.manifest.id;
     try {
-      await _storage.replaceAppData(prepared.workspace);
+      await _storage.replaceAppData(prepared.workspace, adopt: answersPending ? prepared.manifest.id : null);
     } finally {
       await _storage.discard(prepared.workspace.path);
-    }
-
-    // Os dados agora são os de um backup que a pessoa escolheu: o
-    // `ultimo.bipa`, mesmo que tenha vindo de outro aparelho, deixa de
-    // esperar resposta, e o backup diário volta a substituí-lo.
-    final latest = await _storage.latest();
-    if (latest != null) {
-      try {
-        await _storage.adoptLatest((await _archive.readManifest(latest.path)).id);
-      } on BackupException {
-        // Ilegível: o próximo backup o substitui de qualquer jeito.
-      }
     }
   }
 
@@ -165,8 +162,9 @@ final class RestoreBackup {
     return prepared.manifest;
   }
 
-  /// "Desfazer": volta o banco e as fotos de antes da última restauração.
-  /// Devolve `false` se a reserva já não existe.
+  /// "Desfazer": volta o banco e as fotos de antes da última restauração e,
+  /// se ela adotou o `ultimo.bipa`, a pendência dele: o cartão volta, e o
+  /// diário segue pausado. Devolve `false` se a reserva já não existe.
   Future<bool> undo() => _storage.undoReplace();
 
   /// Fim do "Desfazer" (o aviso saiu sem ele): apaga a reserva.

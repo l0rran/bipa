@@ -82,7 +82,7 @@ class _RestoreOfferCardState extends ConsumerState<RestoreOfferCard> {
     await showRestoreSheet(context, preparing: Future.value(prepared), fromOtherPhone: true);
   }
 
-  /// "Começar do zero": o cartão some na hora; o arquivo só é adotado quando
+  /// "Começar do zero": o cartão some na hora; o arquivo só é deixado de lado quando
   /// o aviso sai sem o "Desfazer".
   void _startFresh() => _setAside(context, ref, (l10n, date) => l10n.backupOfferDismissed(date));
 
@@ -218,8 +218,8 @@ class _RestoreOfferCardState extends ConsumerState<RestoreOfferCard> {
 
 /// "Começar do zero" ou "Deixar de lado": o cartão some na hora e o aviso
 /// ([message], com a data com o ano) traz o "Desfazer", que o devolve. O
-/// arquivo só é adotado quando o aviso sai sem o "Desfazer"; até lá, ele
-/// continua pendente.
+/// arquivo só é deixado de lado quando o aviso sai sem o "Desfazer"; até
+/// lá, ele continua pendente.
 void _setAside(BuildContext context, WidgetRef ref, String Function(AppLocalizations l10n, String date) message) {
   final backup = ref.read(backupProvider.notifier);
   final messenger = ScaffoldMessenger.of(context);
@@ -268,8 +268,10 @@ class _OfferTitle extends StatelessWidget {
 ///
 /// "Restaurar" (neutro) sempre passa pela folha de confirmação, com os
 /// números deste celular, porque já há o que perder. "Deixar de lado"
-/// (secundário) tira o cartão com o aviso "O próximo grava por cima." e o
-/// Desfazer; passado o aviso, o backup automático volta.
+/// (secundário) tira o cartão com o aviso "Amanhã o backup deste celular
+/// grava por cima." e o Desfazer; passado o aviso, Ajustes ainda restaura o
+/// arquivo até o fim do dia, e o backup automático volta no dia seguinte
+/// (BK6).
 class PendingBackupCard extends ConsumerWidget {
   const PendingBackupCard({required this.offer, super.key});
 

@@ -135,13 +135,25 @@ abstract interface class BackupStorage {
   /// a pessoa já decidiu o que fazer com ele.
   Future<void> adoptLatest(String backupId);
 
+  /// Lembra que a pessoa deixou de lado, em [at], o `ultimo.bipa` de outro
+  /// aparelho de id [backupId] ("Deixar de lado" ou "Começar do zero"). Ele
+  /// continua de outro aparelho e restaurável; só o backup diário passa a
+  /// gravar por cima, a partir do dia seguinte (BK6).
+  Future<void> setAside(String backupId, DateTime at);
+
   /// Fecha o banco do app, troca o banco e as fotos pelos de [workspace] e
   /// reabre. Os de antes ficam numa reserva, para [undoReplace]. Se a troca
   /// falha, os de antes voltam e o banco reabre com eles.
-  Future<void> replaceAppData(RestoreWorkspace workspace);
+  ///
+  /// Com [adopt], depois da troca, o `ultimo.bipa` de id [adopt] passa a ser
+  /// deste aparelho ([adoptLatest]), e a marca de antes fica junto da
+  /// reserva: o [undoReplace] a devolve, e o arquivo volta a esperar
+  /// resposta (BK5).
+  Future<void> replaceAppData(RestoreWorkspace workspace, {String? adopt});
 
-  /// Volta o banco e as fotos da reserva, fechando e reabrindo o banco.
-  /// Devolve `false` se não há reserva.
+  /// Volta o banco e as fotos da reserva, fechando e reabrindo o banco, e a
+  /// marca do `ultimo.bipa` de antes, se a restauração o adotou. Devolve
+  /// `false` se não há reserva.
   Future<bool> undoReplace();
 
   /// Apaga a reserva: a restauração não pode mais ser desfeita.
@@ -175,7 +187,13 @@ final class RestoreWorkspace {
 /// O `ultimo.bipa` no aparelho.
 @immutable
 final class LatestBackupFile {
-  const LatestBackupFile({required this.path, required this.size, required this.madeHereId});
+  const LatestBackupFile({
+    required this.path,
+    required this.size,
+    required this.madeHereId,
+    this.setAsideId,
+    this.setAsideAt,
+  });
 
   final String path;
   final int size;
@@ -183,4 +201,9 @@ final class LatestBackupFile {
   /// O id do último backup que este aparelho gravou ou adotou; quando é
   /// outro, o arquivo veio de outro aparelho (pelo Auto Backup do Android).
   final String? madeHereId;
+
+  /// O id do backup de outro aparelho que a pessoa deixou de lado
+  /// ([BackupStorage.setAside]), e quando.
+  final String? setAsideId;
+  final DateTime? setAsideAt;
 }

@@ -23,6 +23,10 @@ void main() {
   late ProviderContainer container;
   final at = DateTime(2026, 10, 29, 8, 40);
 
+  /// A hora do relógio do app; os testes do diário a passam para o dia
+  /// seguinte.
+  late DateTime now;
+
   /// Os nomes dos produtos, como uma tela os veria.
   final productNamesProvider = StreamProvider<List<String>>(
     (ref) => ref
@@ -33,6 +37,7 @@ void main() {
   );
 
   setUp(() async {
+    now = at;
     driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
     root = await Directory.systemTemp.createTemp('bipa_backup_provider');
     location = AppDataLocation(joinPath(root.path, 'documentos'));
@@ -54,7 +59,7 @@ void main() {
           ),
         ),
         backupAppVersionProvider.overrideWithValue(() async => '0.1.0+1'),
-        clockProvider.overrideWithValue(() => at),
+        clockProvider.overrideWithValue(() => now),
         idGeneratorProvider.overrideWithValue(SequentialIdGenerator()),
       ],
     );
@@ -173,17 +178,40 @@ void main() {
       expect(controller().lastBackupInfo?.manifest.id, id);
     });
 
-    test('"Deixar de lado" valendo: o arquivo é adotado e o diário volta a gravar', () async {
+    test('"Deixar de lado" valendo: o cartão sai, Ajustes o restaura hoje, e o diário grava amanhã (BK6)', () async {
       final id = await arriveFromOtherPhone();
 
       final hidden = controller().hideRestoreOffer()!;
       await controller().dismissRestoreOffer(hidden);
 
       final state = container.read(backupProvider).value!;
-      expect((state.pending, state.restoreOffer), (false, null));
-      // O backup do outro celular ainda é o último, até o diário seguinte.
-      expect(state.lastBackup?.manifest.id, id);
+      expect(state.restoreOffer, isNull);
+      expect((state.pending, state.lastBackup?.manifest.id, state.lastBackup?.setAsideAt), (true, id, at));
+      now = at.add(const Duration(hours: 8));
+      await controller().runDailyBackup();
+      expect(controller().lastBackupInfo?.manifest.id, id);
+
+      now = at.add(const Duration(days: 1));
+      await controller().runDailyBackup();
+      final next = container.read(backupProvider).value!;
+      expect(next.lastBackup?.manifest.id, isNot(id));
+      expect((next.pending, next.restoreOffer), (false, null));
     });
+
+    test(
+      '"Apagar e fazer backup" com o aviso de "Deixar de lado" na tela: o backup novo é deste celular (BK7)',
+      () async {
+        await arriveFromOtherPhone();
+
+        final hidden = controller().hideRestoreOffer()!;
+        final made = (await controller().createBackup(replacePending: true))!;
+        await controller().dismissRestoreOffer(hidden);
+
+        final state = container.read(backupProvider).value!;
+        expect(state.lastBackup?.manifest.id, made.manifest.id);
+        expect((state.pending, state.restoreOffer), (false, null));
+      },
+    );
 
     test('"Fazer backup agora" só grava por cima com a confirmação', () async {
       final id = await arriveFromOtherPhone();
@@ -195,6 +223,34 @@ void main() {
       final state = container.read(backupProvider).value!;
       expect(state.lastBackup?.manifest.id, made!.manifest.id);
       expect((state.pending, state.restoreOffer), (false, null));
+    });
+
+    test('restaurar o backup pendente e desfazer: a pergunta volta, e o diário não grava (BK5)', () async {
+      final id = await arriveFromOtherPhone();
+
+      await controller().restore(File(controller().lastBackupInfo!.path));
+      expect(container.read(backupProvider).value!.pending, isFalse);
+      expect(await controller().undoRestore(), isTrue);
+
+      final state = container.read(backupProvider).value!;
+      expect((state.pending, state.restoreOffer?.manifest.id), (true, id));
+      now = at.add(const Duration(days: 1));
+      await controller().runDailyBackup();
+      expect(controller().lastBackupInfo?.manifest.id, id);
+    });
+
+    test('restaurar outro arquivo deixa o backup do outro celular pendente (BK5)', () async {
+      final id = await arriveFromOtherPhone();
+      final copy = File(joinPath(root.path, 'copia.bipa'));
+      await controller().saveCopy(copy.openWrite());
+
+      await controller().restore(copy);
+
+      final state = container.read(backupProvider).value!;
+      expect((state.pending, state.restoreOffer?.manifest.id), (true, id));
+      now = at.add(const Duration(days: 1));
+      await controller().runDailyBackup();
+      expect(controller().lastBackupInfo?.manifest.id, id);
     });
   });
 

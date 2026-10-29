@@ -22,6 +22,7 @@ final class ReadLatestBackup {
         size: latest.size,
         manifest: manifest,
         madeHere: latest.madeHereId == manifest.id,
+        setAsideAt: latest.setAsideId == manifest.id ? latest.setAsideAt : null,
       );
     } on BackupException {
       // Um `ultimo.bipa` que não se lê não serve para restaurar: é como se
