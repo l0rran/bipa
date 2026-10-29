@@ -286,7 +286,8 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
               // Celular novo, com o backup do antigo trazido pelo Android: o
               // cartão "Backup encontrado" fica no lugar do convite da casa
-              // vazia (ADR 0023, B1).
+              // vazia (ADR 0023, B1). Com a casa já em uso, o cartão menor
+              // fica no lugar da pergunta do relatório de falhas (BK1).
               if (entries.isEmpty && restoreOffer != null)
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(BipaSpacing.s4, BipaSpacing.s6, BipaSpacing.s4, 0),
@@ -363,11 +364,17 @@ class _HomePageState extends ConsumerState<HomePage> {
               // A pergunta do relatório de falhas: depois de "Acabando", que é
               // o que o Início existe para mostrar, e só uma vez (ADR 0025).
               // Com busca ou local escolhido some, para não empurrar os
-              // resultados para baixo do teclado (H18).
+              // resultados para baixo do teclado (H18). O backup de outro
+              // celular sem resposta, com a casa em uso, fica no lugar dela:
+              // uma pergunta por vez (protótipo InicioBackupPendente).
               if (_query.trim().isEmpty && _place == null)
-                const SliverPadding(
-                  padding: EdgeInsets.symmetric(horizontal: BipaSpacing.s4),
-                  sliver: SliverToBoxAdapter(child: CrashReportingAskCard()),
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: BipaSpacing.s4),
+                  sliver: SliverToBoxAdapter(
+                    child: entries.isNotEmpty && restoreOffer != null
+                        ? PendingBackupCard(offer: restoreOffer)
+                        : const CrashReportingAskCard(),
+                  ),
                 ),
               if (atHome.isNotEmpty) ...[
                 _sectionHeader(SectionHeader(title: l10n.sectionAtHome, count: atHome.length)),

@@ -230,10 +230,49 @@
   "backupOfferFresh": "Começar do zero",
   "backupOfferDismissed": "Backup de {date} deixado de lado",
   "@backupOfferDismissed": {
-    "description": "Aviso de \"Começar do zero\", com Desfazer, que traz o cartão de volta.",
+    "description": "Aviso de \"Começar do zero\", com Desfazer, que traz o cartão de volta. A data tem o ano.",
     "placeholders": {
       "date": {
+        "type": "String",
+        "example": "12/10/2026"
+      }
+    }
+  },
+  "backupOfferSetAside": "Deixar de lado",
+  "@backupOfferSetAside": {
+    "description": "No cartão menor do Início, com a casa já em uso, no lugar de \"Começar do zero\" (protótipo InicioBackupPendente)."
+  },
+  "backupOfferSetAsideNotice": "Backup de {date} deixado de lado. O próximo grava por cima.",
+  "@backupOfferSetAsideNotice": {
+    "description": "Aviso de \"Deixar de lado\", com Desfazer, que traz o cartão de volta; passado o aviso, o backup automático volta.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "12/10/2026"
+      }
+    }
+  },
+  "backupOfferSummary": "{productsText} {products, plural, =1{produto} other{produtos}}, {pricesText} {prices, plural, =1{preço} other{preços}} e {itemsText} {items, plural, =1{item em casa} other{itens em casa}}",
+  "@backupOfferSummary": {
+    "description": "Os números do backup numa linha, no cartão menor do Início.",
+    "placeholders": {
+      "productsText": {
         "type": "String"
+      },
+      "products": {
+        "type": "int"
+      },
+      "pricesText": {
+        "type": "String"
+      },
+      "prices": {
+        "type": "int"
+      },
+      "itemsText": {
+        "type": "String"
+      },
+      "items": {
+        "type": "int"
       }
     }
   },

@@ -617,9 +617,31 @@ void _tests() {
         ),
       );
       _expectReadable(tester);
-      expect(find.text('Restaurar o backup de 12/10?'), findsOneWidget);
+      expect(find.text('Restaurar o backup de 12/10/2026?'), findsOneWidget);
       expect(find.text('Restaurar'), findsOneWidget);
       expect(find.text('Começar do zero'), findsOneWidget);
+    });
+
+    testWidgets('cartão menor do backup de outro celular, com a casa em uso', (tester) async {
+      final offer = fakeBackupInfo(createdAt: DateTime(2026, 10, 12, 21), madeHere: false);
+      await _pumpComponent(
+        tester,
+        ProviderScope(
+          overrides: [
+            backupProvider.overrideWith(() => FakeBackupController(initial: BackupState(restoreOffer: offer))),
+          ],
+          child: PendingBackupCard(offer: offer),
+        ),
+      );
+      _expectReadable(tester);
+      expect(find.text('Restaurar o backup de 12/10/2026?'), findsOneWidget);
+      expect(find.text('214 produtos, 1.380 preços e 56 itens em casa'), findsOneWidget);
+      expect(find.text('Deixar de lado'), findsOneWidget);
+      // A 200%, os botões ficam um embaixo do outro.
+      expect(
+        tester.getTopLeft(find.text('Deixar de lado')).dy,
+        greaterThan(tester.getBottomLeft(find.text('Restaurar')).dy),
+      );
     });
 
     testWidgets('bandeja do modo carrinho', (tester) async {
