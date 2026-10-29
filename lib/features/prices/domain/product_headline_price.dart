@@ -10,7 +10,9 @@ import 'package:bipa/features/products/domain/product_package.dart';
 ///
 /// Com [perUnit] nulo, é o preço da embalagem; com ele, é o preço por kg, litro
 /// ou unidade, que serve para comparar embalagens de tamanhos diferentes.
-typedef HeadlinePrice = ({Money price, MeasureUnit? perUnit});
+/// [observedAt] é o dia em que esse preço foi visto, para a linha dizer a idade
+/// de um preço velho (F5).
+typedef HeadlinePrice = ({Money price, MeasureUnit? perUnit, DateTime observedAt});
 
 /// Escolhe o único preço da linha de [product]:
 ///
@@ -30,17 +32,30 @@ HeadlinePrice? headlinePrice({
     case []:
       final entries = history.where((entry) => entry.observation.packageId == null);
       final cheapest = latestPricePerMarket(entries).firstOrNull;
-      return cheapest == null ? null : (price: cheapest.observation.price, perUnit: product.unit.baseUnit);
+      return cheapest == null
+          ? null
+          : (
+              price: cheapest.observation.price,
+              perUnit: product.unit.baseUnit,
+              observedAt: cheapest.observation.observedAt,
+            );
     case [final only]:
       final entries = history.where((entry) => entry.observation.packageId == only.id);
       final cheapest = latestPricePerMarket(entries).firstOrNull;
-      return cheapest == null ? null : (price: cheapest.observation.price, perUnit: null);
+      return cheapest == null
+          ? null
+          : (price: cheapest.observation.price, perUnit: null, observedAt: cheapest.observation.observedAt);
     default:
-      final unitPrices = [for (final entry in latestPricePerPackage(history, packages)) ?entry.unitPrice];
+      final withUnit = [
+        for (final entry in latestPricePerPackage(history, packages))
+          if (entry.unitPrice case final unitPrice?)
+            (unitPrice: unitPrice, observedAt: entry.entry.observation.observedAt),
+      ];
       // Na unidade do produto, quando houver: kg e litro não se comparam.
       final best =
-          unitPrices.where((unitPrice) => unitPrice.unit == product.unit.baseUnit).firstOrNull ??
-          unitPrices.firstOrNull;
-      return best == null ? null : (price: best.price, perUnit: best.unit);
+          withUnit.where((item) => item.unitPrice.unit == product.unit.baseUnit).firstOrNull ?? withUnit.firstOrNull;
+      return best == null
+          ? null
+          : (price: best.unitPrice.price, perUnit: best.unitPrice.unit, observedAt: best.observedAt);
   }
 }

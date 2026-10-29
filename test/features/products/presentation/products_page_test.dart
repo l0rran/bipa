@@ -170,11 +170,38 @@ void main() {
     expect(find.text('Omo · 1,6 kg'), findsOneWidget);
     expect(find.textContaining(Money.symbol), findsNWidgets(3));
     expect(find.text('sem preço'), findsNothing);
+    // Preço recente não ganha idade.
+    expect(find.textContaining('há '), findsNothing);
 
     // Ordem alfabética, e "Cadastrar produto" fecha a lista.
     final titles = ['Açúcar refinado', 'Arroz branco', 'Sabão em pó', 'Tomate italiano', 'Cadastrar produto'];
     final tops = [for (final title in titles) tester.getTopLeft(find.text(title)).dy];
     expect([...tops]..sort(), tops);
+  });
+
+  testWidgets('preço de 30 dias ou mais ganha a idade na linha; o recente não', (tester) async {
+    final (:container, :router) = await _pump(tester);
+    Future<void> add(String id, String productId, String? packageId, int cents, int daysAgo) => container
+        .read(priceRepositoryProvider)
+        .add(
+          PriceObservation(
+            id: id,
+            productId: productId,
+            packageId: packageId,
+            marketId: 'm',
+            price: Money.cents(cents),
+            source: PriceSource.manual,
+            observedAt: _now.subtract(Duration(days: daysAgo)),
+            createdAt: _now,
+          ),
+        );
+    // Sabão: só um preço, de 41 dias. Tomate: o do dia continua o mais novo.
+    await tester.runAsync(() => add('velho', 'sabao', 'omo', 1990, 41));
+    await tester.runAsync(() => add('quase', 'acucar', 'uniao', 459, 29));
+    await _settle(tester);
+
+    expect(find.text('há 41 dias'), findsOneWidget);
+    expect(find.textContaining('há '), findsOneWidget);
   });
 
   testWidgets('não há chips de filtro nem botões na barra: só a busca e as linhas', (tester) async {

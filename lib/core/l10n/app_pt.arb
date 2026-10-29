@@ -1237,7 +1237,7 @@
       }
     }
   },
-  "cartWeighingTitle": "Quanto deu o {name}?",
+  "cartWeighingTitle": "Quanto deu {name}?",
   "@cartWeighingTitle": {
     "description": "Título do diálogo do valor pago pela pesagem (a linha do granel ou da balança), que pergunta em vez de pedir \"o preço\", para não parecer o preço da gôndola (D9). Também é o rótulo acessível do valor da linha.",
     "placeholders": {
@@ -1245,6 +1245,10 @@
         "type": "String"
       }
     }
+  },
+  "cartWeighingInvalid": "Digite o valor pago, maior que zero. Ex.: 12,40",
+  "@cartWeighingInvalid": {
+    "description": "Erro do diálogo do valor da pesagem quando \"Salvar\" é tocado com o campo vazio, zero ou um texto que não é dinheiro (D10)."
   },
   "cartWeighingValueField": "Valor pago, em reais",
   "@cartWeighingValueField": {
@@ -1536,6 +1540,19 @@
   "packageMoveAtHome": "O que está em casa dela também vai.",
   "@packageMoveAtHome": {
     "description": "Na confirmação de mover a embalagem, quando há lotes dela em casa."
+  },
+  "packageByBarcode": "a embalagem de código final {last}",
+  "@packageByBarcode": {
+    "description": "Como a confirmação de mover ou apagar chama uma embalagem sem marca nem tamanho, em vez do código de barras inteiro (G5): \"Mover a embalagem de código final 4321 para Leite Ninho?\".",
+    "placeholders": {
+      "last": {
+        "type": "String"
+      }
+    }
+  },
+  "packageNameless": "a embalagem sem nome",
+  "@packageNameless": {
+    "description": "Como a confirmação de mover ou apagar chama uma embalagem sem marca, tamanho nem código de barras (G5)."
   },
   "packageMoveConfirm": "Mover",
   "packageMoved": "Embalagem movida para {name}.",
